@@ -1,0 +1,11 @@
+# CMake / build outputs
+/build/
+/cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+*.o
+*.a
+*.dSYM/
+
+# Local editor state
+.idea/
