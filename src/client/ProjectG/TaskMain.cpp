@@ -12,6 +12,7 @@
 #define TASKMAIN_ITEMSTORAGE_INLINE
 #define TASKMAIN_FRTABBUTTON_INLINE
 #define TASKMAIN_SOUNDMANAGER_INLINE
+#define TASKMAIN_ONELINEBOARD_INLINE
 #include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
 #include "NetworkSystem.h"
 #include "TaskMain.h"
@@ -139,10 +140,7 @@ bool FrUserInfoForm::IsOpenAddFriendDlg(void) const {
 
 // user_info.h:601: CUserInfo::GetDlg, inline in user_info.h (TASKMAIN_USER_INFO_INLINE).
 
-// onelineboard.h:14
-void COneLineBoard::SetRect(const WRect &rect) {
-	m_rect = rect;
-}
+// onelineboard.h:14: COneLineBoard::SetRect, inline in onelineboard.h (TASKMAIN_ONELINEBOARD_INLINE).
 
 // onelineboard.h:15
 void COneLineBoard::SetMessage(const char *message) {

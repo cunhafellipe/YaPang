@@ -894,7 +894,7 @@ bool CGhostMain::OnResultSubEquipBar(int result, FrForm *form) {
 // ghostmain.cpp:1108
 void CGhostMain::SetUserEquip(PANGYA_ITEM_GROUP group, unsigned long id) {
 	CSharedDoc *doc = WSingleton<CSharedDoc>::Instance();
-	sUserInfo &info = doc->m_roomPlayers[0];
+	sUserInfo *info = &WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0];
 	switch (group) {
 	case 1: {
 		std::map<unsigned int, sCharacterInfo>::iterator it = doc->m_characterMap.find(id);
@@ -904,50 +904,50 @@ void CGhostMain::SetUserEquip(PANGYA_ITEM_GROUP group, unsigned long id) {
 		doc->m_myCharacterId = id;
 		WSingleton<CSharedDoc>::Instance()->BuildMyPartTidList(it->second);
 
-		info.m_characterId = id;
-		info.m_characterInfo = it->second;
+		info->m_characterId = id;
+		info->m_characterInfo = it->second;
 		UserPetRebuild();
 		if (m_userStat) { delete m_userStat; m_userStat = 0; }
 		m_userStat = BuildStatusBar(0);
 
-		m_userIcons[0] = GetIconName(info.m_characterInfo.typeId);
+		m_userIcons[0] = GetIconName(info->m_characterInfo.typeId);
 		break;
 	}
 	case 16: {
 		std::map<unsigned int, sMascotInfo>::iterator it = doc->m_myMascotMap.find(id);
 		if (it != doc->m_myMascotMap.end()) {
 			doc->m_myMascotId = id;
-			info.m_mascotId = id;
-			info.m_mascot = it->second;
+			info->m_mascotId = id;
+			info->m_mascot = it->second;
 		} else {
 			doc->m_myMascotId = 0;
-			memset(&info.m_mascot, 0, sizeof(info.m_mascot));
+			memset(&info->m_mascot, 0, sizeof(info->m_mascot));
 		}
 
 		if (m_userStat) { delete m_userStat; m_userStat = 0; }
 		m_userStat = BuildStatusBar(0);
-		m_userIcons[4] = GetIconName(info.m_mascot.typeId);
+		m_userIcons[4] = GetIconName(info->m_mascot.typeId);
 		break;
 	}
 	case 7: {
 		std::map<unsigned int, sCaddieInfo>::iterator it = doc->m_caddieMap.find(id);
 		if (it != doc->m_caddieMap.end()) {
 			doc->m_myCaddieId = id;
-			info.m_equipHead = id;
-			info.m_caddieInfo = it->second;
+			info->m_equipHead = id;
+			info->m_caddieInfo = it->second;
 		} else {
 			doc->m_myCaddieId = 0;
-			memset(&info.m_caddieInfo, 0, sizeof(info.m_caddieInfo));
+			memset(&info->m_caddieInfo, 0, sizeof(info->m_caddieInfo));
 		}
 
 		if (m_userStat) { delete m_userStat; m_userStat = 0; }
 		m_userStat = BuildStatusBar(0);
-		m_userIcons[1] = GetIconName(info.m_caddieInfo.typeId);
+		m_userIcons[1] = GetIconName(info->m_caddieInfo.typeId);
 		break;
 	}
 	case 5:
 		doc->m_myBallId = id;
-		info.m_ballId = id;
+		info->m_ballId = id;
 		m_userIcons[3] = GetIconName(id);
 		break;
 	case 4: {
@@ -957,15 +957,15 @@ void CGhostMain::SetUserEquip(PANGYA_ITEM_GROUP group, unsigned long id) {
 
 		doc->m_myClubId = id;
 
-		info.m_clubId = id;
+		info->m_clubId = id;
 
-		info.m_clubSet.id = it->second.m_serial;
-		memcpy(info.m_clubSet.statLevel, it->second.m_clubStatLevel, sizeof(info.m_clubSet.statLevel));
-		info.m_clubSet.typeId = it->second.m_typeId;
+		info->m_clubSet.id = it->second.m_serial;
+		memcpy(info->m_clubSet.statLevel, it->second.m_clubStatLevel, sizeof(info->m_clubSet.statLevel));
+		info->m_clubSet.typeId = it->second.m_typeId;
 
 		if (m_userStat) { delete m_userStat; m_userStat = 0; }
 		m_userStat = BuildStatusBar(0);
-		m_userIcons[2] = GetIconName(info.m_clubSet.typeId);
+		m_userIcons[2] = GetIconName(info->m_clubSet.typeId);
 		break;
 	}
 	}

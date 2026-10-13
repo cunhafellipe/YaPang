@@ -3313,12 +3313,13 @@ static int FillIndices(_D3DPRIMITIVETYPE PrimitiveType, unsigned short* pIndexDa
 
 // wd3d8.cpp:5434
 void WDirect3D8::FillVertex(unsigned char* dest, const unsigned char* src, int xLastVertexDecl, int NumVertices, int VertexStreamZeroStride, const D3DXMATRIX* tm) {
+	int off = 0;
+	int dstOff = 0; // not in the PDB (never given a stack home); name invented
 	if ((xLastVertexDecl & D3DFVF_POSITION_MASK) == D3DFVF_XYZ) {
 		__m128 m0 = _mm_set_ps(tm->_14, tm->_13, tm->_12, tm->_11);
 		__m128 m1 = _mm_set_ps(tm->_24, tm->_23, tm->_22, tm->_21);
 		__m128 m2 = _mm_set_ps(tm->_34, tm->_33, tm->_32, tm->_31);
 		__m128 m3 = _mm_set_ps(tm->_44, tm->_43, tm->_42, tm->_41);
-		int off = 0;
 		if (xLastVertexDecl & D3DFVF_NORMAL) {
 			for (int i = 0; i < NumVertices; i++) {
 				const float* v = (const float*)(src + off);
@@ -3351,62 +3352,62 @@ void WDirect3D8::FillVertex(unsigned char* dest, const unsigned char* src, int x
 	} else if (xLastVertexDecl & D3DFVF_NORMAL) {
 		if ((xLastVertexDecl & D3DFVF_POSITION_MASK) == D3DFVF_XYZB4) {
 			for (int i = 0; i < NumVertices; i++) {
-				const float* w = (const float*)(src + 0xc);
+				const float* w = (const float*)(src + off + 0xc);
 				D3DXVECTOR3 v[4], n[4];
-				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)src, &tm[src[0x18]]);
-				D3DXVec3TransformNormal(&n[0], (const D3DXVECTOR3*)(src + 0x1c), &tm[src[0x18]]);
-				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)src, &tm[src[0x19]]);
-				D3DXVec3TransformNormal(&n[1], (const D3DXVECTOR3*)(src + 0x1c), &tm[src[0x19]]);
-				D3DXVec3TransformCoord(&v[2], (const D3DXVECTOR3*)src, &tm[src[0x1a]]);
-				D3DXVec3TransformNormal(&n[2], (const D3DXVECTOR3*)(src + 0x1c), &tm[src[0x1a]]);
-				D3DXVec3TransformCoord(&v[3], (const D3DXVECTOR3*)src, &tm[src[0x1b]]);
-				D3DXVec3TransformNormal(&n[3], (const D3DXVECTOR3*)(src + 0x1c), &tm[src[0x1b]]);
+				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x18]]);
+				D3DXVec3TransformNormal(&n[0], (const D3DXVECTOR3*)(src + off + 0x1c), &tm[src[off + 0x18]]);
+				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x19]]);
+				D3DXVec3TransformNormal(&n[1], (const D3DXVECTOR3*)(src + off + 0x1c), &tm[src[off + 0x19]]);
+				D3DXVec3TransformCoord(&v[2], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x1a]]);
+				D3DXVec3TransformNormal(&n[2], (const D3DXVECTOR3*)(src + off + 0x1c), &tm[src[off + 0x1a]]);
+				D3DXVec3TransformCoord(&v[3], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x1b]]);
+				D3DXVec3TransformNormal(&n[3], (const D3DXVECTOR3*)(src + off + 0x1c), &tm[src[off + 0x1b]]);
 
-				*(D3DXVECTOR3*)dest = v[0] * w[0] + v[1] * w[1] + v[2] * w[2] + v[3] * (1.0f - w[0] - w[1] - w[2]);
-				*(D3DXVECTOR3*)(dest + 0xc) = n[0] * w[0] + n[1] * w[1] + n[2] * w[2] + n[3] * (1.0f - w[0] - w[1] - w[2]);
-				memcpy(dest + 0x18, src + 0x28, VertexStreamZeroStride - 0x28);
-				dest += VertexStreamZeroStride - 0x10;
-				src += VertexStreamZeroStride;
+				*(D3DXVECTOR3*)(dest + dstOff) = v[0] * w[0] + v[1] * w[1] + v[2] * w[2] + v[3] * (1.0f - w[0] - w[1] - w[2]);
+				*(D3DXVECTOR3*)(dest + dstOff + 0xc) = n[0] * w[0] + n[1] * w[1] + n[2] * w[2] + n[3] * (1.0f - w[0] - w[1] - w[2]);
+				memcpy(dest + dstOff + 0x18, src + off + 0x28, VertexStreamZeroStride - 0x28);
+				dstOff += VertexStreamZeroStride - 0x10;
+				off += VertexStreamZeroStride;
 			}
 		} else if ((xLastVertexDecl & D3DFVF_POSITION_MASK) == D3DFVF_XYZB3) {
 			for (int i = 0; i < NumVertices; i++) {
-				const float* w = (const float*)(src + 0xc);
+				const float* w = (const float*)(src + off + 0xc);
 				D3DXVECTOR3 v[3], n[3];
-				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)src, &tm[src[0x14]]);
-				D3DXVec3TransformNormal(&n[0], (const D3DXVECTOR3*)(src + 0x18), &tm[src[0x14]]);
-				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)src, &tm[src[0x15]]);
-				D3DXVec3TransformNormal(&n[1], (const D3DXVECTOR3*)(src + 0x18), &tm[src[0x15]]);
-				D3DXVec3TransformCoord(&v[2], (const D3DXVECTOR3*)src, &tm[src[0x16]]);
-				D3DXVec3TransformNormal(&n[2], (const D3DXVECTOR3*)(src + 0x18), &tm[src[0x16]]);
+				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x14]]);
+				D3DXVec3TransformNormal(&n[0], (const D3DXVECTOR3*)(src + off + 0x18), &tm[src[off + 0x14]]);
+				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x15]]);
+				D3DXVec3TransformNormal(&n[1], (const D3DXVECTOR3*)(src + off + 0x18), &tm[src[off + 0x15]]);
+				D3DXVec3TransformCoord(&v[2], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x16]]);
+				D3DXVec3TransformNormal(&n[2], (const D3DXVECTOR3*)(src + off + 0x18), &tm[src[off + 0x16]]);
 
-				*(D3DXVECTOR3*)dest = v[0] * w[0] + v[1] * w[1] + v[2] * (1.0f - w[0] - w[1]);
-				*(D3DXVECTOR3*)(dest + 0xc) = n[0] * w[0] + n[1] * w[1] + n[2] * (1.0f - w[0] - w[1]);
-				memcpy(dest + 0x18, src + 0x24, VertexStreamZeroStride - 0x24);
-				dest += VertexStreamZeroStride - 0xc;
-				src += VertexStreamZeroStride;
+				*(D3DXVECTOR3*)(dest + dstOff) = v[0] * w[0] + v[1] * w[1] + v[2] * (1.0f - w[0] - w[1]);
+				*(D3DXVECTOR3*)(dest + dstOff + 0xc) = n[0] * w[0] + n[1] * w[1] + n[2] * (1.0f - w[0] - w[1]);
+				memcpy(dest + dstOff + 0x18, src + off + 0x24, VertexStreamZeroStride - 0x24);
+				dstOff += VertexStreamZeroStride - 0xc;
+				off += VertexStreamZeroStride;
 			}
 		} else if ((xLastVertexDecl & D3DFVF_POSITION_MASK) == D3DFVF_XYZB2) {
 			for (int i = 0; i < NumVertices; i++) {
-				const float* w = (const float*)(src + 0xc);
+				const float* w = (const float*)(src + off + 0xc);
 				D3DXVECTOR3 v[2], n[2];
-				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)src, &tm[src[0x10]]);
-				D3DXVec3TransformNormal(&n[0], (const D3DXVECTOR3*)(src + 0x14), &tm[src[0x10]]);
-				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)src, &tm[src[0x11]]);
-				D3DXVec3TransformNormal(&n[1], (const D3DXVECTOR3*)(src + 0x14), &tm[src[0x11]]);
+				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x10]]);
+				D3DXVec3TransformNormal(&n[0], (const D3DXVECTOR3*)(src + off + 0x14), &tm[src[off + 0x10]]);
+				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x11]]);
+				D3DXVec3TransformNormal(&n[1], (const D3DXVECTOR3*)(src + off + 0x14), &tm[src[off + 0x11]]);
 
-				*(D3DXVECTOR3*)dest = v[0] * w[0] + v[1] * (1.0f - w[0]);
-				*(D3DXVECTOR3*)(dest + 0xc) = n[0] * w[0] + n[1] * (1.0f - w[0]);
-				memcpy(dest + 0x18, src + 0x20, VertexStreamZeroStride - 0x20);
-				dest += VertexStreamZeroStride - 8;
-				src += VertexStreamZeroStride;
+				*(D3DXVECTOR3*)(dest + dstOff) = v[0] * w[0] + v[1] * (1.0f - w[0]);
+				*(D3DXVECTOR3*)(dest + dstOff + 0xc) = n[0] * w[0] + n[1] * (1.0f - w[0]);
+				memcpy(dest + dstOff + 0x18, src + off + 0x20, VertexStreamZeroStride - 0x20);
+				dstOff += VertexStreamZeroStride - 8;
+				off += VertexStreamZeroStride;
 			}
 		} else if ((xLastVertexDecl & D3DFVF_POSITION_MASK) == D3DFVF_XYZB1) {
 			for (int i = 0; i < NumVertices; i++) {
-				D3DXVec3TransformCoord((D3DXVECTOR3*)dest, (const D3DXVECTOR3*)src, &tm[src[0xc]]);
-				D3DXVec3TransformNormal((D3DXVECTOR3*)(dest + 0xc), (const D3DXVECTOR3*)(src + 0x10), &tm[src[0xc]]);
-				memcpy(dest + 0x18, src + 0x1c, VertexStreamZeroStride - 0x1c);
-				dest += VertexStreamZeroStride - 4;
-				src += VertexStreamZeroStride;
+				D3DXVec3TransformCoord((D3DXVECTOR3*)(dest + dstOff), (const D3DXVECTOR3*)(src + off), &tm[src[off + 0xc]]);
+				D3DXVec3TransformNormal((D3DXVECTOR3*)(dest + dstOff + 0xc), (const D3DXVECTOR3*)(src + off + 0x10), &tm[src[off + 0xc]]);
+				memcpy(dest + dstOff + 0x18, src + off + 0x1c, VertexStreamZeroStride - 0x1c);
+				dstOff += VertexStreamZeroStride - 4;
+				off += VertexStreamZeroStride;
 			}
 		}
 	} else {
@@ -3419,42 +3420,42 @@ void WDirect3D8::FillVertex(unsigned char* dest, const unsigned char* src, int x
 				D3DXVec3TransformCoord(&v[2], (const D3DXVECTOR3*)src, &tm[src[0x1a]]);
 				D3DXVec3TransformCoord(&v[3], (const D3DXVECTOR3*)src, &tm[src[0x1b]]);
 
-				*(D3DXVECTOR3*)dest = v[0] * w[0] + v[1] * w[1] + v[2] * w[2] + v[3] * (1.0f - w[0] - w[1] - w[2]);
-				memcpy(dest + 0xc, src + 0x1c, VertexStreamZeroStride - 0x1c);
-				dest += VertexStreamZeroStride - 0x10;
+				*(D3DXVECTOR3*)(dest + dstOff) = v[0] * w[0] + v[1] * w[1] + v[2] * w[2] + v[3] * (1.0f - w[0] - w[1] - w[2]);
+				memcpy(dest + dstOff + 0xc, src + 0x1c, VertexStreamZeroStride - 0x1c);
+				dstOff += VertexStreamZeroStride - 0x10;
 				src += VertexStreamZeroStride;
 			}
 		} else if ((xLastVertexDecl & D3DFVF_POSITION_MASK) == D3DFVF_XYZB3) {
 			for (int i = 0; i < NumVertices; i++) {
-				const float* w = (const float*)(src + 0xc);
+				const float* w = (const float*)(src + off + 0xc);
 				D3DXVECTOR3 v[3];
-				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)src, &tm[src[0x14]]);
-				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)src, &tm[src[0x15]]);
-				D3DXVec3TransformCoord(&v[2], (const D3DXVECTOR3*)src, &tm[src[0x16]]);
+				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x14]]);
+				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x15]]);
+				D3DXVec3TransformCoord(&v[2], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x16]]);
 
-				*(D3DXVECTOR3*)dest = v[0] * w[0] + v[1] * w[1] + v[2] * (1.0f - w[0] - w[1]);
-				memcpy(dest + 0xc, src + 0x18, VertexStreamZeroStride - 0x18);
-				dest += VertexStreamZeroStride - 0xc;
-				src += VertexStreamZeroStride;
+				*(D3DXVECTOR3*)(dest + dstOff) = v[0] * w[0] + v[1] * w[1] + v[2] * (1.0f - w[0] - w[1]);
+				memcpy(dest + dstOff + 0xc, src + off + 0x18, VertexStreamZeroStride - 0x18);
+				dstOff += VertexStreamZeroStride - 0xc;
+				off += VertexStreamZeroStride;
 			}
 		} else if ((xLastVertexDecl & D3DFVF_POSITION_MASK) == D3DFVF_XYZB2) {
 			for (int i = 0; i < NumVertices; i++) {
-				const float* w = (const float*)(src + 0xc);
+				const float* w = (const float*)(src + off + 0xc);
 				D3DXVECTOR3 v[2];
-				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)src, &tm[src[0x10]]);
-				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)src, &tm[src[0x11]]);
+				D3DXVec3TransformCoord(&v[0], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x10]]);
+				D3DXVec3TransformCoord(&v[1], (const D3DXVECTOR3*)(src + off), &tm[src[off + 0x11]]);
 
-				*(D3DXVECTOR3*)dest = v[0] * w[0] + v[1] * (1.0f - w[0]);
-				memcpy(dest + 0xc, src + 0x14, VertexStreamZeroStride - 0x14);
-				dest += VertexStreamZeroStride - 8;
-				src += VertexStreamZeroStride;
+				*(D3DXVECTOR3*)(dest + dstOff) = v[0] * w[0] + v[1] * (1.0f - w[0]);
+				memcpy(dest + dstOff + 0xc, src + off + 0x14, VertexStreamZeroStride - 0x14);
+				dstOff += VertexStreamZeroStride - 8;
+				off += VertexStreamZeroStride;
 			}
 		} else if ((xLastVertexDecl & D3DFVF_POSITION_MASK) == D3DFVF_XYZB1) {
 			for (int i = 0; i < NumVertices; i++) {
-				D3DXVec3TransformCoord((D3DXVECTOR3*)dest, (const D3DXVECTOR3*)src, &tm[src[0xc]]);
-				memcpy(dest + 0xc, src + 0x10, VertexStreamZeroStride - 0x10);
-				dest += VertexStreamZeroStride - 4;
-				src += VertexStreamZeroStride;
+				D3DXVec3TransformCoord((D3DXVECTOR3*)(dest + dstOff), (const D3DXVECTOR3*)(src + off), &tm[src[off + 0xc]]);
+				memcpy(dest + dstOff + 0xc, src + off + 0x10, VertexStreamZeroStride - 0x10);
+				dstOff += VertexStreamZeroStride - 4;
+				off += VertexStreamZeroStride;
 			}
 		}
 	}
@@ -4263,27 +4264,27 @@ void WDirect3D8::UpdateTextureSurfaceDirect(void* buff, int pitch, pix_info* pix
 	// Converts a bitmap the size of the surface pixel by pixel (8-bit through
 	// its palette); an alpha shift of 8 means the format has no alpha.
 	int cps = bi->bmiHeader.biBitCount / 8;
-	int h = bi->bmiHeader.biHeight;
+	int w = bi->bmiHeader.biWidth, h = bi->bmiHeader.biHeight;
 
-	int nCps = ((bi->bmiHeader.biWidth * cps + 3) & ~3) - bi->bmiHeader.biWidth * cps; int nPitch = pitch - pix->cpp * bi->bmiHeader.biWidth;
+	int nCps = ((w * cps + 3) & ~3) - w * cps; int nPitch = pitch - pix->cpp * w;
 	unsigned char* ptr = (unsigned char*)buff;
 	unsigned long code;
 
 	if (bi->bmiHeader.biBitCount == 8) {
 		for (int y = 0; y < h; y++) {
-			for (int x = 0; x < bi->bmiHeader.biWidth; x++) {
-				unsigned char* p = (unsigned char*)&bi->bmiColors[*(unsigned char*)data]; code = pix->a_r_shift == 8 ? pix->Pack(p[2], p[1], p[0]) : pix->Pack(p[3], p[2], p[1], p[0]); data = (unsigned char*)data + cps;
+			for (int x = 0; x < w; x++) {
+				unsigned char* p = (unsigned char*)&bi->bmiColors[*(unsigned char*)data]; code = pix->a_r_shift == 8 ? pix->Pack(p[2], p[1], p[0]) : pix->Pack(p[3], p[2], p[1], p[0]); (unsigned char*&)data += cps;
 				memcpy(ptr, &code, pix->cpp); ptr += pix->cpp;
 			}
-			ptr += nPitch; data = (unsigned char*)data + nCps;
+			ptr += nPitch; (unsigned char*&)data += nCps;
 		}
 	} else {
 		for (int y = 0; y < h; y++) {
-			for (int x = 0; x < bi->bmiHeader.biWidth; x++) {
-				unsigned char* p = (unsigned char*)data; code = pix->a_r_shift == 8 ? pix->Pack(p[2], p[1], p[0]) : pix->Pack(p[3], p[2], p[1], p[0]); data = (unsigned char*)data + cps;
+			for (int x = 0; x < w; x++) {
+				code = pix->a_r_shift == 8 ? pix->Pack(((unsigned char*)data)[2], ((unsigned char*)data)[1], ((unsigned char*)data)[0]) : pix->Pack(((unsigned char*)data)[3], ((unsigned char*)data)[2], ((unsigned char*)data)[1], ((unsigned char*)data)[0]); (unsigned char*&)data += cps;
 				memcpy(ptr, &code, pix->cpp); ptr += pix->cpp;
 			}
-			ptr += nPitch; data = (unsigned char*)data + nCps;
+			ptr += nPitch; (unsigned char*&)data += nCps;
 		}
 	}
 }
@@ -5212,27 +5213,28 @@ HRESULT WDirect3D8::ScreenShot(const char* pDestFilename, int format) {
 // wd3d8.cpp:8904
 bool WDirect3D8::CaptureScreen(Bitmap* bitmap) {
 	// Copies the render target into a 24-bit bitmap (16- or 32-bit targets).
-	bool result = false;
+	_D3DSURFACE_DESC ddsd;
+	unsigned char r, g, b;
 	IDirect3DSurface9* pRenderTarget;
+	_D3DLOCKED_RECT LockedRect;
+	bool result = false;
 	if (m_pd3dDevice->GetRenderTarget(0, &pRenderTarget) == D3D_OK) {
-		_D3DSURFACE_DESC ddsd;
 		if (pRenderTarget->GetDesc(&ddsd) == D3D_OK) {
 			pix_info* pix = FindPixInfoByFormat(ddsd.Format);
 
 			if (pix) {
-				_D3DLOCKED_RECT LockedRect;
 				if (pRenderTarget->LockRect(&LockedRect, NULL, D3DLOCK_READONLY) == D3D_OK) {
 					if (pix->cpp == 2) {
 						for (int y = 0; y < bitmap->bi->bmiHeader.biHeight; y++) {
 							for (int x = 0; x < bitmap->bi->bmiHeader.biWidth; x++) {
-								unsigned short code = *(unsigned short*)((unsigned char*)LockedRect.pBits + LockedRect.Pitch * y + pix->cpp * x);
+								unsigned long code = *(unsigned short*)((unsigned char*)LockedRect.pBits + LockedRect.Pitch * y + pix->cpp * x);
 
-								unsigned char g = (code >> pix->g_l_shift) << pix->g_r_shift;
-								unsigned char r = (code >> pix->r_l_shift) << pix->r_r_shift;
-								unsigned char* dst = bitmap->vram + bitmap->pitch * y + x * 3;
-								unsigned char b = (code >> pix->b_l_shift) << pix->b_r_shift;
-								dst[1] = g;
-								dst[2] = r; dst[0] = b;
+								g = (unsigned char)((code >> pix->g_l_shift) << pix->g_r_shift);
+								r = (unsigned char)((code >> pix->r_l_shift) << pix->r_r_shift);
+								unsigned char* dst = &bitmap->vram[bitmap->pitch * y + x * 3];
+								b = (unsigned char)((code >> pix->b_l_shift) << pix->b_r_shift);
+								dst[0] = b;
+								dst[1] = g; dst[2] = r;
 							}
 						}
 					} else if (pix->cpp == 4) {
@@ -5240,12 +5242,12 @@ bool WDirect3D8::CaptureScreen(Bitmap* bitmap) {
 							for (int x = 0; x < bitmap->bi->bmiHeader.biWidth; x++) {
 								unsigned long code = *(unsigned long*)((unsigned char*)LockedRect.pBits + LockedRect.Pitch * y + pix->cpp * x);
 
-								unsigned char g = (unsigned char)(code >> pix->g_l_shift);
-								unsigned char r = (unsigned char)(code >> pix->r_l_shift);
-								unsigned char* dst = bitmap->vram + bitmap->pitch * y + x * 3;
-								unsigned char b = (unsigned char)(code >> pix->b_l_shift);
-								dst[1] = g; dst[0] = b;
-								dst[2] = r;
+								g = (unsigned char)(code >> pix->g_l_shift);
+								r = (unsigned char)(code >> pix->r_l_shift);
+								unsigned char* dst = &bitmap->vram[bitmap->pitch * y + x * 3];
+								b = (unsigned char)(code >> pix->b_l_shift);
+								dst[0] = b;
+								dst[1] = g; dst[2] = r;
 							}
 						}
 					}

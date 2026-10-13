@@ -306,7 +306,8 @@ void CLightColumn::Display(void) {
 						vPoint.y += fY;
 						float fSide = (i & 2) ? 1.0f : -1.0f;
 
-						m_buffers[i].m_vPos = fSide * vWidth[k] + vPoint;
+						vPoint += fSide * vWidth[k];
+						m_buffers[i].m_vPos = vPoint;
 						m_buffers[i].m_fV = (m_fHeight - fY) / m_fHeight * fTexScale[k] + fTexV[k];
 						if (j < 2) {
 							m_buffers[i].m_nColor = ((int)byLayerAlpha << 24) | 0xFFFFFF;

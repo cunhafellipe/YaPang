@@ -192,7 +192,7 @@ void ShotPreview::UpdateSensor::Update(void) {
 	m_clubIndex = GolfClub().GetIndex();
 	m_wind = Wind().GetGlobalWind();
 	m_powerShotType = GolfClub().PowerShotType();
-	m_shotItemTypeId = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId;
+	m_shotItemTypeId = GOLFDOC()->GetPlayer(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId;
 	m_impact = GOLFDOC()->GetBar().m_impact;
 }
 
@@ -239,13 +239,13 @@ ShotPreview::ShotPreview(void) : m_predictType((PredictType::Enum)0), m_visible(
 
 // shotpreview.cpp:200
 std::string ShotPreview::TwAddOption(const tweaker_param& param) {
-	m_optionFlag |= param[0].to_int();
+	unsigned int flag = GetOptionFlag(); SetOptionFlag(flag | param[0].to_int());
 	return std::string("TwAddOption Processed");
 }
 
 // shotpreview.cpp:207
 std::string ShotPreview::TwSubOption(const tweaker_param& param) {
-	m_optionFlag &= ~param[0].to_int();
+	unsigned int flag = GetOptionFlag(); SetOptionFlag(flag & ~param[0].to_int());
 	return std::string("TwSubOption Processed");
 }
 
@@ -599,7 +599,8 @@ void ShotPreview::HandleMsg(const MsgObject& msg) {
 		}
 
 		if (name == "GET_PREDICT_POSITIONS") {
-			((std::vector<WVector>*)msg.m_param2)->assign(m_path.begin(), m_path.end());
+			std::vector<WVector>* positions = (std::vector<WVector>*)msg.m_param2;
+			positions->assign(m_path.begin(), m_path.end());
 		} else if (name == "CHANGE_PREDICT_TYPE") {
 			PredictType::Enum type = (PredictType::Enum)msg.m_param2;
 			if (type != m_predictType) {

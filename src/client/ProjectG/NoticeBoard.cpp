@@ -135,38 +135,36 @@ bool CNoticeBoard::GetColornText(const char* pszText, std::string& text, unsigne
 	color = 0xFFFFFFFF;
 	cTokenV token;
 	if (token.Init(pszText, strlen(pszText))) {
-		char* pToken;
-		bool ret = token.GetTokenFullSep(&pToken, "\\c", 2);
-		if (pToken == 0 || *pToken == 0) {
-			if (!ret) {
-				return false;
-			}
-		}
-		if (ret) {
-			token.GetTokenFullSep(&pToken, "\\c", 2);
+		char* pFirst;
+		bool ret = token.GetTokenFullSep(&pFirst, "\\c", 2);
+		if ((pFirst != 0 && *pFirst != 0) || ret) {
+			if (ret) {
+				char* pToken;
+				token.GetTokenFullSep(&pToken, "\\c", 2);
 
-			unsigned long value = 0xFFFFFFFF;
-			cTokenV colorToken;
-			if (colorToken.Init(pToken, strlen(pToken))) {
-				bool more;
-				do {
-					more = colorToken.GetToken(&pToken, ",", 1);
-					if (pToken != 0 && *pToken != 0) {
-						if (strlen(pToken) > 1) {
-							sscanf(pToken, "%x", &value);
+				unsigned long value = 0xFFFFFFFF;
+				cTokenV colorToken;
+				if (colorToken.Init(pToken, strlen(pToken))) {
+					bool more;
+					do {
+						more = colorToken.GetToken(&pToken, ",", 1);
+						if (pToken != 0 && *pToken != 0) {
+							if (strlen(pToken) > 1) {
+								sscanf(pToken, "%x", &value);
+							}
 						}
-					}
-				} while (more);
-			}
-			color = value;
+					} while (more);
+				}
+				color = value;
 
-			std::string str(pszText);
-			text = str.substr(str.rfind("\\c") + 2);
+				std::string str(pszText);
+				text = str.substr(str.rfind("\\c") + 2);
+			}
+			else {
+				text = pszText;
+			}
+			return true;
 		}
-		else {
-			text = pszText;
-		}
-		return true;
 	}
 	return false;
 }

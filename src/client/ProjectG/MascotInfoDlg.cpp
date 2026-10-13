@@ -254,81 +254,81 @@ bool FrMascotInfoDlg::OnInit(void) {
 
 	IFF_STRUCT::sMascot* pMascot = ItemManager()->FindMascot(m_info.typeId);
 
-	bool described = false;
+	bool unknown = true;
 
 	if (m_pPortrait) {
 		if (pMascot) {
 			m_pPortrait->SetBgImg(pMascot->m_icon);
-
-			if (m_pName) {
-				char text[512] = "";
-
-				sprintf(text, "\xc0\xcc  \xb8\xa7: %s", pMascot->m_name);
-
-				if (pMascot->m_itemDropRate > 0) {
-					strcat(text, MakeStr("\n\xbe\xc6\xc0\xcc\xc5\xdb \xb5\xe5\xb7\xd3\xb7\xfc : %d%%", pMascot->m_itemDropRate));
-				}
-				if (pMascot->m_pangRate > 0) {
-					strcat(text, MakeStr("\n\xc3\xdf\xb0\xa1 \xc6\xce \xc8\xb9\xb5\xe6\xb7\xfc : %d%%", pMascot->m_pangRate - 100));
-				}
-				if (pMascot->m_expRate > 0) {
-					strcat(text, MakeStr("\n\xc3\xdf\xb0\xa1 \xb0\xe6\xc7\xe8\xc4\xa1 \xc8\xb9\xb5\xe6\xb7\xfc : %d%%", pMascot->m_expRate - 100));
-				}
-				if (pMascot->m_addItemSlots > 0) {
-					strcat(text, MakeStr("\n\xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4 : %d\xc4\xad", pMascot->m_addItemSlots));
-				}
-
-				unsigned short days = m_info.remainHours / 24, hours = m_info.remainHours % 24;
-
-				strcat(text, "\n\xb3\xb2\xc0\xba\xbd\xc3\xb0\xa3 : ");
-
-				bool unlimited = false;
-
-				if (IsLocalContent((localContentType_t)0x6C)) {
-					if (m_info.typeId == 0x40000006) {
-						strcat(text, "\xb9\xab\xc1\xa6\xc7\xd1");
-						unlimited = true;
-					}
-
-					if (m_info.typeId == 0x40000004) {
-						strcat(text, "PC\xb9\xe6 \xb9\xab\xc1\xa6\xc7\xd1");
-						unlimited = true;
-					}
-
-					if (m_info.typeId == 0x40000013) {
-						strcat(text, "\xb9\xab\xc1\xa6\xc7\xd1");
-						unlimited = true;
-					}
-				}
-
-				if (!unlimited) {
-					if (days > 0) {
-						strcat(text, MakeStr("%d\xc0\xcf ", days));
-					}
-					if (hours > 0) {
-						strcat(text, MakeStr("%d\xbd\xc3\xb0\xa3", hours));
-					}
-					if (days <= 0 && hours <= 0) {
-						strcat(text, "\xc1\xbe\xb7\xe1");
-					}
-				}
-
-				m_pName->AddText(text, false, true);
-
-				IFF_STRUCT::sDesc* pDesc = ItemManager()->FindDesc(pMascot->m_typeId);
-				if (pDesc) {
-					SetMessage(pDesc->m_text, false);
-				}
-
-				described = true;
-			}
 		}
 		else {
 			m_pPortrait->SetBgImg("hide");
 		}
+
+		if (pMascot && m_pName) {
+			char text[512] = "";
+
+			sprintf(text, "\xc0\xcc  \xb8\xa7: %s", pMascot->m_name);
+
+			if (pMascot->m_itemDropRate > 0) {
+				strcat(text, MakeStr("\n\xbe\xc6\xc0\xcc\xc5\xdb \xb5\xe5\xb7\xd3\xb7\xfc : %d%%", pMascot->m_itemDropRate));
+			}
+			if (pMascot->m_pangRate > 0) {
+				strcat(text, MakeStr("\n\xc3\xdf\xb0\xa1 \xc6\xce \xc8\xb9\xb5\xe6\xb7\xfc : %d%%", pMascot->m_pangRate - 100));
+			}
+			if (pMascot->m_expRate > 0) {
+				strcat(text, MakeStr("\n\xc3\xdf\xb0\xa1 \xb0\xe6\xc7\xe8\xc4\xa1 \xc8\xb9\xb5\xe6\xb7\xfc : %d%%", pMascot->m_expRate - 100));
+			}
+			if (pMascot->m_addItemSlots > 0) {
+				strcat(text, MakeStr("\n\xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4 : %d\xc4\xad", pMascot->m_addItemSlots));
+			}
+
+			unsigned short days = m_info.remainHours / 24, hours = m_info.remainHours % 24;
+
+			strcat(text, "\n\xb3\xb2\xc0\xba\xbd\xc3\xb0\xa3 : ");
+
+			bool unlimited = false;
+
+			if (IsLocalContent((localContentType_t)0x6C)) {
+				if (m_info.typeId == 0x40000006) {
+					strcat(text, "\xb9\xab\xc1\xa6\xc7\xd1");
+					unlimited = true;
+				}
+
+				if (m_info.typeId == 0x40000004) {
+					strcat(text, "PC\xb9\xe6 \xb9\xab\xc1\xa6\xc7\xd1");
+					unlimited = true;
+				}
+
+				if (m_info.typeId == 0x40000013) {
+					strcat(text, "\xb9\xab\xc1\xa6\xc7\xd1");
+					unlimited = true;
+				}
+			}
+
+			if (!unlimited) {
+				if (days > 0) {
+					strcat(text, MakeStr("%d\xc0\xcf ", days));
+				}
+				if (hours > 0) {
+					strcat(text, MakeStr("%d\xbd\xc3\xb0\xa3", hours));
+				}
+				if (days <= 0 && hours <= 0) {
+					strcat(text, "\xc1\xbe\xb7\xe1");
+				}
+			}
+
+			m_pName->AddText(text, false, true);
+
+			IFF_STRUCT::sDesc* pDesc = ItemManager()->FindDesc(pMascot->m_typeId);
+			if (pDesc) {
+				SetMessage(pDesc->m_text, false);
+			}
+
+			unknown = false;
+		}
 	}
 
-	if (!described) {
+	if (unknown) {
 		if (m_pName) {
 			m_pName->AddText("\xc0\xcc\xb8\xa7: \xba\xd2\xb8\xed\n\n\xb7\xb9\xba\xa7: \xba\xd2\xb8\xed", false, true);
 		}

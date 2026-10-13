@@ -2279,8 +2279,10 @@ void CShopMain::OnAuxPartCartListOwnerDraw(int param) {
 	if (part == NULL)
 		return;
 
-	short status[5] = {0};
-	short slotStatus[5] = {0};
+	short status[5];
+	short slotStatus[5];
+	memset(slotStatus, 0, sizeof(slotStatus));
+	memset(status, 0, sizeof(status));
 	bool hasStatus = false;
 	for (int i = 0; i < 5; i++) {
 		if (part->m_baseStat[i] != 0 || part->m_slotStat[i] != 0) {
@@ -4254,19 +4256,20 @@ void CShopMain::ClearCartList(bool bKeepCharacters, CPartTidList *pTidList) {
 			}
 		} else if (group == 0xF && pTidList) {
 			if (!m_anotherHand.IsWorking(0)) {
+				bool found = false;
 				const std::map<unsigned int, sCharacterInfo> &characters = WSingleton<CSharedDoc>::Instance()->m_characterMap;
-				std::map<unsigned int, sCharacterInfo>::const_iterator it = characters.begin();
 				unsigned long tidChar = m_petExhibition->GetPetFrame()->GetTidChar();
-				for (; it != characters.end(); ++it) {
+				for (std::map<unsigned int, sCharacterInfo>::const_iterator it = characters.begin(); it != characters.end(); ++it) {
 					if (it->second.typeId == tidChar) {
 						m_hairColor = it->second.hairColor;
 
 						CPartTidList &tidList = WSingleton<CSharedDoc>::Instance()->GetMyPartTidList();
 						m_petExhibition->GetPetFrame()->SetHairClr(&tidList, m_hairColor);
+						found = true;
 						break;
 					}
 				}
-				if (it == characters.end()) {
+				if (!found) {
 					m_hairColor = 0;
 				}
 			}
@@ -4275,9 +4278,9 @@ void CShopMain::ClearCartList(bool bKeepCharacters, CPartTidList *pTidList) {
 		i = m_cartList->_DelItem(i);
 	}
 
-	i = m_auxCartList->m_itemList.begin();
-	while (i != m_auxCartList->m_itemList.end()) {
-		IFF_ITEM_COMMON *item = (IFF_ITEM_COMMON *)(*i)->pData;
+	FrListBox::ITEM_LIST::iterator j = m_auxCartList->m_itemList.begin();
+	while (j != m_auxCartList->m_itemList.end()) {
+		IFF_ITEM_COMMON *item = (IFF_ITEM_COMMON *)(*j)->pData;
 		if ((item->m_typeId & 0xFC000000) == 0x08000000 && pTidList
 			&& pTidList->IsEquipped(item->m_typeId, 0) && !m_anotherHand.IsWorking(0)) {
 			m_petExhibition->GetPetFrame()->SetPart(pTidList, item->m_typeId, 0);
@@ -4285,7 +4288,7 @@ void CShopMain::ClearCartList(bool bKeepCharacters, CPartTidList *pTidList) {
 			RestoreShoppersOldItem(item->m_typeId, *pTidList);
 		}
 
-		i = m_auxCartList->_DelItem(i);
+		j = m_auxCartList->_DelItem(j);
 	}
 
 	CheckAuxCartScroll();
@@ -4389,15 +4392,13 @@ bool CShopMain::SelectItemList(FrListItem *pItem) {
 		if (!tidList.CanSetPart(item->m_typeId)) {
 			m_itemListBox->UnselectItem(pItem);
 			char text[256];
-			const char *msg;
 			if (((IFF_STRUCT::sPart *)item)->m_wearRestricted) {
 				sprintf(text, "\xBA\xBB \xBB\xF3\xC7\xB0\xC0\xBA \xC7\xF6\xC0\xE7 \xC0\xC7\xBB\xF3\xBF\xA1\xB4\xC2 \xC2\xF8\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.");
-				msg = text;
-			} else {
-				msg = "\\c0xffff0000\\c\xBB\xF3\xC7\xB0\xC0\xBB \xC2\xF8\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.";
+				this << MsgObject(0, 0x23, (intptr_t)text, 0, 0, 0, 0);
+				return false;
 			}
 
-			this << MsgObject(0, 0x23, (intptr_t)msg, 0, 0, 0, 0);
+			this << MsgObject(0, 0x23, (intptr_t)"\\c0xffff0000\\c\xBB\xF3\xC7\xB0\xC0\xBB \xC2\xF8\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
 			return false;
 		}
 
@@ -4407,7 +4408,7 @@ bool CShopMain::SelectItemList(FrListItem *pItem) {
 
 		IFF_ITEM_COMMON *partItem = (IFF_ITEM_COMMON *)pItem->pData;
 		unsigned long serial = 0;
-		if (UccManager()->IsDisplayUccClothes(partItem)) {
+		if (UccManager()->IsDisplayUccClothes(item)) {
 			// A UCC part replaces the old items and the selection of its slot.
 			unsigned long typeId = item->m_typeId;
 			for (std::list<oldItem_t>::iterator it = m_shoppersOldItems.begin(); it != m_shoppersOldItems.end();) {
@@ -5255,14 +5256,13 @@ void CShopMain::Build_Decorate(subTab_t tab, int) {
 void CShopMain::Build_Cutin(subTab_t tab, int) {
 	typedef std::map<unsigned int, IFF_STRUCT::sSkin> SkinMap;
 	for (SkinMap::iterator it = ItemManager()->m_skinMap.begin(); it != ItemManager()->m_skinMap.end(); ++it) {
-		IFF_ITEM_COMMON &item = (IFF_ITEM_COMMON &)it->second;
-		if (S5::ISCutinItem(item.m_typeId)) {
-			if ((item.m_flags0 >> 5) != 0) {
-				IFF_STRUCT::S5::sCutinInformation *info = ItemManager()->FindCutinInformation(item.m_typeId);
+		if (S5::ISCutinItem(it->second.m_typeId)) {
+			if ((((IFF_ITEM_COMMON &)it->second).m_flags0 >> 5) != 0) {
+				IFF_STRUCT::S5::sCutinInformation *info = ItemManager()->FindCutinInformation(it->second.m_typeId);
 				if (info) {
 					if ((m_standPetTypeId & 0x3FFFFFF) == info->m_charSerial || info->m_charSerial >= 100) {
-						FrListItem *listItem = m_itemListBox->AddItem(&item);
-						AddSellMiniButton(item, listItem);
+						FrListItem *listItem = m_itemListBox->AddItem(&it->second);
+						AddSellMiniButton((IFF_ITEM_COMMON &)it->second, listItem);
 						if (IsItemInCart(listItem))
 							m_itemListBox->SelectItem(listItem, true);
 					}
@@ -6325,26 +6325,25 @@ void CShopMain::DeleteCardImages(void) {
 
 // shopmain.cpp:10616
 WOverlay *CShopMain::GetCardImg(unsigned long typeId) {
+	WOverlay *overlay = NULL;
 	std::map<unsigned int, WOverlay *>::iterator it = m_cardImgs.find(typeId);
 	if (it == m_cardImgs.end()) {
 
 		IFF_STRUCT::sCard *card = ItemManager()->FindCard(typeId);
 
-		if (card == 0) {
-			return 0;
+		if (card) {
+			char path[64];
+			sprintf(path, "%s.png", card->m_model);
+			overlay = g_resrcmng->GetOverlay(path, 0);
+			if (overlay) {
+				m_cardImgs.insert(std::map<unsigned int, WOverlay *>::value_type(card->m_typeId, overlay));
+			}
 		}
-
-		char path[64];
-		sprintf(path, "%s.png", card->m_model);
-		WOverlay *overlay = g_resrcmng->GetOverlay(path, 0);
-		if (overlay) {
-			m_cardImgs.insert(std::map<unsigned int, WOverlay *>::value_type(card->m_typeId, overlay));
-		}
-
-		return overlay;
+	} else {
+		overlay = it->second;
 	}
 
-	return it->second;
+	return overlay;
 }
 
 // shopmain.cpp:10641

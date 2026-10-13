@@ -672,6 +672,8 @@ void COfflineTradeDlg::OnMaketListOwnerDraw(int param) {
 		}
 	}
 
+	WPoint& pos = pItem->pos;
+
 	if (pSaleItem->m_public == 1) {
 		// "public"
 		pGDI->Print(WPoint(pos.x + 470.0f, pos.y + 1.0f), 2, "\xB0\xF8  \xB0\xB3");
@@ -1616,8 +1618,9 @@ void COfflineShopEditDlg::OnTradeMyItemOkBnUp(void) {
 	char price[10] = { 0 };
 	const char* pText = m_pTradeMyItemPrice->GetLine(1, false);
 
-	char* p = price;
-	for (int i = 0; i < 9; i++) {
+	int i;
+	char* p;
+	for (i = 0, p = price; i < 9; i++) {
 		if (pText[i] == 0) {
 			break;
 		}
@@ -1873,8 +1876,9 @@ bool COfflineShopEditDlg::OnOfflineTradeItemOnDlgResult(int ret, FrForm* pForm) 
 			char price[10] = { 0 };
 			const char* pText = m_pTradeMyItemPrice->GetLine(1, false);
 
-			char* p = price;
-			for (int i = 0; i < 9; i++) {
+			int i;
+			char* p;
+			for (i = 0, p = price; i < 9; i++) {
 				if (pText[i] == 0) {
 					break;
 				}

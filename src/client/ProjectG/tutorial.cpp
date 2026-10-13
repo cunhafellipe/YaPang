@@ -705,7 +705,10 @@ void CTutorial::IsPractice(void) {
 	WSingleton<CMouseCursor>::Instance()->Store();
 
 	for (int i = 0; i < 0x1A; i++) {
-		m_tutorialOverlays[i].Activate(false, true, true);
+		AnimatedOverlay &overlay = m_tutorialOverlays[i];
+		overlay.m_active = false;
+		overlay.m_loop = true;
+		overlay.m_fadeDir = -1;
 	}
 
 	BlockInput();
@@ -1004,20 +1007,26 @@ void CTutorial::Again_Msg(bool retry) {
 void CTutorial::ChanceOverlay(void) {
 	if (m_step == 1 && GOLFDOC()->m_gameState == 4) {
 		for (int i = 0; i < 3; i++) {
+			AnimatedOverlay &chance = m_chanceOverlays[i];
 			if (i < 3 - m_failCount) {
-				AnimatedOverlay &chance = m_chanceOverlays[i];
 				chance.m_src.x = g_view->GetWidth() - (i + 1) * 62.0f - 20.0f;
 				chance.m_src.y = 160.0f;
 				chance.m_src.w = 58.0f;
 				chance.m_src.h = 53.0f;
 				chance.Activate(true, true, true);
 			} else {
-				m_chanceOverlays[i].Activate(false, true, true);
+				chance.m_active = false;
+				chance.m_fadeDir = -1;
+				chance.m_loop = true;
 			}
 		}
 	} else {
-		for (int i = 0; i < 3; i++)
-			m_chanceOverlays[i].Activate(false, true, true);
+		for (int i = 0; i < 3; i++) {
+			AnimatedOverlay &chance = m_chanceOverlays[i];
+			chance.m_active = false;
+			chance.m_loop = true;
+			chance.m_fadeDir = -1;
+		}
 	}
 }
 
@@ -1170,7 +1179,10 @@ bool CTutorial::OnPracticeFormResult(int result, FrForm *form) {
 	}
 
 	for (int i = 0; i < 0x1A; i++) {
-		m_tutorialOverlays[i].Activate(false, true, true);
+		AnimatedOverlay &overlay = m_tutorialOverlays[i];
+		overlay.m_active = false;
+		overlay.m_loop = true;
+		overlay.m_fadeDir = -1;
 	}
 
 	BlockInput();

@@ -175,8 +175,9 @@ BEGIN_LAYOUT_CHECK(sLoadParam)
 END_LAYOUT_CHECK
 extern sLoadParam g_LoadParam;
 
-// Loading step last shown by CTask::OnProcessWhileLoading.
-extern "C" int data_b79bd0;
+// Loading step last shown by CTask::OnProcessWhileLoading (unnamed data,
+// file-local in the original: .bss, zero).
+static int data_b79bd0;
 extern int g_iRecvPacketType;
 extern int g_iRecvDisconCode;
 

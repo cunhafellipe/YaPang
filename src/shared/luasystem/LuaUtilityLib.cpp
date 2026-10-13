@@ -127,7 +127,8 @@ void lua_file_line_text_manager::road_lua_file(const char *filename) {
 
 	std::vector<std::string> lines;
 
-	std::map<std::string, std::vector<std::string> >::iterator it = m_files.find(filename);
+	std::map<std::string, std::vector<std::string> >::iterator it;
+	it = m_files.find(filename);
 	if (it != m_files.end()) {
 		m_files.erase(it);
 	}
@@ -169,7 +170,8 @@ void lua_file_line_text_manager::road_lua_buffer(const char *filename, const cha
 
 	std::vector<std::string> lines;
 
-	std::map<std::string, std::vector<std::string> >::iterator it = m_files.find(filename);
+	std::map<std::string, std::vector<std::string> >::iterator it;
+	it = m_files.find(filename);
 	if (it != m_files.end()) {
 		m_files.erase(it);
 	}
@@ -203,12 +205,17 @@ void lua_file_line_text_manager::road_lua_buffer(const char *filename, const cha
 
 // luautilitylib.cpp:222
 bool lua_file_line_text_manager::is_loaded_lua_file(const char *filename) {
+	std::map<std::string, std::vector<std::string> >::iterator it;
 	if (filename == NULL) {
 		return false;
 	}
 
-	std::map<std::string, std::vector<std::string> >::iterator it = m_files.find(filename);
-	return it != m_files.end();
+	it = m_files.find(filename);
+	if (it == m_files.end()) {
+		return false;
+	}
+
+	return true;
 }
 
 // luautilitylib.cpp:237

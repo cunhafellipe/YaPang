@@ -2640,7 +2640,6 @@ void CGolfPlayer::SetPendingTexPart(int player, char *texName) {
 // golfplayer.cpp:3778
 void CGolfPlayer::SearchGround(void) {
 	WVector dir;
-	float next;
 	WVector ground;
 	WVector nextGround;
 
@@ -2649,21 +2648,19 @@ void CGolfPlayer::SearchGround(void) {
 
 	do {
 		ground = GetPVS().GetGroundPoint(m_position + dir * t, true, NULL, false);
-		next = t + 0.1f;
 		nextGround = GetPVS().GetGroundPoint(m_position + dir * (t + 0.1f), true, NULL, false);
 
 		if ((WVectorLen(ground - m_position) - m_ballDist) * (WVectorLen(nextGround - m_position) - m_ballDist) <= 0.0f) {
 			break;
 		}
 
-		t = next;
+		t += 0.1f;
 	} while (t < 1.0f);
 
 	float end = t + 0.1f;
 
-	for (float s = t; s < end; s = t) {
+	for (float s = t; s < end; s += 0.01f) {
 		ground = GetPVS().GetGroundPoint(m_position + dir * s, true, NULL, false);
-		t = s + 0.01f;
 		nextGround = GetPVS().GetGroundPoint(m_position + dir * (s + 0.01f), true, NULL, false);
 
 		if ((WVectorLen(ground - m_position) - m_ballDist) * (WVectorLen(nextGround - m_position) - m_ballDist) <= 0.0f) {
@@ -2699,19 +2696,17 @@ void CGolfPlayer::SearchGround(void) {
 
 // golfplayer.cpp:3860
 bool CGolfPlayer::SearchGround(const WVector &pos, float angle) {
-	WVector dir;
-	float next;
 	int objId;
 	WVector ground;
 	WVector nextGround;
+	WVector dir;
 
 	dir = m_ballDist * RotMat(angle, 1).xa;
 	float t = 0.0f;
 
 	do {
 		ground = GetPVS().GetGroundPoint(pos + dir * t, true, NULL, false);
-		next = t + 0.1f;
-		nextGround = GetPVS().GetGroundPoint(pos + dir * next, true, &objId, false);
+		nextGround = GetPVS().GetGroundPoint(pos + dir * (t + 0.1f), true, &objId, false);
 
 		if (objId < 0) {
 			return false;
@@ -2721,15 +2716,14 @@ bool CGolfPlayer::SearchGround(const WVector &pos, float angle) {
 			break;
 		}
 
-		t = next;
+		t += 0.1f;
 	} while (t < 1.0f);
 
 	float end = t + 0.1f;
 
-	for (; t < end; t = next) {
-		ground = GetPVS().GetGroundPoint(pos + dir * t, true, NULL, false);
-		next = t + 0.01f;
-		nextGround = GetPVS().GetGroundPoint(pos + dir * next, true, NULL, false);
+	for (float s = t; s < end; s += 0.01f) {
+		ground = GetPVS().GetGroundPoint(pos + dir * s, true, NULL, false);
+		nextGround = GetPVS().GetGroundPoint(pos + dir * (s + 0.01f), true, NULL, false);
 
 		if ((WVectorLen(ground - pos) - m_ballDist) * (WVectorLen(nextGround - pos) - m_ballDist) <= 0.0f) {
 			WMatrix mat = RotMat(m_unk140, 1);

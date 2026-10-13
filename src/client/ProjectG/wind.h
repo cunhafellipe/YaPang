@@ -46,7 +46,8 @@ public:
 	void SetActive(bool active) { m_windEnabled = active; }
 	// wind.h:48
 	bool HasSpecialWind(void) { return m_specialIntensity > 0.0f; }
-	bool IsActiveSpecialWind(void);   // wind.h:57
+	// wind.h:57
+	bool IsActiveSpecialWind(void) { return m_activeSpecialWind; }
 	// wind.h:58
 	void SetSpWindStartFrame(unsigned long frame) { m_specialStartFrame = frame; }
 	// wind.h:59

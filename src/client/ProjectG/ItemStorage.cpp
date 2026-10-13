@@ -1404,7 +1404,8 @@ void FrItemConfirm::OnOwnerDrawDrawArea(intptr_t id) {
 
 			pGDI->Print(WPoint(rc.x + 110.0f, rc.y + 55.0f), 0, GetUccItemName(m_storedItemInfo.item.guid));
 		} else {
-			IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(m_storedItemInfo.item.typeId);
+			unsigned long typeId = m_storedItemInfo.item.typeId;
+			IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(typeId);
 
 			if (pCommon) {
 				const Bitmap* pIcon = g_pFresh->GetBitmap(pCommon->m_icon);

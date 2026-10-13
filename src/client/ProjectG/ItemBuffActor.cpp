@@ -262,8 +262,9 @@ void CItemBuff::HandleMsg(const MsgObject& msg) {
 void CItemBuff::HandleBuffItemSubMsg(const MsgObject& msg) {
 	switch (msg.m_param1) {
 	case 0: {
+		unsigned long itemTypeId = msg.m_param5;
 		bool* pIsBuff = (bool*)msg.m_param2;
-		if (ItemManager()->IsItemBuff(msg.m_param5)) {
+		if (ItemManager()->IsItemBuff(itemTypeId)) {
 			*pIsBuff = true;
 		}
 		if (*pIsBuff) {
@@ -272,8 +273,9 @@ void CItemBuff::HandleBuffItemSubMsg(const MsgObject& msg) {
 		break;
 	}
 	case 1: {
+		unsigned long itemTypeId = msg.m_param5;
 		bool* pIsBuff = (bool*)msg.m_param2;
-		if (ItemManager()->IsItemBuff(msg.m_param5)) {
+		if (ItemManager()->IsItemBuff(itemTypeId)) {
 			*pIsBuff = true;
 		}
 		if (*pIsBuff) {
@@ -297,7 +299,7 @@ void CItemBuff::DrawMiniButton(FrListItem* pItem, const WPoint& pt) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pItem->underCursor) {
-		if (WRect(pItem->pos.x + m_buttonRect.x, pItem->pos.y + m_buttonRect.y, m_buttonRect.w, m_buttonRect.h).IsInRect(pt)) {
+		if ((m_buttonRect + pItem->pos).IsInRect(pt)) {
 			pGDI->DrawTexture(m_pButtonOver, WRect(m_buttonRect.x + pItem->pos.x, pItem->pos.y + m_buttonRect.y, m_buttonRect.w, m_buttonRect.h), 0xFFFFFFFF, 0);
 			CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x46);
 			return;
@@ -382,10 +384,12 @@ void CItemBuff::ResetBuffList(void) {
 
 // itembuffactor.cpp:457
 void CItemBuff::ProcessPacket(WReceivedPacket& packet) {
-	if (packet.Decode2() == 0x186) {
-		switch (packet.Decode4()) {
+	unsigned short type = packet.Decode2();
+	if (type == 0x186) {
+		unsigned long subType = packet.Decode4();
+		switch (subType) {
 		case 0: {
-			int count = packet.Decode1();
+			unsigned char count = packet.Decode1();
 			for (int i = 0; i < count; i++) {
 				sSCardAvilityPeriodInfo info;
 				packet.DecodeBuffer(&info, sizeof(info));

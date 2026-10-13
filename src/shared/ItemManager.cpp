@@ -624,10 +624,11 @@ void CItemManager::MakeSetItemMap(char *data, int count) {
 
 // itemmanager.cpp:966
 void CItemManager::MakeCourseMap(char *data, int count) {
+	IFF_STRUCT::sCourse course;
 	sIffHeader header = *(sIffHeader *)data;
 	char *record = data + sizeof(sIffHeader);
 	for (int i = 0; i < header.m_count; i++) {
-		IFF_STRUCT::sCourse course = *(IFF_STRUCT::sCourse *)record;
+		course = *(IFF_STRUCT::sCourse *)record;
 		record += sizeof(IFF_STRUCT::sCourse);
 
 		// TODO(classdefine.h): sCourse does not embed IFF_ITEM_COMMON in its
@@ -651,40 +652,39 @@ void CItemManager::MakeCourseMap(char *data, int count) {
 	}
 
 	// The built-in courses the IFF does not list.
-	IFF_STRUCT::sCourse course;
 	memset(&course, 0, sizeof(course));
-
+	course.m_typeId = 0x280000FD;
+	course.m_rate = 1.1f;
 	course.courseFlags = (course.courseFlags & 0xF0) | 1;
 	strcpy(course.m_name, "TUTORIAL");
 	strcpy(course.m_mapName, "tuto");
 
 	strcpy(course.m_propertyFile, "tuto_property.xml");
 
-	course.m_typeId = 0x280000FD;
-	course.m_rate = 1.1f;
 	m_courseMap.insert(std::pair<const unsigned int, IFF_STRUCT::sCourse>(course.m_typeId, course));
 
 	memset(&course, 0, sizeof(course));
+	course.m_typeId = 0x280000FE;
+	course.m_rate = 1.1f;
 	course.courseFlags = (course.courseFlags & 0xF0) | 1;
 	strcpy(course.m_name, "TEST");
 	strcpy(course.m_mapName, "test");
 
 	strcpy(course.m_propertyFile, "test_property.xml");
-	course.m_typeId = 0x280000FE;
-	course.m_rate = 1.1f;
+
 	m_courseMap.insert(std::pair<const unsigned int, IFF_STRUCT::sCourse>(course.m_typeId, course));
 
 	memset(&course, 0, sizeof(course));
-
+	course.m_typeId = 0x2800007F;
+	course.m_active = 1;
+	course.m_rate = 1.1f;
 	course.courseFlags = (course.courseFlags & 0xF0) | 1;
 	strcpy(course.m_name, "RANDOM");
 	strcpy(course.m_mapName, "random");
 
 	strcpy(course.m_propertyFile, "test_property.xml");
 	strcpy(course.m_icon, "map_random");
-	course.m_typeId = 0x2800007F;
-	course.m_active = 1;
-	course.m_rate = 1.1f;
+
 	m_courseMap.insert(std::pair<const unsigned int, IFF_STRUCT::sCourse>(course.m_typeId, course));
 }
 
@@ -2298,7 +2298,8 @@ unsigned int CItemManager::GetItemSalePrice(unsigned long typeId, int count, uns
 		break;
 	}
 
-	int prices[5] = { 0, };
+	int prices[5];
+	memset(prices, 0, sizeof(prices));
 
 	switch (group) {
 	case 6: {
@@ -2310,11 +2311,14 @@ unsigned int CItemManager::GetItemSalePrice(unsigned long typeId, int count, uns
 		}
 
 		IFF_STRUCT::sItem *item = FindItem(typeId);
+		int units;
 		if (item->quantity > 0) {
-			count = count / item->quantity;
+			units = count / item->quantity;
+		} else {
+			units = count;
 		}
 
-		price = count * unitPrice;
+		price = units * unitPrice;
 		break;
 	}
 	case 14: {
@@ -2337,11 +2341,7 @@ unsigned int CItemManager::GetItemSalePrice(unsigned long typeId, int count, uns
 			return 0xFFFFFFFF;
 		}
 
-		prices[0] = skin->m_periodPrices[0];
-		prices[1] = skin->m_periodPrices[1];
-		prices[2] = skin->m_periodPrices[2];
-		prices[3] = skin->m_periodPrices[3];
-		prices[4] = skin->m_periodPrices[4];
+		for (int i = 0; i < 5; i++) prices[i] = skin->m_periodPrices[i];
 		break;
 	}
 	case 8: {
@@ -2350,10 +2350,7 @@ unsigned int CItemManager::GetItemSalePrice(unsigned long typeId, int count, uns
 			return 0xFFFFFFFF;
 		}
 
-		prices[0] = cadItem->m_levels[0];
-		prices[2] = cadItem->m_levels[2];
-		prices[3] = cadItem->m_levels[3];
-		prices[4] = cadItem->m_levels[4];
+		for (int i = 0; i < 5; i++) prices[i] = cadItem->m_levels[i];
 		prices[1] = -1;
 		break;
 	}
@@ -2363,10 +2360,7 @@ unsigned int CItemManager::GetItemSalePrice(unsigned long typeId, int count, uns
 			return 0xFFFFFFFF;
 		}
 
-		prices[0] = mascot->m_periodPrices[0];
-		prices[1] = mascot->m_periodPrices[1];
-		prices[3] = mascot->m_periodPrices[3];
-		prices[4] = mascot->m_periodPrices[4];
+		for (int i = 0; i < 5; i++) prices[i] = mascot->m_periodPrices[i];
 		prices[2] = -1;
 		break;
 	}
@@ -2377,11 +2371,7 @@ unsigned int CItemManager::GetItemSalePrice(unsigned long typeId, int count, uns
 				return 0xFFFFFFFF;
 			}
 
-			prices[0] = furniture->m_dayPrices[0];
-			prices[1] = furniture->m_dayPrices[1];
-			prices[2] = furniture->m_dayPrices[2];
-			prices[3] = furniture->m_dayPrices[3];
-			prices[4] = furniture->m_dayPrices[4];
+			for (int i = 0; i < 5; i++) prices[i] = furniture->m_dayPrices[i];
 		}
 		break;
 	}

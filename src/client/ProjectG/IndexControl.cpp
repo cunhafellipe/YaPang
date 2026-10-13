@@ -69,11 +69,8 @@ bool CIndexControl::BuildPage(unsigned long page) {
 		m_curPage = page;
 		if (m_totalCount - m_countPerPage * page >= m_countPerPage) {
 			m_curIndexCount = m_countPerPage;
-		} else {
-			unsigned long rest = m_totalCount % m_countPerPage;
-			if (rest != 0) {
-				m_curIndexCount = rest;
-			}
+		} else if (m_totalCount % m_countPerPage != 0) {
+			m_curIndexCount = m_totalCount % m_countPerPage;
 		}
 
 		if (m_curIndexCount > 0) {
@@ -100,7 +97,7 @@ bool CIndexControl::BuildPage(unsigned long page) {
 				m_selectedIndex = 0;
 				result = true;
 			} else {
-				return false;
+				result = false;
 			}
 		}
 	}
@@ -118,7 +115,7 @@ void CIndexControl::Draw(WPoint& pos) {
 		}
 
 		m_pos = pos;
-		WPoint drawPos = pos;
+		WPoint drawPos = m_pos;
 
 		float width = m_curIndexCount * m_indexRect.w;
 
