@@ -121,11 +121,13 @@ const CBingoPoint& CBingoLine::GetBingoPoint(int index) const {
 int CBingoLine::IsHavePointNumber(int number) {
 	int count = m_points.size();
 
-	if (count != 0) {
-		for (int i = 0; i < count; i++) {
-			if (m_points[i].GetPointNumber() == number) {
-				return i;
-			}
+	if (count == 0) {
+		return -1;
+	}
+
+	for (int i = 0; i < count; i++) {
+		if (m_points[i].GetPointNumber() == number) {
+			return i;
 		}
 	}
 
@@ -290,8 +292,10 @@ void CBingoBoard::ReScanBoard(void) {
 	}
 
 	complete = true;
+	j = 0;
 	for (i = 0; i < count; i++) {
-		if (!m_lines[i].GetBingoPoint(-i).IsProperty(2)) {
+		CBingoPoint& point = m_lines[i].GetBingoPoint(j--);
+		if (!point.IsProperty(2)) {
 			complete = false;
 			break;
 		}
@@ -302,8 +306,10 @@ void CBingoBoard::ReScanBoard(void) {
 	}
 
 	complete = true;
+	j = count - 1;
 	for (i = 0; i < count; i++) {
-		if (!m_lines[i].GetBingoPoint(count - 1 - i).IsProperty(2)) {
+		CBingoPoint& point = m_lines[i].GetBingoPoint(j--);
+		if (!point.IsProperty(2)) {
 			complete = false;
 			break;
 		}
@@ -525,11 +531,10 @@ void FrBingoEventDlg::DrawBoardNumber(FrGraphicInterface* pGI, const WRect& rect
 		float slantY = 0.0f;
 		for (int j = 0; j < 5; j++) {
 			sPoint& pt = m_boardMatchMap[m_board[i][j]];
-			src.x = pt.x;
-			src.y = pt.y;
-
 			float x = slantX + rect.x + rowX + columnX + m_completeBarPos.x;
+			src.x = pt.x;
 			float y = rect.y + m_completeBarPos.y + slantY + slantRowY + rowY;
+			src.y = pt.y;
 			m_board[i].GetBingoPoint(j).DrawPoint(pGI, m_bitmaps, src, x, y);
 
 			columnX = (src.w + 9.0f) * (j + 1);
@@ -597,7 +602,7 @@ void FrBingoEventDlg::DrawCompleteBar(FrGraphicInterface* pGI, const WRect& rect
 			width = 221.0f;
 			height = 42.0f;
 			x = i * 7.5f + 15.0f;
-			y = i * 53.0f - 20.0f;
+			y = 53.0f * i - 20.0f;
 		} else if (i < 10 && i > 4) {
 			pBitmap = m_bitmaps[6];
 			width = 44.0f;
@@ -634,8 +639,8 @@ void FrBingoEventDlg::DrawBingoLogo(FrGraphicInterface* pGI, const WRect& rect) 
 
 	for (int i = 0; i < 12; i++) {
 		if (i < 5) {
-			x = i * 7.5f + 15.0f + width / 2;
 			y = i * 53.0f - 20.0f;
+			x = width / 2 + (i * 7.5f + 15.0f);
 		} else if (i < 10 && i > 4) {
 			x = (i - 5) * 54.0f + 10.0f;
 			y = 15.0f - (i - 5) * 8.0f + height / 2;

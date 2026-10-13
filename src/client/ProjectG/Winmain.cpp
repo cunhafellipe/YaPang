@@ -87,9 +87,9 @@ static void BlitColorKey(unsigned char* dst, int dstHeight, int x, int y, int w,
 	if (y < 0 || y + h >= 600)
 		return;
 
-	int dstOffset = (dstHeight - y - srcH) * dstPitch + x * 3;
+	x = (dstHeight - y - srcH) * dstPitch + x * 3;
 	int srcOffset = srcY * srcPitch + srcX * 3;
-	int d = dstOffset, s = srcOffset;
+	int d = x, s = srcOffset;
 
 	int xEnd = srcX + srcW;
 	if (xEnd >= dstPitch / 3) xEnd = dstPitch / 3;
@@ -104,7 +104,7 @@ static void BlitColorKey(unsigned char* dst, int dstHeight, int x, int y, int w,
 			d += 3;
 			s += 3;
 		}
-		d = dstOffset + (j + 1) * dstPitch;
+		d = x + (j + 1) * dstPitch;
 		s = srcOffset + (j + 1) * srcPitch;
 	}
 }

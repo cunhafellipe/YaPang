@@ -795,7 +795,7 @@ void FrBongdariShopDlg::OpenBonusBall(int index) {
 		if (m_silhouettes[i].m_slot == index) {
 			m_movingData[index].m_state = 3;
 
-			float halfW = (float)(m_silhouettes[i].m_pImage->Width() / 2), halfH = (float)(m_silhouettes[i].m_pImage->Height() / 2);
+			unsigned int halfW = m_silhouettes[i].m_pImage->Width() / 2, halfH = m_silhouettes[i].m_pImage->Height() / 2;
 
 			m_movingData[index].m_floor = WVector(halfW + g_arrPtItemSilhouette[i].x + GetRect().x - 7.0f, halfH + g_arrPtItemSilhouette[i].y + GetRect().y - 15.0f, 0.0f);
 			m_movingData[index].m_dir = WVector(m_movingData[index].m_floor.x - m_movingData[index].m_pos.x, m_movingData[index].m_floor.y - m_movingData[index].m_pos.y, 0.0f);
@@ -1240,11 +1240,9 @@ void FrBongdariShopDlg::DrawShadow(void) {
 				if (m_pBongdari) {
 					FrArea* pArea = m_pBongdariArea;
 					float w = m_pShadowImage->Width() * 1.5f;
-					float x = pArea->GetRect().x + pArea->GetRect().w * 0.5f - w * 0.5f;
-					float h = m_pShadowImage->Height() * 1.5f;
 					WRect rect;
 
-					rect = WRect(x, pArea->GetRect().y + pArea->GetRect().h - 23.0f - h * 0.5f, w, h);
+					rect = WRect(pArea->GetRect().x + pArea->GetRect().w * 0.5f - w * 0.5f, pArea->GetRect().y + pArea->GetRect().h - 23.0f - (m_pShadowImage->Height() * 1.5f) * 0.5f, w, m_pShadowImage->Height() * 1.5f);
 					pGDI->DrawTexture(m_pShadowImage, rect, 0x90ffffff, 0);
 				}
 			}
@@ -1266,14 +1264,12 @@ void FrBongdariShopDlg::DrawShadow(void) {
 
 						if (m_selectedBall == i) {
 							float w = m_pShadowImage->Width() * 0.7f;
-							float h = m_pShadowImage->Height() * 0.7f;
 
-							rect = WRect(x - w * 0.5f, y - h * 0.5f + 36.0f, w, h);
+							rect = WRect(x - 0.5f * w, y - 0.5f * (m_pShadowImage->Height() * 0.7f) + 36.0f, w, m_pShadowImage->Height() * 0.7f);
 						} else {
 							float w = m_pShadowImage->Width() * 0.55f;
-							float h = m_pShadowImage->Height() * 0.55f;
 
-							rect = WRect(x - w * 0.5f, y - h * 0.5f + 28.0f, w, h);
+							rect = WRect(x - 0.5f * w, y - 0.5f * (m_pShadowImage->Height() * 0.55f) + 28.0f, w, m_pShadowImage->Height() * 0.55f);
 						}
 
 						pGDI->DrawTexture(m_pShadowImage, rect, (alpha << 24) | 0xffffff, 0);
@@ -1294,7 +1290,9 @@ void FrBongdariShopDlg::DrawTextBongdariClick(void) {
 
 	WRect rc = m_pBongdariArea->GetRect();
 
-	pGDI->DrawTexture(m_pClickTextImage, WRect(rc.x - 13.0f, rc.y - 100.0f + m_clickTextY, m_pClickTextImage->Width(), m_pClickTextImage->Height()), 0xffffffff, 0);
+	WRect rect(rc.x - 13.0f, rc.y - 100.0f + m_clickTextY, m_pClickTextImage->Width(), m_pClickTextImage->Height());
+
+	pGDI->DrawTexture(m_pClickTextImage, rect, 0xffffffff, 0);
 }
 
 // bongdarishopdlg.cpp:1657

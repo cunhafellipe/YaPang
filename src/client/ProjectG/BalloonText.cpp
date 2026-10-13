@@ -198,8 +198,8 @@ void ntBalloonText::Render(WView *view) {
 				dst -= back;
 				src -= back;
 				lineBuffer[dst] = '\0';
-				lines[lineCount++] = lineBuffer;
 				dst = 0;
+				lines[lineCount++] = lineBuffer;
 			}
 			hasEmoticon = false;
 		} else if (dst > 20) {
@@ -207,8 +207,8 @@ void ntBalloonText::Render(WView *view) {
 			dst -= back;
 			src -= back;
 			lineBuffer[dst] = '\0';
-			lines[lineCount++] = lineBuffer;
 			dst = 0;
+			lines[lineCount++] = lineBuffer;
 		}
 
 		ntBalloonTextManager::Instance()->m_font->SetScale(scale);

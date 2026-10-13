@@ -1032,8 +1032,8 @@ void CSceneManager::Render_RenderBlendGroup(WView* pView, std::list<TransparentE
 			}
 
 			float proj = WDotProduct(axis, it->m_pPuppet->GetBoundSphere().pos - next->m_pPuppet->GetBoundSphere().pos);
-			float extent = prevExtent > 0.0f ? prevExtent : WVectorLen(WVector(it->m_pPuppet->GetBoundBox().max.x - it->m_pPuppet->GetBoundBox().min.x, 0.0f, it->m_pPuppet->GetBoundBox().max.z - it->m_pPuppet->GetBoundBox().min.z));
-			prevExtent = WVectorLen(WVector(next->m_pPuppet->GetBoundBox().max.x - next->m_pPuppet->GetBoundBox().min.x, 0.0f, next->m_pPuppet->GetBoundBox().max.z - next->m_pPuppet->GetBoundBox().min.z));
+			float extent = prevExtent > 0.0f ? prevExtent : WVectorLen(WVector(it->m_pPuppet->GetBoundBox().max.x, 0.0f, it->m_pPuppet->GetBoundBox().max.z) - WVector(it->m_pPuppet->GetBoundBox().min.x, 0.0f, it->m_pPuppet->GetBoundBox().min.z));
+			prevExtent = WVectorLen(WVector(next->m_pPuppet->GetBoundBox().max.x, 0.0f, next->m_pPuppet->GetBoundBox().max.z) - WVector(next->m_pPuppet->GetBoundBox().min.x, 0.0f, next->m_pPuppet->GetBoundBox().min.z));
 
 			if (Abs(proj) > prevExtent + extent) {
 				split = true;

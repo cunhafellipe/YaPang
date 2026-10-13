@@ -244,26 +244,40 @@ void gaM3::Orthonormalize(void) {
 }
 
 // gamath.cpp:333
+// In-place lower-triangular Cholesky factor (row i = pRowI, row j = pRowJ).
 bool gaM3::CholeskyDecomposition(void) {
 	float recip[3];
 
+	float *pRowI = m[0];
 	for (int i = 0; i < 3; i++) {
+		float *pIJ = m[i];
+		const float *pRowJ = m[0];
 		for (int j = 0; j < i; j++) {
-			float fSum = m[i][j];
-			for (int k = 0; k != j; k++)
-				fSum -= m[j][k] * m[i][k];
-			m[i][j] = fSum * recip[j];
+			int k = j;
+			const float *pI = pRowI;
+			const float *pJ = pRowJ;
+			float fSum = *pIJ;
+			while (k--)
+				fSum -= *pJ++ * *pI++;
+			fSum *= recip[j];
+			pRowJ += 3;
+			*pIJ++ = fSum;
 		}
 
-		float fSum = m[i][i];
-		for (int k = 0; k != i; k++)
-			fSum -= m[i][k] * m[i][k];
+		int k = i;
+		const float *pI = pRowI;
+		float fSum = *pIJ;
+		while (k--) {
+			fSum -= *pI * *pI;
+			pI++;
+		}
 		if (fSum <= gaMath::ZERO)
 			return false;
 
 		fSum = gaMath::Sqrt(fSum);
-		m[i][i] = fSum;
+		*pIJ = fSum;
 		recip[i] = gaMath::ID / fSum;
+		pRowI += 3;
 	}
 
 	return true;

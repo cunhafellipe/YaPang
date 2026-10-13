@@ -642,7 +642,7 @@ cModel *CRealMyRoomData::CreateModel(const char *name) {
 	pModel->m_pModelData->m_pPuppet = g_resrcmng->GetPuppet(pModel->m_pModelData->m_name, true, bSubOrder, false);
 
 	if (pBox != NULL) {
-		pModel->m_pModelData->m_aabb.min.Reset(); pModel->m_pModelData->m_aabb.max.Reset();
+		pModel->m_pModelData->m_aabb.Reset();
 		pModel->m_pModelData->m_aabb = pBox->info->aabb;
 
 		pModel->m_pModelData->m_obb = pBox->bone->GetMatrix();
@@ -725,7 +725,7 @@ cModel *CRealMyRoomData::CreateModel(const char *name, WVector pos, float angle,
 	pModel->m_pModelData->m_pPuppet = g_resrcmng->GetPuppet(pModel->m_pModelData->m_name, true, bSubOrder, false);
 
 	if (pBox != NULL) {
-		pModel->m_pModelData->m_aabb.min.Reset(); pModel->m_pModelData->m_aabb.max.Reset();
+		pModel->m_pModelData->m_aabb.Reset();
 		pModel->m_pModelData->m_aabb = pBox->info->aabb;
 
 		pModel->m_pModelData->m_obb = pBox->bone->GetMatrix();
@@ -739,9 +739,7 @@ cModel *CRealMyRoomData::CreateModel(const char *name, WVector pos, float angle,
 
 		pModel->m_pModelData->m_obb.center = pModel->m_pModelData->m_basePos;
 
-		pModel->m_pModelData->m_matrix.pivot.x = pModel->m_pModelData->m_basePos.x;
-		pModel->m_pModelData->m_matrix.pivot.y = pModel->m_pModelData->m_basePos.y;
-		pModel->m_pModelData->m_matrix.pivot.z = pModel->m_pModelData->m_basePos.z;
+		pModel->SetPosition(pModel->m_pModelData->m_basePos);
 
 		pModel->m_angle = 0.0f;
 		pModel->SetRotate(angle);
@@ -789,9 +787,8 @@ cModel *CRealMyRoomData::CreateModel(const char *name, WVector pos, float angle,
 		}
 	}
 
-	// realmyroomdata.cpp:1297 is not transcribed: it stores into
-	// pModel->m_handle the result of GetPVS().Get_WallSlidingAngle(
-	// m_basePos, m_pModelData, <a local WVector>), not declared by quadtree.h yet.
+	WVector normal;
+	pModel->m_handle = GetPVS().Get_WallSlidingAngle(pModel->m_pModelData->m_basePos, pModel->m_pModelData, normal);
 
 	unsigned long flags = 0;
 	if (pModel->m_pModelData->m_subOrder)
@@ -1710,9 +1707,7 @@ bool CRealMyRoomData::IsModelData_SaveList(unsigned long id, unsigned long typeI
 // realmyroomdata.cpp:2846
 int CRealMyRoomData::IsFunritureValueChange(cModel &model) {
 	int result = -1;
-	std::list<sFurniture_List>::iterator it;
-
-	for (it = m_furnitureList.begin(); it != m_furnitureList.end(); ++it) {
+	for (std::list<sFurniture_List>::iterator it = m_furnitureList.begin(); it != m_furnitureList.end(); ++it) {
 		if (model.m_pFurniture->m_id == it->m_id) {
 			result = 0;
 
@@ -1825,14 +1820,17 @@ void cModel::OBBToAABB() {
 	// Each corner goes through a temporary copied into the array, and the
 	// sums are grouped per corner as the original adds them (the ext1/ext2
 	// pair is shared between corners).
+	WVector n0 = ext0 * -1.0f;
+	WVector n1 = ext1 * -1.0f;
+	WVector n2 = ext2 * -1.0f;
 	WVector corner[8];
-	corner[0] = center + (ext0 * -1.0f + (ext1 + ext2 * -1.0f));
-	corner[1] = center + (ext0 * -1.0f + (ext1 * -1.0f + ext2 * -1.0f));
-	corner[2] = center + (ext1 * -1.0f + ext2 * -1.0f) + ext0;
-	corner[3] = center + (ext1 + ext2 * -1.0f) + ext0;
-	corner[4] = center + ext0 * -1.0f + (ext1 + ext2);
-	corner[5] = center + ext0 * -1.0f + (ext1 * -1.0f + ext2);
-	corner[6] = center + (ext1 * -1.0f + ext2) + ext0;
+	corner[0] = center + (n0 + (ext1 + n2));
+	corner[1] = center + (n0 + (n1 + n2));
+	corner[2] = center + (n1 + n2) + ext0;
+	corner[3] = center + (ext1 + n2) + ext0;
+	corner[4] = center + n0 + (ext1 + ext2);
+	corner[5] = center + n0 + (n1 + ext2);
+	corner[6] = center + (n1 + ext2) + ext0;
 	corner[7] = center + (ext1 + ext2) + ext0;
 
 	WVector *pCorner = corner;

@@ -715,12 +715,12 @@ float CClub::GetRange(const char *name) {
 				range = club->m_range + GetPowerShotFactor(); range = (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + range;
 			}
 		} else {
-			range = range + GetPowerShotFactor(); range = (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power * 2.0f + range;
+			range = club->m_range + GetPowerShotFactor(); range = (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power * 2.0f + range;
 		}
 		break;
 
 	case 1:
-		range = range + GetPowerShotFactor();
+		range = club->m_range + GetPowerShotFactor();
 		break;
 
 	case 2:
@@ -742,6 +742,8 @@ float CClub::GetRange(const char *name) {
 	case 3:
 		if (m_powerPutter) {
 			range = Is("1PT", club) ? 40.0f : 30.0f;
+		} else {
+			range = club->m_range;
 		}
 		break;
 	}
@@ -756,8 +758,8 @@ float CClub::GetRange(const char *name) {
 			return range + buff;
 		}
 
-		CCardManager::Instance()->SetPlayerIndex(GOLFDOC()->m_myPlayerIndex);
 		bool withPowerRange = false;
+		CCardManager::Instance()->SetPlayerIndex(GOLFDOC()->m_myPlayerIndex);
 		if (GolfClub().PowerShotType())
 			withPowerRange = true;
 		return range + CCardManager::Instance()->GetTotalRange(withPowerRange);
@@ -827,12 +829,12 @@ float CClub::GetPower(void) {
 			if (range > 0.0f && power > 0.0f) {
 
 
-				return (((int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + aux * 0.5f + powerShot) / range * 1.5f + 1.0f) * power;
+				return ((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + powerShot) / range * 1.5f + 1.0f) * power;
 
 			} else {
 
 
-				return (((int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + aux * 0.5f + powerShot) / m_pClub->m_range * 1.5f + 1.0f) * m_pClub->m_power;
+				return ((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + powerShot) / m_pClub->m_range * 1.5f + 1.0f) * m_pClub->m_power;
 			}
 		}
 
@@ -841,14 +843,14 @@ float CClub::GetPower(void) {
 
 
 
-		return ((((int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + aux * 0.5f) * 2.0f + powerShot) / m_pClub->m_range * 1.5f + 1.0f) * m_pClub->m_power;
+		return (((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power) * 2.0f + powerShot) / m_pClub->m_range * 1.5f + 1.0f) * m_pClub->m_power;
 
 
 
 
 	case 1:
-		power = (powerShot / m_pClub->m_range + 1.0f) * m_pClub->m_power;
-		return power + (float)m_pClub->m_power / m_pClub->m_range * aux * 1.3f;
+		return (powerShot / m_pClub->m_range + 1.0f) * m_pClub->m_power
+			+ (float)m_pClub->m_power / m_pClub->m_range * aux * 1.3f;
 
 
 

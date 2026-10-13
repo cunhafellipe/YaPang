@@ -2429,9 +2429,8 @@ void CPangInfo::ChangeTurn(void) {
 
 // fontinfo.cpp:3057
 bool HaveAngelWing(int nPlayer) {
-	sCharacterInfo &info = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[nPlayer].m_characterInfo;
 	for (int i = 0; i < 24; i++) {
-		switch (info.partTypeIds[i]) {
+		switch (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[nPlayer].m_characterInfo.partTypeIds[i]) {
 		case 0x8016800:
 		case 0x8058800:
 		case 0x8098800:

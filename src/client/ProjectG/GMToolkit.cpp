@@ -546,15 +546,16 @@ bool CGMToolkit::FindItem(unsigned long typeId, char *name) const {
 bool CGMToolkit::Confirm(void) {
 	bool result = false;
 
-	if (m_argumentCount != 1) {
-		result = false;
-	} else {
+	if (m_argumentCount == 1) {
 		if (strcmp(m_arguments[0], "y") == 0 || strcmp(m_arguments[0], "Y") == 0) {
 			result = true;
-			if (m_confirmPacket) {
-				m_confirmPacket->Send(SEND_TO_DEFAULT);
-			}
 		}
+	} else {
+		result = false;
+	}
+
+	if (result && m_confirmPacket) {
+		m_confirmPacket->Send(SEND_TO_DEFAULT);
 	}
 
 	if (m_confirmPacket) {

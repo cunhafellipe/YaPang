@@ -3864,12 +3864,13 @@ void FrScoreForm::OnHoleListOwnerDraw(intptr_t param) {
 		return;
 	}
 
-	int width = m_pHoleList->GetItemWidth();
-	int height = m_pHoleList->GetItemHeight();
+	float width = m_pHoleList->GetItemWidth();
+	float height = m_pHoleList->GetItemHeight();
 	unsigned char holes = WSingleton<CSharedDoc>::Instance()->m_holes;
 
-	float x = width * (1.0f / 18.0f) + pItem->pos.x;
-	float y = height * 0.5f + pItem->pos.y - 7.0f;
+	WPoint pt;
+	pt.x = width * (1.0f / 18.0f) + pItem->pos.x;
+	pt.y = height * 0.5f + pItem->pos.y - 7.0f;
 	int start = m_bFront9 ? 0 : 9;
 	int end = start + 9;
 	if (end >= holes) {
@@ -3879,8 +3880,8 @@ void FrScoreForm::OnHoleListOwnerDraw(intptr_t param) {
 	if (start < end) {
 		float step = width * (1.0f / 9.0f);
 		for (int i = start; i < end; i++) {
-			DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
-			x = (float)(int)(step + x);
+			DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			pt.x = (float)(int)(step + pt.x);
 		}
 	}
 }
@@ -3917,24 +3918,18 @@ void FrScoreForm::OnParListOwnerDraw(intptr_t param) {
 	float width = m_pParList->GetItemWidth();
 	float height = m_pParList->GetItemHeight();
 
-	unsigned char holes = WSingleton<CSharedDoc>::Instance()->m_holes;
+	WPoint pt;
 	float offset = width * (1.0f / 18.0f);
-	float x = offset + pItem->pos.x;
-	float y = height * 0.5f + pItem->pos.y - 7.0f;
+	pt.x = offset + pItem->pos.x;
+	pt.y = height * 0.5f + pItem->pos.y - 7.0f;
 	int start = m_bFront9 ? 0 : 9;
-	int end = start + 9;
-	if (end >= holes) {
-		end = holes;
-	}
+	int end = start + 9 < WSingleton<CSharedDoc>::Instance()->m_holes ? start + 9 : WSingleton<CSharedDoc>::Instance()->m_holes;
 
 	int total = 0;
-	if (start < end) {
-		float step = width * (1.0f / 9.0f);
-		for (int i = start; i < end; i++) {
-			total += GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-			DrawDigit(pGDI, MakeStr("%d", GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par), WPoint(x, y), 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
-			x = (float)(int)(step + x);
-		}
+	for (int i = start; i < end; i++) {
+		total += GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
+		DrawDigit(pGDI, MakeStr("%d", GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par), pt, 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
+		pt.x = (float)(int)(width * (1.0f / 9.0f) + pt.x);
 	}
 
 	switch (WSingleton<CSharedDoc>::Instance()->m_roomType) {
@@ -3944,13 +3939,13 @@ void FrScoreForm::OnParListOwnerDraw(intptr_t param) {
 		break;
 
 	case 7:
-		x = (float)float2int(offset + pItem->pos.x + 473.0f);
-		DrawDigit(pGDI, MakeStr("%d", total), WPoint(x, y), 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
+		pt.x = (float)float2int(offset + pItem->pos.x + 473.0f);
+		DrawDigit(pGDI, MakeStr("%d", total), pt, 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
 		break;
 
 	default:
-		x = (float)(int)(offset + pItem->pos.x + 355.0f);
-		DrawDigit(pGDI, MakeStr("%d", total), WPoint(x, y), 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
+		pt.x = (float)(int)(offset + pItem->pos.x + 355.0f);
+		DrawDigit(pGDI, MakeStr("%d", total), pt, 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
 		break;
 	}
 }
@@ -4023,29 +4018,24 @@ void FrScoreForm::OnPangListOwnerDraw(int param) {
 	}
 
 	float width = m_pPangList->GetItemWidth();
-	int height = m_pPangList->GetItemHeight();
+	float height = m_pPangList->GetItemHeight();
 
+	WPoint pt;
 	float offset = width * (1.0f / 18.0f);
-	WPoint pt(offset + pItem->pos.x, height * 0.5f + pItem->pos.y - 7.0f);
+	pt.x = offset + pItem->pos.x;
+	pt.y = height * 0.5f + pItem->pos.y - 7.0f;
 	int start = m_bFront9 ? 0 : 9;
-	int end = start + 9;
-	unsigned char holes = WSingleton<CSharedDoc>::Instance()->m_holes;
-	if (end >= holes) {
-		end = holes;
-	}
+	int end = start + 9 < WSingleton<CSharedDoc>::Instance()->m_holes ? start + 9 : WSingleton<CSharedDoc>::Instance()->m_holes;
 
-	if (start < end) {
-		float step = width * (1.0f / 9.0f);
-		for (int i = start; i < end; i++) {
-			unsigned long color = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_redPang ? 0xFFFF0000 : 0xFF000000;
+	for (int i = start; i < end; i++) {
+		unsigned long color = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_redPang ? 0xFFFF0000 : 0xFF000000;
 
-			pGDI->SetTextStyle(1);
-			pGDI->SetTextColor(color, 0xFFFFFFFF);
-			// The original passes only the low dword of the __int64 to %I64d.
-			pGDI->PrintText(pt, 1, MakeStr("%I64d", (unsigned long)GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_pang), 0);
+		pGDI->SetTextStyle(1);
+		pGDI->SetTextColor(color, 0xFFFFFFFF);
+		// The original passes only the low dword of the __int64 to %I64d.
+		pGDI->PrintText(pt, 1, MakeStr("%I64d", (unsigned long)GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_pang), 0);
 
-			pt.x = (float)(int)(step + pt.x);
-		}
+		pt.x = (float)(int)(width * (1.0f / 9.0f) + pt.x);
 	}
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 7) {
@@ -4737,8 +4727,9 @@ void FrScoreForm::DrawVersus(FrListItem* pItem) {
 	int count = 1 - (int)(m_typeTime * -20.0f);
 	int end = (count < 9 ? count : 9) + start < WSingleton<CSharedDoc>::Instance()->m_holes
 		? (count < 9 ? count : 9) + start : WSingleton<CSharedDoc>::Instance()->m_holes;
-	float x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
-	float y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
+	WPoint pt;
+	pt.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
+	pt.y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
 
 	for (int i = start; i < end; i++) {
 		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
@@ -4756,7 +4747,7 @@ void FrScoreForm::DrawVersus(FrListItem* pItem) {
 		}
 
 		if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && (GOLFDOC()->GameMode() & ~0x22000)) {
-			DrawDigit(pGDI, "?", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			DrawDigit(pGDI, "?", pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 		} else {
 			const Bitmap* pBmp = 0;
 			switch (GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_mapState) {
@@ -4774,15 +4765,15 @@ void FrScoreForm::DrawVersus(FrListItem* pItem) {
 
 			if (pBmp) {
 				WRect rect;
-				rect.x = (float)(int)(x - (float)pBmp->Width() * 0.5f);
-				rect.y = y;
+				rect.x = (float)(int)(pt.x - (float)pBmp->Width() * 0.5f);
+				rect.y = pt.y;
 				rect.w = (float)pBmp->Width();
 				rect.h = (float)pBmp->Height();
 				pGDI->DrawTexture(pBmp, rect, 0xFFFFFFFF, 0);
 			}
 		}
 
-		x = (float)(int)(width * (1.0f / 9.0f) + x);
+		pt.x = (float)(int)(width * (1.0f / 9.0f) + pt.x);
 	}
 }
 
@@ -4814,11 +4805,13 @@ void FrScoreForm::DrawGraph(FrListItem* pItem) {
 
 	// the score of each hole against its par
 	int i = start;
+	int diff;
+	int score;
 	if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] > (unsigned char)0
 		&& (GOLFDOC()->GetPlayer(index)->m_state != 0 || i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1 || GOLFDOC()->GameMode() == 0x2000)) {
 		int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-		int score = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
-		score = score < -3 ? -3 : (score > 3 ? 3 : score);
+		diff = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
+		score = diff < -3 ? -3 : (diff > 3 ? 3 : diff);
 		unsigned long color = GetScoreColor(score);
 		p1.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
 		p1.y = (float)(int)((float)score * step + y);
@@ -4829,9 +4822,9 @@ void FrScoreForm::DrawGraph(FrListItem* pItem) {
 			if (GOLFDOC()->GetPlayer(index)->m_state == 0 && i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GameMode() != 0x2000)
 				break;
 
-			par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-			score = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
-			score = score < -3 ? -3 : (score > 3 ? 3 : score);
+			int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
+			diff = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
+			score = diff < -3 ? -3 : (diff > 3 ? 3 : diff);
 			unsigned long nextColor = GetScoreColor(score);
 
 			p2.x = (float)(int)(width * (1.0f / 9.0f) + p1.x);
@@ -4858,8 +4851,8 @@ void FrScoreForm::DrawGraph(FrListItem* pItem) {
 				break;
 
 			int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-			int score = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
-			score = score < -3 ? -3 : (score > 3 ? 3 : score);
+			diff = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
+			score = diff < -3 ? -3 : (diff > 3 ? 3 : diff);
 
 			rect.y = (float)(int)((float)score * step + y - 2.0f);
 			pGDI->DrawTexture(m_pPoint, rect, 0xFF696969, 0);

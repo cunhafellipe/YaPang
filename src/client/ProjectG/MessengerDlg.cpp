@@ -1610,64 +1610,61 @@ CMessengerInfo::CMessengerInfo(void) : m_pMessengerDlg(0), m_notifyElapsed(0), m
 }
 
 // The last messenger connection attempts (CMessengerInfo::Open allows five per
-// minute). No symbol in the PDB; the type name is invented.
-struct sConnectHistory {
-	unsigned long ticks[5];          // 0x0, GetTickCount of each attempt
-	int count;                       // 0x14
-};
-static sConnectHistory data_af7784;
+// minute): GetTickCount of each attempt and their count. No symbols in the PDB.
+extern "C" unsigned long data_af7784[5];
+extern "C" int data_af7798;
 
 // messengerdlg.cpp:2852
 void CMessengerInfo::Open(bool) {
-	if (WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_MSN)->m_bConnected != 0 && WNetworkSystem::Instance()->IsConnectionComplete(WNetworkSystem::NET_UNIT_MSN)) {
+	if (WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_MSN)->m_bConnected == 0 || !WNetworkSystem::Instance()->IsConnectionComplete(WNetworkSystem::NET_UNIT_MSN)) {
+		// "Connecting to the messenger server...."
+		Notify2("메신저서버에 접속중....");
+
+		unsigned long now = GetTickCount();
+
+		if (data_af7798 >= 5) {
+			if (now - data_af7784[4] > 90000) {
+				data_af7798 = 0;
+				data_af7784[0] = 0;
+			} else {
+				// "Please try again later."
+				Notify2("잠시 후에 이용해 주십시오.");
+				return;
+			}
+		}
+
+		if ((!WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN) && !WNetworkSystem::Instance()->IsConnectionComplete(WNetworkSystem::NET_UNIT_MSN))
+			|| WNetworkSystem::Instance()->IsConnectionComplete(WNetworkSystem::NET_UNIT_MSN) == 1) {
+			WNetworkSystem::Instance()->Init(WNetworkSystem::NET_UNIT_MSN);
+			WNetworkSystem::Instance()->SendMessage(WNetworkSystem::NET_UNIT_MSN, NetworkUnit::EVENT_NEXT);
+
+			if (now - data_af7784[0] < 60000) {
+				data_af7784[data_af7798] = now;
+				data_af7798++;
+				return;
+			}
+
+			int i;
+			for (i = 0; i < data_af7798; i++) {
+				if (now - data_af7784[i] < 60000)
+					break;
+			}
+
+			if (i < data_af7798) {
+				int count = data_af7798 - i;
+
+				for (int j = 0; j < count; j++)
+					data_af7784[j] = data_af7784[i + j];
+
+				data_af7784[count] = now;
+				data_af7798 = count + 1;
+			} else {
+				data_af7784[0] = now;
+				data_af7798 = 1;
+			}
+		}
+	} else {
 		Toggle();
-		return;
-	}
-
-	// "Connecting to the messenger server...."
-	Notify2("\xB8\xDE\xBD\xC5\xC0\xFA\xBC\xAD\xB9\xF6\xBF\xA1 \xC1\xA2\xBC\xD3\xC1\xDF....");
-
-	unsigned long now = GetTickCount();
-
-	if (data_af7784.count >= 5) {
-		if (now - data_af7784.ticks[4] > 90000) {
-			data_af7784.count = 0;
-			data_af7784.ticks[0] = 0;
-		} else {
-			// "Please try again later."
-			Notify2("\xC0\xE1\xBD\xC3 \xC8\xC4\xBF\xA1 \xC0\xCC\xBF\xEB\xC7\xD8 \xC1\xD6\xBD\xCA\xBD\xC3\xBF\xC0.");
-			return;
-		}
-	}
-
-	if ((!WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN) && !WNetworkSystem::Instance()->IsConnectionComplete(WNetworkSystem::NET_UNIT_MSN))
-		|| WNetworkSystem::Instance()->IsConnectionComplete(WNetworkSystem::NET_UNIT_MSN) == 1) {
-		WNetworkSystem::Instance()->Init(WNetworkSystem::NET_UNIT_MSN);
-		WNetworkSystem::Instance()->SendMessage(WNetworkSystem::NET_UNIT_MSN, NetworkUnit::EVENT_NEXT);
-
-		if (now - data_af7784.ticks[0] < 60000) {
-			data_af7784.ticks[data_af7784.count++] = now;
-			return;
-		}
-
-		int i;
-		for (i = 0; i < data_af7784.count; i++) {
-			if (now - data_af7784.ticks[i] < 60000)
-				break;
-		}
-
-		if (i < data_af7784.count) {
-			int count = data_af7784.count - i;
-
-			for (int j = 0; j < count; j++)
-				data_af7784.ticks[j] = data_af7784.ticks[i + j];
-
-			data_af7784.ticks[count] = now;
-			data_af7784.count = count + 1;
-		} else {
-			data_af7784.ticks[0] = now;
-			data_af7784.count = 1;
-		}
 	}
 }
 

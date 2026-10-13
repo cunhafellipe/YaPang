@@ -1444,7 +1444,9 @@ void CCameraWork::Process(float elapsed, float time) {
 	m_prevSourceCamera2 = m_prevSourceCamera;
 	m_prevSourceCamera = m_sourceCamera;
 
-	m_preDataFrame = GolfBall().m_preDataIndex;
+	CGolfBall &ball = GolfBall();
+
+	m_preDataFrame = ball.m_preDataIndex;
 	m_workTime = (float)m_preDataFrame;
 	float prevTime = m_cameraTime;
 	bool scripted = false;

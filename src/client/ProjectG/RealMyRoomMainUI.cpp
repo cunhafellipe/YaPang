@@ -1192,7 +1192,6 @@ void CRealMyRoomMain::InitMyRoomDialogs(void) {
 		m_pFurnitureAbilityDlg = NULL;
 	}
 
-	m_itemStoragePageCount = 0;
 	m_dialogsReady = true;
 	m_pUccDrawDlg = NULL;
 	m_pUccCopyDlg = NULL;
@@ -1202,7 +1201,7 @@ void CRealMyRoomMain::InitMyRoomDialogs(void) {
 	m_pItemStorageNotice = NULL;
 	m_pItemStorageAccessPanel = NULL;
 	m_itemStorageVisible = false;
-	m_itemStoragePage = 0;
+	m_itemStorageDlgPos = WPoint(0, 0);
 	m_pItemStorageDlg = NULL;
 	m_pItemStoragePang = NULL;
 	m_pItemStoragePangMinus = NULL;
@@ -1524,8 +1523,8 @@ void CRealMyRoomMain::LoadMyRoomImages(void) {
 	m_pItemSlotBitmap[2] = g_pFresh->RegisterBitmap("item_slot_d");
 	m_pItemSlotEmpty = g_pFresh->RegisterBitmap("item_slot_empty");
 
-	m_pItemDescBottomLeft = (Bitmap*)g_pFresh->RegisterBitmap("itemdesc_01");
-	m_pItemDescBottomRight = (Bitmap*)g_pFresh->RegisterBitmap("itemdesc_02");
+	m_pItemDescBottom[0] = (Bitmap*)g_pFresh->RegisterBitmap("itemdesc_01");
+	m_pItemDescBottom[1] = (Bitmap*)g_pFresh->RegisterBitmap("itemdesc_02");
 
 	m_pGiftPageBitmap[0] = g_pFresh->RegisterBitmap("gift_arrow_white_2");
 	m_pGiftPageBitmap[1] = g_pFresh->RegisterBitmap("gift_number_01");
@@ -3193,8 +3192,12 @@ void CRealMyRoomMain::OnItemDescBgOwnerDraw2(int param) {
 		return;
 	}
 
-	float w[9] = { (float)m_pItemDescFrame[0]->Width(), (float)m_pItemDescFrame[1]->Width(), (float)m_pItemDescFrame[2]->Width(), (float)m_pItemDescFrame[3]->Width(), (float)m_pItemDescFrame[4]->Width(), (float)m_pItemDescFrame[5]->Width(), (float)m_pItemDescFrame[6]->Width(), (float)m_pItemDescFrame[7]->Width(), (float)m_pItemDescFrame[8]->Width() };
-	float h[9] = { (float)m_pItemDescFrame[0]->Height(), (float)m_pItemDescFrame[1]->Height(), (float)m_pItemDescFrame[2]->Height(), (float)m_pItemDescFrame[3]->Height(), (float)m_pItemDescFrame[4]->Height(), (float)m_pItemDescFrame[5]->Height(), (float)m_pItemDescFrame[6]->Height(), (float)m_pItemDescFrame[7]->Height(), (float)m_pItemDescFrame[8]->Height() };
+	float w[9];
+	float h[9];
+	for (int i = 0; i < 9; i++) {
+		w[i] = (float)m_pItemDescFrame[i]->Width();
+		h[i] = (float)m_pItemDescFrame[i]->Height();
+	}
 
 	float nameH = m_pItemNameEdit->GetRect().h;
 	int lineHeight = m_pItemDescEdit2->GetLineHeight();
@@ -3238,14 +3241,18 @@ void CRealMyRoomMain::OnItemDescBgOwnerDraw(int param) {
 		return;
 	}
 
-	float w[2] = { (float)m_pItemDescBottomLeft->Width(), (float)m_pItemDescBottomRight->Width() };
-	float h[2] = { (float)m_pItemDescBottomLeft->Height(), (float)m_pItemDescBottomRight->Height() };
+	float w[6];
+	float h[6];
+	for (int i = 0; i < 2; i++) {
+		w[i] = (float)m_pItemDescBottom[i]->Width();
+		h[i] = (float)m_pItemDescBottom[i]->Height();
+	}
 
 	float y = m_itemDescPos.y + 320.0f;
 
-	pGI->DrawTexture(m_pItemDescBottomLeft, WRect(m_itemDescPos.x + 6.0f, y, w[0], h[0]), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescBottom[0], WRect(m_itemDescPos.x + 6.0f, y, w[0], h[0]), 0xFFFFFFFF, 0);
 
-	pGI->DrawTexture(m_pItemDescBottomRight, WRect(m_itemDescPos.x + 262.0f, y, w[1], h[1]), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescBottom[1], WRect(m_itemDescPos.x + 262.0f, y, w[1], h[1]), 0xFFFFFFFF, 0);
 }
 
 // realmyroommainui.cpp:4091
@@ -8589,10 +8596,11 @@ void CRealMyRoomMain::Net_EquipCharacter(void) {
 void CRealMyRoomMain::Net_EquipDresserParts(void) {
 	int i;
 
-	std::map<unsigned int, sCharacterInfo>::iterator docIt = WSingleton<CSharedDoc>::Instance()->m_characterMap.begin(), it = m_characterMap.begin();
+	std::map<unsigned int, sCharacterInfo>::iterator it = m_characterMap.begin(), docIt = WSingleton<CSharedDoc>::Instance()->m_characterMap.begin();
 
 	for (; it != m_characterMap.end() && docIt != WSingleton<CSharedDoc>::Instance()->m_characterMap.end(); ++it, ++docIt) {
 		sCharacterInfo& charInfo = it->second;
+		sCharacterInfo& docInfo = docIt->second;
 
 		IFF_STRUCT::sChar* pChar = ItemManager()->FindChar(charInfo.typeId);
 		if (pChar == NULL) {
@@ -8602,14 +8610,14 @@ void CRealMyRoomMain::Net_EquipDresserParts(void) {
 		int numParts = pChar->m_numParts + pChar->m_numExtraParts;
 		bool changed = false;
 		for (i = 0; i < numParts; i++) {
-			if (charInfo.partTypeIds[i] != docIt->second.partTypeIds[i] || charInfo.partIds[i] != docIt->second.partIds[i]) {
+			if (charInfo.partTypeIds[i] != docInfo.partTypeIds[i] || charInfo.partIds[i] != docInfo.partIds[i]) {
 				changed = true;
 				break;
 			}
 		}
 
 		for (i = 0; i < 5; i++) {
-			if (charInfo.auxParts.tids[i] != docIt->second.auxParts.tids[i]) {
+			if (charInfo.auxParts.tids[i] != docInfo.auxParts.tids[i]) {
 				changed = true;
 				break;
 			}
@@ -8619,11 +8627,11 @@ void CRealMyRoomMain::Net_EquipDresserParts(void) {
 			continue;
 		}
 
-		sCharacterInfo info = docIt->second;
+		sCharacterInfo info = docInfo;
 
 		for (i = 0; i < numParts; i++) {
-			info.partTypeIds[i] = docIt->second.partTypeIds[i];
-			info.partIds[i] = docIt->second.partIds[i];
+			info.partTypeIds[i] = docInfo.partTypeIds[i];
+			info.partIds[i] = docInfo.partIds[i];
 		}
 
 		for (i = numParts; i < 24; i++) {
@@ -8631,7 +8639,7 @@ void CRealMyRoomMain::Net_EquipDresserParts(void) {
 			info.partIds[i] = 0;
 		}
 
-		info.auxParts = docIt->second.auxParts;
+		info.auxParts = docInfo.auxParts;
 
 		WSendPacket packet(GCT_REQUEST_EQUIP_ITEM);
 		packet.Encode1(0);
@@ -14215,9 +14223,7 @@ void CRealMyRoomMain::DrawCutinFrame(void) {
 			if (pInfo != NULL) {
 				WOverlay* pCutin = GetCutinImg(pInfo->m_typeId);
 				if (pCutin != NULL) {
-					WRECT screenRect = { 72.0f, 67.0f, (float)pCutin->GetWidth(), (float)pCutin->GetHeight() };
-					WRECT texRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-					pCutin->Render(g_view, texRect, screenRect, 0, 0xFFFFFFFF, 0.0f, 0);
+					pCutin->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(72.0f, 67.0f, pCutin->GetWidth(), pCutin->GetHeight()), 0, 0xFFFFFFFF, 0.0f, 0);
 				}
 			}
 		}

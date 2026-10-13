@@ -1297,28 +1297,21 @@ float WPolySoup::GetCameraRadius(WVector a, WVector b, WVector c) {
 	b.y = 0.0f;
 	c.y = 0.0f;
 
+	float angle[2];
 	float lenA = sqrtf(a.x * a.x + a.z * a.z);
 	float lenB = sqrtf(b.x * b.x + b.z * b.z);
 	a.Normalize();
 	b.Normalize();
 	c.Normalize();
 
-	float cosA = a.x * c.x + a.z * c.z + a.y * c.y;
-	if (cosA < -1.0f)
-		cosA = -1.0f;
-	else if (cosA > 1.0f)
-		cosA = 1.0f;
-	float angleA = acosf(cosA);
-	float cosB = b.x * c.x + b.z * c.z + b.y * c.y;
-	if (cosB < -1.0f)
-		cosB = -1.0f;
-	else if (cosB > 1.0f)
-		cosB = 1.0f;
-	float angleB = acosf(cosB);
+	float cosA = a.x * c.x + a.y * c.y + a.z * c.z;
+	angle[0] = acosf(cosA < -1.0f ? -1.0f : (cosA > 1.0f ? 1.0f : cosA));
+	float cosB = b.x * c.x + b.y * c.y + b.z * c.z;
+	angle[1] = acosf(cosB < -1.0f ? -1.0f : (cosB > 1.0f ? 1.0f : cosB));
 
-	float sinSum = sinf(angleA + angleB);
+	float sinSum = sinf(angle[0] + angle[1]);
 
-	return sinSum * lenB * lenA / (sinf(angleA) * lenA + sinf(angleB) * lenB);
+	return sinSum * lenB * lenA / (sinf(angle[0]) * lenA + sinf(angle[1]) * lenB);
 }
 
 // polysoup.cpp:1766
@@ -2077,23 +2070,20 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 		break;
 	}
 
-	// Four arrays of numMeshes counters: the first fragment of each mesh in
+	// Four runs of numMeshes counters: the first fragment of each mesh in
 	// pOut, the file's fragments A and B of each mesh, its input fragments.
-	int *pFirst = new int[numMeshes * 4];
-	int *pCountA = pFirst + numMeshes;
-	int *pCountB = pFirst + numMeshes * 2;
-	int *pCountIn = pFirst + numMeshes * 3;
-	memset(pFirst, 0, numMeshes * 16);
+	int *pCounts = new int[numMeshes * 4];
+	memset(pCounts, 0, numMeshes * 16);
 	SmOutFrag *pOut = new SmOutFrag[numOutA + numOutB + numInFrags];
 
 	if (numOutA > 0) {
-		pFile->Read(pCountA, numMeshes * 4);
+		pFile->Read(&pCounts[numMeshes], numMeshes * 4);
 	}
 	if (numSkipBefore > 0) {
 		pFile->Seek(numMeshes * 4, 1);
 	}
 	if (numOutB > 0) {
-		pFile->Read(pCountB, numMeshes * 4);
+		pFile->Read(&pCounts[numMeshes * 2], numMeshes * 4);
 	}
 	if (numSkipAfter > 0) {
 		pFile->Seek(numMeshes * 4, 1);
@@ -2105,26 +2095,23 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 				SmInFragList *pLists = pCases[c].m_pLists;
 				if (pLists) {
 					for (j = 0; j < pLists[i].m_numFrags; j++) {
-						SmInFrag *pFrag = &pLists[i].m_pFrags[j];
-						if (pFrag->m_triIndex != 0xFFFF) {
-							pCountIn[pFrag->m_meshIndex]++;
-						}
+						if (pLists[i].m_pFrags[j].m_triIndex != 0xFFFF) pCounts[numMeshes * 3 + pLists[i].m_pFrags[j].m_meshIndex]++;
 					}
 				}
 			}
 		}
 	}
 
-	pFirst[0] = 0;
+	pCounts[0] = 0;
 	for (i = 1; i < numMeshes; i++) {
-		pFirst[i] = pFirst[i - 1] + pCountIn[i - 1] + pCountA[i - 1] + pCountB[i - 1];
+		pCounts[i] = pCounts[i - 1] + pCounts[numMeshes * 3 + i - 1] + pCounts[numMeshes + i - 1] + pCounts[numMeshes * 2 + i - 1];
 	}
 
-	memset(pCountIn, 0, numMeshes * 4);
+	memset(&pCounts[numMeshes * 3], 0, numMeshes * 4);
 
 	for (i = 0; i < numMeshes; i++) {
-		if (pCountA[i] > 0) {
-			pFile->Read(&pOut[pFirst[i]], pCountA[i] * 8);
+		if (pCounts[numMeshes + i] > 0) {
+			pFile->Read(&pOut[pCounts[i]], pCounts[numMeshes + i] * 8);
 		}
 	}
 	if (numSkipBefore) {
@@ -2133,8 +2120,8 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 
 	if (numOutB > 0) {
 		for (i = 0; i < numMeshes; i++) {
-			if (pCountB[i] > 0) {
-				pFile->Read(&pOut[pFirst[i] + pCountA[i]], pCountB[i] * 8);
+			if (pCounts[numMeshes * 2 + i] > 0) {
+				pFile->Read(&pOut[pCounts[i] + pCounts[numMeshes + i]], pCounts[numMeshes * 2 + i] * 8);
 			}
 		}
 	}
@@ -2148,12 +2135,10 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 						SmInFrag *pFrag = &pLists[i].m_pFrags[j];
 						if (pFrag->m_triIndex != 0xFFFF) {
 							int mesh = pFrag->m_meshIndex;
-							int *pCount = &pCountIn[mesh];
-							SmOutFrag *pDst = &pOut[pCountB[mesh] + pCountA[mesh] + pFirst[mesh] + *pCount];
-							pDst->m_triIndex = pFrag->m_triIndex;
-							pDst->m_vtx[0] = pFrag->m_vtx[0];
-							pDst->m_vtx[1] = pFrag->m_vtx[1];
-							pDst->m_vtx[2] = pFrag->m_vtx[2];
+							int *pCount = &pCounts[numMeshes * 3 + mesh];
+							int dst = pCounts[numMeshes * 2 + mesh] + pCounts[numMeshes + mesh] + pCounts[mesh] + *pCount;
+							pOut[dst].m_triIndex = pFrag->m_triIndex;
+							memcpy(pOut[dst].m_vtx, pFrag->m_vtx, 6);
 							(*pCount)++;
 						}
 					}
@@ -2167,48 +2152,22 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 	}
 
 	for (i = 0; i < numMeshes; i++) {
-		if (pCountB[i] > 0) {
-			pFile->Read(&pOut[pFirst[i] + pCountA[i]], pCountB[i] * 8);
+		if (pCounts[numMeshes * 2 + i] > 0) {
+			pFile->Read(&pOut[pCounts[i] + pCounts[numMeshes + i]], pCounts[numMeshes * 2 + i] * 8);
 		}
-		pCountA[i] += pCountIn[i] + pCountB[i];
+		pCounts[numMeshes + i] += pCounts[numMeshes * 3 + i] + pCounts[numMeshes * 2 + i];
 	}
 
 	for (i = 0; i < numMeshes; i++) {
-		int count = pCountA[i];
-		if (count <= 0) {
-			continue;
-		}
-		SmOutFrag *pFrags = &pOut[pFirst[i]];
-
-		// The fragments with no later duplicate.
-		int numUnique = 0;
-		int k, r;
-		for (j = 0; j < count - 1; j++) {
-			for (k = j + 1; k < count; k++) {
-				for (r = 0; r < 3; r++) {
-					if (pFrags[j].m_vtx[0] == pFrags[k].m_vtx[r] && pFrags[j].m_vtx[1] == pFrags[k].m_vtx[(r + 1) % 3] && pFrags[j].m_vtx[2] == pFrags[k].m_vtx[(r + 2) % 3]) {
-						break;
-					}
-				}
-				if (r < 3) {
-					break;
-				}
-			}
-			if (k == count) {
-				numUnique++;
-			}
-		}
-
-		if (numUnique + 1 == count) {
-			qsort(pFrags, count, 8, smCompareOutFrag);
-			smBuildOutFragMeshes(ppMeshes[i], pFrags, count, pVtx);
-		} else {
-			SmOutFrag *pKept = new SmOutFrag[numUnique + 1];
-			int numKept = 0;
-			for (j = 0; j < pCountA[i] - 1; j++) {
-				for (k = j + 1; k < pCountA[i]; k++) {
+		int count = pCounts[numMeshes + i];
+		if (count > 0) {
+			// The fragments with no later duplicate.
+			int numUnique = 0;
+			int k, r;
+			for (j = 0; j < count - 1; j++) {
+				for (k = j + 1; k < count; k++) {
 					for (r = 0; r < 3; r++) {
-						if (pFrags[j].m_vtx[0] == pFrags[k].m_vtx[r] && pFrags[j].m_vtx[1] == pFrags[k].m_vtx[(r + 1) % 3] && pFrags[j].m_vtx[2] == pFrags[k].m_vtx[(r + 2) % 3]) {
+						if (pOut[pCounts[i] + j].m_vtx[0] == pOut[pCounts[i] + k].m_vtx[r] && pOut[pCounts[i] + j].m_vtx[1] == pOut[pCounts[i] + k].m_vtx[(r + 1) % 3] && pOut[pCounts[i] + j].m_vtx[2] == pOut[pCounts[i] + k].m_vtx[(r + 2) % 3]) {
 							break;
 						}
 					}
@@ -2216,18 +2175,41 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 						break;
 					}
 				}
-				if (k == pCountA[i]) {
-					pKept[numKept++] = pFrags[j];
+				if (k == count) {
+					numUnique++;
 				}
 			}
-			pKept[numKept++] = pFrags[j];
-			qsort(pKept, numKept, 8, smCompareOutFrag);
-			smBuildOutFragMeshes(ppMeshes[i], pKept, numKept, pVtx);
-			delete[] pKept;
+
+			if (numUnique + 1 != count) {
+				SmOutFrag *pKept = new SmOutFrag[numUnique + 1];
+				int numKept = 0;
+				for (j = 0; j < pCounts[numMeshes + i] - 1; j++) {
+					for (k = j + 1; k < pCounts[numMeshes + i]; k++) {
+						for (r = 0; r < 3; r++) {
+							if (pOut[pCounts[i] + j].m_vtx[0] == pOut[pCounts[i] + k].m_vtx[r] && pOut[pCounts[i] + j].m_vtx[1] == pOut[pCounts[i] + k].m_vtx[(r + 1) % 3] && pOut[pCounts[i] + j].m_vtx[2] == pOut[pCounts[i] + k].m_vtx[(r + 2) % 3]) {
+								break;
+							}
+						}
+						if (r < 3) {
+							break;
+						}
+					}
+					if (k == pCounts[numMeshes + i]) {
+						pKept[numKept++] = pOut[pCounts[i] + j];
+					}
+				}
+				pKept[numKept++] = pOut[pCounts[i] + j];
+				qsort(pKept, numKept, 8, smCompareOutFrag);
+				smBuildOutFragMeshes(ppMeshes[i], pKept, numKept, pVtx);
+				delete[] pKept;
+			} else {
+				qsort(&pOut[pCounts[i]], count, 8, smCompareOutFrag);
+				smBuildOutFragMeshes(ppMeshes[i], &pOut[pCounts[i]], pCounts[numMeshes + i], pVtx);
+			}
 		}
 	}
 
-	delete[] pFirst;
+	delete[] pCounts;
 	delete[] pOut;
 }
 
@@ -2247,6 +2229,9 @@ int __cdecl WPolySoup::smCompareOutFrag(const void *a, const void *b) {
 	return 0;
 }
 
+// The epsilon of the vertex merge, a nameless .rdata float of this object.
+extern "C" const float data_a111e4;
+
 // polysoup.cpp:2982
 // Splits the triangles of pMesh named by the output fragments (sorted by
 // triangle) into the fragments' triangles. A fragment vertex below 0x8000 is
@@ -2261,8 +2246,8 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 
 	unsigned short *pOldIdx = pMesh->indexList;
 	WVector *pOldVec = pMesh->vecList;
-	float (*pOldUV)[2] = pMesh->uvData;
 	WVector *pOldNorm = pMesh->normList;
+	float (*pOldUV)[2] = pMesh->uvData;
 	unsigned long *pOldColors = pMesh->vtxColorList;
 	int numTris = 1;
 	int i, j, k;
@@ -2283,11 +2268,10 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 	int numNew = 0;
 
 	for (i = 0; i < numFrags; i++) {
-		int tri = pFrags[i].m_triIndex;
-		int i0 = pOldIdx[tri * 3];
-		int i1 = pOldIdx[tri * 3 + 1];
-		int i2 = pOldIdx[tri * 3 + 2];
-		unsigned short *pDst = &pNewIdx[numKeptIdx + i * 3];
+		int tri = pFrags[i].m_triIndex * 3;
+		int i0 = pOldIdx[tri];
+		int i1 = pOldIdx[tri + 1];
+		int i2 = pOldIdx[tri + 2];
 
 		for (j = 0; j < 3; j++) {
 			int vtx = pFrags[i].m_vtx[j];
@@ -2311,20 +2295,21 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 				normal.y = InterpolateTriangle(pOldNorm[i0].y, pOldNorm[i1].y, pOldNorm[i2].y, u, v);
 				normal.z = InterpolateTriangle(pOldNorm[i0].z, pOldNorm[i1].z, pOldNorm[i2].z, u, v);
 
-				unsigned long c0 = pOldColors[i0];
-				unsigned long c1 = pOldColors[i1];
-				unsigned long c2 = pOldColors[i2];
-				unsigned long color = (unsigned char)(int)InterpolateTriangle((float)(c0 >> 24 & 0xFF), (float)(c1 >> 24 & 0xFF), (float)(c2 >> 24 & 0xFF), u, v);
-				color = color << 8 | (unsigned char)(int)InterpolateTriangle((float)(c0 >> 16 & 0xFF), (float)(c1 >> 16 & 0xFF), (float)(c2 >> 16 & 0xFF), u, v);
-				color = color << 8 | (unsigned char)(int)InterpolateTriangle((float)(c0 >> 8 & 0xFF), (float)(c1 >> 8 & 0xFF), (float)(c2 >> 8 & 0xFF), u, v);
-				color = color << 8 | (unsigned char)(int)InterpolateTriangle((float)(c0 & 0xFF), (float)(c1 & 0xFF), (float)(c2 & 0xFF), u, v);
+				float a0 = (float)((pOldColors[i0] >> 24) & 0xFF);
+				float r0 = (float)((pOldColors[i0] >> 16) & 0xFF);
+				float g0 = (float)((pOldColors[i0] >> 8) & 0xFF);
+				float b0 = (float)(pOldColors[i0] & 0xFF);
+				unsigned long color = (unsigned char)(int)InterpolateTriangle(a0, (float)((pOldColors[i1] >> 24) & 0xFF), (float)((pOldColors[i2] >> 24) & 0xFF), u, v);
+				color = color << 8 | (unsigned char)(int)InterpolateTriangle(r0, (float)((pOldColors[i1] >> 16) & 0xFF), (float)((pOldColors[i2] >> 16) & 0xFF), u, v);
+				color = color << 8 | (unsigned char)(int)InterpolateTriangle(g0, (float)((pOldColors[i1] >> 8) & 0xFF), (float)((pOldColors[i2] >> 8) & 0xFF), u, v);
+				color = color << 8 | (unsigned char)(int)InterpolateTriangle(b0, (float)(pOldColors[i1] & 0xFF), (float)(pOldColors[i2] & 0xFF), u, v);
 
 				float uv[2];
 				uv[0] = InterpolateTriangle(pOldUV[i0][0], pOldUV[i1][0], pOldUV[i2][0], u, v);
 				uv[1] = InterpolateTriangle(pOldUV[i0][1], pOldUV[i1][1], pOldUV[i2][1], u, v);
 
 				for (k = 0; k < numNew; k++) {
-					if (WisEqual(pNewVec[k].x, pPos->x, 0.00001f) && WisEqual(pNewVec[k].y, pPos->y, 0.00001f) && WisEqual(pNewVec[k].z, pPos->z, 0.00001f) && WisEqual(pNewNorm[k].x, normal.x, 0.00001f) && WisEqual(pNewNorm[k].y, normal.y, 0.00001f) && WisEqual(pNewNorm[k].z, normal.z, 0.00001f) && WisEqual(pNewUV[k][0], uv[0], 0.00001f) && WisEqual(pNewUV[k][1], uv[1], 0.00001f)) {
+					if (WisEqual(pNewVec[k].x, pPos->x, data_a111e4) && WisEqual(pNewVec[k].y, pPos->y, data_a111e4) && WisEqual(pNewVec[k].z, pPos->z, data_a111e4) && WisEqual(pNewNorm[k].x, normal.x, data_a111e4) && WisEqual(pNewNorm[k].y, normal.y, data_a111e4) && WisEqual(pNewNorm[k].z, normal.z, data_a111e4) && WisEqual(pNewUV[k][0], uv[0], data_a111e4) && WisEqual(pNewUV[k][1], uv[1], data_a111e4)) {
 						break;
 					}
 				}
@@ -2332,19 +2317,17 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 				if (k == numNew) {
 					pNewVec[numNew] = *pPos;
 					pNewNorm[numNew] = normal;
-					pNewUV[numNew][0] = uv[0];
-					pNewUV[numNew][1] = uv[1];
+					memcpy(pNewUV[numNew], uv, sizeof(uv));
 					pNewColors[numNew] = color;
-					*pDst = (unsigned short)(pMesh->vtxNum + numNew);
+					pNewIdx[numKeptIdx + i * 3 + j] = (unsigned short)(pMesh->vtxNum + numNew);
 					numNew++;
 				} else {
-					*pDst = (unsigned short)(pMesh->vtxNum + k);
+					pNewIdx[numKeptIdx + i * 3 + j] = (unsigned short)(pMesh->vtxNum + k);
 				}
 			} else {
-				*pDst = (unsigned short)(vtx - 0x8000);
+				pNewIdx[numKeptIdx + i * 3 + j] = (unsigned short)(vtx - 0x8000);
 			}
 
-			pDst++;
 		}
 	}
 
@@ -2366,7 +2349,7 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 		}
 	}
 
-	int last = pFrags[numFrags - 1].m_triIndex * 3;
+	int last = pFrags[i - 1].m_triIndex * 3;
 	int rest = pMesh->indexNum - last;
 
 	if (rest > 3) {
@@ -2736,50 +2719,26 @@ bool WPolySoup::IsInPoly(WVector &pos, std::vector<sCupVtx> &verts) {
 // Whether the segments (a, b) and (c, d) cross on the XZ plane: each
 // segment's ends lie on opposite sides of the other.
 bool WPolySoup::AreCrossed(WVector *a, WVector *b, WVector *c, WVector *d) {
-	float x1 = b->x - a->x;
-	float z1 = b->z - a->z;
-	float len = 1.0f / sqrtf(z1 * z1 + x1 * x1);
-	x1 *= len;
-	z1 *= len;
-	float x2 = c->x - a->x;
-	float z2 = c->z - a->z;
-	len = 1.0f / sqrtf(z2 * z2 + x2 * x2);
-	x2 *= len;
-	z2 *= len;
-	float side1 = x1 * z2 - x2 * z1;
-
-	float x3 = d->x - a->x;
-	float z3 = d->z - a->z;
-	len = 1.0f / sqrtf(z3 * z3 + x3 * x3);
-	x3 *= len;
-	z3 *= len;
-
-	float side2 = x1 * z3 - x3 * z1;
+	WVector2D e(b->x - a->x, b->z - a->z);
+	e /= sqrtf(e.x * e.x + e.y * e.y);
+	WVector2D v(c->x - a->x, c->z - a->z);
+	v /= sqrtf(v.x * v.x + v.y * v.y);
+	float side1 = e.x * v.y - v.x * e.y;
+	v = WVector2D(d->x - a->x, d->z - a->z);
+	v /= sqrtf(v.x * v.x + v.y * v.y);
+	float side2 = e.x * v.y - v.x * e.y;
 
 	if (side2 * side1 > 0.0f)
 		return false;
 
-	x1 = d->x - c->x;
-	z1 = d->z - c->z;
-	len = 1.0f / sqrtf(z1 * z1 + x1 * x1);
-	x1 *= len;
-	z1 *= len;
-
-	x2 = a->x - c->x;
-	z2 = a->z - c->z;
-	len = 1.0f / sqrtf(z2 * z2 + x2 * x2);
-	x2 *= len;
-	z2 *= len;
-
-	side1 = x1 * z2 - x2 * z1;
-
-	x3 = b->x - c->x;
-	z3 = b->z - c->z;
-	len = 1.0f / sqrtf(z3 * z3 + x3 * x3);
-	x3 *= len;
-	z3 *= len;
-
-	side2 = x1 * z3 - x3 * z1;
+	e = WVector2D(d->x - c->x, d->z - c->z);
+	e /= sqrtf(e.x * e.x + e.y * e.y);
+	v = WVector2D(a->x - c->x, a->z - c->z);
+	v /= sqrtf(v.x * v.x + v.y * v.y);
+	side1 = e.x * v.y - v.x * e.y;
+	v = WVector2D(b->x - c->x, b->z - c->z);
+	v /= sqrtf(v.x * v.x + v.y * v.y);
+	side2 = e.x * v.y - v.x * e.y;
 
 	if (side2 * side1 > 0.0f)
 		return false;
@@ -2951,29 +2910,28 @@ void WPolySoup::BuildNewHolecupMesh(std::vector<sHoleMesh> &meshes, sHoleTri &tr
 			next++;
 		next %= numClipped;
 
-		WVector line;
-		line.x = clipped[i].z - clipped[next].z;
-		line.y = clipped[next].x - clipped[i].x;
-		line.z = 0.0f;
+		WVector &cur = clipped[i];
+		WVector line(cur.z - clipped[next].z, clipped[next].x - cur.x, 0.0f);
 		line.Normalize();
-		line.z = (line.x * clipped[i].x + line.y * clipped[i].z) * -1.0f;
+		line.z = (line.x * cur.x + line.y * cur.z) * -1.0f;
 		edges.push_back(line);
 	}
 
-	bool used[3] = { false, false, false };
 	int firstInside = -1;
 	bool started = false;
 	int prevCount = 0;
 	int prevInside[3];
+	bool used[3];
+	memset(used, 0, sizeof(used));
 
 	for (i = 0; i < numClipped; i++) {
-		WVector &edge = edges[i];
 		int inside[3];
 		int count = 0;
 		int k;
 
 		for (k = 0; k < 3; k++) {
-			if (tri.m_pVertex[k]->x * edge.x + tri.m_pVertex[k]->z * edge.y + edge.z > 0.001f)
+			float dist = tri.m_pVertex[k]->x * edges[i].x + tri.m_pVertex[k]->z * edges[i].y + edges[i].z;
+			if (dist > 0.001f)
 				inside[count++] = k;
 		}
 
@@ -2993,16 +2951,20 @@ void WPolySoup::BuildNewHolecupMesh(std::vector<sHoleMesh> &meshes, sHoleTri &tr
 
 		case 1: {
 			int cur = inside[0];
-			int other = -1;
-			if (prevCount == 1)
-				other = prevInside[0];
-			else if (prevCount == 2)
-				other = prevInside[1];
-
-			if (other != -1 && cur != other && !used[other]) {
-				used[other] = true;
-				AddNewHolecupTri(meshes, tri, tri.m_pVertex[other], tri.m_pVertex[cur], &clipped[i],
-					tri.m_vtx[other], tri.m_vtx[cur], -1);
+			if (prevCount == 1) {
+				int other = prevInside[0];
+				if (cur != other && !used[other]) {
+					used[other] = true;
+					AddNewHolecupTri(meshes, tri, tri.m_pVertex[other], tri.m_pVertex[cur], &clipped[i],
+						tri.m_vtx[other], tri.m_vtx[cur], -1);
+				}
+			} else if (prevCount == 2) {
+				int other = prevInside[1];
+				if (cur != other && !used[other]) {
+					used[other] = true;
+					AddNewHolecupTri(meshes, tri, tri.m_pVertex[other], tri.m_pVertex[cur], &clipped[i],
+						tri.m_vtx[other], tri.m_vtx[cur], -1);
+				}
 			}
 
 			if (i < numClipped - 1) {
@@ -3042,9 +3004,8 @@ void WPolySoup::BuildNewHolecupMesh(std::vector<sHoleMesh> &meshes, sHoleTri &tr
 		}
 		}
 
+		memcpy(prevInside, inside, count * sizeof(int));
 		prevCount = count;
-		for (k = 0; k < count; k++)
-			prevInside[k] = inside[k];
 	}
 }
 

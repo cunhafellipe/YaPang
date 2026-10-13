@@ -5,6 +5,7 @@
 #include "defines.h"
 #include "padding.h"
 #include "frform.h"
+#include "wflag.h"
 #include <vector>
 #include <map>
 
@@ -18,7 +19,10 @@ class WRect;
 
 // One cell of the bingo board: its number, a bool set by operator=(bool) and
 // a bit set of properties (bit 0 and bit 1 pick the cell's bitmap in
-// DrawPoint). The destructor is not virtual (??_G is QAE).
+// DrawPoint). The properties are a WFlags: the inlined accessors address
+// the member itself (CBingoLine::ClearOverProperty keeps a dead
+// lea of point+8, AimPoint never caches the value). The destructor is not
+// virtual (??_G is QAE).
 class CBingoPoint {
 	LAYOUT_CHECK_FRIEND;
 
@@ -32,10 +36,10 @@ public:
 	void SetPointNumber(int number) { m_pointNumber = number; }    // bingoeventdlg.h:32
 	int GetPointNumber(void) const { return m_pointNumber; }       // bingoeventdlg.h:33
 
-	void EnableProperty(int property) { m_property |= property; }     // bingoeventdlg.h:35
-	void DisableProperty(int property) { m_property &= ~property; }   // bingoeventdlg.h:36
+	void EnableProperty(int property) { m_property.Enable(property); }     // bingoeventdlg.h:35
+	void DisableProperty(int property) { m_property.Disable(property); } // bingoeventdlg.h:36
 	bool IsProperty(int property) {   // bingoeventdlg.h:37
-		if (m_property & property) {
+		if (m_property.GetFlag(property)) {
 			return true;
 		}
 
@@ -47,7 +51,7 @@ public:
 private:
 	int m_pointNumber;   // 0x0
 	bool m_value;        // 0x4 (operator=(bool))
-	int m_property;      // 0x8 (EnableProperty/DisableProperty bits)
+	WFlags m_property;   // 0x8 (EnableProperty/DisableProperty bits)
 };
 
 CHECK_SIZE(CBingoPoint, 0xC);

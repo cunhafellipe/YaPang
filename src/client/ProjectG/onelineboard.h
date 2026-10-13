@@ -90,6 +90,17 @@ END_LAYOUT_CHECK
 #define ONELINEREQDLG_ONELINEBOARD_INLINE inline
 #endif
 
+// TaskMain.cpp defines TASKMAIN_ONELINEBOARD_INLINE empty before its includes:
+// the original holds the out-of-line copy of SetRect in TaskMain's object.
+#ifndef TASKMAIN_ONELINEBOARD_INLINE
+#define TASKMAIN_ONELINEBOARD_INLINE inline
+#endif
+
+// onelineboard.h:14
+TASKMAIN_ONELINEBOARD_INLINE void COneLineBoard::SetRect(const WRect &rect) {
+	m_rect = rect;
+}
+
 // onelineboard.h:19
 ONELINEREQDLG_ONELINEBOARD_INLINE int COneLineBoard::GetWaitMsgNum(void) {
 	return m_waitMsgNum;

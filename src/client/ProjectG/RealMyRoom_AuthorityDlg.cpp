@@ -151,7 +151,11 @@ void CRealMyRoom_AuthorityDlg::OnAuth_KindPowerBtnDown(void) {
 	if (pItem->no == m_bAuthSetting) {
 		m_pKindPowerList->SelectItem(pItem, true);
 	}
-	m_bAuthSetting = pItem->no != 0;
+	if (pItem->no == 0) {
+		m_bAuthSetting = false;
+	} else {
+		m_bAuthSetting = true;
+	}
 
 	m_pPasswordEdit->SetVisible(m_bAuthSetting);
 }

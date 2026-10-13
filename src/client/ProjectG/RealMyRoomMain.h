@@ -712,8 +712,7 @@ private:
 	const Bitmap* m_pSkinSlotBitmap;   // 0x55c, DrawSkinSlot's slot background; cleared by InitMyRoomControls
 	const Bitmap* m_pItemSlotBitmap[3];    // 0x560, OnItemSlotOwnerDraw's slot frame: normal, hovered, selected
 	const Bitmap* m_pItemSlotEmpty;    // 0x56c, "item_slot_empty"
-	Bitmap* m_pItemDescBottomLeft;     // 0x570, drawn under the item description at (+6, +320) (OnItemDescBgOwnerDraw)
-	Bitmap* m_pItemDescBottomRight;    // 0x574, drawn under the item description at (+262, +320)
+	Bitmap* m_pItemDescBottom[2];     // 0x570, drawn under the item description at (+6, +320) and (+262, +320) (OnItemDescBgOwnerDraw)
 	UNKNOWN(0x578, 0x588);
 	// OnItemDescBgOwnerDraw2's frame around the second item description: the top row (left, middle, right),
 	// the middle row and the bottom row, three each.
@@ -860,8 +859,7 @@ private:
 	FrItemStorageAccessPanel* m_pItemStorageAccessPanel;   // 0xd94, cleared by OnResultItemStorageAccessPanel
 	bool m_itemStorageVisible;         // 0xd98
 	UNKNOWN(0xD99, 0xD9C);
-	int m_itemStoragePage;             // 0xd9c, zeroed by InitMyRoomDialogs
-	int m_itemStoragePageCount;        // 0xda0, zeroed by InitMyRoomDialogs
+	WPoint m_itemStorageDlgPos;        // 0xd9c, beside the item storage dialog; InitMyRoomDialogs sets (0, 0), no other member reads it
 	FrForm* m_pItemStorageDlg;         // 0xda4, cleared by InitMyRoomDialogs
 	FrArea* m_pItemStoragePang;        // 0xda8, a front UI of the item storage
 	FrButton* m_pItemStoragePangMinus; // 0xdac, a front UI of the item storage
@@ -1051,8 +1049,7 @@ BEGIN_LAYOUT_CHECK(CRealMyRoomMain)
 	CHECK_FIELD(CRealMyRoomMain, m_pItemStorageNotice, 0xD90);
 	CHECK_FIELD(CRealMyRoomMain, m_pItemStorageAccessPanel, 0xD94);
 	CHECK_FIELD(CRealMyRoomMain, m_itemStorageVisible, 0xD98);
-	CHECK_FIELD(CRealMyRoomMain, m_itemStoragePage, 0xD9C);
-	CHECK_FIELD(CRealMyRoomMain, m_itemStoragePageCount, 0xDA0);
+	CHECK_FIELD(CRealMyRoomMain, m_itemStorageDlgPos, 0xD9C);
 	CHECK_FIELD(CRealMyRoomMain, m_pItemStorageDlg, 0xDA4);
 	CHECK_FIELD(CRealMyRoomMain, m_pItemStorageList, 0xDB4);
 	CHECK_FIELD(CRealMyRoomMain, m_pItemStoragePangMinus, 0xDAC);
@@ -1105,8 +1102,7 @@ BEGIN_LAYOUT_CHECK(CRealMyRoomMain)
 	CHECK_FIELD(CRealMyRoomMain, m_pGiftDescEdit, 0x3A0);
 	CHECK_FIELD(CRealMyRoomMain, m_pItemDescBg2, 0x364);
 	CHECK_FIELD(CRealMyRoomMain, m_pItemDescEdit, 0x360);
-	CHECK_FIELD(CRealMyRoomMain, m_pItemDescBottomLeft, 0x570);
-	CHECK_FIELD(CRealMyRoomMain, m_pItemDescBottomRight, 0x574);
+	CHECK_FIELD(CRealMyRoomMain, m_pItemDescBottom, 0x570);
 	CHECK_FIELD(CRealMyRoomMain, m_itemDescPos, 0x788);
 	CHECK_FIELD(CRealMyRoomMain, m_equipItem, 0x984);
 	CHECK_FIELD(CRealMyRoomMain, m_pFortuneDlg, 0x440);
