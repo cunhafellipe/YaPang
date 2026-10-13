@@ -244,7 +244,8 @@ bool CPartList::CheckSubParts(void) {
 
 	// A sub part (tid bits 9-10 = 1) stays only while a worn part lists it.
 	for (i = 0; i < m_numTotalParts; i++) {
-		unsigned long tid = m_parts[i].m_tid;
+		::sPart &part = m_parts[i];
+		unsigned long tid = part.m_tid;
 		if (tid != 0 && (tid & 0x600) == 0x200) {
 			int j;
 			for (j = 0; j < m_numTotalParts; j++) {
@@ -260,14 +261,14 @@ bool CPartList::CheckSubParts(void) {
 			}
 
 			if (j >= m_numTotalParts) {
-				if (!SetPart(tid, m_parts[i].m_id))
+				if (!SetPart(tid, part.m_id))
 					return false;
-			} else if (i >= m_numDefaultParts && m_parts[i].m_pIff != 0) {
-				if (!IsEmpty(m_parts[i].m_pIff->hideMask, (unsigned char)i)) {
-					m_parts[i].m_tid = 0;
-					m_parts[i].m_pIff = 0;
+			} else if (i >= m_numDefaultParts && part.m_pIff != 0) {
+				if (!IsEmpty(part.m_pIff->hideMask, (unsigned char)i)) {
+					part.m_tid = 0;
+					part.m_pIff = 0;
 					if (IsLocalContent((localContentType_t)0x5F)) {
-						m_parts[i].m_id = 0;
+						part.m_id = 0;
 					}
 				}
 			}
@@ -960,9 +961,17 @@ int IsFixedHairStyle(unsigned long tid) {
 
 // The wig colour slot of each character type (the colour field, bits 13-17,
 // of the part type id that carries the hair colour).
+#ifdef JP_PAKS
+// The JP data has characters 10-14 (Spika ... Cesillia): the JP exe's table
+// (0xE26E98, docs/JP_CLIENT.md).
+int g_iIndexWigColor[] = {
+	16, 16, 16, 16, 16, 20, 14, 16, 16, 16, 16, 14, 14, 16, 16
+};
+#else
 int g_iIndexWigColor[] = {
 	16, 16, 16, 16, 16, 20, 14, 16, 16, 16
 };
+#endif
 
 // partsinfo.cpp:1341
 bool CPetFrame::SetHairClr(CPartTidList *pTidList, unsigned char clr) {
@@ -1095,10 +1104,10 @@ bool CPetFrame::SetShirtsClr(CPartTidList *pTidList, unsigned char clr) {
 	}
 
 	IFF_STRUCT::sChar *pChar = ItemManager()->FindChar(m_tidChar);
-	char *texName = pChar->m_baseTexture;
-	if (texName[0] == 0) {
+	if (pChar->m_baseTexture[0] == 0) {
 		return false;
 	}
+	char *texName = pChar->m_baseTexture;
 	int hOldTex = g_resrcmng->LoadTexture(texName, 0, 0, 0);
 	char *p = strrchr(texName, '.');
 	if (p == 0) {

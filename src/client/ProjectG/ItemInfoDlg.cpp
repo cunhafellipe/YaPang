@@ -464,11 +464,11 @@ void FrItemInfoDlg::DrawEnchantArrow(void) {
 
 	// One arrow per ability row, 17 pixels apart: the upgrade arrow for an
 	// enchanted one.
-	for (int i = 0, offsetY = 0; i < 5; i++, offsetY += 17) {
+	for (int i = 0; i < 5; i++) {
 		int bUpgraded = m_pTradeItem->stats[i] != 0;
 
 		if (m_pEnchantBitmap[bUpgraded] != 0) {
-			pDevice->DrawTexture(m_pEnchantBitmap[bUpgraded], WRect(x, y + offsetY, m_pEnchantBitmap[bUpgraded]->Width(), m_pEnchantBitmap[bUpgraded]->Height()), 0xFFFFFFFF, 0);
+			pDevice->DrawTexture(m_pEnchantBitmap[bUpgraded], WRect(x, y + i * 17, m_pEnchantBitmap[bUpgraded]->Width(), m_pEnchantBitmap[bUpgraded]->Height()), 0xFFFFFFFF, 0);
 		}
 	}
 }

@@ -106,7 +106,14 @@ struct RenderOrder {
 
 // An element drawn after the opaque ones, sorted by Greater (scenemanager.cpp).
 struct TransparentElement {
-	WPuppet* m_pPuppet;                    // 0x00
+	// scenemanager.h:128
+	TransparentElement(WPuppet* pPuppet, Waabb* pBox, int texture, int numPolys) {
+		m_pPuppet = pPuppet;
+		m_pBox = pBox;
+		m_texture = texture; m_numPolys = numPolys;
+	}
+
+	WPuppet* m_pPuppet;                   // 0x00
 	Waabb* m_pBox;                         // 0x04
 	unsigned long m_texture;               // 0x08, the imposter's first render-target texture
 	int m_numPolys;                        // 0x0C, face count of the puppet
@@ -168,6 +175,10 @@ public:
 	// scenemanager.h:229
 	void ShowTag(void) {
 		m_drawElementBoxes = !m_drawElementBoxes;
+	}
+	// scenemanager.h:231
+	bool ToggleTransparent(void) {
+		return m_overlapCamera = !m_overlapCamera;
 	}
 	// scenemanager.h:232
 	bool ToogleNoOverlapCamera(void) {

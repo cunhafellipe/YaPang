@@ -133,6 +133,7 @@ public:
 	bool ParseLine(const char* line);
 	void SetActive(bool bActive);                 // fxspray.inl:63
 	WVector& Pos(void);                           // fxspray.inl:70
+	WVector& Vel(void);                           // fxspray.inl:77
 	WVector& InitialMinVel(void);                 // fxspray.inl:84
 	WVector& InitialMaxVel(void);                 // fxspray.inl:91
 	void SetLight(const LightSet& light);

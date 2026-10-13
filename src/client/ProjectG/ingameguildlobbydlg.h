@@ -197,7 +197,7 @@ private:
 	const GUILD_USER_LIST *m_pCommandUserInfo;   // 0x2D4: the member the command menu acts on
 	std::list<const GUILD_LIST *> m_searchItems;   // 0x2D8: the rows of the search list box
 	int m_memberPage;               // 0x2E4: the current member page (1-based)
-	unsigned int m_searchPage;      // 0x2E8: the current guild search page (1-based)
+	int m_searchPage;               // 0x2E8: the current guild search page (1-based)
 	int m_searchMode;               // 0x2EC: reset by InitSearchMode
 	std::string m_searchText;       // 0x2F0
 	PADDING(0x30C, 0x310);

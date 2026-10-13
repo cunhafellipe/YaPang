@@ -45,14 +45,15 @@ void ntBalloonText::SetText(const char *text) {
 		return;
 	}
 
-	if (*text == '!') {
-		text++;
+	const char *body = text;
+	if (*body == '!') {
+		body++;
 		m_isThink = true;
 	} else {
 		m_isThink = false;
 	}
 
-	const char *stripped = StripSpecialText(text);
+	const char *stripped = StripSpecialText(body);
 	if (*stripped == '\0') {
 		return;
 	}

@@ -708,15 +708,13 @@ void FrChangeRoomInfoDlg::OnHoleTypeOwnerDraw(int param) {
 
 	WRect rect = m_pHoleType->GetRect();
 
-	WRect rc1;
-	rc1.x = rect.x;
-	rc1.y = rect.y;
-	rc1.w = (float)m_pHoleTypeImg[0]->Width();
-	rc1.h = (float)m_pHoleTypeImg[0]->Height();
+	float width = (float)m_pHoleTypeImg[0]->Width();
+	float height = (float)m_pHoleTypeImg[0]->Height();
 
-	WRect rc2(rc1.x + rc1.w, rect.y, (float)m_pHoleTypeImg[2]->Width(), rc1.h);
-	WRect rc3(rc2.x + rc2.w, rect.y, (float)m_pHoleTypeImg[4]->Width(), rc1.h);
-	WRect rc4(rc3.x + rc3.w, rect.y, (float)m_pHoleTypeImg[6]->Width(), rc1.h);
+	WRect rc1(rect.x, rect.y, width, height);
+	WRect rc2(rc1.x + rc1.w, rect.y, (float)m_pHoleTypeImg[2]->Width(), height);
+	WRect rc3(rc2.x + rc2.w, rect.y, (float)m_pHoleTypeImg[4]->Width(), height);
+	WRect rc4(rc3.x + rc3.w, rect.y, (float)m_pHoleTypeImg[6]->Width(), height);
 
 	if (m_gameType == 10) {
 		DrawHoleTypeButton(pDevice, (eHoleType)0, rc1, false);

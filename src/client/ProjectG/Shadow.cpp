@@ -384,7 +384,6 @@ void CShadowCaster::UpdateBSphere(WView *view, float minAngle, float minDist) {
 		return;
 	}
 
-	float ratio = view->GetRatio();
 	float fov = view->GetFOV();
 	if (fov < minAngle) {
 		fov = minAngle;
@@ -393,15 +392,15 @@ void CShadowCaster::UpdateBSphere(WView *view, float minAngle, float minDist) {
 	float farDist = nearDist + minDist;
 
 	float tanY = (float)tan(fov * 0.5f);
-	float tanX = (float)tan(ratio * fov * 0.5f);
+	float tanX = (float)tan(view->GetRatio() * fov * 0.5f);
 
-	float nearX = tanX * nearDist;
 	float nearY = tanY * nearDist;
-	float farX = tanX * farDist;
+	float nearX = tanX * nearDist;
 	float farY = tanY * farDist;
+	float farX = tanX * farDist;
 
-	float farSq = farX * farX + farY * farY + farDist * farDist;
-	float nearSq = nearX * nearX + nearY * nearY + nearDist * nearDist;
+	float farSq = WVector(farX, farY, farDist).SquareMagnitude();
+	float nearSq = WVector(nearX, nearY, nearDist).SquareMagnitude();
 	float c = (farSq - nearSq) / (minDist * 2.0f);
 
 	m_bsphere.pos = c * view->camera.za + view->camera.pivot;

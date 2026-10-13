@@ -152,6 +152,15 @@ void CSharedDoc::SetUserInfoMod(int mod) {
 	m_userInfoMod = mod;
 }
 
+// globalgamedefine.h:1799
+sUserPosition::sUserPosition(void) {
+	m_roomNumber = 0xFFFF;
+	m_value2 = 0xFFFFFFFF;
+	m_userValue = 0xFFFFFFFF;
+	m_channelId = 0xFF;
+	memset(m_channelName, 0, sizeof(m_channelName));
+}
+
 // globalgamedefine.h:3549
 void sFriend::Clear(void) {
 	memset(nick, 0, sizeof(nick));
@@ -520,9 +529,12 @@ void CSharedDoc::ClearGameVars(void) {
 
 	memset(m_value47B4, 0, sizeof(m_value47B4));
 
-	for (int i = 3; i >= 0; i--) {
-		m_gameStatistics[i].exp = 0xFFFFFFFF;
-	}
+	// Written out, not as a loop: a loop leaves cl enough inline budget to
+	// inline _Erase into the clear() below (docs/tough_problems/028).
+	m_gameStatistics[3].exp = 0xFFFFFFFF;
+	m_gameStatistics[2].exp = 0xFFFFFFFF;
+	m_gameStatistics[1].exp = 0xFFFFFFFF;
+	m_gameStatistics[0].exp = 0xFFFFFFFF;
 	m_value4D7C = 0;
 	m_value456C = 0;
 	m_winningTeam = 2;
@@ -1422,6 +1434,90 @@ void CSharedDoc::BuildMyPartTidList(sCharacterInfo &characterInfo) {
 	memcpy(m_myAuxPartTidList, &characterInfo.auxParts, sizeof(m_myAuxPartTidList));
 }
 
+// shareddoc.cpp:1843, rebuilds the result list from the tiki report: the
+// local player's line also sets the match, exp, room type and winning team.
+void CSharedDoc::BuildTikiReportList(void) {
+	if (!IsLocalContent((localContentType_t)0x14)) {
+		return;
+	}
+
+	int count = m_tikiReportList.size();
+	if (count == 0) {
+		return;
+	}
+
+	WSingleton<CSharedDoc>::Instance()->m_gameResultList.~vector();
+	WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit = 30;
+
+	for (std::vector<sCaddieReportData>::iterator it = m_tikiReportList.begin(); it != m_tikiReportList.end(); ++it) {
+		sRivalData rival;
+		memset(&rival, 0, sizeof(rival));
+		rival.m_id = it->m_uid;
+		rival.m_uid = it->m_uid;
+		strcpy(rival.m_nickname, it->m_nickname);
+		rival.m_level = it->m_level;
+		rival.m_score = it->m_score;
+		rival.m_pang = it->m_pang;
+		rival.m_extraPang = it->m_extraPang;
+		rival.m_hasEmblem = it->m_guildUID;
+		strcpy(rival.m_emblemName, it->m_emblemName);
+		rival.m_mascotTypeId = it->m_mascotTypeId;
+		rival.m_holeShots[0] = it->m_value28;
+		unsigned char flags = it->m_flags;
+		if (flags & 4) {
+			flags ^= 4;
+			rival.m_state = 3;
+		}
+		rival.m_team = flags;
+
+		if (strcmp(rival.m_nickname, WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname) == 0) {
+			WSingleton<CSharedDoc>::Instance()->m_value456C = it->m_value28;
+			WSingleton<CSharedDoc>::Instance()->m_gameStatistics[0].exp = it->m_exp;
+			WSingleton<CSharedDoc>::Instance()->m_matchTypeId = it->m_matchTypeId;
+			WSingleton<CSharedDoc>::Instance()->m_roomType = it->m_roomType;
+			WSingleton<CSharedDoc>::Instance()->m_winningTeam = it->m_winningTeam;
+		}
+
+		rival.m_identity = it->m_isGM ? 0x80 : 0;
+		rival.m_itemBoostFlags = 0;
+		rival.m_extraFlags = 0;
+
+		if (it->m_awardFlags & 1) {
+			m_awardPlayers[0].m_uid = rival.m_id;
+		}
+		if (it->m_awardFlags & 2) {
+			m_awardPlayers[1].m_uid = rival.m_id;
+		}
+		if (it->m_awardFlags & 4) {
+			m_awardPlayers[2].m_uid = rival.m_id;
+		}
+		if (it->m_awardFlags & 8) {
+			m_awardPlayers[3].m_uid = rival.m_id;
+		}
+		if (it->m_awardFlags & 0x10) {
+			m_awardPlayers[4].m_uid = rival.m_id;
+		}
+		if (it->m_awardFlags & 0x20) {
+			m_awardPlayers[5].m_uid = rival.m_id;
+		}
+
+		switch (it->m_boostKind) {
+		case 1:
+			rival.m_itemBoostFlags = 1;
+			break;
+		case 2:
+			rival.m_extraFlags = 1;
+			break;
+		case 3:
+			rival.m_extraFlags = 1;
+			rival.m_itemBoostFlags = 1;
+			break;
+		}
+
+		m_gameResultList.push_back(rival);
+	}
+}
+
 // shareddoc.cpp:1972
 CPartTidList &CSharedDoc::GetMyPartTidList(void) {
 	return m_myPartTidList;
@@ -2191,6 +2287,35 @@ bool CSharedDoc::SendOfflineTradeEditShop(void) {
 	return true;
 }
 
+// shareddoc.cpp:3411, asks to visit the offline shop of the visited-shops
+// entry with this id, or tells the player the own offline shop is not set up.
+bool CSharedDoc::SendOfflineTradeVisitor(unsigned long uid) {
+	if (IsLocalContent((localContentType_t)0x66)) {
+		if (WSingleton<CSharedDoc>::Instance()->GetStallItem() == NULL || WSingleton<CSharedDoc>::Instance()->GetStallItem()->ownerUID == 0) {
+			// The literal is 62 bytes; only its first 32 are known (from its
+			// mangled name ??_C@_0DP@HEPMFBFC@): "방문하신 방의 유저는 좌판을 배치"...
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xB9\xE6\xB9\xAE\xC7\xCF\xBD\xC5 \xB9\xE6\xC0\xC7 \xC0\xAF\xC0\xFA\xB4\xC2 \xC1\xC2\xC6\xC7\xC0\xBB \xB9\xE8\xC4\xA1", 0, 0, 0, 0));
+		} else {
+			std::list<sStall> *pList = WSingleton<CSharedDoc>::Instance()->GetListStallItem();
+			sStall stall;
+			for (std::list<sStall>::iterator it = pList->begin(); it != pList->end(); ++it) {
+				if ((*it).uid == uid) {
+					WSendPacket packet(GCT_OFFLINESHOP_REQUEST_VISIT);
+					packet.Encode4(WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID);
+					packet.Encode4((*it).ownerUID);
+					packet.Encode1(1);
+					packet.Send(SEND_TO_DEFAULT);
+
+					AfxGetTask()->SendMsgToMainActor(MsgObject(0, 1, 0, 0, 0, 0, 0));
+					break;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 // shareddoc.cpp:3453
 bool CSharedDoc::SendTradeOpenShop(void) {
 	if (m_stateTrade != STATE_TRADE_READY) return false;
@@ -2615,6 +2740,56 @@ void CSharedDoc::LoadVisGroup(const char *fileName) {
 // shareddoc.cpp:4048
 void CSharedDoc::SetFileName(char *const fileName) {
 	strcpy(m_fileName, fileName);
+}
+
+// shareddoc.cpp:4053, lists the replays of save/ recorded by this player
+// with this game version, ten at most
+void CSharedDoc::ReplaySavFileCheck(void) {
+	WSingleton<CSharedDoc>::Instance()->m_replayFileList.clear();
+
+	char fileName[32] = {0};
+	for (int i = 0; i < 100; ++i) {
+		sprintf(fileName, "save/pangya_%03d.sav", i);
+		FILE *fp = fopen(fileName, "rb");
+
+		if (fp == NULL) {
+			continue;
+		}
+
+		int version = 0;
+		unsigned long uid = 0xFFFFFFFF;
+		unsigned char course = 0;
+		SYSTEMTIME date;
+		int mode = 0;
+
+		fread(&version, 4, 1, fp);
+		fread(&uid, 4, 1, fp);
+		fread(&course, 1, 1, fp);
+		fread(&date, 16, 1, fp);
+		fread(&mode, 4, 1, fp);
+
+		if (version == m_value5BD4 && uid == WSingleton<CSharedDoc>::Instance()->m_myUID) {
+			sRecordedItemInfo info;
+
+			if (mode == 1) {
+				info.m_typeId = 0x1A000043;
+			} else if (mode == 2) {
+				info.m_typeId = 0x1A000050;
+			}
+			info.m_course = course;
+			info.m_count = 1;
+			info.m_date = date;
+			info.m_playable = 1;
+			strcpy(info.m_fileName, fileName);
+
+			WSingleton<CSharedDoc>::Instance()->m_replayFileList.push_back(info);
+		}
+		fclose(fp);
+
+		if (WSingleton<CSharedDoc>::Instance()->m_replayFileList.size() >= 10) {
+			break;
+		}
+	}
 }
 
 // shareddoc.cpp:4118

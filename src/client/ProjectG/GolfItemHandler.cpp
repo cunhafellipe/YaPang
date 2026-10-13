@@ -201,9 +201,9 @@ void CGolfItemHandler::OnResetSpecialBox(void) {
 
 	pDoc->ResetSpecialBoxCount();
 
-	CSharedDoc* pShared = WSingleton<CSharedDoc>::Instance();
-	std::list<sItemInfo>::const_iterator it = std::find_if(pShared->m_itemInfoList.begin(), pShared->m_itemInfoList.end(), ItemTypeIdIs(0x1A00015B));
-	if (it == pShared->m_itemInfoList.end()) {
+	const std::list<sItemInfo>& items = WSingleton<CSharedDoc>::Instance()->GetConstMyItemList();
+	std::list<sItemInfo>::const_iterator it = std::find_if(items.begin(), items.end(), ItemTypeIdIs(0x1A00015B));
+	if (it == items.end()) {
 		pDoc->SetOwnSpecialBoxCount(0);
 	} else {
 		pDoc->SetOwnSpecialBoxCount((*it).m_count);

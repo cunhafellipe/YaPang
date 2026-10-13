@@ -42,6 +42,8 @@ public:
 	void SetSpecialWind(bool);
 	void GenerateFx(bool);
 	bool IsGlobalWind_Compare(void);
+	// wind.h:37
+	void SetActive(bool active) { m_windEnabled = active; }
 	// wind.h:48
 	bool HasSpecialWind(void) { return m_specialIntensity > 0.0f; }
 	bool IsActiveSpecialWind(void);   // wind.h:57

@@ -405,12 +405,21 @@ CHECK_FIELD(sShotResult, m_preDataCount, 0x23);
 
 // Positions on the shot bar (sBar::Persent reads BAR_START from .rdata).
 // The original initializes BAR_LENGTH (360.0f) dynamically at golfdoc.h:282
-// in every unit using it; the initializer expression is not known yet, and
-// this constant one is folded statically.
+// in fontinfo, GolfRule, gui_control, rival, SharedDoc, ShotPreview, stdafx
+// and videoin. The value of other const variables is not a constant
+// expression for cl, so it is dynamic where <atlbase.h> (the PCH stand-in,
+// _AtlWinModule's initializer) precedes this header, folded elsewhere
+// (docs/tough_problems/010).
 const float BAR_START = 140.0f;
 const float BAR_END = 500.0f;
 // golfdoc.h:282
 const float BAR_LENGTH = BAR_END - BAR_START;
+// golfdoc.h:283: the middle of the bar (320.0f), initialized dynamically only
+// in stdafx and videoin, the objects defining PG_GOLFDOC_BAR_CENTER; the
+// other includers of the original have no initializer for it.
+#ifdef PG_GOLFDOC_BAR_CENTER
+const float BAR_CENTER = (BAR_START + BAR_END) * 0.5f;
+#endif
 
 // The power/accuracy bar of a shot; sBar::Reset (golfdoc.cpp:1146) writes
 // every member, CGolfDoc's next member at 0xF4 bounds the size.
@@ -667,6 +676,8 @@ public:
 	bool IsShowChat(void);
 	void SetDay(bool day);
 	bool GetDay(void);
+	void SetSaveChatNum(int num);
+	int GetSaveChatNum(void);
 	void SetStatUpdated(bool updated);
 	bool GetStatUpdated(void) const;
 	bool GetApproachReloaded(void);
@@ -758,7 +769,7 @@ public:
 private:
 	__int64 m_skinsPangTotal;                        // 0x1A0, pang total CHoleInfo::Display prints in room type 7
 	unsigned long m_skinsCarryCount;                 // 0x1A8, count CHoleInfo::Display prints "x%d" when above 1
-	bool m_clearedFlag1AC;                           // 0x1AC, cleared by the constructor
+	unsigned char m_clearedFlag1AC;                  // 0x1AC, cleared by the constructor; a count (SetHoleInPose_Skins compares it with 2, 3 and 4)
 	PADDING(0x1AD, 0x1B0);
 public:
 	__int64 m_totalPang;                             // 0x1B0, the round's total pang (FrScoreForm::OnPangListOwnerDraw)
@@ -977,6 +988,16 @@ GOLFRULE_GOLFDOC_INLINE void CGolfDoc::ShowChat(bool show) {
 // golfdoc.h:556
 GOLFRULE_GOLFDOC_INLINE bool CGolfDoc::IsShowChat(void) {
 	return m_showChat;
+}
+
+// golfdoc.h:559
+inline void CGolfDoc::SetSaveChatNum(int num) {
+	m_chatHistoryIndex = num;
+}
+
+// golfdoc.h:560
+inline int CGolfDoc::GetSaveChatNum(void) {
+	return m_chatHistoryIndex;
 }
 
 // shareddoc.inl's PLAYER and TEAM, defined by SharedDoc.h once CGolfDoc is

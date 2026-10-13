@@ -1,4 +1,6 @@
 // Original: d:\build\custom\temp\code\client\projectg\rival.cpp
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
+			// (keeps BAR_LENGTH dynamically initialized, docs/tough_problems/010)
 #include "rival.h"
 #include "SharedDoc.h"
 #include "GolfDoc.h"
@@ -16,7 +18,11 @@ float Random(float min, float max, int seed);
 int WisZero(const float &value, float eps);
 
 // The bar power of the rival's shot at a power rate of 1 (no symbol).
-extern float data_00af23f4;
+extern "C" float data_af23f4;
+
+// Nameless .rdata floats: [0] epsilon (1e-5), [2] BAR_START (140), read
+// through memory rather than literals.
+extern "C" const float data_9ed380[3];
 
 template <> CRival* WSingleton<CRival>::m_pInstance = NULL;
 
@@ -34,14 +40,14 @@ CRival::~CRival(void) {
 
 // rival.cpp:33
 void CRival::Shot(void) {
-	if (WAbsBySign(m_powerRate - 1.0f) < g_EPSILON) {
+	if (WAbsBySign(m_powerRate - 1.0f) < data_9ed380[0]) {
 		GOLFDOC()->GetBar().m_stopped = true;
 	}
 
-	GOLFDOC()->GetBar().m_power = data_00af23f4 * m_powerRate + BAR_START;
+	GOLFDOC()->GetBar().m_power = data_af23f4 * m_powerRate + data_9ed380[2];
 	GOLFDOC()->GetBar().m_position = Random(-10.0f, 10.0f, -1) + GOLFDOC()->GetBar().m_startPosition;
 
-	float error = Abs(GOLFDOC()->GetBar().m_position - BAR_START);
+	float error = Abs(GOLFDOC()->GetBar().m_position - data_9ed380[2]);
 
 	if (error < 2.0f) {
 		GOLFDOC()->GetBar().m_accuracyGrade = 4;
@@ -67,7 +73,7 @@ void CRival::SetVariable(CGolfDoc *pGolfDoc) {
 
 		GolfClub().SetClub((unsigned char)m_clubIndex);
 
-		if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == 3) {
+		if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)3) {
 			if (m_result != 1)
 				goto aim;
 
@@ -208,7 +214,7 @@ aim:
 	m_aimAngle = CalcDeltaAngle(m_pos - GolfBall().m_pos - windScale * Wind().GetGlobalWind(), WVector::UNIT_POS_Z);
 	m_pos = GolfBall().m_pos + WVector::UNIT_POS_Z * (GolfClub().GetRange(NULL) * 3.2f) * RotMat(m_aimAngle, 1);
 
-	if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == 1) {
+	if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1) {
 		m_powerRate = 1.0f;
 	} else if (m_result == 3) {
 		if ((m_pos - GolfBall().m_pos).Magnitude() < (m_expectedPos - GolfBall().m_pos).Magnitude()) {
@@ -330,11 +336,11 @@ WVector CRival::GetGreenSlope(void) {
 	WVector slope;
 	slope.x = slope.y = slope.z = 0;
 	WVector pos = GolfBall().m_pos;
+	WVector normal;
 	for (int i = 0; i < stepCount; i++) {
 		pos += dir * 3.2f;
-		// The original stores the normal into the step direction itself.
-		dir = GetPVS().GetMeshNormal(pos);
-		slope += WVector(dir.x, 0, dir.z);
+		normal = GetPVS().GetMeshNormal(pos);
+		slope += WVector(normal.x, 0, normal.z);
 	}
 	return slope;
 }

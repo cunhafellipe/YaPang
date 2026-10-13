@@ -116,7 +116,7 @@ void CTalkBox::Process(float fDelta) {
 
 // talkbox.cpp:154
 void CTalkBox::Render(WView* pView, float x, float y, int align) {
-	if (m_lines.size() == 0 || m_transparency == 0.0f) {
+	if (m_lines.size() == 0 || m_transparency == 0.0) {
 		return;
 	}
 
@@ -139,21 +139,21 @@ void CTalkBox::Render(WView* pView, float x, float y, int align) {
 
 	WRect tail;
 	tail = WRect(0.0f, 0.0f, 10.0f, 20.0f);
-	float boxLeft;
+	WPoint boxPos;
 	float shear;
 	switch (align) {
 	case 0:
-		boxLeft = x;
+		boxPos.x = x;
 		tail.x = x + 6.0f;
 		shear = -(tail.w * 0.5f + 6.0f);
 		break;
 	case 1:
-		boxLeft = x - 6.0f - maxWidth * 0.5f;
+		boxPos.x = x - 6.0f - maxWidth * 0.5f;
 		tail.x = x - tail.w * 0.5f;
 		shear = 0.0f;
 		break;
 	case 2:
-		boxLeft = x - 12.0f - maxWidth;
+		boxPos.x = x - 12.0f - maxWidth;
 		tail.x = x - 6.0f - tail.w;
 		shear = tail.w * 0.5f + 6.0f;
 		break;
@@ -194,25 +194,25 @@ void CTalkBox::Render(WView* pView, float x, float y, int align) {
 	}
 
 	tail.y = y - tail.h;
-	float boxTop = tail.y - boxHeight + 1.0f;
+	boxPos.y = tail.y - boxHeight + 1.0f;
 	float lineHeight = lineSpacing + 10.0f;
-	m_boxX = boxLeft;
-	m_boxY = boxTop;
+	m_boxX = boxPos.x;
+	m_boxY = boxPos.y;
 
-	m_pOverlay->Render(pView, WRect(src.x, src.y, 0.046875f, src.h), WRect(boxLeft, boxTop, 6.0f, boxHeight), 0x80000, alpha | 0xFFFFFF, 0.0f, 0);
-	m_pOverlay->Render(pView, WRect(src.x + 0.046875f, src.y, src.w - 0.09375f, src.h), WRect(boxLeft + 6.0f, boxTop, maxWidth, boxHeight), 0x80000, alpha | 0xFFFFFF, 0.0f, 0);
-	m_pOverlay->Render(pView, WRect(src.w + src.x - 0.046875f, src.y, 0.046875f, src.h), WRect(boxLeft + maxWidth + 6.0f, boxTop, 6.0f, boxHeight), 0x80000, alpha | 0xFFFFFF, 0.0f, 0);
+	m_pOverlay->Render(pView, WRect(src.x, src.y, 0.046875f, src.h), WRect(boxPos.x, boxPos.y, 6.0f, boxHeight), 0x80000, alpha | 0xFFFFFF, 0.0f, 0);
+	m_pOverlay->Render(pView, WRect(src.x + 0.046875f, src.y, src.w - 0.09375f, src.h), WRect(boxPos.x + 6.0f, boxPos.y, maxWidth, boxHeight), 0x80000, alpha | 0xFFFFFF, 0.0f, 0);
+	m_pOverlay->Render(pView, WRect(src.w + src.x - 0.046875f, src.y, 0.046875f, src.h), WRect(boxPos.x + maxWidth + 6.0f, boxPos.y, 6.0f, boxHeight), 0x80000, alpha | 0xFFFFFF, 0.0f, 0);
 	m_pOverlay->RenderWithShear(pView, WRect(0.5f, 0.375f, tail.w / 128.0f, tail.h / 128.0f), tail, shear, 0x80000, alpha | 0xFFFFFF);
 
-	float textY = boxTop + topMargin;
-	float textX = boxLeft + 6.0f;
+	float textY = boxPos.y + topMargin;
+	float textX = boxPos.x + 6.0f;
 	for (it = m_lines.begin(); it != m_lines.end(); ++it) {
 		m_pFont->Print(pView, textX, textY, it->text, 0, alpha | color, 0);
 
 		color = it->color;
 		if (it->lineBreak) {
 			textY += lineHeight;
-			textX = boxLeft + 6.0f;
+			textX = boxPos.x + 6.0f;
 		} else {
 			textX += it->width;
 		}

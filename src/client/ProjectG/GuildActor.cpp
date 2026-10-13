@@ -448,7 +448,7 @@ void CGuildActor::OpenGuildQuestionForm(const char* text, int type) {
 
 // guildactor.cpp:689
 void CGuildActor::ReInitMyGuildInfo_SharedDoc(GUILD_USER_INFO* pInfo) {
-	sPangYaUserInfo& userInfo = WSingleton<CSharedDoc>::Instance()->m_userInfo;
+	sPangYaUserInfo& userInfo = const_cast<sPangYaUserInfo&>(WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo());
 
 	userInfo.guildUID = pInfo->guildNumber;
 	userInfo.guildPosition = pInfo->value19;

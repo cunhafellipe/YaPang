@@ -3,6 +3,15 @@
 // units emit some of them, e.g. GOLFDOC); defined once here, in the unit
 // that emitted these, until their callers are transcribed.
 
+// shareddoc.inl:213, the name of a game type, NULL past the 15 known ones.
+const char *GetGameTypeName(unsigned char gameType) {
+	if (gameType >= 15) {
+		return NULL;
+	}
+
+	return WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[gameType].name;
+}
+
 // shareddoc.inl:229
 void SetHoles(unsigned char holes) {
 	WSingleton<CSharedDoc>::Instance()->m_holes = holes;

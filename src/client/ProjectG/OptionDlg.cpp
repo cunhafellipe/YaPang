@@ -153,7 +153,7 @@ void FrOptionDlg::sGameTab::SetSelected(bool bSelected) {
 
 // optiondlg.cpp:242
 void FrOptionDlg::sGameTab::Init(void) {
-	if (OnlinePlay() && !((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI))) {
+	if (OnlinePlay() && !(((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false))) {
 		m_bEnableChangeNick = IsEnableChangeNickname();
 	}
 }
@@ -239,18 +239,17 @@ FrOptionDlg::sAudioTab::sAudioTab(void) {
 		memset(m_bDisabled, 1, sizeof(m_bDisabled));
 	}
 
-	FrWnd** ppHoverWnds[5] = {
-		(FrWnd**)&m_pEnableBtn,
-		(FrWnd**)&m_pOverallCmb,
-		(FrWnd**)&m_pSfxGauge,
-		(FrWnd**)&m_pBgmGauge,
-		(FrWnd**)&m_pSpeakerCmb
-	};
+	m_pEnableBtn = 0;
+	m_pOverallCmb = 0;
+	m_pSfxGauge = 0;
+	m_pBgmGauge = 0;
+	m_pSpeakerCmb = 0;
 
-	for (int i = 0; i < 5; i++) {
-		m_pHoverWnds[i] = ppHoverWnds[i];
-		*m_pHoverWnds[i] = 0;
-	}
+	m_pHoverWnds[0] = (FrWnd**)&m_pEnableBtn;
+	m_pHoverWnds[1] = (FrWnd**)&m_pOverallCmb;
+	m_pHoverWnds[2] = (FrWnd**)&m_pSfxGauge;
+	m_pHoverWnds[3] = (FrWnd**)&m_pBgmGauge;
+	m_pHoverWnds[4] = (FrWnd**)&m_pSpeakerCmb;
 }
 
 // optiondlg.cpp:359
@@ -834,7 +833,7 @@ FrOptionDlg::FrOptionDlg(void) : m_bApplyScrSize(false) {
 
 // optiondlg.cpp:938
 FrOptionDlg::~FrOptionDlg(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		if (!CChatMsg::Instance()->IsOpened()) {
 			g_pFresh->GetManager()->SetExclusiveKey(false);
 		}
@@ -1105,7 +1104,7 @@ void FrOptionDlg::gOnChangeSchoolBtnInit(int param) {
 	m_gameTab.m_pChangeSchoolBtn = DYNAMIC_CAST(FrButton, param);
 
 	// The school can only be changed from the lobby, online.
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI)
+	if (((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false)
 		&& WSingleton<WNetworkSystem>::Instance()->IsConnected((WNetworkSystem::eNetUnit)0)) {
 		m_gameTab.m_pChangeSchoolBtn->Enable(true);
 	} else {
@@ -1631,7 +1630,7 @@ bool FrOptionDlg::OnInit(void) {
 
 // optiondlg.cpp:1824
 bool FrOptionDlg::OnLButtonDown(const WPoint& pt) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		if (g_input->GetButton(LEFT_BUTTON) == 1) {
 			g_pFresh->GetManager()->SetExclusiveKey(true);
 			CMessengerInfo::Instance()->SetGameFocus(false);
@@ -1979,7 +1978,7 @@ void FrOptionDlg::SetTab(eTabType type) {
 
 // optiondlg.cpp:2302
 void FrOptionDlg::OnCancel(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) && !CChatMsg::Instance()->IsOpened()) {
+	if (((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) && !CChatMsg::Instance()->IsOpened()) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 
 		CMessengerInfo::Instance()->SetGameFocus(true);
@@ -1999,7 +1998,7 @@ void FrOptionDlg::OnCancel(void) {
 
 // optiondlg.cpp:2326
 void FrOptionDlg::OnOK(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) && !CChatMsg::Instance()->IsOpened()) {
+	if (((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) && !CChatMsg::Instance()->IsOpened()) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 
 		CMessengerInfo::Instance()->SetGameFocus(true);

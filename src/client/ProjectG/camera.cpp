@@ -34,8 +34,6 @@
 
 extern WMatrix g_camera;
 
-// wmath (?WisZero@@YIHABMM@Z); no header declares it yet.
-int WisZero(const float &value, float eps);
 
 // Input of the previous frame, compared by the Get*Acc ramps.
 static int data_00af2adc;

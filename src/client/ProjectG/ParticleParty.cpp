@@ -187,9 +187,9 @@ void CPowerShot::Display(void) {
 		for (int j = 0; j < 4; j++) {
 			// Corners 0/1 at the segment's start angle, 2/3 at its end; 1/3 on
 			// the outer edge, 0/2 on the inner one.
-			float fSinSide = (j & 2) ? 1.0f : 0.0f; float fCosSide = (j & 2) ? 1.0f : 0.0f; float fRadius = (m_fSize - ((j & 1) ? 0.0f : 1.0f) * m_fWidth) * m_fDistance; WVector vPos = WVector(cosf(fAngle + fCosSide * fStep), 0.0f, sinf(fAngle + fSinSide * fStep)) * fRadius + m_vCenter;
-
-			m_buffers[j].m_vPos = vPos;
+			float fSinSide = (j & 2) ? 1.0f : 0.0f;
+			float fCosSide = (j & 2) ? 1.0f : 0.0f;
+			m_buffers[j].m_vPos = WVector(cosf(fAngle + fCosSide * fStep), 0.0f, sinf(fAngle + fSinSide * fStep)) * ((m_fSize - ((j & 1) ? 0.0f : 1.0f) * m_fWidth) * m_fDistance) + m_vCenter;
 		}
 
 		g_view->DrawPolygonFan((WTVertex**)&m_pBuffer0, (m_texHandle & 0x7FF) | 0xC00000, 0x400, false);
@@ -965,9 +965,11 @@ void CRipple::Display(void) {
 		if (m_pRipples[i].m_bAlive) {
 			for (int j = 0; j < 4; j++) {
 				WVector vPos = m_vCenter;
-				vPos.x += ((j & 2) ? 1.0f : -1.0f) * m_pRipples[i].m_fRadius * 0.5f;
-				vPos.z += ((j & 1) ? 1.0f : -1.0f) * m_pRipples[i].m_fRadius * 0.5f;
-				m_buffers[j].m_vPos = vPos;
+				float fX = vPos.x + ((j & 2) ? 1.0f : -1.0f) * m_pRipples[i].m_fRadius * 0.5f;
+				float fZ = vPos.z + ((j & 1) ? 1.0f : -1.0f) * m_pRipples[i].m_fRadius * 0.5f;
+				m_buffers[j].m_vPos.x = fX;
+				m_buffers[j].m_vPos.y = vPos.y;
+				m_buffers[j].m_vPos.z = fZ;
 				m_buffers[j].m_fU = (j & 2) ? 1.0f : 0.0f;
 				m_buffers[j].m_fV = (j & 1) ? 0.0f : 1.0f;
 				m_buffers[j].m_nColor = ((int)m_pRipples[i].m_fPrevX << 24) | 0xFFFFFF;
@@ -1382,7 +1384,7 @@ void CStarDust::Generate(void) {
 	p->m_fRadius = GolfBall().m_radius;
 	p->m_fAngularSpeed = (float)(rand() % 1023) * 0.0015339808f + 1.5707964f;
 	p->m_vAxisX = WVector((float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f) * 2.0f + g_camera.za;
-	p->m_vAxisY = vSide * (1.0f / vSide.Magnitude()) + WVector((float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f) * 2.0f;
+	p->m_vAxisY = vSide / vSide.Magnitude() + WVector((float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f) * 2.0f;
 	p->m_vOrigin = GolfBall().m_pos;
 	p->m_fAngle = (float)(rand() % 1023) * 0.0061359233f;
 	p->m_fLife = 1.0f;
@@ -1531,7 +1533,7 @@ void CStarDust2::Generate(void) {
 		p->m_fRadius = GolfBall().m_radius * 4.0f;
 		p->m_fAngularSpeed = (float)(rand() % 1023) * 0.0015339808f + 1.5707964f;
 		p->m_vAxisX = WVector((float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f) * 2.0f + g_camera.za;
-		p->m_vAxisY = vSide * (1.0f / vSide.Magnitude()) + WVector((float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f) * 2.0f;
+		p->m_vAxisY = vSide / vSide.Magnitude() + WVector((float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f, (float)(rand() % 1024 - 512) * 0.001953125f) * 2.0f;
 		p->m_vOrigin = GolfBall().m_pos;
 		p->m_fAngle = (float)(rand() % 1023) * 0.0061359233f;
 		p->m_fLife = 255.0f;

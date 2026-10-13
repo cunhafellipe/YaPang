@@ -38,8 +38,9 @@ extern WMatrix g_camera;
 
 int WisZero(const float &value, float eps);
 
-// 3.1415927f, a named constant of the original (its symbol is not known).
-extern "C" const float data_9eee9c;
+// Nameless .rdata floats: [0] pi, [3] epsilon (1e-5), read through memory
+// rather than literals.
+extern "C" const float data_9eee9c[4];
 
 // The caddie's talk kinds: the name of each behaviour in the caddie's
 // talk script, and whether it is said only once.
@@ -460,8 +461,8 @@ bool CGolfCaddie::ReadAttribute(sCaddie *caddie) {
 
 		int frame = (int)(motion->s * 30.0f + 0.5f);
 
-		int index = -1, count;
-		pet->CheckFrameData(frame, frame, index, count);
+		int index = -1;
+		pet->CheckFrameData(frame, frame, index, frame);
 		if (index > -1) {
 			WSliceStr slice(pet->GetFrameData(index));
 
@@ -761,7 +762,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 			SetBubble(0x10, false, 0);
 	}
 
-	if (GOLFDOC()->GetHoleData().m_par == 5 && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == 1
+	if (GOLFDOC()->GetHoleData().m_par == 5 && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1
 		&& PLAYER(GOLFDOC()->m_myPlayerIndex)->m_comboGauge >= 33.0f) {
 		WVector cup = GOLFDOC()->GetHoleData().m_cupPos;
 		WVector toCup = cup - GolfBall().m_pos;
@@ -809,7 +810,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 	WVector shot = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ballPos - PLAYER(GOLFDOC()->m_myPlayerIndex)->m_lastShotPos;
 
 	if (CSharedDoc::Instance()->m_gameStatistics[GOLFDOC()->m_myPlayerIndex].bestDrive > 960.0f
-		&& WAbsBySign(sqrtf(shot.x * shot.x + shot.z * shot.z) - CSharedDoc::Instance()->m_gameStatistics[GOLFDOC()->m_myPlayerIndex].bestDrive) < g_EPSILON)
+		&& WAbsBySign(sqrtf(shot.x * shot.x + shot.z * shot.z) - CSharedDoc::Instance()->m_gameStatistics[GOLFDOC()->m_myPlayerIndex].bestDrive) < data_9eee9c[3])
 		SetBubble(0x1C, false, 0);
 
 	if (CSharedDoc::Instance()->m_roomType == 1) {
@@ -826,7 +827,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 			}
 		}
 
-		if (TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] == 1) {
+		if (TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1) {
 			for (int i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
 				if (GOLFDOC()->GetPlayer(i)->m_attribute != PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute && GOLFDOC()->GetPlayer(i)->m_rivalLevel == 1) {
 					SetBubble(0x12, false, 0);
@@ -836,7 +837,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 		}
 	} else {
 		if (CSharedDoc::Instance()->m_roomType == 0 || CSharedDoc::Instance()->m_roomType == 3) {
-			if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == 1) {
+			if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1) {
 				for (int i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
 					if (GOLFDOC()->GetPlayer(i)->m_rivalLevel == 1 && i != MyIndex()) {
 						SetBubble(0x12, false, 0);
@@ -845,7 +846,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 				}
 			}
 
-			if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == 1 && GOLFDOC()->GetPlayerNum() > 1) {
+			if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1 && GOLFDOC()->GetPlayerNum() > 1) {
 				int i;
 				for (i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
 					if (GOLFDOC()->GetPlayer(i)->m_state != 3 && i != GOLFDOC()->m_myPlayerIndex) {
@@ -1276,16 +1277,17 @@ void CGolfCaddie::HandleMsg(const MsgObject &msg) {
 // golfcadie.cpp:1809
 void CGolfCaddie::SearchGround(void) {
 	for (int i = 0; i < 4; i++) {
-		m_angle = GOLFDOC()->GetCameraData().m_yaw + (i & 1 ? 1.0f : -1.0f) * 0.6981317f + (i & 2 ? data_9eee9c : 0.0f);
+		m_angle = GOLFDOC()->GetCameraData().m_yaw + (i & 1 ? 1.0f : -1.0f) * 0.6981317f + (i & 2 ? data_9eee9c[0] : 0.0f);
 		m_position = GetPVS().GetGroundPoint(GolfBall().m_pos + RotMat(m_angle, 1).za * 22.4f, true, 0, false);
 
 		if (GetPVS().GetMeshIndex(m_position, true) < 0)
 			continue;
 
-		if (!(GetPVS().GetMeshNormal(m_position).y < cos(0.3490658476948738))) {
-			if (!GetPVS().OverlappedWithObject(m_position, 1.6f))
-				break;
-		}
+		if (GetPVS().GetMeshNormal(m_position).y < (float)cos(0.3490658476948738))
+			continue;
+
+		if (!GetPVS().OverlappedWithObject(m_position, 1.6f))
+			break;
 	}
 }
 
@@ -1344,10 +1346,10 @@ void CGolfCaddie::Run(void) {
 
 	m_position = m_pCaddie->m_pBody->GetPos();
 
-	WVector dir(m_destination.x - m_position.x, m_destination.y - m_position.y, m_destination.z - m_position.z); WVector vel = m_pCaddie->m_pBody->GetVel();
+	WVector dir = m_destination - m_position; WVector vel = m_pCaddie->m_pBody->GetVel();
 
-	float dot = vel.x * dir.x + vel.z * dir.z;
-	float stopDist = WAbsBySign(GolfBall().m_lieSlope) < g_EPSILON ? m_pCaddie->m_stopDist : m_pCaddie->m_stopDist * 2.0f;
+	float dot = dir.x * vel.x + dir.z * vel.z;
+	float stopDist = WAbsBySign(GolfBall().m_lieSlope) < data_9eee9c[3] ? m_pCaddie->m_stopDist : m_pCaddie->m_stopDist * 2.0f;
 
 	if (sqrtf(dir.x * dir.x + dir.z * dir.z) < stopDist
 		|| (GolfBall().m_preDataIndex > 0 && (GolfBall().m_preDataCount - GolfBall().m_preDataIndex < 50 || dot < 0.0f))) {
@@ -1366,16 +1368,18 @@ void CGolfCaddie::Run(void) {
 			if (ball.m_landed || ground >= 3)
 				m_pCaddie->m_pBody->SetNextMotion("\xba\xa1\xc4\xbf", false);
 
-			if (WAbsBySign(sqrtf(vel.x * vel.x + vel.z * vel.z)) < g_EPSILON) {
+			dot = sqrtf(vel.x * vel.x + vel.z * vel.z);
+			if (WAbsBySign(dot) < data_9eee9c[3]) {
 				CGolfBall &ball = GolfBall();
-				WVector dir = ball.PreData(ball.m_preDataCount)->m_pos - ball.PreData(0)->m_pos;
-				dir.Normalize();
-				WVector offset = dir * 5.0f;
+				vel = ball.PreData(ball.m_preDataCount)->m_pos - ball.PreData(0)->m_pos;
+				vel.Normalize();
+				WVector offset = vel * 5.0f;
 
-				WVector pos = GetPVS().GetGroundPoint(ball.PreData(ball.m_preDataCount)->m_pos - offset, false, 0, false);
+				vel = ball.PreData(ball.m_preDataCount)->m_pos - offset;
+				vel = GetPVS().GetGroundPoint(vel, false, 0, false);
 
-				m_pCaddie->m_pBody->SetPos(pos);
-				m_position = pos;
+				m_pCaddie->m_pBody->SetPos(vel);
+				m_position = vel;
 			}
 		}
 	}

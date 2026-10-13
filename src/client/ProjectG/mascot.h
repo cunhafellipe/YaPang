@@ -33,10 +33,6 @@ public:
 
 	void ChangePet(const char *name);
 
-	// Accessors for CMascot::HandleMsg (the members are CCreature's).
-	void SetActive(bool active) { m_active = active; }
-	WPuppet *GetPet(void) const { return m_pPet; }
-	void SetAddTex(int handle) { m_addTex = handle; }
 
 protected:
 	unsigned char m_playerIndex;    // 0x120, the player the bird follows

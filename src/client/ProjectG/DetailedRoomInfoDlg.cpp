@@ -427,7 +427,7 @@ void FrDtRoomDlg::OnJoinBtnUp(void) {
 
 
 
-			if (m_roomInfo.m_guildUID[0] != guildUID && m_roomInfo.m_guildUID[0] != 0 && m_roomInfo.m_guildUID[1] != guildUID && m_roomInfo.m_guildUID[1] != 0) {
+			if (m_roomInfo.m_guild.m_guildUID[0] != guildUID && m_roomInfo.m_guild.m_guildUID[0] != 0 && m_roomInfo.m_guild.m_guildUID[1] != guildUID && m_roomInfo.m_guild.m_guildUID[1] != 0) {
 
 				message = "\xc5\xb8\xb1\xe6\xb5\xe5\xc0\xc7 \xb4\xeb\xc0\xfc\xc0\xd4\xb4\xcf\xb4\xd9.";
 				bRefuse = true;

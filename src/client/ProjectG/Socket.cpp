@@ -108,7 +108,7 @@ int WSocket::Poll(int timeout)
 // socket.cpp:160
 std::string& WSocket::GetAddressString(std::string& str)
 {
-	return str;
+	return GetAddressString(str, GetPeerAddress());
 }
 
 // socket.cpp:166

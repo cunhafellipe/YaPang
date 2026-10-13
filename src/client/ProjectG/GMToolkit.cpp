@@ -571,11 +571,11 @@ bool CGMToolkit::FindKeywordInString(const char *const string, const char *const
 	int stringLength = strlen(string);
 	int keywordLength = strlen(keyword);
 	int matched = 0;
+	int i;
 
-	for (int i = 0; i < stringLength; i++) {
-		if (string[i] == keyword[matched]) {
+	for (i = 0; i < stringLength; i++) {
+		if (keyword[matched] == string[i]) {
 			matched++;
-
 			if (matched == keywordLength) {
 				return true;
 			}
@@ -1098,9 +1098,7 @@ eGMToolResult CGMToolkit::CommandGiveItem(eGMToolkitStatus status) {
 				if (count > 0) {
 					unsigned long typeId = atoi(m_arguments[2]);
 
-					bool found = FindItem(typeId, itemName);
-
-					if (!found) {
+					if (!FindItem(typeId, itemName)) {
 						// "Invalid item TypeID."
 						Display("\xc0\xdf\xb8\xf8\xb5\xc8 \xbe\xc6\xc0\xcc\xc5\xdb TypeID \xc0\xd4\xb4\xcf\xb4\xd9.", 0xFF7802);
 					} else if (m_confirmPacket == 0) {
@@ -1167,9 +1165,7 @@ eGMToolResult CGMToolkit::CommandGoldenBell(eGMToolkitStatus status) {
 				if (count > 0) {
 					unsigned long typeId = atoi(m_arguments[1]);
 
-					bool found = FindItem(typeId, itemName);
-
-					if (!found) {
+					if (!FindItem(typeId, itemName)) {
 						// "Invalid item type ID."
 						Display("\xc0\xdf\xb8\xf8\xb5\xc8 \xbe\xc6\xc0\xcc\xc5\xdb \xc5\xb8\xc0\xd4ID \xc0\xd4\xb4\xcf\xb4\xd9.", 0xFF7802);
 					} else if (m_confirmPacket == 0) {

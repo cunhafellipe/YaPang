@@ -2,6 +2,7 @@
 #define REALMYROOMMAINUI_EXHIBITION_INLINE
 #define REALMYROOMMAINUI_CCARDBOOK_INLINE
 #define REALMYROOMMAINUI_ITEMSTORAGE_INLINE
+#define REALMYROOMMAINUI_SHAREDDOC_INLINE
 #include "NetworkSystem.h"
 #include "RealMyRoomMain.h"
 #include "StandingInLine.h"
@@ -3363,7 +3364,7 @@ void CRealMyRoomMain::OnEquipCancelUp(void) {
 		}
 	}
 
-	CIconToolTip::GetInstance()->ClearToolTip();
+	OnTooltipHoverOff(0);
 }
 
 // realmyroommainui.cpp:4256
@@ -3392,7 +3393,7 @@ void CRealMyRoomMain::OnEquipResetUp(void) {
 		}
 	}
 
-	CIconToolTip::GetInstance()->ClearToolTip();
+	OnTooltipHoverOff(0);
 }
 
 // realmyroommainui.cpp:4288
@@ -4926,12 +4927,12 @@ void CRealMyRoomMain::DrawStatus(FrGraphicInterface* pGI, FrListItem* pItem, sho
 		if (slotCount != 0 || count != 0) {
 			float x = 86.0f;
 			for (int j = 0; j < count; j++) {
-				pGI->DrawTexture(pPoint, WRect(x + pItem->pos.x, y + pItem->pos.y, 5.0f, 6.0f), 0xFFFFFFFF, 0);
+				pGI->DrawTexture(pPoint, WRect(x + pItem->pos.x, y + pItem->pos.y, 5.0, 6.0), 0xFFFFFFFF, 0);
 				x -= 6.0f;
 			}
 
 			for (int j = 0; j < slotCount; j++) {
-				pGI->DrawTexture(pSlotPoint, WRect(x + pItem->pos.x, y + pItem->pos.y, 5.0f, 6.0f), 0xFFFFFFFF, 0);
+				pGI->DrawTexture(pSlotPoint, WRect(x + pItem->pos.x, y + pItem->pos.y, 5.0, 6.0), 0xFFFFFFFF, 0);
 				x -= 6.0f;
 			}
 
@@ -6250,8 +6251,8 @@ void CRealMyRoomMain::OpenNewYearMoney(sItemInfo* pItemInfo) {
 // realmyroommainui.cpp:7420
 void CRealMyRoomMain::OpenEventGiftBox(sItemInfo* pItemInfo) {
 	if (pItemInfo != NULL) {
-		CGiftBoxEvent* pEvent = (CGiftBoxEvent*)WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0x1D);
-		if (pEvent == NULL) {
+		CGiftBoxEvent* pEvent = NULL;
+		if (!WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0x1D, pEvent)) {
 			return;
 		}
 
@@ -8071,10 +8072,9 @@ bool CRealMyRoomMain::SelectItemList(FrListItem* pItem) {
 		}
 
 		const char* msg = NULL;
-		unsigned char overLevel = pPart->m_level >> 7;
-		if (overLevel == 0 && (unsigned char)(pPart->m_level & 0x7F) > WSingleton<CSharedDoc>::Instance()->m_myLevel) {
+		if ((pPart->m_level >> 7) == 0 && (unsigned char)(pPart->m_level & 0x7F) > WSingleton<CSharedDoc>::Instance()->m_myLevel) {
 			msg = "\xb7\xb9\xba\xa7\xc0\xcc \xc3\xe6\xba\xd0\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9. \xb7\xb9\xba\xa7\xbe\xf7 \xc8\xc4\xbf\xa1 \xc2\xf8\xbf\xeb\xc7\xd8\xc1\xd6\xbc\xbc\xbf\xe4.";
-		} else if (overLevel == 1 && (unsigned char)(pPart->m_level & 0x7F) < WSingleton<CSharedDoc>::Instance()->m_myLevel) {
+		} else if ((pPart->m_level >> 7) == 1 && (unsigned char)(pPart->m_level & 0x7F) < WSingleton<CSharedDoc>::Instance()->m_myLevel) {
 			msg = "\xc0\xcc\xb9\xcc \xc2\xf8\xbf\xeb\xb0\xa1\xb4\xc9\xc7\xd1 \xb7\xb9\xba\xa7\xc0\xbb \xb3\xd1\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9. \xbe\xc6\xc0\xcc\xc5\xdb\xbf\xa1 \xc7\xa5\xbd\xc3\xb5\xc8 \xb7\xb9\xba\xa7 \xc0\xcc\xc7\xcf\xb8\xb8 \xc2\xf8\xbf\xeb\xc7\xd2 \xbc\xf6 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.";
 		}
 
@@ -8093,15 +8093,13 @@ bool CRealMyRoomMain::SelectItemList(FrListItem* pItem) {
 			m_pUccCopyHideWnd->UnselectItem(pItem);
 
 			char text[256];
-			const char* text2;
 			if (pPart->m_wearRestricted) {
 				sprintf(text, "\xba\xbb \xbb\xf3\xc7\xb0\xc0\xba \xc7\xf6\xc0\xe7 \xc0\xc7\xbb\xf3\xbf\xa1\xb4\xc2 \xc2\xf8\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
-				text2 = text;
-			} else {
-				text2 = "\\c0xffff0000\\c\xbb\xf3\xc7\xb0\xc0\xbb \xc2\xf8\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.";
+				this << MsgObject(0, 0x23, (intptr_t)text, 0, 0, 0, 0);
+				return false;
 			}
 
-			this << MsgObject(0, 0x23, (intptr_t)text2, 0, 0, 0, 0);
+			this << MsgObject(0, 0x23, (intptr_t)"\\c0xffff0000\\c\xbb\xf3\xc7\xb0\xc0\xbb \xc2\xf8\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
 			return false;
 		}
 
@@ -8232,7 +8230,9 @@ bool CRealMyRoomMain::SelectItemList(FrListItem* pItem) {
 		if (!S5::ISCutinItem(pInfo->m_typeId)) {
 			return true;
 		}
-		break;
+
+		g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
+		return true;
 	}
 
 	case 6: {
@@ -8276,9 +8276,6 @@ bool CRealMyRoomMain::SelectItemList(FrListItem* pItem) {
 	case 18:
 	case 19:
 		SafeLoadPet(&((sItemInfo*)pItem->pData)->m_typeId, false);
-		g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
-		return true;
-
 	case 27:
 		g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
 		return true;
@@ -8286,11 +8283,25 @@ bool CRealMyRoomMain::SelectItemList(FrListItem* pItem) {
 	case 22:
 		return true;
 
-	case 17:
-		// realmyroommainui.cpp:9976-9990, the gift's sender, message and
-		// date: not written yet, sGiftInfo (PangGiftDlg.h) lacks the date
-		// text at 0xDA.
+	case 17: {
+		if (IsLocalContent(static_cast<localContentType_t>(0x60))) {
+			return true;
+		}
+
+		sGiftInfo* pGift = (sGiftInfo*)pItem->pData;
+		char date[32] = { 0 };
+		char time[32] = { 0 };
+
+		sscanf(pGift->m_date, "%s %s", date, time);
+
+		char* pDot = strchr(time, '.');
+		if (pDot != NULL) {
+			*pDot = 0;
+		}
+
+		SetGiftDescString(pGift->m_sender, pGift->m_message, date, time);
 		break;
+	}
 	}
 
 	g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
@@ -8680,20 +8691,27 @@ void CRealMyRoomMain::Net_EquipGear(void) {
 
 // realmyroommainui.cpp:8502
 void CRealMyRoomMain::SetLevelBar(void) {
-	unsigned char slotStatus[5] = {0, 0, 0, 0, 0};
-	unsigned char status[5] = {0, 0, 0, 0, 0};
-	unsigned char cardStatus[5] = {0, 0, 0, 0, 0};
+	unsigned char status[5];
+	unsigned char slotStatus[5];
+	unsigned char cardStatus[5];
 	int i;
 
-	FrGaugeBar** ppBar = &m_pPowerBar;
+	memset(status, 0, sizeof(status));
+	memset(slotStatus, 0, sizeof(slotStatus));
+	memset(cardStatus, 0, sizeof(cardStatus));
+
 	for (i = 0; i < 5; i++) {
-		if (ppBar[i]) {
-			ppBar[i]->SetDestPos(0, false);
-			ppBar[i]->SetExpand(0);
+		if ((&m_pPowerBar)[i]) {
+			(&m_pPowerBar)[i]->SetDestPos(0, false);
+			(&m_pPowerBar)[i]->SetExpand(0);
 		}
 	}
 
-	if (m_statTab == 0) {
+	switch (m_statTab) {
+	case 1:
+		GetTotalStatus(status, slotStatus, cardStatus);
+		break;
+	case 0:
 		switch (m_roomMode) {
 		case 1:
 		case 2:
@@ -8714,19 +8732,17 @@ void CRealMyRoomMain::SetLevelBar(void) {
 			m_statSource = 2;
 			break;
 		}
-	} else if (m_statTab == 1) {
-		GetTotalStatus(status, slotStatus, cardStatus);
+		break;
 	}
 
-	FrStatic** ppEdit = &m_pPowerEdit;
 	for (i = 0; i < 5; i++) {
-		if (ppBar[i]) {
-			ppBar[i]->SetDestPos(status[i], false);
-			ppBar[i]->SetExpand(slotStatus[i] - status[i]);
+		if ((&m_pPowerBar)[i]) {
+			(&m_pPowerBar)[i]->SetDestPos(status[i], false);
+			(&m_pPowerBar)[i]->SetExpand(slotStatus[i] - status[i]);
 		}
 
-		if (ppEdit[i]) {
-			ppEdit[i]->SetCaption11(MakeStatusString3(status[i], slotStatus[i], cardStatus[i]));
+		if ((&m_pPowerEdit)[i]) {
+			(&m_pPowerEdit)[i]->SetCaption11(MakeStatusString3(status[i], slotStatus[i], cardStatus[i]));
 		}
 	}
 }
@@ -12568,93 +12584,90 @@ void CRealMyRoomMain::PostDlgCreate(void) {
 
 // realmyroommainui.cpp:15605
 void CRealMyRoomMain::ControlUiHideMode(int mode) {
-	for (;;) {
-		if (mode != m_uiState && mode != 5) {
-			m_prevUiState = m_uiState;
+	if (mode != m_uiState && mode != 5) {
+		m_prevUiState = m_uiState;
+	}
+
+	m_pRoomFx->SetActive(false, true);
+
+	switch (mode) {
+	case 1:
+		SetUIState(1);
+
+		ShowOverAndUnderBar(true);
+		for (int i = 0; i < 3; i++) {
+			if (m_barFrame[i] && m_barFrame[i]->IsVisible()) {
+				m_barFrame[i]->SetElementFadeOut(false);
+			}
 		}
+		SetCameraDisplayType(1);
 
-		m_pRoomFx->SetActive(false, true);
+		m_bHideMiddleUI = true;
+		if (m_pMiddleUIWnd) {
+			m_pMiddleUIWnd->SetElementFadeOut(false);
+		}
+		ChangeMainTab(m_mainTab, true);
 
-		switch (mode) {
-		case 1:
-			SetUIState(1);
-
-			ShowOverAndUnderBar(true);
-			for (int i = 0; i < 3; i++) {
-				if (m_barFrame[i] && m_barFrame[i]->IsVisible()) {
-					m_barFrame[i]->SetElementFadeOut(false);
-				}
-			}
-			SetCameraDisplayType(1);
-
-			m_bHideMiddleUI = true;
-			if (m_pMiddleUIWnd) {
-				m_pMiddleUIWnd->SetElementFadeOut(false);
-			}
-			ChangeMainTab(m_mainTab, true);
-
-			FurnitureDisplayControl(false);
-			if (WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
-				WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetState(2);
-				WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetHide(false);
-			}
-			break;
-		case 2:
-			SetUIState(2);
-
-			ShowOverAndUnderBar(true);
-			for (int i = 0; i < 3; i++) {
-				if (m_barFrame[i] && m_barFrame[i]->IsVisible()) {
-					m_barFrame[i]->SetElementFadeOut(false);
-				}
-			}
-
-			m_bHideMiddleUI = false;
-			if (m_pMiddleUIWnd && m_pMiddleUIWnd->IsVisible()) {
-				m_pMiddleUIWnd->SetElementFadeOut(true);
-			}
-			FurnitureDisplayControl(false);
-
-			SetCameraDisplayType(4);
-			if (WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
-				WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->ChangeCharacterInfo();
-				WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetState(0);
-				WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetHide(true);
-			}
-			break;
-		case 4:
-			m_pRoomFx->SetActive(true, true);
-
-			SetUIState(8);
-			for (int i = 0; i < 3; i++) {
-				if (m_barFrame[i] && m_barFrame[i]->IsVisible()) {
-					m_barFrame[i]->SetElementFadeOut(true);
-				}
-			}
-			ShowOverAndUnderBar(false);
-
-			m_bHideMiddleUI = false;
-			if (m_pMiddleUIWnd && m_pMiddleUIWnd->IsVisible()) {
-				m_pMiddleUIWnd->SetElementFadeOut(true);
-			}
-			FurnitureDisplayControl(true);
-
-			SetCameraDisplayType(4);
-			if (WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
-				WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->ChangeCharacterInfo();
-				WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetState(0);
-				WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetHide(true);
-			}
-			break;
-		case 5:
-			if (m_prevUiState == 1) {
-				mode = (m_mainTab != 6) + 1;
-			} else {
-				mode = 2;
-			}
-			continue;
+		FurnitureDisplayControl(false);
+		if (WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
+			WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetState(2);
+			WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetHide(false);
 		}
 		break;
+	case 2:
+		SetUIState(2);
+
+		ShowOverAndUnderBar(true);
+		for (int i = 0; i < 3; i++) {
+			if (m_barFrame[i] && m_barFrame[i]->IsVisible()) {
+				m_barFrame[i]->SetElementFadeOut(false);
+			}
+		}
+
+		m_bHideMiddleUI = false;
+		if (m_pMiddleUIWnd && m_pMiddleUIWnd->IsVisible()) {
+			m_pMiddleUIWnd->SetElementFadeOut(true);
+		}
+		FurnitureDisplayControl(false);
+
+		SetCameraDisplayType(4);
+		if (WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
+			WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->ChangeCharacterInfo();
+			WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetState(0);
+			WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetHide(true);
+		}
+		break;
+	case 4:
+		m_pRoomFx->SetActive(true, true);
+
+		SetUIState(8);
+		for (int i = 0; i < 3; i++) {
+			if (m_barFrame[i] && m_barFrame[i]->IsVisible()) {
+				m_barFrame[i]->SetElementFadeOut(true);
+			}
+		}
+		ShowOverAndUnderBar(false);
+
+		m_bHideMiddleUI = false;
+		if (m_pMiddleUIWnd && m_pMiddleUIWnd->IsVisible()) {
+			m_pMiddleUIWnd->SetElementFadeOut(true);
+		}
+		FurnitureDisplayControl(true);
+
+		SetCameraDisplayType(4);
+		if (WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
+			WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->ChangeCharacterInfo();
+			WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetState(0);
+			WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar->SetHide(true);
+		}
+		break;
+	case 5:
+		if (m_prevUiState == 1) {
+			ControlUiHideMode((m_mainTab != 6) + 1);
+			return;
+		}
+		ControlUiHideMode(2);
+		return;
 	}
 
 	m_uiState = mode;
@@ -14121,7 +14134,7 @@ void CRealMyRoomMain::OnLBDownItemStorageClose(void) {
 		}
 	}
 
-	if ((__rtti_obj = AfxGetPreservedTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetPreservedTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false) {
 		m_barButton[7]->Enable(false);
 		m_barButton[8]->Enable(false);
 	}

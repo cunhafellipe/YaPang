@@ -48,11 +48,19 @@ CHECK_FIELD(IFF_ITEM_COMMON, m_timeType, 0x6A);
 CHECK_FIELD(IFF_ITEM_COMMON, m_saleStart, 0x70);
 CHECK_FIELD(IFF_ITEM_COMMON, m_saleEnd, 0x80);
 
-// A UCC (user-created) clothes texture set owned by an item.
-struct sUccClothes {
-	// uccmanager.h:47
-	sUccClothes() {
-		m_typeId = 0; m_texture[0] = 0; m_texture[1] = 0; m_texture[2] = 0; m_downloadCount = 0; m_pIcon = 0; m_uccKey[0] = 0; m_uccName[0] = 0;
+// A UCC (user-created) texture set owned by an item: the common record of
+// the UCC kinds (sUccClothes).
+struct sUccItem {
+	// uccmanager.h:32
+	sUccItem() {
+		m_typeId = 0;
+		m_texture[0] = 0;
+		m_texture[1] = 0;
+		m_texture[2] = 0;
+		m_downloadCount = 0;
+		m_pIcon = 0;
+		m_uccKey[0] = 0;
+		m_uccName[0] = 0;
 	}
 
 	unsigned long m_serial;         // 0x00, item serial (-1: none)
@@ -67,15 +75,23 @@ struct sUccClothes {
 	unsigned char m_downloadCount;  // 0x60
 	PADDING(0x61, 0x64);
 };
+CHECK_SIZE(sUccItem, 0x64);
+CHECK_FIELD(sUccItem, m_serial, 0x00);
+CHECK_FIELD(sUccItem, m_uccKey, 0x04);
+CHECK_FIELD(sUccItem, m_typeId, 0x10);
+CHECK_FIELD(sUccItem, m_uccName, 0x14);
+CHECK_FIELD(sUccItem, m_texture, 0x40);
+CHECK_FIELD(sUccItem, m_period, 0x4C);
+CHECK_FIELD(sUccItem, m_pIcon, 0x5C);
+CHECK_FIELD(sUccItem, m_downloadCount, 0x60);
+
+// A UCC clothes texture set.
+struct sUccClothes : sUccItem {
+	// uccmanager.h:47
+	sUccClothes() {
+	}
+};
 CHECK_SIZE(sUccClothes, 0x64);
-CHECK_FIELD(sUccClothes, m_serial, 0x00);
-CHECK_FIELD(sUccClothes, m_uccKey, 0x04);
-CHECK_FIELD(sUccClothes, m_typeId, 0x10);
-CHECK_FIELD(sUccClothes, m_uccName, 0x14);
-CHECK_FIELD(sUccClothes, m_texture, 0x40);
-CHECK_FIELD(sUccClothes, m_period, 0x4C);
-CHECK_FIELD(sUccClothes, m_pIcon, 0x5C);
-CHECK_FIELD(sUccClothes, m_downloadCount, 0x60);
 
 // A UCC aztec (ball/accessory) texture, same shape as sUccClothes.
 struct sUccAztec {

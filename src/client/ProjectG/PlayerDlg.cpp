@@ -25,6 +25,13 @@
 #include <stdlib.h>
 #include <algorithm>
 
+// The type id of an equipment entry, for CEquipHelper::MapFindEquipTid
+// (playerdlg.h): our structs name it differently (sItemInfo::m_typeId).
+static unsigned long EquipTypeId(const sCharacterInfo& info) { return info.typeId; }
+static unsigned long EquipTypeId(const sCaddieInfo& info) { return info.typeId; }
+static unsigned long EquipTypeId(const sItemInfo& info) { return info.m_typeId; }
+static unsigned long EquipTypeId(const sMascotInfo& info) { return info.typeId; }
+
 // playerdlg.cpp:40
 CStatBar::CStatBar(float barGap, float barHeight) : m_barGap(barGap), m_barHeight(barHeight) {
 	m_bars.reserve(5);

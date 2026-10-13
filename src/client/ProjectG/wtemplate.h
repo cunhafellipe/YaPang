@@ -156,6 +156,13 @@ bool FindIf(const L& list, P pred) {
 	return it != list.end() ? true : false;
 }
 
+// wtemplate.h:277
+// The absolute value of value.
+template <class T>
+T wAbs(T value) {
+	return value < 0 ? -value : value;
+}
+
 // wtemplate.h:313
 // Subtracts amount from value without going below limit; returns the result.
 template <class T>
@@ -180,6 +187,27 @@ T SAFE_ADDVALUE(T& value, const T& limit, T amount) {
 		}
 	}
 	return value;
+}
+
+// wtemplate.h:375
+// Sets value to newValue when value lies in [minValue, maxValue], to
+// minValue otherwise; returns whether value was in range.
+template <class T, class U>
+bool SAFE_RANGEVALUE(T& value, const U& minValue, const U& maxValue, const U& newValue) {
+	if (value < minValue || value > maxValue) {
+		value = minValue;
+		return false;
+	}
+
+	value = newValue;
+	return true;
+}
+
+// wtemplate.h:396
+// Whether value lies in [minValue, maxValue].
+template <class T>
+bool IS_INRANGE(const T& value, const T& minValue, const T& maxValue) {
+	return value >= minValue && value <= maxValue;
 }
 
 // wtemplate.h:502

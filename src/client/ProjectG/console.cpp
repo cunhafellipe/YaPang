@@ -43,6 +43,8 @@
 #include "client/Fresh/include/fresh.h"
 #include "RealMyRoomTask.h"
 #include "ShopTask.h"
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer, after golfdoc.h (BAR_LENGTH folds) and before guilddefine.h:12 (kept dynamic, tough_problems/010)
+#include "guilddefine.h"
 
 // The console commands (0x59 of them, 0xA7FB98): the name, the identifier
 // BrowseCommand returns and the usage BadArgument prints. The usages are
@@ -208,7 +210,12 @@ void CConsole::ShutDown(void) {
 // console.cpp:400
 void CConsole::Process(float elapsed) {
 	// The original's body (lines 400-450) compiled to nothing: only the
-	// `ret 4` remains.
+	// `ret 4` remains. It is unreachable code that still names
+	// CInputManager::SetActive (the original object holds its COMDAT and no
+	// other function stores the flag); its exact content is not known.
+	return;
+
+	g_input->SetActive(!m_active);
 }
 
 // console.cpp:453
@@ -702,7 +709,7 @@ void CConsole::Command(const char *line) {
 				int triangle = -1;
 				sscanf(line + len + 1, "%d", &triangle);
 
-				GetPVS().m_markedTriangle = triangle;
+				GetPVS().PaintIndex(triangle);
 				return;
 			}
 			// console.cpp:1055
@@ -748,7 +755,7 @@ void CConsole::Command(const char *line) {
 			}
 			// console.cpp:1261
 			case 62: // "transparent"
-				AddText((CSceneManager::Instance()->m_overlapCamera = !CSceneManager::Instance()->m_overlapCamera) ? "Transparent ON" : "Transparent OFF");
+				AddText(CSceneManager::Instance()->ToggleTransparent() ? "Transparent ON" : "Transparent OFF");
 				return;
 			// console.cpp:1268
 			case 61: { // "mouse"
@@ -784,9 +791,9 @@ void CConsole::Command(const char *line) {
 					BadArgument(59);
 					return;
 				}
-				AddText(MakeStr("%.2f->%.2f", GetPVS().m_greenSlope, slope));
+				AddText(MakeStr("%.2f->%.2f", GetPVS().GetGreenFactor(), slope));
 
-				GetPVS().m_greenSlope = slope;
+				GetPVS().SetGreenFactor(slope);
 				GetPVS().CalcGreenPlane();
 				return;
 			}
@@ -817,7 +824,7 @@ void CConsole::Command(const char *line) {
 				if (condition < -50.0f || condition > 50.0f) {
 					BadArgument(55);
 				} else {
-					GetPVS().m_condition = condition;
+					GetPVS().SetCondition(condition);
 				}
 				return;
 			}
@@ -830,7 +837,7 @@ void CConsole::Command(const char *line) {
 					BadArgument(53);
 					return;
 				}
-				GetPVS().m_bounceFactor = bounce;
+				GetPVS().SetBounceFactor(bounce);
 				return;
 			}
 			// console.cpp:1357
@@ -842,7 +849,7 @@ void CConsole::Command(const char *line) {
 					BadArgument(54);
 					return;
 				}
-				GetPVS().m_rollFactor = roll;
+				GetPVS().SetRollFactor(roll);
 				return;
 			}
 			// console.cpp:1369
@@ -1089,7 +1096,7 @@ void CConsole::Command(const char *line) {
 
 				float distance;
 				sscanf(line + len + 1, "%f", &distance);
-				GOLFDOC()->m_pPolySoup->m_cullDistance = distance * 3.2f;
+				GOLFDOC()->m_pPolySoup->SetCullDistance(distance * 3.2f);
 				return;
 			}
 			// console.cpp:1639

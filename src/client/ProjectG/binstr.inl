@@ -79,16 +79,13 @@ inline const char *cTokenS::GetBuf(void) const {
 // binstr.inl:135
 inline int PosB(const char *str, int strLen, const char *sub, int subLen) {
 	for (int i = 0; i < strLen - subLen + 1; i++) {
-		bool bFind = true;
 		for (int j = 0; j < subLen; j++) {
 			if (str[i + j] != sub[j]) {
-				bFind = false;
-				break;
+				goto next;  // a break plus a found flag rotates the inner loop
 			}
 		}
-		if (bFind) {
-			return i;
-		}
+		return i;
+next:
 		if (str[i] & 0x80) {
 			i++;
 		}

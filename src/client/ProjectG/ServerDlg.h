@@ -74,7 +74,6 @@ END_LAYOUT_CHECK
 // FrServerDlgMakeInstance; members named from the code that uses them.
 class FrServerDlg : public FrForm {
 	LAYOUT_CHECK_FRIEND;
-	friend class CLobbyMain;   // CLobbyMain::OnCreateNickResult reads m_pServerList
 public:
 	static const WRTTI m_RTTI;
 	virtual const WRTTI* GetRTTI(void) const { return &m_RTTI; }   // serverdlg.h:28
@@ -98,6 +97,10 @@ public:
 	void ConnectToServer(unsigned long serverId);
 	void BuildServerList(void);
 	void BuildChannelList(void);
+	void ClickDisableList(bool enable) {   // serverdlg.h:46
+		if (m_pServerList)
+			m_pServerList->Enable(enable);
+	}
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];

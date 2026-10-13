@@ -46,14 +46,20 @@ public:
 	void SelectCamera(int type);
 	void Load(void);
 
+	// camerawork.h:126
+	int GetCameraType(void) { return m_cameraType; }
+
 	// camerawork.h:127
 	void SetCamera(WMatrix &matrix) { m_baseMatrixCopy = matrix; }
+
+	// camerawork.h:130
+	void Lock(void) { m_keepInputOffsets = true; }
 
 	// camerawork.h:131
 	void Unlock(void) {
 		if (m_keepInputOffsets) {
 			m_keepInputOffsets = false;
-			m_inputUsed = false; m_inputYaw = 0.0f; m_inputPitch = 0.0f; m_inputZoom = 0.0f;
+			m_input.Reset();
 		}
 	}
 
@@ -62,6 +68,18 @@ public:
 
 	// camerawork.h:143
 	bool Finished(void) { return m_transitionTime > 0.0f && m_cameraTime > m_transitionTime; }
+
+	// camerawork.h:145
+	void SetCaddieChase(bool caddieChase) { m_longShotCamera = caddieChase; }
+
+	// camerawork.h:148
+	void SetReplayCount(int count) { m_replayMode = count; }
+
+	// camerawork.h:153
+	void SetManualType(int type) { m_inputMode = type; }
+
+	// camerawork.h:158
+	void SetAbsAnim(void) { m_skipTurn = true; }
 
 protected:
 	// A hole-in camera puppet loaded for one player.
@@ -129,11 +147,26 @@ private:
 	void CobraBCamera(float elapsed, float time);
 	void SpikeACamera(float elapsed, float time);
 
-	float m_inputYaw;               // 0x28, InputProcess's free-look offsets (keys); SetCamera and
-	float m_inputZoom;              // 0x2c   ReplayCamera reset them
-	float m_inputPitch;             // 0x30
-	bool m_inputUsed;               // 0x34, set by InputProcess
-	PADDING(0x35, 0x38);
+	// InputProcess's free-look offsets (keys); SetCamera and ReplayCamera
+	// reset them (size 0x10).
+	struct sInput {
+		sInput(void) {}
+
+		// camerawork.h:252
+		void Reset(void) {
+			m_used = false;
+			m_yaw = 0.0f;
+			m_pitch = 0.0f; m_zoom = 0.0f;
+		}
+
+		float m_yaw;                // 0x0
+		float m_zoom;               // 0x4
+		float m_pitch;              // 0x8
+		bool m_used;                // 0xc, set by InputProcess
+		PADDING(0xd, 0x10);
+	};
+
+	sInput m_input;                 // 0x28
 	void (CCameraWork::*m_pCameraProc)(float elapsed, float time);  // 0x38, the current camera work (Process calls it)
 	WVector m_sourceCamera;         // 0x3c, camera position
 	WVector m_prevSourceCamera;     // 0x48, m_sourceCamera of the previous Process
@@ -213,10 +246,8 @@ private:
 
 CHECK_SIZE(CCameraWork, 0x2b4);
 BEGIN_LAYOUT_CHECK(CCameraWork)
-	CHECK_FIELD(CCameraWork, m_inputYaw, 0x28);
-	CHECK_FIELD(CCameraWork, m_inputZoom, 0x2c);
-	CHECK_FIELD(CCameraWork, m_inputPitch, 0x30);
-	CHECK_FIELD(CCameraWork, m_inputUsed, 0x34);
+	CHECK_FIELD(CCameraWork, m_input, 0x28);
+	CHECK_SIZE(CCameraWork::sInput, 0x10);
 	CHECK_FIELD(CCameraWork, m_pCameraProc, 0x38);
 	CHECK_FIELD(CCameraWork, m_sourceCamera, 0x3c);
 	CHECK_FIELD(CCameraWork, m_prevSourceCamera, 0x48);

@@ -16,7 +16,8 @@ struct sGiftInfo {
 	unsigned long m_typeId;          // 0x4, the gift item's type id
 	unsigned short m_pang;           // 0x8, item count (pang amount for a pang gift)
 	char m_sender[0x80];             // 0xA, sender's name
-	char m_message[0x70];            // 0x8A, sender's message
+	char m_message[0x50];            // 0x8A, sender's message
+	char m_date[0x20];               // 0xDA, when it was sent, "date time" text
 	unsigned char m_timeUnit;        // 0xFA, period unit of a time-limited gift (3 hours, 4 days, 5 months)
 };
 CHECK_FIELD(sGiftInfo, m_serial, 0x0);
@@ -24,6 +25,7 @@ CHECK_FIELD(sGiftInfo, m_typeId, 0x4);
 CHECK_FIELD(sGiftInfo, m_pang, 0x8);
 CHECK_FIELD(sGiftInfo, m_sender, 0xA);
 CHECK_FIELD(sGiftInfo, m_message, 0x8A);
+CHECK_FIELD(sGiftInfo, m_date, 0xDA);
 CHECK_FIELD(sGiftInfo, m_timeUnit, 0xFA);
 
 // Pang gift dialog; its size (0x128) is the `new` of

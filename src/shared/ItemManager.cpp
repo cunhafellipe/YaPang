@@ -842,13 +842,15 @@ void CItemManager::MakeOfflineMap(char *data, int count) {
 // itemmanager.cpp:1427
 void CItemManager::MakeTikiRecipeMap(char *data, int count) {
 	IFF_STRUCT::sTikiOutputTable table;
+	memset(&table, 0, sizeof(table));
 
-	sIffHeader header = *(sIffHeader *)data;
-	char *record = data + sizeof(sIffHeader);
+	sIffHeader header;
+	memcpy(&header, data, sizeof(sIffHeader));
+	data += sizeof(sIffHeader);
 
 	for (int i = 0; i < header.m_count; i++) {
-		table = *(IFF_STRUCT::sTikiOutputTable *)record;
-		record += sizeof(IFF_STRUCT::sTikiOutputTable);
+		memcpy(&table, data, sizeof(IFF_STRUCT::sTikiOutputTable));
+		data += sizeof(IFF_STRUCT::sTikiOutputTable);
 
 		if (WSingleton<CTikiMagicBoxDoc>::Instance()) {
 			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertOutput(table);
@@ -859,13 +861,15 @@ void CItemManager::MakeTikiRecipeMap(char *data, int count) {
 // itemmanager.cpp:1459
 void CItemManager::MakeTikiPointTableMap(char *data, int count) {
 	IFF_STRUCT::sTikiPointTable table;
+	memset(&table, 0, sizeof(table));
 
-	sIffHeader header = *(sIffHeader *)data;
-	char *record = data + sizeof(sIffHeader);
+	sIffHeader header;
+	memcpy(&header, data, sizeof(sIffHeader));
+	data += sizeof(sIffHeader);
 
 	for (int i = 0; i < header.m_count; i++) {
-		table = *(IFF_STRUCT::sTikiPointTable *)record;
-		record += sizeof(IFF_STRUCT::sTikiPointTable);
+		memcpy(&table, data, sizeof(IFF_STRUCT::sTikiPointTable));
+		data += sizeof(IFF_STRUCT::sTikiPointTable);
 
 		if (WSingleton<CTikiMagicBoxDoc>::Instance()) {
 			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertPointTable(table);
@@ -876,13 +880,15 @@ void CItemManager::MakeTikiPointTableMap(char *data, int count) {
 // itemmanager.cpp:1490
 void CItemManager::MakeTikiSpecialTableMap(char *data, int count) {
 	IFF_STRUCT::sTikiSpecialRecipe recipe;
+	memset(&recipe, 0, sizeof(recipe));
 
-	sIffHeader header = *(sIffHeader *)data;
-	char *record = data + sizeof(sIffHeader);
+	sIffHeader header;
+	memcpy(&header, data, sizeof(sIffHeader));
+	data += sizeof(sIffHeader);
 
 	for (int i = 0; i < header.m_count; i++) {
-		recipe = *(IFF_STRUCT::sTikiSpecialRecipe *)record;
-		record += sizeof(IFF_STRUCT::sTikiSpecialRecipe);
+		memcpy(&recipe, data, sizeof(IFF_STRUCT::sTikiSpecialRecipe));
+		data += sizeof(IFF_STRUCT::sTikiSpecialRecipe);
 
 		if (WSingleton<CTikiMagicBoxDoc>::Instance()) {
 			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertSpecialRecipe(recipe);
@@ -1168,11 +1174,13 @@ void CItemManager::MakeDescMap(char *data, int count) {
 
 // itemmanager.cpp:1986
 void CItemManager::MakeFurnitureAbilityList(char *data, int count) {
+	IFF_STRUCT::sFurnitureAbility ability;
+
 	sIffHeader header = *(sIffHeader *)data;
 	char *record = data + sizeof(sIffHeader);
 
 	for (int i = 0; i < header.m_count; i++) {
-		IFF_STRUCT::sFurnitureAbility ability = *(IFF_STRUCT::sFurnitureAbility *)record;
+		ability = *(IFF_STRUCT::sFurnitureAbility *)record;
 		record += sizeof(IFF_STRUCT::sFurnitureAbility);
 
 		if (ability.m_active) {

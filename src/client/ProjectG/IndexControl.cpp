@@ -22,6 +22,8 @@ CIndexControl::~CIndexControl(void) {
 // indexcontrol.cpp:47
 void CIndexControl::ClearVariables(void) {
 	m_enabled = false;
+	m_drawRect = m_indexRect;
+
 	m_align = 1;
 	m_color = 0xffff0000;
 	m_selectedColor = 0xffaa1111;
@@ -33,9 +35,6 @@ void CIndexControl::ClearVariables(void) {
 	m_curPage = 0;
 	m_selectedIndex = 0;
 	m_indexRects = NULL;
-
-	m_drawRect = m_indexRect;
-
 	m_pos = WPoint(0.0f, 0.0f);
 }
 

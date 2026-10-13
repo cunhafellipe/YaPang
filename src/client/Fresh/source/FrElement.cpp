@@ -117,6 +117,14 @@ void FrGuiItem::Init(const TiXmlNode* pSrc) {
 	TiXmlNode* pParam = pSrc->FirstChild("param");
 	while (pParam != 0) {
 		TiXmlElement* pParamElement = pParam->ToElement();
+#ifdef JP_PAKS
+		// The JP data has stray text after a <param> (events.xml), a text
+		// node this loop would take for an element (docs/JP_CLIENT.md).
+		if (pParamElement == 0) {
+			pParam = pParam->NextSibling();
+			continue;
+		}
+#endif
 
 		std::string aName = pParamElement->Attribute("name");
 		std::string aVar = pParamElement->Attribute("var");
@@ -391,6 +399,228 @@ bool FrElementDoc::Load(const char* fileName) {
 	return true;
 }
 
+#ifdef JP_PAKS
+// The JP data (2017) made the 2011 full-screen layouts forms of the same
+// controls; the KR code still opens them as layouts (docs/JP_CLIENT.md).
+static const char* JpLayoutForForm(const std::string& form) {
+	static const char* const kMap[][2] = {
+		{ "roomlist", "ROOMLIST" },
+		{ "gameroom_main", "GAMEROOM" },
+		{ "shopmain", "SHOPMAIN" },
+		{ "tutorialmain", "TUTORIAL_MAIN" },
+		{ "realmyroom", "REALMYROOM" },
+	};
+	for (unsigned int i = 0; i < sizeof(kMap) / sizeof(kMap[0]); i++) {
+		if (stricmp(form.c_str(), kMap[i][0]) == 0) {
+			return kMap[i][1];
+		}
+	}
+	return 0;
+}
+
+// The JP lobby, the chat room and the forms above no longer place the
+// under/over bars (the 2017 client draws them itself); the KR layouts put
+// these three macros at 0,0. The JP data still has the macros. Added when the layout lacks them
+// (the KR code keeps their controls; CLobbyMain hides the over bar where the
+// JP form draws its own title row).
+// gameroom_main holds a group per room kind: group_stroke (the KR GAMEROOM's
+// controls), group_30s, group_gp and group_result (30-player, Grand Prix and
+// the results panel), which the JP exe shows one at a time. The KR code knows
+// one room: the other groups covered the start button, and their "user" lists
+// took the room's user list handler.
+static void JpDropGameRoomGroups(std::list<FrGuiItem*>& guiList) {
+	for (std::list<FrGuiItem*>::iterator it = guiList.begin(); it != guiList.end();) {
+		if ((*it)->m_name == "group_30s" || (*it)->m_name == "group_gp" || (*it)->m_name == "group_result") {
+			delete *it;
+			it = guiList.erase(it);
+		} else {
+			++it;
+		}
+	}
+}
+
+// Where the JP data moved or dropped a control the KR code binds, the
+// elements are reshaped on load into what the KR message maps address. Rows
+// name the element: a JP form registered as a KR layout (by the layout's
+// name) or a macro. Check with the port's JP control check
+// (docs/JP_CLIENT.md, "KR controls the JP data lacks").
+//
+// Renamed groups: the KR code reaches the controls inside through the KR
+// group name (SHOPMAIN.st.epower). The JP stat box is the macro stat_default
+// (one group, stat_group), shared by the shop and My Room.
+static const char* const kJpRenames[][3] = {
+	// element, JP name, KR name
+	{ "stat_default", "stat_group", "st" },
+};
+
+// Items moved into a group: the KR My Room has its stat box and the
+// upgrade/downgrade buttons inside middle_ui (REALMYROOM.middle_ui.st...,
+// .middle_ui.upgrade); the JP form places their macros at the top. The JP
+// group around the buttons (updown_group) is then dropped by FrCmdTarget's
+// group reroute.
+static const char* const kJpMoves[][3] = {
+	// element, item, group
+	{ "REALMYROOM", "st_com", "middle_ui" },
+	{ "REALMYROOM", "up_com", "middle_ui" },
+};
+
+// Controls the KR code binds in an FRCMD_INIT handler and then uses without a
+// NULL check, which the JP data dropped (its stat box shows the values only:
+// no gauges, no selected-item box). Each gets an empty control of the KR
+// type, zero-sized so it never draws or takes a click.
+static const char* const kJpPlaceholders[][3] = {
+	// element, path (group.name), KR type
+	{ "stat_default", "st.selected_name", "STATIC" },
+	{ "stat_default", "st.selframe", "AREA" },
+	{ "stat_default", "st.selitemicon", "AREA" },
+	{ "stat_default", "st.selitem", "BUTTON" },
+	{ "stat_default", "st.selitem_prev", "BUTTON" },
+	{ "stat_default", "st.selitem_next", "BUTTON" },
+	{ "stat_default", "st.stat_frame", "AREA" },
+	{ "stat_default", "st.stat_text", "AREA" },
+	{ "stat_default", "st.stat_part", "VIEWER" },
+	{ "stat_default", "st.stat_all", "VIEWER" },
+	{ "stat_default", "st.powerbar", "GAUGEBAR" },
+	{ "stat_default", "st.controlbar", "GAUGEBAR" },
+	{ "stat_default", "st.impactbar", "GAUGEBAR" },
+	{ "stat_default", "st.spinbar", "GAUGEBAR" },
+	{ "stat_default", "st.curvebar", "GAUGEBAR" },
+	// The bars' buttons the JP client dropped (item storage, scratch, the
+	// messenger and gift alarms).
+	{ "under_bar_m", "ubar.itemstorage", "BUTTON" },
+	{ "under_bar_black_m", "ubar.itemstorage", "BUTTON" },
+	{ "under_bar_black_m", "ubar.tabbtn_b", "BUTTON" },
+	{ "under_tab_m", "utab.scratch", "BUTTON" },
+	{ "under_tab_black_m", "utab.scratch", "BUTTON" },
+	{ "over_bar_m", "obar.messenger_alarm", "BUTTON" },
+	{ "over_bar_m", "obar.gift_alarm", "BUTTON" },
+	// My Room: the KR furniture mode and right-click menu (the JP form has
+	// its own furniture controls, ftab_main and fitem_list).
+	{ "REALMYROOM", "middle_ui.furniture_arrange", "BUTTON" },
+	{ "REALMYROOM", "middle_ui.chatbg", "AREA" },
+	{ "REALMYROOM", "rmenu", "CONTEXTMENU" },
+	{ "REALMYROOM", "farrorup", "BUTTON" },
+	{ "REALMYROOM", "farrordown", "BUTTON" },
+	{ "REALMYROOM", "flist_num", "EDIT" },
+	{ "REALMYROOM", "flist_maxnum", "EDIT" },
+	{ "REALMYROOM", "Btn_flistnum", "BUTTON" },
+	{ "REALMYROOM", "freset", "BUTTON" },
+	{ "REALMYROOM", "fback", "BUTTON" },
+	{ "REALMYROOM", "fsave", "BUTTON" },
+	{ "REALMYROOM", "fout", "BUTTON" },
+	{ "REALMYROOM", "ftab_background01", "AREA" },
+	{ "REALMYROOM", "ftab_background02", "AREA" },
+	{ "REALMYROOM", "ftab_background03", "AREA" },
+	{ "REALMYROOM", "ftab_background04", "AREA" },
+	{ "REALMYROOM", "ftab_background05", "AREA" },
+	{ "REALMYROOM", "ftab_background06", "AREA" },
+	{ "REALMYROOM", "ftab_background07", "AREA" },
+	{ "REALMYROOM", "ftab_background08", "AREA" },
+	{ "REALMYROOM", "ftab_scrollimg01", "AREA" },
+	{ "REALMYROOM", "ftab_scrollimg02", "AREA" },
+	{ "REALMYROOM", "ftab_scrollimg03", "AREA" },
+	{ "REALMYROOM", "Btn_Menu", "BUTTON" },
+	{ "REALMYROOM", "Btn_MenuList", "LISTBOX" },
+};
+
+static FrGuiItem* JpFindItem(std::list<FrGuiItem*>& guiList, const std::string& name) {
+	for (std::list<FrGuiItem*>::iterator it = guiList.begin(); it != guiList.end(); ++it) {
+		if ((*it)->m_name == name) {
+			return *it;
+		}
+	}
+	return 0;
+}
+
+// The child list of the group at a dotted path ("" = guiList itself).
+static std::list<FrGuiItem*>* JpGroupList(std::list<FrGuiItem*>& guiList, const std::string& path) {
+	std::list<FrGuiItem*>* pList = &guiList;
+	std::string::size_type start = 0;
+	while (pList != 0 && start < path.length()) {
+		std::string::size_type dot = path.find('.', start);
+		if (dot == std::string::npos) {
+			dot = path.length();
+		}
+		FrGuiItem* pGroup = JpFindItem(*pList, path.substr(start, dot - start));
+		pList = pGroup != 0 ? const_cast<std::list<FrGuiItem*>*>(pGroup->GetChildList()) : 0;
+		start = dot + 1;
+	}
+	return pList;
+}
+
+static void JpReshape(const std::string& element, std::list<FrGuiItem*>& guiList) {
+	unsigned int i;
+	for (i = 0; i < sizeof(kJpRenames) / sizeof(kJpRenames[0]); i++) {
+		if (stricmp(element.c_str(), kJpRenames[i][0]) == 0) {
+			FrGuiItem* pItem = JpFindItem(guiList, kJpRenames[i][1]);
+			if (pItem != 0) {
+				pItem->m_name = kJpRenames[i][2];
+			}
+		}
+	}
+	for (i = 0; i < sizeof(kJpMoves) / sizeof(kJpMoves[0]); i++) {
+		if (stricmp(element.c_str(), kJpMoves[i][0]) == 0) {
+			FrGuiItem* pItem = JpFindItem(guiList, kJpMoves[i][1]);
+			std::list<FrGuiItem*>* pGroup = JpGroupList(guiList, kJpMoves[i][2]);
+			if (pItem != 0 && pGroup != 0 && pGroup != &guiList) {
+				guiList.remove(pItem);
+				pGroup->push_back(pItem);
+			}
+		}
+	}
+	for (i = 0; i < sizeof(kJpPlaceholders) / sizeof(kJpPlaceholders[0]); i++) {
+		if (stricmp(element.c_str(), kJpPlaceholders[i][0]) != 0) {
+			continue;
+		}
+		std::string path = kJpPlaceholders[i][1];
+		std::string::size_type dot = path.rfind('.');
+		std::string name = dot == std::string::npos ? path : path.substr(dot + 1);
+		std::list<FrGuiItem*>* pList = JpGroupList(guiList, dot == std::string::npos ? std::string() : path.substr(0, dot));
+		if (pList == 0 || JpFindItem(*pList, name) != 0) {
+			continue;
+		}
+		FrGuiItem* pItem = new FrGuiItem;
+		pItem->m_type = GuiType[kJpPlaceholders[i][2]];
+		pItem->m_name = name;
+		if (pItem->m_type == GI_CONTEXTMENU) {
+			pItem->m_resource = "CONTEXTFRM"; // FrContextMenuCtrl::Init needs a frame
+		}
+		pItem->m_rect.left = 0;
+		pItem->m_rect.top = 0;
+		pItem->m_rect.right = 0;
+		pItem->m_rect.bottom = 0;
+		pList->push_back(pItem);
+	}
+}
+
+static void JpAddBars(std::list<FrGuiItem*>& guiList, bool black) {
+	static const char* const kBars[][3] = {
+		{ "utab_mcr", "under_tab_m", "under_tab_black_m" },
+		{ "ubar_mcr", "under_bar_m", "under_bar_black_m" },
+		{ "obar_mcr", "over_bar_m", "over_bar_m" },
+	};
+	for (unsigned int i = 0; i < sizeof(kBars) / sizeof(kBars[0]); i++) {
+		bool found = false;
+		for (std::list<FrGuiItem*>::iterator it = guiList.begin(); it != guiList.end(); ++it) {
+			if ((*it)->m_name == kBars[i][0]) {
+				found = true;
+			}
+		}
+		if (!found) {
+			FrGuiItem* pItem = new FrGuiItem;
+			pItem->m_type = GI_MACROITEM;
+			pItem->m_name = kBars[i][0];
+			pItem->m_resource = kBars[i][black ? 2 : 1];
+			pItem->m_rect.left = 0;
+			pItem->m_rect.top = 0;
+			pItem->m_rect.right = 10;
+			pItem->m_rect.bottom = 10;
+			guiList.push_back(pItem);
+		}
+	}
+}
+#endif
+
 // frelement.cpp:672
 bool FrElementDoc::LoadXml(const char* pszXmlFilename, std::list<FrElement*>& tempList) {
 	TiXmlDocument xml;
@@ -454,6 +684,30 @@ bool FrElementDoc::LoadXml(const char* pszXmlFilename, std::list<FrElement*>& te
 				pElement->Init(pNode);
 				tempList.push_back(pElement);
 			}
+#ifdef JP_PAKS
+			// Also register the form's controls as the layout the KR code opens.
+			const char* layoutName = elementType == ED_FORM ? JpLayoutForForm(name) : 0;
+			if (layoutName != 0) {
+				FrElementLayout* pLayout = new FrElementLayout;
+				pLayout->m_name = layoutName;
+				std::string size = pXmlElement->Attribute("size");
+				sscanf(size.c_str(), "%d %d", &pLayout->m_bgSize.cx, &pLayout->m_bgSize.cy);
+				pLayout->m_bgColor = 0xFFFFFF;
+				CreateGuiItem(pNode, pLayout->m_guiList);
+				if (stricmp(layoutName, "GAMEROOM") == 0) {
+					JpDropGameRoomGroups(pLayout->m_guiList);
+				}
+				JpReshape(layoutName, pLayout->m_guiList);
+				JpAddBars(pLayout->m_guiList, stricmp(layoutName, "REALMYROOM") == 0);
+				tempList.push_back(pLayout);
+			}
+			if (elementType == ED_MACROITEM && pElement != 0) {
+				JpReshape(name, static_cast<FrElementMacroItem*>(pElement)->m_guiList);
+			}
+			if (elementType == ED_LAYOUT && (stricmp(name.c_str(), "TOPPAGE") == 0 || stricmp(name.c_str(), "AVATARCHAT_MAIN") == 0)) {
+				JpAddBars(static_cast<FrElementLayout*>(pElement)->m_guiList, false);
+			}
+#endif
 		}
 
 		pNode = pNode->NextSibling();

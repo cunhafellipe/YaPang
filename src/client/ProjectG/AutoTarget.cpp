@@ -116,7 +116,8 @@ float CAutoTarget::GetDistance(const WVector &a, const WVector &b) {
 	float dx = a.x - b.x;
 	float dz = a.z - b.z;
 
-	return sqrtf(dx * dx + dz * dz);
+	dx *= dx;
+	return sqrtf(dx + dz * dz);
 }
 
 // autotarget.cpp:145
@@ -148,7 +149,7 @@ WVector CAutoTarget::GetPoint(const char *clubName) {
 			toCup = WVector(GOLFDOC()->GetHoleData().m_cupPos) - GolfBall().m_pos;
 
 			if (toCup.x * toPoint.x + toCup.z * toPoint.z > 0.0f
-					&& GetDistance(toCup, toPoint) < sqrtf(toCup.x * toCup.x + toCup.z * toCup.z)) {
+					&& (WVector2D(toCup.x, toCup.z) - WVector2D(toPoint.x, toPoint.z)).Magnitude() < sqrtf(toCup.x * toCup.x + toCup.z * toCup.z)) {
 				point.y = 0.0f;
 				return point;
 			}

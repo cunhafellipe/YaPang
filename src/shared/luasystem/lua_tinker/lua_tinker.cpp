@@ -628,8 +628,9 @@ lua_tinker::table_obj::~table_obj()
 {
 	if (validate()) {
 		lua_remove(m_L, m_index);
+
+		table_obj_manager::GetInstance().delete_table_obj(this);
 	}
-	table_obj_manager::GetInstance().delete_table_obj(this);
 }
 
 // lua_tinker.cpp:806

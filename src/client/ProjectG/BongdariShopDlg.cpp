@@ -1238,12 +1238,13 @@ void FrBongdariShopDlg::DrawShadow(void) {
 		if (m_pShadowImage) {
 			if (m_shopState == 0) {
 				if (m_pBongdari) {
-					const WRect& rc = m_pBongdariArea->GetRect();
+					FrArea* pArea = m_pBongdariArea;
 					float w = m_pShadowImage->Width() * 1.5f;
+					float x = pArea->GetRect().x + pArea->GetRect().w * 0.5f - w * 0.5f;
 					float h = m_pShadowImage->Height() * 1.5f;
 					WRect rect;
 
-					rect = WRect(rc.x + rc.w * 0.5f - w * 0.5f, rc.y + rc.h - 23.0f - h * 0.5f, w, h);
+					rect = WRect(x, pArea->GetRect().y + pArea->GetRect().h - 23.0f - h * 0.5f, w, h);
 					pGDI->DrawTexture(m_pShadowImage, rect, 0x90ffffff, 0);
 				}
 			}
@@ -1287,17 +1288,13 @@ void FrBongdariShopDlg::DrawShadow(void) {
 void FrBongdariShopDlg::DrawTextBongdariClick(void) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
-	if (pGDI) {
-		FrArea* pArea = m_pBongdariArea;
-		if (pArea) {
-			const Bitmap* pImage = m_pClickTextImage;
-			if (pImage) {
-				WRect rc = pArea->GetRect();
+	if (pGDI == NULL) return;
+	if (m_pBongdariArea == NULL) return;
+	if (m_pClickTextImage == NULL) return;
 
-				pGDI->DrawTexture(pImage, WRect(rc.x - 13.0f, rc.y - 100.0f + m_clickTextY, pImage->Width(), pImage->Height()), 0xffffffff, 0);
-			}
-		}
-	}
+	WRect rc = m_pBongdariArea->GetRect();
+
+	pGDI->DrawTexture(m_pClickTextImage, WRect(rc.x - 13.0f, rc.y - 100.0f + m_clickTextY, m_pClickTextImage->Width(), m_pClickTextImage->Height()), 0xffffffff, 0);
 }
 
 // bongdarishopdlg.cpp:1657
@@ -1790,12 +1787,10 @@ unsigned long FrBongdariShopDlg::SelectDifferentTypeId(int type) {
 		return 0;
 	}
 
-	int index = rand() % 100;
-	unsigned long typeId;
+	unsigned long typeId = pTable[rand() % 100];
 	bool bRetry;
 
 	do {
-		typeId = pTable[index];
 		bRetry = false;
 
 		for (int i = 0; i < 9; i++) {
@@ -1803,11 +1798,13 @@ unsigned long FrBongdariShopDlg::SelectDifferentTypeId(int type) {
 				break;
 
 			if (m_silhouettes[i].m_slotParam == typeId) {
-				index = rand() % 100;
 				bRetry = true;
 				break;
 			}
 		}
+
+		if (bRetry)
+			typeId = pTable[rand() % 100];
 	} while (bRetry);
 
 	return typeId;
@@ -2688,7 +2685,7 @@ void FrBongdarishopNoticeDlg::OnNoticeViewerBnUp(void) {
 		std::list<sNoticeImage::sBn>::iterator it;
 		for (it = m_noticeImages[m_curIndex].buttons.begin(); it != m_noticeImages[m_curIndex].buttons.end(); ++it) {
 			WPoint pos = GetRect().TopLeft();
-			WRect rect(pos.x + it->x, pos.y + it->y, it->w, it->h);
+			WRect rect(pos.x + it->rect.x, pos.y + it->rect.y, it->rect.w, it->rect.h);
 
 			if (mouse.x >= rect.x && mouse.x <= rect.x + rect.w && mouse.y >= rect.y && mouse.y <= rect.y + rect.h) {
 				m_moveLayoutTid = it->index;

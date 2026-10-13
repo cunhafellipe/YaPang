@@ -93,7 +93,7 @@ void COneLineBoard::Process(float elapsed) {
 
 // onelineboard.cpp:109
 void COneLineBoard::Display(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		DrawBg();
 	}
 
@@ -183,7 +183,7 @@ float COneLineBoard::GetFadeFactor(void) {
 
 // onelineboard.cpp:204
 void COneLineBoard::DrawBg(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		if (!m_showBg) {
 			return;
 		}

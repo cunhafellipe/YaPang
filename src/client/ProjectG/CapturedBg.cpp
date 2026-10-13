@@ -35,13 +35,13 @@ void CCapturedBg::SetCapturedBgMode(bool on) {
 			m_CaptureMode = true;
 		}
 
-		WSingleton<CProjectG>::Instance()->m_mainFlags |= 2;
+		WSingleton<CProjectG>::Instance()->m_mainFlags.Enable(2);
 		WSingleton<CProjectG>::Instance()->SetFPS(g_resrcmng->VideoReference()->GetMonitorSupportFPS());
 	} else {
 		g_resrcmng->VideoReference()->Command(W_VDEV_CAPTURED_BG, 0, 0);
 
 		m_CaptureMode = false;
 
-		WSingleton<CProjectG>::Instance()->m_mainFlags &= ~2;
+		WSingleton<CProjectG>::Instance()->m_mainFlags.Disable(2);
 	}
 }

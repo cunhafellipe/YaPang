@@ -92,7 +92,7 @@ void FrLoginRsDlg::OnProc(const float deltaTime) {
 				CUserInfo::Instance()->Close();
 			}
 			Close(true);
-			CRankingInfo::Instance()->Open();
+			RANKING()->Open();
 		}
 	}
 }

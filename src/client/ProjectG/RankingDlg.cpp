@@ -914,13 +914,13 @@ void FrRankingDlg::SetAllControlsEnable(bool bEnable) {
 
 // rankingdlg.cpp:1130
 void FrRankingDlg::HidePet(bool bHide) {
-	if (m_pExhibition) {
-		delete m_pExhibition;
-		m_pExhibition = 0;
-	}
-	if (m_pPetData) {
-		delete m_pPetData;
-		m_pPetData = 0;
+	// Both branches are the same; the compiler merges them.
+	if (bHide) {
+		if (m_pExhibition) { delete m_pExhibition; m_pExhibition = 0; }
+		if (m_pPetData) { delete m_pPetData; m_pPetData = 0; }
+	} else {
+		if (m_pExhibition) { delete m_pExhibition; m_pExhibition = 0; }
+		if (m_pPetData) { delete m_pPetData; m_pPetData = 0; }
 	}
 }
 
@@ -1244,7 +1244,7 @@ void FrRankingDlg::OnLanguageInit(intptr_t param) {
 
 // rankingdlg.cpp:1506
 void FrRankingDlg::OnAboutBtnInit(int param) {
-	if ((__rtti_obj = (void*)param) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrButton::m_RTTI)) {
+	if ((__rtti_obj = (void*)param) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) : false) {
 	}
 }
 
@@ -2188,7 +2188,7 @@ void FrRankingAboutDlg::OnForwardBnUp(void) {
 
 // rankingdlg.cpp:2561
 void FrRankingAboutDlg::OnOkBnInit(intptr_t param) {
-	if ((__rtti_obj = (void*)param) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrButton::m_RTTI)) {
+	if ((__rtti_obj = (void*)param) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) : false) {
 	}
 }
 

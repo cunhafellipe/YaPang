@@ -105,7 +105,7 @@ void FrMessengerChatDlg::OnMessenger_CloseLBtnDown(void) {
 void FrMessengerChatDlg::OnMessenger_ChatInputInit(intptr_t param) {
 	m_pChatInput = DYNAMIC_CAST(FrEdit, param);
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 	}
 
@@ -121,7 +121,7 @@ void FrMessengerChatDlg::OnMessenger_ChatInputLBtnDown(void) {
 
 // messengerchatdlg.cpp:149
 bool FrMessengerChatDlg::OnLButtonDown(const WPoint& pt) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		if (g_input->GetButton(LEFT_BUTTON) == 1) {
 			g_pFresh->GetManager()->SetExclusiveKey(true);
 			CMessengerInfo::Instance()->SetGameFocus(false);
@@ -312,7 +312,7 @@ bool FrMessengerChatDlg::OnEmoticonResult(int result, FrForm* pForm) {
 				FrEdit* pEdit = m_pChatInput;
 
 				if (pEdit) {
-					if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+					if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 						g_pFresh->GetManager()->SetExclusiveKey(true);
 					}
 
@@ -374,7 +374,7 @@ bool FrMessengerChatDlg::Close(bool bDestroy) {
 
 	FrForm::Close(true);
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		if (!CChatMsg::Instance()->IsOpened() && chatDlgList.size() == 1) {
 			g_pFresh->GetManager()->SetExclusiveKey(false);
 			CMessengerInfo::Instance()->SetGameFocus(true);

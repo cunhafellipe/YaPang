@@ -47,9 +47,10 @@ void CGolfRule30Battle::SetPlayer(void) {
 			data.m_ballPos = GOLFDOC()->GetHoleData().m_teePos;
 
 			data.m_titleTypeId = (*it).m_titleTypeId;
+			data.m_team = (*it).m_attribute & 3;
 			data.m_characterType = (*it).m_attribute >> 5;
 
-			data.m_team = (*it).m_attribute & 3; data.m_state = 0; data.m_totalShots = 0; data.m_rank = 1; data.m_score = 0; data.m_pang = 0; data.m_extraPang = 0; memset(data.m_holeShots, 0, sizeof(data.m_holeShots)); data.m_joined = 1; data.m_present = 1;
+			data.m_rank = 1; data.m_state = 0; data.m_totalShots = 0; data.m_score = 0; data.m_pang = 0; data.m_extraPang = 0; memset(data.m_holeShots, 0, sizeof(data.m_holeShots)); data.m_joined = 1; data.m_present = 1;
 			memset(data.m_holeScore, 0, sizeof(data.m_holeScore));
 			memset(data.m_holePang, 0, sizeof(data.m_holePang));
 
@@ -67,8 +68,8 @@ void CGolfRule30Battle::SetPlayer(void) {
 			data.m_identity = (*it).m_identity;
 			data.m_mascotTypeId = (*it).m_mascotTypeId;
 			data.m_itemBoostFlags = (*it).m_itemBoostFlags;
-			data.m_extraFlags = (*it).m_extraFlags;
 			data.m_uniteGuildIndex = 0;
+			data.m_extraFlags = (*it).m_extraFlags;
 			WSingleton<CSharedDoc>::Instance()->m_gameResultList.push_back(data);
 
 			if ((*it).m_uid == MyGuid(true)) {
@@ -87,7 +88,7 @@ void CGolfRule30Battle::SetPlayer(void) {
 
 		m_pRule->LoadShot(WSingleton<CSharedDoc>::Instance()->m_fileName);
 
-		GOLFDOC()->m_pPolySoup->LoadMapCheckData(m_pRule->m_hole);
+		GOLFDOC()->m_pPolySoup->LoadMapCheckData(m_pRule->GetShotData()->m_hole);
 	}
 }
 

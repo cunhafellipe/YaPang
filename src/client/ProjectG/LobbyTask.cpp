@@ -3,7 +3,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#include "guilddefine.h"
 #include "ClientSetting.h"
 #include "LobbyTask.h"
 #include "ObjectFactory.h"
@@ -27,6 +26,10 @@
 #include "ChatMsg.h"
 #include "DetailedRoomInfoDlg.h"
 #include "FrTicketExchangeDlg.h"
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer, after
+			// golfdoc.h (BAR_LENGTH folds) and before guilddefine.h:12 (kept dynamic,
+			// docs/tough_problems/010)
+#include "guilddefine.h"
 
 #include <algorithm>
 

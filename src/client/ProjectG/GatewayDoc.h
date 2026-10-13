@@ -16,9 +16,24 @@ namespace _gateway {
 
 class CGatewayHandler;
 
+// The base of the gateway content documents (second password, golf item,
+// trade, special box); it has no handler of its own.
+class CGatewayControlDoc : public IContentsDataContainer {
+public:
+	// gatewaydoc.h:20
+	CGatewayControlDoc(void) {}
+	// gatewaydoc.h:21
+	virtual ~CGatewayControlDoc(void) {}
+
+	// gatewaydoc.h:24
+	virtual CGatewayHandler* GetGatewayHandler(void) { return NULL; }
+};
+
+CHECK_SIZE(CGatewayControlDoc, 0x4);
+
 // The document of the second-password content. Its handler (a
 // CSecondaryPassword) is created by Initialize and deleted by Release.
-class CSecondPwdDoc : public IContentsDataContainer {
+class CSecondPwdDoc : public CGatewayControlDoc {
 public:
 	CSecondPwdDoc(void);
 	// gatewaydoc.h:36
@@ -60,7 +75,7 @@ CHECK_SIZE(CSecondPwdDoc, 0x18);
 
 // The document of the golf-item content: its handler (a CGolfItemHandler),
 // the calipers count and the usable-item list.
-class CGolfItemDoc : public IContentsDataContainer {
+class CGolfItemDoc : public CGatewayControlDoc {
 public:
 	CGolfItemDoc(void);
 	// gatewaydoc.h:87
@@ -117,7 +132,7 @@ CHECK_FIELD(CGolfItemDoc, m_iOwnSpecialBoxCount, 0x20);
 CHECK_SIZE(CGolfItemDoc, 0x24);
 
 // The document of the trade content: its handler (a CTradeHandler).
-class CTradeDoc : public IContentsDataContainer {
+class CTradeDoc : public CGatewayControlDoc {
 public:
 	CTradeDoc(void);
 	virtual ~CTradeDoc(void);
@@ -143,7 +158,7 @@ CHECK_SIZE(CTradeDoc, 0xC);
 
 // The document of the special-box content: its handler (a
 // CSpecialBoxHandler).
-class CSpecialBoxDoc : public IContentsDataContainer {
+class CSpecialBoxDoc : public CGatewayControlDoc {
 public:
 	virtual bool Initialize(void);
 	virtual bool Release(void);

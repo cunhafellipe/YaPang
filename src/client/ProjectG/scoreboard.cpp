@@ -59,8 +59,6 @@
 // ?SCORE_PPL_DIR@@3PBDB, the original's).
 const char* SCORE_PPL_DIR = "./score_ppl";
 
-unsigned char GetDifficulty(void);   // club.cpp
-
 // Hole kind points by difficulty and hole count (CScore::HandleMsg 0x13a);
 // no symbol, its contents are not transcribed yet.
 extern const int data_9f1f48[][19][11];
@@ -1101,8 +1099,8 @@ void FrRankForm3::OnRankInit(intptr_t param) {
 
 	m_playerCount = (unsigned char)(WSingleton<CSharedDoc>::Instance()->m_vector4524.size() * 2);
 
-	m_pRedEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[0]);
-	m_pBlueEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[1]);
+	m_pRedEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[0]);
+	m_pBlueEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[1]);
 
 	m_pRankBg = g_pFresh->GetManager()->GetBitmap("FRAMES4", "30in_rank_02");
 
@@ -1346,8 +1344,8 @@ void FrRankForm3::SetCaptionType(unsigned char type) {
 void FrRankForm3::OnScoreInfoInit(intptr_t param) {
 	m_pScoreInfo = DYNAMIC_CAST(FrArea, param);
 
-	m_pRedEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[0]);
-	m_pBlueEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[1]);
+	m_pRedEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[0]);
+	m_pBlueEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[1]);
 
 	memset(&m_score, 0, sizeof(m_score) + sizeof(m_scoreRemain));
 
@@ -2616,22 +2614,29 @@ void FrAwardForm::OnNextLevelTextInit(int param) {
 bool FrAwardForm::OnInit(void) {
 	FrForm::OnInit();
 
+	WPoint pos;
+
 	if (m_pUserList) {
 		m_pUserList->EnableScrollBar(false);
 
 		WRect rect = m_pUserList->GetRect();
-		float height = m_pUserList->GetItemHeight();
-		height *= m_numRows;
+		float itemHeight = m_pUserList->GetItemHeight();
+		float height = itemHeight * m_numRows;
 		float grow = height - rect.h;
 		rect.h = height;
 		m_pUserList->SetRect(rect);
 
-		m_rect.h += grow;
-		MoveWindow(WPoint(m_rect.x, g_view->GetHeight() - m_rect.h + 5.0f));
+		float formHeight = grow + m_rect.h;
+		pos.x = m_rect.x;
+		m_rect.h = formHeight;
+		pos.y = g_view->GetHeight() - formHeight + 5.0f;
+		MoveWindow(pos);
 		SetRect(m_rect);
 
 		float textHeight = m_pNextLevelText->GetRect().h;
-		m_pNextLevelText->MoveWindow(WPoint(m_rect.x + 25.0f, g_view->GetHeight() - textHeight));
+		pos.x = m_rect.x + 25.0f;
+		pos.y = g_view->GetHeight() - textHeight;
+		m_pNextLevelText->MoveWindow(pos);
 	}
 
 	unsigned char gameType = WSingleton<CSharedDoc>::Instance()->m_roomType;
@@ -2650,7 +2655,6 @@ bool FrAwardForm::OnInit(void) {
 			else
 				upper = true;
 
-			WPoint pos;
 
 			const WRect& barRect = m_pExpBar[i]->GetRect();
 			pos = WPoint(barRect.x, barRect.y + (upper ? offset + 3.0f : offset - 3.0f));
@@ -2674,7 +2678,7 @@ bool FrAwardForm::OnInit(void) {
 			m_pLevelUp[i]->MoveWindow(pos);
 		}
 
-		if (GOLFDOC()->GetTeamGameWinner() == 2) {
+		if ((unsigned char)GOLFDOC()->GetTeamGameWinner() == 2) {
 			m_pMatchRes[0]->SetBgImg("draw");
 			m_pMatchRes[1]->SetBgImg("draw");
 		} else {
@@ -2690,7 +2694,7 @@ bool FrAwardForm::OnInit(void) {
 
 		CalcResult();
 	} else if (gameType == 7) {
-		if (GOLFDOC()->GetPlayer(1)->m_joinState == GOLFDOC()->GetPlayer(0)->m_joinState) {
+		if (PLAYER(1)->m_joinState == PLAYER(0)->m_joinState) {
 			m_pMatchRes[0]->SetBgImg("draw");
 			m_pMatchRes[1]->SetBgImg("draw");
 
@@ -2708,7 +2712,7 @@ bool FrAwardForm::OnInit(void) {
 
 		CalcResult();
 	} else if (gameType == 3) {
-		if (GOLFDOC()->GetPlayer(1)->m_joinState == GOLFDOC()->GetPlayer(0)->m_joinState) {
+		if (PLAYER(1)->m_joinState == PLAYER(0)->m_joinState) {
 			m_pMatchRes[0]->SetBgImg("draw");
 			m_pMatchRes[1]->SetBgImg("draw");
 		} else {
@@ -2785,20 +2789,20 @@ bool FrAwardForm::OnInit(void) {
 			if (i == MyIndex())
 				continue;
 
-			if ((int)GOLFDOC()->GetPlayer((unsigned char)i)->m_ghostResult < (int)GOLFDOC()->GetPlayer((unsigned char)best)->m_ghostResult
-				|| (GOLFDOC()->GetPlayer((unsigned char)i)->m_ghostResult == GOLFDOC()->GetPlayer((unsigned char)best)->m_ghostResult
-					&& (int)GOLFDOC()->GetPlayer((unsigned char)i)->m_ghostAward > (int)GOLFDOC()->GetPlayer((unsigned char)best)->m_ghostAward))
+			if ((int)PLAYER((unsigned char)i)->m_ghostResult < (int)PLAYER((unsigned char)best)->m_ghostResult
+				|| (PLAYER((unsigned char)i)->m_ghostResult == PLAYER((unsigned char)best)->m_ghostResult
+					&& PLAYER((unsigned char)i)->m_ghostAward > PLAYER((unsigned char)best)->m_ghostAward))
 				best = i;
 
 			if ((int)GOLFDOC()->GetPlayer((unsigned char)i)->m_ghostResult < myScore
 				|| ((int)GOLFDOC()->GetPlayer((unsigned char)i)->m_ghostResult == myScore
-					&& (int)GOLFDOC()->GetPlayer((unsigned char)i)->m_ghostAward > myPang))
+					&& GOLFDOC()->GetPlayer((unsigned char)i)->m_ghostAward > myPang))
 				result = 2;
 		}
 
 		if (result != 0) {
 			if ((int)GOLFDOC()->GetPlayer((unsigned char)best)->m_ghostResult == myScore
-				&& (int)GOLFDOC()->GetPlayer((unsigned char)best)->m_ghostAward == myPang)
+				&& GOLFDOC()->GetPlayer((unsigned char)best)->m_ghostAward == myPang)
 				result = 1;
 		}
 	} else if (roomType == 7) {
@@ -4674,14 +4678,14 @@ void FrScoreForm::DrawShot(FrListItem* pItem) {
 		}
 	} else {
 		for (int i = start; i < end; i++) {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 
 			if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GetPlayer(index)->m_state != 1
 				&& (!(GOLFDOC()->GameMode() & 0x22000) || GOLFDOC()->IsNetGameEnd())) {
 				DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
-			} else if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0) {
+			} else if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0) {
 				DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 			} else {
 				int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
@@ -4738,7 +4742,7 @@ void FrScoreForm::DrawVersus(FrListItem* pItem) {
 
 	for (int i = start; i < end; i++) {
 		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
-			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 		} else if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
@@ -4746,7 +4750,7 @@ void FrScoreForm::DrawVersus(FrListItem* pItem) {
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 		} else {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 		}
@@ -4820,7 +4824,7 @@ void FrScoreForm::DrawGraph(FrListItem* pItem) {
 		p1.y = (float)(int)((float)score * step + y);
 
 		for (i++; i < end; i++) {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0)
+			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
 				break;
 			if (GOLFDOC()->GetPlayer(index)->m_state == 0 && i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GameMode() != 0x2000)
 				break;
@@ -4848,7 +4852,7 @@ void FrScoreForm::DrawGraph(FrListItem* pItem) {
 		rect.h = 4.0f;
 
 		for (i = start; i < end; i++) {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0)
+			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
 				break;
 			if (GOLFDOC()->GetPlayer(index)->m_state == 0 && i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GameMode() != 0x2000)
 				break;
@@ -4883,7 +4887,7 @@ void FrScoreForm::DrawPutt(FrListItem* pItem) {
 	float y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
 
 	for (int i = start; i < end; i++) {
-		if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+		if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 			&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 			break;
 
@@ -4892,7 +4896,7 @@ void FrScoreForm::DrawPutt(FrListItem* pItem) {
 		if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GetPlayer(index)->m_state != 1
 			&& (!(GOLFDOC()->GameMode() & 0x22000) || GOLFDOC()->IsNetGameEnd())) {
 			DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
-		} else if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0) {
+		} else if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0) {
 			DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 		} else {
 			DrawDigit(pGDI, MakeStr("%d", putts), WPoint(x, y), 0xFF40C967, FrGDI::ALIGN_CENTER, false);
@@ -4923,7 +4927,7 @@ void FrScoreForm::DrawPang(FrListItem* pItem) {
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
 		// a team game: the team's record
 		for (int i = start; i < end; i++) {
-			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 
@@ -4933,7 +4937,7 @@ void FrScoreForm::DrawPang(FrListItem* pItem) {
 			else
 				pang = (int)GOLFDOC()->GetTeam(index)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
 
-			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0)
+			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
 				DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 			else
 				DrawDigit(pGDI, MakeStr("%I64d", pang), WPoint(x, y), 0xFFE98919, FrGDI::ALIGN_CENTER, true);
@@ -4964,7 +4968,7 @@ void FrScoreForm::DrawPang(FrListItem* pItem) {
 		}
 	} else {
 		for (int i = start; i < end; i++) {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 
@@ -4974,7 +4978,7 @@ void FrScoreForm::DrawPang(FrListItem* pItem) {
 			else
 				pang = (int)GOLFDOC()->GetPlayer(index)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
 
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0)
+			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
 				DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 			else
 				DrawDigit(pGDI, MakeStr("%d", pang), WPoint(x, y), 0xFFE98919, FrGDI::ALIGN_CENTER, true);
@@ -5007,14 +5011,14 @@ void FrScoreForm::DrawSkins(FrListItem* pItem) {
 		return;
 
 	for (int i = start; i < end; i++) {
-		if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+		if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 			&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 			break;
 
 		bool bDash = false;
 		if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1) {
 			if (GOLFDOC()->GetPlayer(index)->m_state == 3) {
-				if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0)
+				if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
 					bDash = true;
 			} else if (!GOLFDOC()->m_approachMode && m_state != 3) {
 				bDash = true;
@@ -5773,8 +5777,8 @@ void CScore::OnLoad(void) {
 		m_pScoreForm->SetState(FrScoreForm::STATE_HIDDEN);
 		m_pScoreForm->SetTypeBtn();
 		m_pScoreForm->SetVisible(false);
-		m_pScoreForm->GetBaseFrame()->SetCaptionOffset(true);
-		m_pScoreForm->GetBaseFrame()->m_nFlags.Enable(0x1000);
+		m_pScoreForm->SetCaptionOffset(true);
+		m_pScoreForm->DescHidePrivacy();
 	} else {
 		// scoreboard.cpp:7613
 		m_pScoreForm = CreateForm<FrScoreForm>(g_pFresh->GetManager(), this, "score", 0);
@@ -5785,8 +5789,8 @@ void CScore::OnLoad(void) {
 		m_pScoreForm->SetState(FrScoreForm::STATE_HIDDEN);
 		m_pScoreForm->SetTypeBtn();
 		m_pScoreForm->SetVisible(false);
-		m_pScoreForm->GetBaseFrame()->SetCaptionOffset(true);
-		m_pScoreForm->GetBaseFrame()->m_nFlags.Enable(0x1000);
+		m_pScoreForm->SetCaptionOffset(true);
+		m_pScoreForm->DescHidePrivacy();
 
 		// scoreboard.cpp:7626
 		m_pTreasureGauge = CreateForm<FrTreasureGauge>(g_pFresh->GetManager(), this, "tPointdlg", 0);

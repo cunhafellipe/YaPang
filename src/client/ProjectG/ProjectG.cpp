@@ -306,7 +306,7 @@ void DeleteSingletonClasses(void) {
 }
 
 // projectg.cpp:374
-CProjectG::CProjectG(HWND hWnd) : m_mainFlags(0), m_inputDevList(16, 16), m_appFlags(0) {
+CProjectG::CProjectG(HWND hWnd) : m_inputDevList(16, 16), m_appFlags(0) {
 	g_CurrentTime = timeGetTime();
 
 	srand(g_CurrentTime);
@@ -876,7 +876,7 @@ void CProjectG::CheckScreenShot(void) {
 		if (m_aviEncoder.IsOpened()) {
 			m_aviEncoder.Close();
 
-			m_mainFlags &= ~0x22;
+			m_mainFlags.Disable(0x22);
 			m_appFlags &= ~2;
 			SetFPS(m_monitorFPS);
 
@@ -894,7 +894,7 @@ void CProjectG::CheckScreenShot(void) {
 				g_input->SetFakeInput("\xbd\xba\xc6\xe4\xc0\xcc\xbd\xba\xb9\xd9", false);
 				SetFPS((float)fps);
 				m_appFlags |= 2;
-				m_mainFlags |= 0x22;
+				m_mainFlags.Enable(0x22);
 			}
 		}
 		return;
@@ -1011,7 +1011,7 @@ void CProjectG::Process(float seconds) {
 	PgConsoleProcess(seconds);
 #endif
 
-	if (!WisEqual(m_gameSpeed, 1.0f, 0.00001f) && !((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)))
+	if (!WisEqual(m_gameSpeed, 1.0f, 0.00001f) && !((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false))
 		m_gameSpeed = 1.0f;
 
 	WSingleton<CNetworkMonitor>::Instance()->Process(seconds);
@@ -1563,7 +1563,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 	case WM_SYSKEYDOWN:
 		// Alt+F4 during a round only quits where the content allows it.
 		if (wParam == VK_F4) {
-			if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 				if (!IsLocalContent((localContentType_t)0x4F) || CSharedDoc::Instance()->m_playingMode == 1)
 					return 1;
 			}

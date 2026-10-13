@@ -272,8 +272,7 @@ bool GroundItem::TestIntersection(int frame) {
 
 // grounditem.cpp:410
 bool GroundItem::TestIntersection2(int frame, float ballRadius) {
-	ThSphere ball;
-	ball.center = ms_ballInfo.MakeBallBoundingVolume(frame).center;
+	ThSphere ball = ms_ballInfo.MakeBallBoundingVolume(frame);
 
 	ThSphere item;
 	GetBoundingSphere(item.center, item.radius);

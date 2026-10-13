@@ -76,21 +76,19 @@ inline WVector CFxBox::Random(const WVector& min, const WVector& max) {
 inline WVector CFxBox::Random(const WVector& center, float minDist, float maxDist, float angle) {
 	float cosHalf = cosf(angle * 0.5f);
 	float capHeight = 1.0f - cosHalf;
-	float x, z, y, len;
+	WVector2D xz;
+	float y, len;
 	do {
-		x = (rand() % 20001) * 0.0001f - 1.0f;
-		z = (rand() % 20001) * 0.0001f - 1.0f;
+		xz.x = (rand() % 20001) * 0.0001f - 1.0f;
+		xz.y = (rand() % 20001) * 0.0001f - 1.0f;
 		y = (rand() % 20001) * capHeight * 0.00005f + cosHalf;
 
-		len = sqrtf(z * z + x * x);
-	} while (fabsf(len) < 0.00001f);
+		len = sqrtf(xz.y * xz.y + xz.x * xz.x);
+	} while (Wabs(len) < 0.00001f);
 
-	float scale = sqrtf(1.0f - y * y) / len;
-	x *= scale;
-	z *= scale;
+	WVector2D dir = xz * (sqrtf(1.0f - y * y) / len);
 
-	float dist = Random(minDist, maxDist);
-	return WVector(x * dist + center.x, y * dist + center.y, z * dist + center.z);
+	return WVector(dir.x, y, dir.y) * Random(minDist, maxDist) + center;
 }
 
 // fxbox.inl:107

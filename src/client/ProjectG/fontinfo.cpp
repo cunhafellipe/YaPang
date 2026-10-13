@@ -1,5 +1,7 @@
 // Original: d:\build\custom\temp\code\client\projectg\fontinfo.cpp
 #define FONTINFO_FONTINFO_INLINE
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
+			// (keeps BAR_LENGTH dynamically initialized, docs/tough_problems/010)
 #include "fontinfo.h"
 #include "SharedDoc.h"
 #include "GolfDoc.h"
@@ -226,7 +228,7 @@ void CFontInfo::Clear(void) {
 		delete[] m_pBuffer;
 		m_pBuffer = NULL;
 	}
-	for (sFontInfo *pInfo = m_fontList.Start(); pInfo != NULL; pInfo = m_fontList.Next()) delete pInfo; m_fontList.Reset();
+	for (sFontInfo *pInfo = m_fontList.Start(); pInfo; pInfo = m_fontList.Next()) { if (pInfo) delete pInfo; } m_fontList.Reset();
 
 	m_loaded = false;
 }
@@ -344,7 +346,7 @@ void CDistToHoleInfo::Process(float fDelta) {
 
 	if ((GOLFDOC()->GameMode() & 0x8210) || !IsMyTurn(true)
 		|| (GOLFDOC()->m_gameState < 15 && GOLFDOC()->m_gameState != 8)
-		|| (GOLFDOC()->m_gameState == 8 && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[0] == 1)) {
+		|| (GOLFDOC()->m_gameState == 8 && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[0] == (unsigned char)1)) {
 		m_nState = 0;
 	}
 
@@ -2903,9 +2905,9 @@ void CPangInfo::PreCalc(bool bFlag) {
 
 	if (ball.IsHoleIn()
 		&& (((CSharedDoc::Instance()->m_roomType == 0 || CSharedDoc::Instance()->m_roomType == 3 || CSharedDoc::Instance()->m_roomType == 7)
-				&& PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == 1)
+				&& PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1)
 			|| (CSharedDoc::Instance()->m_roomType == 1
-				&& TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] == 1))) {
+				&& TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1))) {
 		m_cases[12].m_pang = 20;
 		m_pangs[1] += m_cases[12].m_pang;
 		PLAYER(GOLFDOC()->m_myPlayerIndex)->m_bonusFlags |= 0x1000;
@@ -5756,7 +5758,7 @@ void CExtraHoleInfo::Display(void) {
 					m_color = (i != m_leader ? 0x2DFF : 0) + 0xFFFFD200;
 				}
 
-				if (GOLFDOC()->GetPlayer(i)->m_holes[GOLFDOC()->m_currentHole - 1] == 0) {
+				if (GOLFDOC()->GetPlayer(i)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)0) {
 					Print(g_view->GetWidth() - 85.0f, i * 23.0f + 213.0f, "-", 3.0f, 0, 1.0f, NULL);
 					Print(g_view->GetWidth() - 25.0f, i * 23.0f + 213.0f, "-", 3.0f, 0, 1.0f, NULL);
 				} else {

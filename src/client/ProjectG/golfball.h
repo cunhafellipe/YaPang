@@ -64,6 +64,7 @@ public:
 
 	const sExpected* PreData(int index) const;   // golfball.inl:8
 	sExpected* PreDataToWrite(int index);        // golfball.inl:25 (out-of-line copy in GolfRule)
+	sExpected* NewPreData(void);                 // golfball.inl:89 (out-of-line copy in GolfRule)
 
 	WVector m_pos;          // 0x0, the ball position
 	WVector m_velocity;     // 0xC

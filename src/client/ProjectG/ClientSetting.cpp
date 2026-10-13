@@ -1178,7 +1178,7 @@ int COption::gGetRestore(void) {
 
 // clientsetting.cpp:1551
 void COption::gSetRestore(void) {
-	if (!((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)))
+	if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false))
 		return;
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 10)
@@ -1445,7 +1445,7 @@ void COption::CheckPendingChanges(void) {
 	if (m_option.m_shadowmapEnabled != m_newOption.m_shadowmapEnabled) {
 		m_option.m_shadowmapEnabled = m_newOption.m_shadowmapEnabled;
 
-		if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+		if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 			if (GOLFDOC() && GOLFDOC()->m_pPolySoup)
 				GOLFDOC()->m_pPolySoup->EnableShadowmap(m_option.m_shadowmapEnabled != 0);
 		}

@@ -274,25 +274,20 @@ void FrSchoolDlg::OnTypeListLBtnDown(int param) {
 	m_dist1No = 0;
 	m_schoolNo = 0;
 
-	switch (m_typeNo) {
-	case 3:
-	case 4:
+	if (m_typeNo - 1 == 3 || m_typeNo - 1 == 2) {
 		if (m_pDist1Combo) {
 			m_pDist1Combo->SetVisible(false);
 		}
 		if (m_pDist1Static) {
 			m_pDist1Static->SetVisible(false);
 		}
-		break;
-
-	default:
+	} else {
 		if (m_pDist1Combo) {
 			m_pDist1Combo->SetVisible(true);
 		}
 		if (m_pDist1Static) {
 			m_pDist1Static->SetVisible(true);
 		}
-		break;
 	}
 }
 
@@ -331,9 +326,7 @@ void FrSchoolDlg::OnDist0ListLBtnDown(int param) {
 	}
 
 
-	switch (m_typeNo) {
-	case 3:
-	case 4:
+	if (m_typeNo - 1 == 3 || m_typeNo - 1 == 2) {
 		m_schoolName = "";
 		m_schoolNo = 0;
 
@@ -351,9 +344,7 @@ void FrSchoolDlg::OnDist0ListLBtnDown(int param) {
 				}
 			}
 		}
-		break;
-
-	default:
+	} else {
 		m_dist1Name = "";
 		m_schoolName = "";
 
@@ -379,7 +370,6 @@ void FrSchoolDlg::OnDist0ListLBtnDown(int param) {
 			m_pSchoolCombo->SetLine(1, "", 0, false, 0);
 			m_pSchoolCombo->ClearList();
 		}
-		break;
 	}
 }
 

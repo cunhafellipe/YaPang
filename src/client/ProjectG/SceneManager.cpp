@@ -760,6 +760,7 @@ void CSceneManager::Render_RenderOBMarker(WView* pView) {
 // scenemanager.cpp:742
 int CSceneManager::Render_RenderElement(WView* pView, unsigned long mask) {
 	int numBlend = 0;
+	WVector dist;
 
 	for (std::list<SceneElement>::iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
 		if (&(*it) == 0) {
@@ -776,13 +777,11 @@ int CSceneManager::Render_RenderElement(WView* pView, unsigned long mask) {
 		}
 
 		if (it->m_type == 5) {
-			CustomElement custom((eObjType)it->m_type, it->m_pRender);
-			m_customElements.push_back(custom);
+			m_customElements.push_back(CustomElement((eObjType)it->m_type, it->m_pRender));
 			continue;
 		}
 		if (it->m_type == 6 && (mask & 0x40)) {
-			CustomElement custom((eObjType)it->m_type, it->m_pRender);
-			m_effectElements.push_back(custom);
+			m_effectElements.push_back(CustomElement((eObjType)it->m_type, it->m_pRender));
 			continue;
 		}
 
@@ -810,7 +809,6 @@ int CSceneManager::Render_RenderElement(WView* pView, unsigned long mask) {
 		}
 
 		if (m_useImposter && it->m_pImposter) {
-			WVector dist;
 			dist = pView->camera.pivot - it->m_pPuppet->GetBoundSphere().pos;
 			dist.y = 0.0f;
 			float distance = dist.Magnitude();
@@ -825,30 +823,15 @@ int CSceneManager::Render_RenderElement(WView* pView, unsigned long mask) {
 				it->m_alpha = (unsigned char)(t * 255.0f);
 
 				if (distance > 960.0f) {
-					TransparentElement te;
-					te.m_pPuppet = it->m_pPuppet;
-					te.m_pBox = it->m_pBox;
-					te.m_texture = it->m_pImposter->GetFirstTexture();
-					te.m_numPolys = 0;
-					m_transparentElements.push_back(te);
+					m_transparentElements.push_back(TransparentElement(it->m_pPuppet, it->m_pBox, it->m_pImposter->GetFirstTexture(), 0));
 				} else {
-					TransparentElement te;
-					te.m_pPuppet = it->m_pPuppet;
-					te.m_pBox = it->m_pBox;
-					te.m_texture = it->m_pImposter->GetFirstTexture();
-					te.m_numPolys = it->m_pPuppet->GetFaceNum();
-					m_blendElements.push_back(te);
+					m_blendElements.push_back(TransparentElement(it->m_pPuppet, it->m_pBox, it->m_pImposter->GetFirstTexture(), it->m_pPuppet->GetFaceNum()));
 					numBlend += it->m_pPuppet->GetFaceNum();
 				}
 			} else {
 				it->m_alpha = OverlapCamera(pView, *it);
 				if (it->m_alpha < 0xFF) {
-					TransparentElement te;
-					te.m_pPuppet = it->m_pPuppet;
-					te.m_pBox = it->m_pBox;
-					te.m_texture = 0;
-					te.m_numPolys = 0;
-					m_nearElements.push_back(te);
+					m_nearElements.push_back(TransparentElement(it->m_pPuppet, it->m_pBox, 0, 0));
 				}
 			}
 		} else {
@@ -860,7 +843,6 @@ int CSceneManager::Render_RenderElement(WView* pView, unsigned long mask) {
 			if (it->m_type == 4) {
 				it->m_alpha = it->m_pPuppet->GetRootBone()->GetAlpha();
 			} else if (it->m_pPuppet) {
-				WVector dist;
 				dist = pView->camera.pivot - it->m_pPuppet->GetBoundSphere().pos;
 				dist.y = 0.0f;
 				if (dist.Magnitude() > 800.0f) {
@@ -873,12 +855,7 @@ int CSceneManager::Render_RenderElement(WView* pView, unsigned long mask) {
 			}
 
 			if (it->m_alpha < 0xFF) {
-				TransparentElement te;
-				te.m_pPuppet = it->m_pPuppet;
-				te.m_pBox = it->m_pBox;
-				te.m_texture = 0;
-				te.m_numPolys = 0;
-				m_nearElements.push_back(te);
+				m_nearElements.push_back(TransparentElement(it->m_pPuppet, it->m_pBox, 0, 0));
 			}
 		}
 

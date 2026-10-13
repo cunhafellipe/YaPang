@@ -52,14 +52,14 @@ void FrMemoDlg::OnMemoInit(intptr_t param) {
 	m_pMemo->SetCharLimit(10, false);
 	m_pMemo->SetKeyFocus(true);
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 	}
 }
 
 // memodlg.cpp:42
 void FrMemoDlg::OnMemoLButtonDown(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 	}
 }

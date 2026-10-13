@@ -194,6 +194,18 @@ public:
 	// quadtree.h:119
 	void SetPolySoup(WPolySoup *pPolySoup) { m_pPolySoup = pPolySoup; }
 	float GetLowest(void) const;            // quadtree.h:157
+	// quadtree.h:191
+	void SetBounceFactor(float factor) { m_bounceFactor = factor; }
+	// quadtree.h:192
+	void SetRollFactor(float factor) { m_rollFactor = factor; }
+	// quadtree.h:193
+	void SetCondition(float condition) { m_condition = condition; }
+	// quadtree.h:196
+	float GetGreenFactor(void) const { return m_greenSlope; }
+	// quadtree.h:197
+	void SetGreenFactor(float factor) { m_greenSlope = factor; }
+	// quadtree.h:209
+	void PaintIndex(int index) { m_markedTriangle = index; }
 	WVector GetPenaltyPos(void);            // quadtree.h:423
 	void Display(void);
 	void SetFrame(unsigned long frame);     // quadtree.h:497

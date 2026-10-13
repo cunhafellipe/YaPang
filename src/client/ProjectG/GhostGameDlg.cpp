@@ -576,7 +576,7 @@ void FrGhostGameMapDlg::Init(unsigned long ghostUserId, const std::string& ghost
 }
 
 // ghostgamedlg.cpp:450
-void FrGhostGameMapDlg::OnProc(const float dt) {
+void FrGhostGameMapDlg::OnProc(float dt) {
 	for (std::vector<sImgInfo>::iterator it = m_imgInfos.begin(); it != m_imgInfos.end(); ++it) {
 		if (it->m_mapId == 20)
 			continue;
@@ -590,19 +590,14 @@ void FrGhostGameMapDlg::OnProc(const float dt) {
 		}
 
 		if (it->m_unknown08 < 255.0f && it->m_x > 0.0f) {
-			it->m_unknown08 += dt * 331.5f;
-			if (it->m_unknown08 > 255.0f)
+			if ((it->m_unknown08 += dt * 331.5f) > 255.0f)
 				it->m_unknown08 = 255.0f;
 		}
 
 		if (it->m_y == it->m_x)
 			it->m_flag12 = true;
 
-		if (it->m_flag12 && !it->m_flag10 && it->m_lockOffset < 200.0f) {
-			it->m_lockOffset += dt * 400.0f;
-			if (it->m_lockOffset > 200.0f)
-				it->m_lockOffset = 200.0f;
-		}
+		if (it->m_flag12 && !it->m_flag10 && it->m_lockOffset < 200.0f && (it->m_lockOffset += dt * 400.0f) > 200.0f) it->m_lockOffset = 200.0f;
 	}
 
 	m_imgTags[m_selectId].Animate(dt);
@@ -777,12 +772,12 @@ void FrGhostGameMapDlg::OnDrawChoiceMap(int param) {
 
 		if (tag.m_pEndBitmap) {
 
-			float left = tag.m_endRect.w + tag.m_rect.x + 1.0f;
-			float cur = tag.m_current;
-			if (cur < left) {
+			WRect rect(tag.m_current, tag.m_endRect.y, tag.m_endRect.w, tag.m_endRect.h);
+			float left = rect.w + tag.m_rect.x + 1.0f;
+			if (rect.x < left) {
 
-				WRect src(0.0f, 0.0f, left - cur, tag.m_endRect.h);
-				WRect dest(cur, tag.m_endRect.y, left - cur, tag.m_endRect.h);
+				WRect dest(rect.x, rect.y, left - rect.x, rect.h);
+				WRect src(0.0f, 0.0f, left - rect.x, rect.h);
 				pGDI->DrawTexture(tag.m_pEndBitmap, src, dest, ((unsigned char)tag.m_alphaEnd << 24) | 0xffffff, 0);
 
 				std::list<GHOST_GAME_BRIEF>::iterator it = std::find(m_gameBriefs.begin(), m_gameBriefs.end(), m_selectId);
@@ -792,7 +787,7 @@ void FrGhostGameMapDlg::OnDrawChoiceMap(int param) {
 					const Bitmap* pItemBitmap = g_pFresh->GetBitmap(MakeStr("%s", pItem->m_icon));
 					if (pItemBitmap) {
 
-						WRect itemRect(cur + 7.0f, tag.m_endRect.y + 6.0f, (float)pItemBitmap->Width(), (float)pItemBitmap->Height());
+						WRect itemRect(rect.x + 7.0f, rect.y + 6.0f, (float)pItemBitmap->Width(), (float)pItemBitmap->Height());
 						pGDI->DrawTexture(pItemBitmap, itemRect, ((unsigned char)tag.m_alphaEnd << 24) | 0xffffff, 0);
 					}
 
@@ -1050,8 +1045,8 @@ void FrGhostAward::cPangFx::Create(const WRect& rect) {
 	m_rect = WRect((float)m_pBitmap->Width() * 0.8f + rect.x + offset, (float)(rand() % 5 - 5) + rect.y, m_pBitmap->Width(), m_pBitmap->Height());
 
 	m_speed = (float)(rand() % 50 + 200) * 0.01f;
-	m_alpha = 125.0f;
 	m_targetY = rect.y + 30.0f;
+	m_alpha = 125.0f;
 }
 
 // ghostgamedlg.cpp:926

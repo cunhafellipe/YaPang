@@ -19,11 +19,6 @@
 #include "../include/westpak.h"
 #include "../include/wxtnlbuffer.h"
 
-// wmath.h:86 (not yet in wmath.h, owned by its steward)
-inline int WisZero(const float& f, float eps) {
-	return Wabs(f) < eps;
-}
-
 WTVertex* WBone::m_vtxList = 0;
 WVector* WBone::m_vecList = 0;
 int WBone::m_vtx_len = 0;
@@ -2949,6 +2944,13 @@ float WBone::LoadAnimationKey(cFile* fp) {
 		fp->Read(&pgPos3Num, 4);
 		for (int pgI = 0; pgI < pgPos3Num; ++pgI)
 			fp->Seek(16, 1);
+		// 1.3: a fourth block of (t, value) keys (the JP 983 exe, 0xB96F30).
+		if (PgPetVersionAtLeast(g_pgPetVersion, 0xFFFE0103)) {
+			int pgKeyNum = 0;
+			fp->Read(&pgKeyNum, 4);
+			for (int pgI = 0; pgI < pgKeyNum; ++pgI)
+				fp->Seek(8, 1);
+		}
 	}
 #else
 	fp->Read(&n, 4);

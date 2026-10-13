@@ -190,7 +190,7 @@ void BuddyManager::Process(void) {
 
 // buddymanager.cpp:423
 void BuddyManager::DisplayString(const char *text) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 		AfxGetTask()->PassMsgToActor("Lobby", MsgObject(0, 3, (intptr_t)text, 0xFFFF7878, 0, 0, 0));
 	}
 	else {

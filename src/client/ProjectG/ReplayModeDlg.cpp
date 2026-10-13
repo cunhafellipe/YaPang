@@ -67,7 +67,7 @@ void FrReplayModeDlg::OnOkBtnUp(void) {
 	}
 	else if (m_replayMode == 2) {
 		// Delete the replay file.
-		for (std::list<sReplayFileInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_replayFileList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_replayFileList.end(); ++it) {
+		for (std::list<sRecordedItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_replayFileList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_replayFileList.end(); ++it) {
 			if (!stricmp(it->m_fileName, WSingleton<CSharedDoc>::Instance()->m_fileName)) {
 				WSingleton<CSharedDoc>::Instance()->m_replayFileList.erase(it);
 

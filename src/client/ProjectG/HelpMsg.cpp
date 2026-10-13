@@ -219,9 +219,8 @@ void CHelpMsg::Process(float elapsed) {
 	case 16:
 	case 17: {
 		index = 0;
-		float gauge = WSingleton<CSharedDoc>::Instance()->m_roomType == 1 ? TEAM((unsigned char)(area - 14))->m_teamRate : PLAYER((unsigned char)(area - 14))->m_comboGauge;
 		// "(%d power shots available)"
-		sprintf(m_itemText, "(\xC6\xC4\xBF\xF6\xBC\xA6\xC0\xBB %d\xB9\xF8 \xBB\xE7\xBF\xEB \xB0\xA1\xB4\xC9)", float2int(gauge * 0.030303031f));
+		sprintf(m_itemText, "(\xC6\xC4\xBF\xF6\xBC\xA6\xC0\xBB %d\xB9\xF8 \xBB\xE7\xBF\xEB \xB0\xA1\xB4\xC9)", float2int((WSingleton<CSharedDoc>::Instance()->m_roomType == 1 ? TEAM((unsigned char)(area - 14))->m_teamRate : PLAYER((unsigned char)(area - 14))->m_comboGauge) / 33.0f));
 		break;
 	}
 	case 10:

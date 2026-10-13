@@ -1750,7 +1750,7 @@ void CMessengerInfo::Toggle(void) {
 	bool bVisible = IsVisible() ? true : false;
 	bool bChatRestored = false;
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI))
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false)
 		SetGameFocus(true);
 
 	if (bVisible == true) {
@@ -1783,7 +1783,7 @@ void CMessengerInfo::Toggle(void) {
 					if (m_pMessengerDlg == NULL) {
 						m_pMessengerDlg = CreateForm<FrMessengerDlg>(g_pFresh->GetManager(), this, "messenger", 0);
 						if (m_pMessengerDlg != NULL) {
-							if (!((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)))
+							if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false))
 								m_pMessengerDlg->Adjust(m_rcMessengerDlg);
 
 							m_pMessengerDlg->SetFixed(true);
@@ -1792,7 +1792,7 @@ void CMessengerInfo::Toggle(void) {
 							m_pMessengerDlg->SetFadeout(bVisible);
 
 							if (IsLocalContent((localContentType_t)0x54))
-								m_pMessengerDlg->m_inviteEnabled = m_inviteEnabled;
+								m_pMessengerDlg->EnableInvite(m_inviteEnabled);
 						}
 					}
 				} else {
@@ -1801,7 +1801,7 @@ void CMessengerInfo::Toggle(void) {
 						if (!it->bReceived && it->pChatDlg == NULL && it->uid == uid) {
 							it->pChatDlg = CreateForm<FrMessengerChatDlg>(g_pFresh->GetManager(), this, "messenger_chat", 0);
 
-							if (!((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)))
+							if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false))
 								it->pChatDlg->Adjust(it->rcChatDlg);
 
 							it->pChatDlg->SetFixed(true);
@@ -1822,7 +1822,7 @@ void CMessengerInfo::Toggle(void) {
 			if (m_pMessengerDlg == NULL) {
 				m_pMessengerDlg = CreateForm<FrMessengerDlg>(g_pFresh->GetManager(), this, "messenger", 0);
 				if (m_pMessengerDlg != NULL) {
-					if (!((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)))
+					if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false))
 						m_pMessengerDlg->Adjust(m_rcMessengerDlg);
 
 					m_pMessengerDlg->SetFixed(true);
@@ -1832,7 +1832,7 @@ void CMessengerInfo::Toggle(void) {
 					m_pMessengerDlg->GetClientRect(m_rcMessengerDlg);
 
 					if (IsLocalContent((localContentType_t)0x54))
-						m_pMessengerDlg->m_inviteEnabled = m_inviteEnabled;
+						m_pMessengerDlg->EnableInvite(m_inviteEnabled);
 				}
 			}
 
@@ -1842,7 +1842,7 @@ void CMessengerInfo::Toggle(void) {
 			if (m_pMessengerDlg == NULL) {
 				m_pMessengerDlg = CreateForm<FrMessengerDlg>(g_pFresh->GetManager(), this, "messenger", 0);
 				if (m_pMessengerDlg != NULL) {
-					if (!((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)))
+					if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false))
 						m_pMessengerDlg->Adjust(m_rcMessengerDlg);
 
 					m_pMessengerDlg->SetFixed(true);
@@ -1855,7 +1855,7 @@ void CMessengerInfo::Toggle(void) {
 						m_pMessengerDlg->UpdateFriendList();
 
 					if (IsLocalContent((localContentType_t)0x54))
-						m_pMessengerDlg->m_inviteEnabled = m_inviteEnabled;
+						m_pMessengerDlg->EnableInvite(m_inviteEnabled);
 				}
 			}
 		}
@@ -1863,7 +1863,7 @@ void CMessengerInfo::Toggle(void) {
 		m_focusOrder.clear();
 	}
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)
+	if (((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false)
 		&& !CChatMsg::Instance()->IsOpened()) {
 		g_pFresh->GetManager()->SetExclusiveKey(!bVisible && bChatRestored);
 	}
@@ -1882,7 +1882,7 @@ void CMessengerInfo::SaveCurrentFocus(void) {
 	for (it = pManager->GetTopWndList().begin(); it != pManager->GetTopWndList().end(); ++it) {
 		FrWnd* pWnd = *it;
 
-		if ((__rtti_obj = (void*)pWnd) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI)) {
+		if (((__rtti_obj = (void*)pWnd) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI) : false)) {
 			FrForm* pForm = (FrForm*)pWnd;
 			pForm->GetWindowName(name);
 
@@ -1968,7 +1968,7 @@ void CMessengerInfo::Process(float dt) {
 		}
 	}
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)
+	if (((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false)
 		&& WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
 		if (g_input->GetButton(LEFT_BUTTON) == 1 && !CChatMsg::Instance()->IsOpened()) {
 			g_pFresh->GetManager()->SetExclusiveKey(false);
@@ -2014,19 +2014,19 @@ void CMessengerInfo::Process(float dt) {
 		m_notifyElapsed += dt;
 
 		if (m_notifyElapsed > 4.0f) {
-			if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI)) {
+			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 				AfxGetTask()->GetActor("Lobby") << MsgObject(0, 0xA8, 0, 0, 0, 0, 0);
-			} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI)) {
+			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI) : false) {
 				AfxGetTask()->GetActor("Shop") << MsgObject(0, 0xA8, 0, 0, 0, 0, 0);
-			} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI)) {
+			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xA8, 0, 0, 0, 0, 0);
-			} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI)) {
+			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI) : false) {
 				AfxGetTask()->GetActor("Family") << MsgObject(0, 0xA8, 0, 0, 0, 0, 0);
-			} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 				AfxGetTask()->GetActor("GolfRule") << MsgObject(0, 0xA8, 0, 0, 0, 0, 0);
-			} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI)) {
+			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false) {
 				AfxGetTask()->GetActor("AvatarChat") << MsgObject(0, 0xA8, 0, 0, 0, 0, 0);
-			} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI)) {
+			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xA8, 0, 0, 0, 0, 0);
 			}
 
@@ -2067,19 +2067,19 @@ void CMessengerInfo::Notify1(const char* msg) {
 
 // messengerdlg.cpp:3702
 void CMessengerInfo::Notify2(const char* msg) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Lobby") << MsgObject(0, 0xA8, (intptr_t)msg, 1, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Shop") << MsgObject(0, 0xA8, (intptr_t)msg, 1, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xA8, (intptr_t)msg, 1, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Family") << MsgObject(0, 0xA8, (intptr_t)msg, 1, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("GolfRule") << MsgObject(0, 0xA8, (intptr_t)msg, 1, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("AvatarChat") << MsgObject(0, 0xA8, (intptr_t)msg, 1, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xA8, (intptr_t)msg, 1, 0, 0, 0);
 	}
 
@@ -2091,17 +2091,17 @@ void CMessengerInfo::Notify2(const char* msg) {
 void CMessengerInfo::Notify3(void) {
 	CSharedDoc::Instance()->m_value4DBD = 1;
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Lobby") << MsgObject(0, 0xA9, 1, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Shop") << MsgObject(0, 0xA9, 1, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xA9, 1, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Family") << MsgObject(0, 0xA9, 1, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("GolfRule") << MsgObject(0, 0xA9, 1, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("AvatarChat") << MsgObject(0, 0xA9, 1, 0, 0, 0, 0);
 	}
 
@@ -2112,34 +2112,18 @@ void CMessengerInfo::Notify3(void) {
 void CMessengerInfo::Notify4(bool bOn) {
 	CSharedDoc::Instance()->m_value4DBE = bOn;
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Lobby") << MsgObject(0, 0xAC, bOn, 0, 0, 0, 0);
-		return;
-	}
-
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Shop") << MsgObject(0, 0xAC, bOn, 0, 0, 0, 0);
-		return;
-	}
-
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xAC, bOn, 0, 0, 0, 0);
-		return;
-	}
-
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Family") << MsgObject(0, 0xAC, bOn, 0, 0, 0, 0);
-		return;
-	}
-
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("GolfRule") << MsgObject(0, 0xAC, bOn, 0, 0, 0, 0);
-		return;
-	}
-
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("AvatarChat") << MsgObject(0, 0xAC, bOn, 0, 0, 0, 0);
-		return;
 	}
 }
 
@@ -2150,35 +2134,36 @@ void CMessengerInfo::AlarmBtnUp(unsigned long uid) {
 	int count = (int)chatList.size();
 
 	std::list<sChatSlot>::iterator it;
-	for (it = chatList.begin(); it != chatList.end(); ++it) {
-		if (it->pChatDlg == NULL && it->bReceived && (uid == (unsigned long)-1 || uid == it->uid)) {
-			it->bReceived = false;
-			it->pChatDlg = CreateForm<FrMessengerChatDlg>(g_pFresh->GetManager(), this, "messenger_chat", 0);
-			it->pChatDlg->SetFixed(true);
-			it->pChatDlg->Open((FRESH_RESULT_CALLBACK)0, 0xC);
-			it->pChatDlg->SetUID(it->uid);
-			it->pChatDlg->SetTopmost(true);
-			it->pChatDlg->FindNextTopFocus(false);
+	for (it = chatList.begin(); it != chatList.end(); it++) {
+		sChatSlot& slot = *it;
+		if (slot.pChatDlg == NULL && slot.bReceived && (uid == (unsigned long)-1 || uid == slot.uid)) {
+			slot.bReceived = false;
+			slot.pChatDlg = CreateForm<FrMessengerChatDlg>(g_pFresh->GetManager(), this, "messenger_chat", 0);
+			slot.pChatDlg->SetFixed(true);
+			slot.pChatDlg->Open((FRESH_RESULT_CALLBACK)0, 0xC);
+			slot.pChatDlg->SetUID(slot.uid);
+			slot.pChatDlg->SetTopmost(true);
+			slot.pChatDlg->FindNextTopFocus(false);
 
-			it->pChatDlg->RestoreChat(*it);
+			slot.pChatDlg->RestoreChat(slot);
 
-			RepositionPopupDlg(it->pChatDlg, count);
+			RepositionPopupDlg(slot.pChatDlg, count);
 		}
 	}
 
 	CSharedDoc::Instance()->m_value4DBD = 0;
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Lobby") << MsgObject(0, 0xA9, 0, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Shop") << MsgObject(0, 0xA9, 0, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xA9, 0, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CFamilyTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("Family") << MsgObject(0, 0xA9, 0, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("GolfRule") << MsgObject(0, 0xA9, 0, 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false) {
 		AfxGetTask()->GetActor("AvatarChat") << MsgObject(0, 0xA9, 0, 0, 0, 0, 0);
 	}
 }
@@ -2317,7 +2302,7 @@ void CMessengerInfo::SetGameFocus(bool focus) {
 	m_gameFocus = focus;
 
 	if (focus) {
-		if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+		if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 			g_pFresh->GetManager()->ResetTopFocus();
 		}
 	}

@@ -51,6 +51,11 @@ inline WVector operator*(float f, const WVector& v) {
 	return v * f;
 }
 
+// wmath.inl:72
+inline int operator==(const WVector& a, const WVector& b) {
+	return WisEqual(a, b, g_EPSILON);
+}
+
 // wmath.inl:82
 // Same body as WDotProduct: the out-of-line copy in SharedDoc is byte for
 // byte camerawork's WDotProduct.
@@ -260,6 +265,11 @@ inline void WMatrix::operator*=(const float f) {
 	za *= f;
 }
 
+// wmath.inl:436
+inline void WMatrix::operator*=(const WMatrix& m) {
+	*this = *this * m;
+}
+
 // wmath.inl:441
 GOLFDOC_WMATH_INLINE WMatrix::WMatrix(float _xx, float _yx, float _zx, float _xy, float _yy, float _zy,
                                       float _xz, float _yz, float _zz) {
@@ -395,9 +405,24 @@ GOLFRULE_WMATH_INLINE WVector2D operator+(const WVector2D& a, const WVector2D& b
 	return WVector2D(a.x + b.x, a.y + b.y);
 }
 
+// wmath.inl:610
+inline WVector2D operator-(const WVector2D& a, const WVector2D& b) {
+	return WVector2D(a.x - b.x, a.y - b.y);
+}
+
 // wmath.inl:618
 GOLFRULE_WMATH_INLINE void WVector2D::Reset(void) {
 	x = y = 0.0f;
+}
+
+// wmath.inl:624
+inline float WVector2D::Magnitude(void) const {
+	return sqrtf(SquareMagnitude());
+}
+
+// wmath.inl:630
+inline float WVector2D::SquareMagnitude(void) const {
+	return x * x + y * y;
 }
 
 // wmath.inl:642
@@ -450,6 +475,15 @@ inline float operator*(const WPlane& p, const WVector& v) {
 inline float operator*(const WVector& v, const WPlane& p) {
 	const WVector& value = v;
 	return p.normal * value + p.dis;
+}
+
+// wmath.inl:738
+POOL_WMATH_INLINE void WPlane::Normalize() {
+	float inv = 1.0f / sqrtf(x * x + y * y + z * z);
+	x *= inv;
+	y *= inv;
+	z *= inv;
+	dis *= inv;
 }
 
 // wmath.inl:745

@@ -85,7 +85,7 @@ struct GHOST_SHOT_PROTOCOL {
 	float barStartPosition;         // 0x24
 	unsigned char club;             // 0x28
 	float randomPower;              // 0x2C
-	unsigned long spot;             // 0x30
+	float spot;                     // 0x30
 };
 
 CHECK_SIZE(GHOST_SHOT_PROTOCOL, 0x34);

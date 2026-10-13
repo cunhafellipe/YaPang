@@ -229,7 +229,7 @@ const sTradeItem sTransformHelper::operator()(const sTradeBuyBase& buyItem) {
 // param is the MsgObject's address; m_param2 the address of the result
 // (pointers in ints, as the original: not portable to 64-bit).
 void CTradeHandler::OnUpdateTradeBuyItem(intptr_t param) {
-	sTradeBuyResult* pResult = (sTradeBuyResult*)((const MsgObject*)param)->m_param2;
+	sTradeBuyParam* pResult = (sTradeBuyParam*)((const MsgObject*)param)->m_param2;
 
 	std::for_each(pResult->itemList.begin(), pResult->itemList.end(), UpdateBuyItem);
 
@@ -251,7 +251,7 @@ void CTradeHandler::OnUpdateTradeBuyItem(intptr_t param) {
 // param is the MsgObject's address; m_param2 the address of the result
 // (pointers in ints, as the original: not portable to 64-bit).
 void CTradeHandler::OnUpdateTradeSellItem(intptr_t param) {
-	sTradeSellResult* pResult = (sTradeSellResult*)((const MsgObject*)param)->m_param2;
+	sTradeSellParam* pResult = (sTradeSellParam*)((const MsgObject*)param)->m_param2;
 
 	std::for_each(pResult->itemList.begin(), pResult->itemList.end(), UpdateSellItem);
 
@@ -272,7 +272,7 @@ void CTradeHandler::OnUpdateTradeSellItem(intptr_t param) {
 // param is the MsgObject's address; m_param2 the address of the result
 // (pointers in ints, as the original: not portable to 64-bit).
 void CTradeHandler::OnUpdateTradeMinusItem(int param) {
-	sTradeMinusResult* pResult = (sTradeMinusResult*)((const MsgObject*)param)->m_param2;
+	sTradeMinusParam* pResult = (sTradeMinusParam*)((const MsgObject*)param)->m_param2;
 
 	if (pResult->shopUID == WSingleton<CSharedDoc>::Instance()->GetTradeUID()) {
 

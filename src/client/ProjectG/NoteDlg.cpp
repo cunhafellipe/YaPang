@@ -73,14 +73,14 @@ void FrNoteDlg::OnNoteInit(intptr_t param) {
 	m_pNote = DYNAMIC_CAST(FrEdit, param);
 
 	// Fresh's kind-of test: like DYNAMIC_CAST, through __rtti_obj (frwnd.h).
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 	}
 }
 
 // notedlg.cpp:53
 void FrNoteDlg::OnNoteLBtnDown(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 	}
 }

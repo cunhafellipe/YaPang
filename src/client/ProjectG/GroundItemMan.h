@@ -34,16 +34,9 @@ public:
 	// NSC_OnFirstNewShotFrame clears the first three of the local player.
 	struct PlayerStats {
 		// grounditemman.h:39
-		PlayerStats(void) { memset(this, 0, sizeof(PlayerStats)); }
+		PlayerStats(void) { Reset(); }
 		// grounditemman.h:41
-		void Reset(void) {
-			m_shotCount[0] = 0;
-			m_shotCount[1] = 0;
-			m_shotCount[2] = 0;
-			m_totalCount[0] = 0;
-			m_totalCount[1] = 0;
-			m_totalCount[2] = 0;
-		}
+		void Reset(void) { memset(this, 0, sizeof(PlayerStats)); }
 
 		int m_shotCount[3];     // 0x0, reset at each new shot
 		int m_totalCount[3];    // 0xc

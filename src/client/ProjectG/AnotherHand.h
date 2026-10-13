@@ -11,8 +11,6 @@
 // its name comes from the overriders (?OnAnotherHand@CTask@@MAEXHPAX@Z).
 class CHandOwner {
 public:
-	CHandOwner(void);
-
 	virtual void OnAnotherHand(int nWork, void *pData) = 0;   // vtable slot 0
 };
 

@@ -833,7 +833,6 @@ void WDirect3D8::WFxParamPool::OnResetDevice(IDirect3DDevice9* pDevice) {
 	}
 
 #define FX_VALUE_NOT_EQUAL(a, b) ((a) != (b))
-#define FX_MATRIX_NOT_EQUAL(a, b) (memcmp(&(a), &(b), sizeof(D3DXMATRIX)) != 0)
 
 // wd3d8.cpp:1321
 void WDirect3D8::WFxParamPool::GetInt(ID3DXEffect* ef, WVDFXPARAMETERTYPE wvdFxParamType, const char* hParam, bool isShared, int& Value) const {
@@ -919,7 +918,7 @@ void WDirect3D8::WFxParamPool::GetMatrix(ID3DXEffect* ef, WVDFXPARAMETERTYPE wvd
 // wd3d8.cpp:1393
 void WDirect3D8::WFxParamPool::SetMatrix(ID3DXEffect* ef, WVDFXPARAMETERTYPE wvdFxParamType, const char* hParam, bool isShared, const D3DXMATRIX& Value) {
 	if (ef && hParam) {
-		FX_PARAM_CACHE_SET(D3DXMATRIX, m_paramCacheListPair_Mat, FX_MATRIX_NOT_EQUAL)
+		FX_PARAM_CACHE_SET(D3DXMATRIX, m_paramCacheListPair_Mat, FX_VALUE_NOT_EQUAL)
 
 		ef->SetMatrix(hParam, &Value);
 	}
@@ -1954,11 +1953,11 @@ bool WDirect3D8::SetFogEnable(bool enable) {
 // wd3d8.cpp:3030
 void WDirect3D8::SetFogState(float fogStart, float fogEnd, unsigned long fogColor) {
 	if (fogStart != m_fogStart) {
-		FlushRenderPrimitive(); m_LastFogStart = fogStart; m_pd3dDevice->SetRenderState(D3DRS_FOGSTART, *(unsigned long*)&fogStart);
+		unsigned long value = *(unsigned long*)&fogStart; FlushRenderPrimitive(); m_LastFogStart = *(float*)&value; m_pd3dDevice->SetRenderState(D3DRS_FOGSTART, value);
 	}
 
 	if (fogEnd != m_fogEnd) {
-		FlushRenderPrimitive(); m_LastFogEnd = fogEnd; m_pd3dDevice->SetRenderState(D3DRS_FOGEND, *(unsigned long*)&fogEnd);
+		unsigned long value = *(unsigned long*)&fogEnd; FlushRenderPrimitive(); m_LastFogEnd = *(float*)&value; m_pd3dDevice->SetRenderState(D3DRS_FOGEND, value);
 	}
 
 	if (fogColor != m_fogColor) {
@@ -1970,10 +1969,10 @@ void WDirect3D8::SetFogState(float fogStart, float fogEnd, unsigned long fogColo
 
 // wd3d8.cpp:3082
 void WDirect3D8::ResetFogState(void) {
-	// Each line sets one fog state through a copy of the stored value, as
-	// SetFogState does.
-	{ float fogStart = m_fogStart; FlushRenderPrimitive(); m_LastFogStart = fogStart; m_pd3dDevice->SetRenderState(D3DRS_FOGSTART, *(unsigned long*)&fogStart); }
-	{ float fogEnd = m_fogEnd; FlushRenderPrimitive(); m_LastFogEnd = fogEnd; m_pd3dDevice->SetRenderState(D3DRS_FOGEND, *(unsigned long*)&fogEnd); }
+	// Each line sets one fog state through a DWORD copy of the stored value
+	// (the copy lives in memory because its address is reinterpreted).
+	{ unsigned long fogStart = *(unsigned long*)&m_fogStart; FlushRenderPrimitive(); m_LastFogStart = *(float*)&fogStart; m_pd3dDevice->SetRenderState(D3DRS_FOGSTART, fogStart); }
+	{ unsigned long fogEnd = *(unsigned long*)&m_fogEnd; FlushRenderPrimitive(); m_LastFogEnd = *(float*)&fogEnd; m_pd3dDevice->SetRenderState(D3DRS_FOGEND, fogEnd); }
 	{ unsigned long fogColor = m_fogColor; FlushRenderPrimitive(); m_pd3dDevice->SetRenderState(D3DRS_FOGCOLOR, fogColor); }
 }
 
@@ -2897,16 +2896,26 @@ void WDirect3D8::xFillTexture(int hTex) {
 
 // wd3d8.cpp:4831
 void WDirect3D8::xInstantiateVertexBuffer(int hVb) {
+	D3DPOOL pool;
+	if (m_xaVbList[hVb].xdwUsage & D3DUSAGE_DYNAMIC)
+		pool = D3DPOOL_DEFAULT;
+	else
+		pool = D3DPOOL_MANAGED;
 	m_pd3dDevice->CreateVertexBuffer(m_xaVbList[hVb].xbStride * m_xaVbList[hVb].xnVtxs, m_xaVbList[hVb].xdwUsage, m_xaVbList[hVb].xdwFVF,
-		(m_xaVbList[hVb].xdwUsage & D3DUSAGE_DYNAMIC) ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED, &m_xaVbList[hVb].xpVb, NULL);
+		pool, &m_xaVbList[hVb].xpVb, NULL);
 	xFillVertexBuffer(hVb);
 	m_xiVbSize += m_xaVbList[hVb].xbStride * m_xaVbList[hVb].xnVtxs;
 }
 
 // wd3d8.cpp:4865
 void WDirect3D8::xInstantiateIndexBuffer(int hIb) {
+	D3DPOOL pool;
+	if (m_xaIbList[hIb].xdwUsage & D3DUSAGE_DYNAMIC)
+		pool = D3DPOOL_DEFAULT;
+	else
+		pool = D3DPOOL_MANAGED;
 	m_pd3dDevice->CreateIndexBuffer(m_xaIbList[hIb].xnIdxs * sizeof(unsigned short), m_xaIbList[hIb].xdwUsage, D3DFMT_INDEX16,
-		(m_xaIbList[hIb].xdwUsage & D3DUSAGE_DYNAMIC) ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED, &m_xaIbList[hIb].xpIb, NULL);
+		pool, &m_xaIbList[hIb].xpIb, NULL);
 	xFillIndexBuffer(hIb);
 }
 
@@ -4357,17 +4366,22 @@ void WDirect3D8::UpdateTextureSurfaceFiltering(void* buff, int w, int h, int pit
 void WDirect3D8::UpdateTextureSurfaceAlpha(void* buff, int pitch, pix_info* pix, const tagRECT& rc, tagBITMAPINFO* bi, void* data) {
 	// Blends a 32-bit source over the surface's rectangle by the source's
 	// alpha, keeping that alpha in the result.
-	int nSrcBpp = bi->bmiHeader.biBitCount / 8;
-	int nSrcPitch = (bi->bmiHeader.biWidth * bi->bmiHeader.biBitCount / 8 + 3) & ~3;
-	int nDstBpp = pix->cpp;
+	int nSrcBpp;
+	unsigned long code;
+	int nDstBpp;
+	int nSrcPitch;
+	unsigned char color[4];
+	unsigned char p[4];
+
+	nSrcBpp = bi->bmiHeader.biBitCount / 8;
+	nSrcPitch = (bi->bmiHeader.biWidth * bi->bmiHeader.biBitCount / 8 + 3) & ~3;
+	nDstBpp = pix->cpp;
 
 	for (int y = 0; y < rc.bottom - rc.top; y++) {
 		for (int x = 0; x < rc.right - rc.left; x++) {
 			unsigned char* src = (unsigned char*)data + nSrcPitch * y + nSrcBpp * x;
 			unsigned char* dst = (unsigned char*)buff + pitch * y + nDstBpp * x;
-			unsigned char color[4];
-			unsigned char p[4];
-			unsigned long code;
+			unsigned char alpha = src[3];
 			if (pix->cpp == 2) {
 				code = MAKEWORD(dst[0], dst[1]);
 
@@ -4378,7 +4392,7 @@ void WDirect3D8::UpdateTextureSurfaceAlpha(void* buff, int pitch, pix_info* pix,
 				memcpy(color, dst, 3);
 			}
 
-			for (int i = 0; i < 3; i++) p[i] = (src[i] * src[3] + color[i] * (255 - src[3])) / 255; code = pix->a_r_shift == 8 ? pix->Pack(p[2], p[1], p[0]) : pix->Pack(src[3], p[2], p[1], p[0]);
+			for (code = 0; code < 3; code++) p[code] = (src[code] * alpha + color[code] * (255 - alpha)) / 255; code = pix->a_r_shift == 8 ? pix->Pack(p[2], p[1], p[0]) : pix->Pack(src[3], p[2], p[1], p[0]);
 			memcpy(dst, &code, pix->cpp);
 		}
 	}
@@ -4602,8 +4616,8 @@ int WDirect3D8::Command(wVDevMessage message, int param1, int param2) {
 		((unsigned int*)param1)[2] = GetSortBufferHwSize();
 		break;
 	case WX_VDEV_GET_MERGEBUFFER_SIZE:
-		((unsigned long*)param1)[0] = m_MergeBuffer.VertexStreamBufferSize;
-		((unsigned long*)param1)[1] = m_MergeBuffer.IndexBufferSize;
+		((unsigned long*)param1)[0] = m_MergeBuffer.GetVertexStreamBufferSize();
+		((unsigned long*)param1)[1] = m_MergeBuffer.GetIndexBufferSize();
 		break;
 	}
 

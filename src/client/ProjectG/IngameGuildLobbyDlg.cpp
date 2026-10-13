@@ -427,12 +427,12 @@ void CGuildMainForm::RefreshSearchPageList(void) {
 
 	m_pListBoxes[1]->GetCurrentItemSize(true);
 
-	unsigned int group = (m_searchPage - 1) / 5;
+	unsigned int group = (unsigned int)(m_searchPage - 1) / 5;
 
 	int first = group * 5;
 
 	int last = 0;
-	if ((int)m_searchPage < maxPage) {
+	if (m_searchPage < maxPage) {
 		if (group == (unsigned int)(maxPage - 1) / 5) {
 			// The last group of pages.
 			last = maxPage;
@@ -450,12 +450,12 @@ void CGuildMainForm::RefreshSearchPageList(void) {
 	m_pSearchArrow->RefreshArrowButton(maxPage, m_searchPage);
 
 	int count = m_pListBoxes[3]->GetCurrentItemSize(true);
-	FrWnd *pBg = m_pAreas[7];
+	const WRect &bgRect = m_pAreas[7]->GetRect();
 
-	float center = pBg->GetRect().w * 0.5f + pBg->GetRect().x;
+	float x = bgRect.w * 0.5f + bgRect.x - (float)m_pListBoxes[3]->GetItemWidth() * count * 0.5f + 6.0f;
 
 	WRect rect = m_pListBoxes[3]->GetRect();
-	rect.x = center - (float)m_pListBoxes[3]->GetItemWidth() * count * 0.5f + 6.0f;
+	rect.x = x;
 	m_pListBoxes[3]->SetRect(rect);
 }
 
@@ -1242,7 +1242,7 @@ void CGuildMainForm::OnGuildSearchPrev_ButtonInit(int param) {
 
 // ingameguildlobbydlg.cpp:1353
 void CGuildMainForm::OnGuildSearchPrev_LButtonUp(void) {
-	unsigned int group = (m_searchPage - 1) / 5;
+	unsigned int group = (unsigned int)(m_searchPage - 1) / 5;
 	int page = group * 5;
 	RequestSearch_Page(page);
 }
@@ -1258,7 +1258,7 @@ void CGuildMainForm::OnGuildSearchNext_ButtonInit(int param) {
 
 // ingameguildlobbydlg.cpp:1369
 void CGuildMainForm::OnGuildSearchNext_LButtonUp(void) {
-	unsigned int group = (m_searchPage - 1) / 5;
+	unsigned int group = (unsigned int)(m_searchPage - 1) / 5;
 	int page = group * 5 + 6;
 	RequestSearch_Page(page);
 }

@@ -1049,11 +1049,7 @@ void FrUserInfoForm::OnSpecListboxOwnerDraw(int param) {
 // user_info.cpp:1098
 void FrUserInfoForm::UpdateEditUserLocation(void) {
 	if (m_userInfo.m_slot != 0xFFFF) {
-		std::list<sRoomInfo>::iterator it;
-		for (it = WSingleton<CSharedDoc>::Instance()->m_roomList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_roomList.end(); ++it) {
-			if (it->m_roomNumber == m_userInfo.m_slot)
-				break;
-		}
+		std::list<sRoomInfo>::iterator it = std::find(WSingleton<CSharedDoc>::Instance()->m_roomList.begin(), WSingleton<CSharedDoc>::Instance()->m_roomList.end(), m_userInfo.m_slot);
 
 		if (it == WSingleton<CSharedDoc>::Instance()->m_roomList.end()) {
 			m_pConnStatusEdit->SetLine(1, "\xbe\xcb \xbc\xf6 \xbe\xf8\xc0\xbd", 0xFF000000, false, 0);
@@ -1075,7 +1071,7 @@ void FrUserInfoForm::UpdateEditUserLocation(void) {
 			m_pConnStatusEdit->SetLine(1, MakeStr("[%d]\xb9\xf8 \xb9\xe6 %s", it->m_roomNumber, it->m_option[0] ? "\xc0\xe1\xbc\xf6\xc1\xdf" : "\xb4\xeb\xb1\xe2\xc1\xdf"), 0xFF000000, false, 0);
 			break;
 		case 1:
-			m_pConnStatusEdit->SetLine(1, MakeStr("[%d]\xb9\xf8 \xb9\xe6 %s", it->m_roomNumber, ((m_userInfo.m_identity >> 1) & 1) ? "\xb0\xfc\xc0\xfc\xc1\xdf" : "\xb0\xd4\xc0\xd3\xc1\xdf"), 0xFF000000, false, 0);
+			m_pConnStatusEdit->SetLine(1, MakeStr("[%d]\xb9\xf8 \xb9\xe6 %s", it->m_roomNumber, (bool)((m_userInfo.m_identity >> 1) & 1) ? "\xb0\xfc\xc0\xfc\xc1\xdf" : "\xb0\xd4\xc0\xd3\xc1\xdf"), 0xFF000000, false, 0);
 			break;
 		case 2:
 			m_pConnStatusEdit->SetLine(1, "\xba\xf1\xb0\xf8\xb0\xb3\xb9\xe6\xbf\xa1 \xc1\xa2\xbc\xd3\xc1\xdf", 0xFF000000, false, 0);
@@ -1308,9 +1304,12 @@ void FrUserInfoForm::ChangeRecordType(void) {
 		if (m_pRecCourseBack)
 			m_pRecCourseBack->SetVisible(true);
 
+		// Each loop is one source line indexing through a pointer to the array
+		// (an indexed loop; indexing the member directly is strength-reduced).
+		FrEdit **edits = m_pRecordEdit;
 		for (int i = 0; i < 15; i++) {
-			if (m_pRecordEdit[i])
-				m_pRecordEdit[i]->SetVisible(false);
+			if (edits[i])
+				edits[i]->SetVisible(false);
 		}
 
 		m_pRecTotalList->SetVisible(false);
@@ -1321,13 +1320,17 @@ void FrUserInfoForm::ChangeRecordType(void) {
 		if (m_pRecAwardBack)
 			m_pRecAwardBack->SetVisible(true);
 
+		// Each loop is one source line indexing through a pointer to the array
+		// (an indexed loop; indexing the member directly is strength-reduced).
+		FrWnd **wnds = m_pRecAwardWnd;
 		for (int i = 0; i < 6; i++) {
-			if (m_pRecAwardWnd[i])
-				m_pRecAwardWnd[i]->SetVisible(true);
+			if (wnds[i])
+				wnds[i]->SetVisible(true);
 		}
+		FrEdit **edits = m_pRecordEdit;
 		for (int i = 0; i < 15; i++) {
-			if (m_pRecordEdit[i])
-				m_pRecordEdit[i]->SetVisible(false);
+			if (edits[i])
+				edits[i]->SetVisible(false);
 		}
 
 		m_pRecTotalList->SetVisible(false);
@@ -1816,17 +1819,16 @@ void FrUserInfoForm::SetFormA(eTabType tab) {
 
 // user_info.cpp:2182
 void FrUserInfoForm::HidePet(bool bWait) {
+	// Both branches free the pet; the compiler merges them (only the second
+	// branch's lines survive), which keeps 0 in a register for the whole
+	// function (docs/tough_problems/024).
 	if (bWait) {
 		m_anotherHand.WaitUntilWorkDone(9999);
-	}
-
-	if (m_pPetExhibition) {
-		delete m_pPetExhibition;
-		m_pPetExhibition = NULL;
-	}
-	if (m_pPetTids) {
-		delete m_pPetTids;
-		m_pPetTids = NULL;
+		if (m_pPetExhibition) { delete m_pPetExhibition; m_pPetExhibition = NULL; }
+		if (m_pPetTids) { delete m_pPetTids; m_pPetTids = NULL; }
+	} else {
+		if (m_pPetExhibition) { delete m_pPetExhibition; m_pPetExhibition = NULL; }
+		if (m_pPetTids) { delete m_pPetTids; m_pPetTids = NULL; }
 	}
 }
 
@@ -1978,7 +1980,7 @@ void FrUserInfoForm::UpdateEditSchoolAndGuild(eSeasonType season, const sPangYaU
 	else
 		m_pSchoolEdit->SetLine(1, "\xbc\xd2\xbc\xd3 \xc7\xd0\xb1\xb3 \xbe\xf8\xc0\xbd", 0xFF000000, false, 0);   // "no school"
 
-	if ((m_userInfo.m_identity >> 2) & 1) {
+	if ((bool)((m_userInfo.m_identity >> 2) & 1)) {
 		m_pClubEdit->SetLine(1, "\xbe\xcb \xbc\xf6 \xbe\xf8\xc0\xbd", 0xFF000000, false, 0);   // "unknown"
 	} else {
 		sprintf(buf, "%s", strlen(pInfo->guildName) ? pInfo->guildName : "\xbc\xd2\xbc\xd3 \xb1\xe6\xb5\xe5 \xbe\xf8\xc0\xbd", 0xFF000000);   // "no guild"
@@ -3255,10 +3257,9 @@ void CUserInfo::Process(float elapsed) {
 
 // user_info.cpp:4237
 bool CUserInfo::OnUserInfoFormResult(int ret, FrForm *pForm) {
+	m_bHasInfo = false;
 	m_guid = 0xFFFFFFFF;
 	m_uid = 0xFFFFFFFF;
-	m_bHasInfo = false;
-
 	m_dlg = 0;
 	return true;
 }

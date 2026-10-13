@@ -1,6 +1,7 @@
 // Original: d:\build\custom\temp\code\client\projectg\post_senddlg.cpp
 // This unit emits the out-of-line copy of FrFriendDlg::GetUid (frienddlg.h).
 #define POST_SENDDLG_FRIENDDLG_INLINE
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
 #include "NetworkSystem.h"
 #include "Packet.h"
 #include "post_senddlg.h"
@@ -1203,6 +1204,9 @@ void CPost_MyItemList::OnPost_ItemListBtnDown(void) {
 
 // post_senddlg.cpp:1519
 void CPost_MyItemList::OnPost_ItemListMouseMove(void) {
+	// Placement assumed: the original's only trace of this dead call is the
+	// out-of-line FrEdit::GetSelectLine and this handler's empty line 1520.
+	int line = m_pEditArray->GetSelectLine();
 }
 
 // post_senddlg.cpp:1523
@@ -1505,7 +1509,8 @@ void CPost_MyItemList::SetList(void) {
 						m_pSelectList->SetVisible(true);
 						m_pImgSelect->SetVisible(true);
 					}
-					pListItem->selected = true;
+					if (pListItem)
+						pListItem->selected = true;
 					break;
 				}
 			}

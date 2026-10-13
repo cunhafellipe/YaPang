@@ -142,6 +142,16 @@ struct w_mesh {
 	WBone* aabbBone;                    // 0xb4
 	Waabb localAabb;                    // 0xb8
 	char mpetName[64];                  // 0xd0
+#ifdef PG_7XX
+	// The mesh's own matrix palette (the JP 983 exe keeps a vector of the
+	// mesh's bones at +0xA0 of its w_mesh, 0xB9F980): a skinned vertex's
+	// index byte is a slot here, not the bone's id, so skeletons of more than
+	// 256 bones (Spika: 318) index past neither the byte nor the device's
+	// palette. Each slot holds the bone's id in the puppet's matrix lists.
+	// Plain ints: meshes are copied with memcpy.
+	int pgPaletteNum;
+	int pgPalette[256];
+#endif
 };
 CHECK_SIZE(w_mesh, 0x110);
 CHECK_FIELD(w_mesh, vtxNum, 0x0);

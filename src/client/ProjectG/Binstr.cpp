@@ -47,9 +47,8 @@ bool cToken::GetToken(char *const pToken, const char *sep, int sepLen) {
 	bool bRet = false;
 	int i;
 	int j;
-	const char *pSep;
 	for (i = m_Pos; i < m_Len; i++) {
-		pSep = sep;
+		const char *pSep = sep;
 		for (j = 0; j < sepLen; j++, pSep++) {
 			if (GetBuf()[i] == *pSep) {
 				if (*pSep & 0x80) {
@@ -96,8 +95,8 @@ bool cToken::GetToken(char *const pToken, const char *sep, int sepLen) {
 		bRet = true;
 	}
 	if (found == 2) {
-		bRet = true;
 		i++;
+		bRet = true;
 		pToken[i - m_Pos - 1] = '\0';
 	} else {
 		pToken[i - m_Pos] = '\0';
@@ -469,9 +468,10 @@ int __cdecl mbscut(char *dest, const char *src, unsigned int len) {
 	}
 
 	if (strlen(src) > len) {
-		if (src[len - 1] & 0x80) {
+		unsigned int last = len - 1;
+		if (src[last] & 0x80) {
 			unsigned int i;
-			for (i = 0; i < len - 1; i++) {
+			for (i = 0; i < last; i++) {
 				if (src[i] & 0x80) {
 					i++;
 				}

@@ -289,7 +289,7 @@ private:
 	WVector m_previewCenter;    // 0x1F8, the point the course preview camera circles (DoCoursePreview)
 	float m_modeTime;           // 0x204, time in the current game mode (ChangeGameMode zeroes it)
 	float m_goStopTime;         // 0x208, zeroed when HandleMsg (0x95) opens the go/stop dialog (type not traced)
-	PADDING(0x20C, 0x210);
+	unsigned long m_debugCameraGameMode; // 0x20C, the golf doc's game mode DoDebugCamera restores when the debug camera ends
 	WMatrix m_debugCameraStart; // 0x210, the camera the debug camera starts from (ChangeGameMode 0x400)
 	PADDING(0x240, 0x248);
 	bool m_replayDone;          // 0x248, cleared when Replay starts a replay
@@ -360,6 +360,10 @@ private:
 		int m_extraPang;            // 0x74
 		WCrypticValue<float> m_comboGauge; // 0x78
 	};
+public:
+	// golfrule.h:615, the hole block below as a sShotData
+	sShotData *GetShotData(void) { return (sShotData *)&m_hole; }
+private:
 	// 0x2F4-0x37B: the hole block, a sShotData (see above). It stays flat
 	// because the GolfRule* units read m_pRule->m_hole.
 	unsigned char m_hole;       // 0x2F4, the current hole (CGolfRuleTutorial::SetPlayer passes it to LoadMapCheckData)
@@ -443,7 +447,7 @@ private:
 	PADDING(0x42D, 0x430);
 	float m_msgValue430;        // 0x430, set (as a float) by message 0x9B
 	float m_msgValue434;        // 0x434, set (as a float) by message 0x9D
-	PADDING(0x438, 0x444);
+	WVector m_orbitCenter;      // 0x438, the point ROTATE_CW/CCW orbit the debug camera around, m_msgValue434 ahead of the camera
 	bool m_forgetPending;       // 0x444, the "flower of forgetting" dialog runs (DoFlyBall_Stopped)
 	PADDING(0x445, 0x448);
 	float m_forgetElapsed;      // 0x448, seconds the forget dialog has been open; closed at 10 (DoFlyBall_Stopped)
@@ -518,6 +522,7 @@ CHECK_SIZE(CGolfRule, 0x5C0);
 BEGIN_LAYOUT_CHECK(CGolfRule)
 	CHECK_FIELD(CGolfRule, m_modeTime, 0x204);
 	CHECK_FIELD(CGolfRule, m_previewCenter, 0x1F8);
+	CHECK_FIELD(CGolfRule, m_debugCameraGameMode, 0x20C);
 	CHECK_FIELD(CGolfRule, m_goStopSent, 0x265);
 	CHECK_FIELD(CGolfRule, m_flag266, 0x266);
 	CHECK_FIELD(CGolfRule, m_flag267, 0x267);
@@ -637,6 +642,7 @@ BEGIN_LAYOUT_CHECK(CGolfRule)
 	CHECK_FIELD(CGolfRule, m_shotKeyLockTime, 0x404);
 	CHECK_FIELD(CGolfRule, m_msgValue430, 0x430);
 	CHECK_FIELD(CGolfRule, m_msgValue434, 0x434);
+	CHECK_FIELD(CGolfRule, m_orbitCenter, 0x438);
 	CHECK_FIELD(CGolfRule, m_value59C, 0x59C);
 	CHECK_FIELD(CGolfRule, m_value5A0, 0x5A0);
 	CHECK_FIELD(CGolfRule, m_shotStartComboGauge, 0x5A4);

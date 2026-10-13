@@ -16,6 +16,7 @@
 #include "wavi.h"
 #include "wmath.h"
 #include "cCRC32.h"
+#include "wflag.h"
 
 class FrForm;
 class WInputDev;
@@ -83,7 +84,7 @@ protected:
 	virtual void Update(int time);
 
 public:
-	int m_mainFlags;           // 0x5C (passed to CMainFrame::Main by MainLoop)
+	WFlags m_mainFlags;        // 0x5C (passed to CMainFrame::Main by MainLoop)
 	bool m_loginDlgFlag;       // 0x60 (cleared by FrLoginDlg::OnInit)
 	bool m_bMoveLoginServer;   // 0x61 (SetMoveLoginServer; the login dialog prefills its edits, cleared by FrLoginDlg::OnDisconPrevSession)
 	PADDING(0x62, 0x64);

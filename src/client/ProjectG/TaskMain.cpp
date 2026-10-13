@@ -1664,7 +1664,15 @@ void CTaskMain::EnableOverAndUnderBar(bool enable) {
 void CTaskMain::EnableUnderBar(bool enable) {
 	m_barButton[2]->Enable(enable);
 	m_barButton[3]->Enable(enable);
+#ifdef JP_PAKS
+	// The JP under bar has "achievement" where the KR one has "itemstorage":
+	// no button binds slot 4 (docs/JP_CLIENT.md).
+	if (m_barButton[4]) {
+		m_barButton[4]->Enable(enable);
+	}
+#else
 	m_barButton[4]->Enable(enable);
+#endif
 	m_barButton[5]->Enable(enable);
 	m_barButton[6]->Enable(enable);
 	m_barButton[15]->Enable(enable);
@@ -1814,12 +1822,12 @@ void CTaskMain::OnOverBar_CharOwnerDraw(int) {
 	unsigned long color = m_charViewer->IsEnabled() ? 0xFFFFFFFF : 0x50B0B0B0;
 	WRect rect = m_charViewer->GetRect();
 	const Bitmap *bitmap = NULL;
-	unsigned int characterId = WSingleton<CSharedDoc>::Instance()->m_myCharacterId;
 
-	if (characterId == 0) {
+	if (WSingleton<CSharedDoc>::Instance()->m_myCharacterId == 0) {
 		bitmap = g_pFresh->GetBitmap("bar_no");
 	} else {
-		IFF_ITEM_COMMON *item = ItemManager()->FindCommonItem(WSingleton<CSharedDoc>::Instance()->m_characterMap.find(characterId)->second.typeId);
+		std::map<unsigned int, sCharacterInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_characterMap.find(WSingleton<CSharedDoc>::Instance()->m_myCharacterId);
+		IFF_ITEM_COMMON *item = ItemManager()->FindCommonItem(it->second.typeId);
 		if (item)
 			bitmap = g_pFresh->GetBitmap(MakeStr("s_%s", item->m_icon));
 	}
@@ -1906,20 +1914,20 @@ void CTaskMain::OnOverBar_CaddieOwnerDraw(int) {
 	WRect rect = m_caddieViewer->GetRect();
 	const Bitmap *bitmap = NULL;
 	bool expired = false;
-	unsigned int caddieId = WSingleton<CSharedDoc>::Instance()->m_myCaddieId;
 
-	if (caddieId == 0) {
+	if (WSingleton<CSharedDoc>::Instance()->m_myCaddieId == 0) {
 		bitmap = g_pFresh->GetBitmap("bar_no");
 	} else {
-		std::map<unsigned int, sCaddieInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_caddieMap.find(caddieId);
-		IFF_ITEM_COMMON *item = ItemManager()->FindCommonItem(it->second.typeId);
+		std::map<unsigned int, sCaddieInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_caddieMap.find(WSingleton<CSharedDoc>::Instance()->m_myCaddieId);
+		sCaddieInfo &info = it->second;
+		IFF_ITEM_COMMON *item = ItemManager()->FindCommonItem(info.typeId);
 		if (item)
 			bitmap = g_pFresh->GetBitmap(MakeStr("s_%s", item->m_icon));
 
 		// a caddie on contract whose days ran out: crossed out in red
-		IFF_STRUCT::sCaddie *caddie = ItemManager()->FindCaddie(it->second.typeId);
+		IFF_STRUCT::sCaddie *caddie = ItemManager()->FindCaddie(info.typeId);
 		if (caddie) {
-			if ((it->second.flags & 2) && it->second.days <= 0 && it->second.cadItemTypeId == 0 && caddie->fee != 0)
+			if ((info.flags & 2) && info.days <= 0 && info.cadItemTypeId == 0 && caddie->fee != 0)
 				expired = true;
 		}
 	}
@@ -1928,9 +1936,9 @@ void CTaskMain::OnOverBar_CaddieOwnerDraw(int) {
 		gdi->DrawTexture(bitmap, rect, color, 0);
 
 	if (expired) {
-		g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f - 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
-		g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f), 0xFFFF0000, 0xFFFF0000, 0);
-		g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f + 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+		gdi->Line(WPoint(rect.x, rect.y + rect.h * 0.5f - 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+		gdi->Line(WPoint(rect.x, rect.y + rect.h * 0.5f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f), 0xFFFF0000, 0xFFFF0000, 0);
+		gdi->Line(WPoint(rect.x, rect.y + rect.h * 0.5f + 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
 	}
 
 	_DrawSelection(m_caddieViewer, rect, (eBarButton)0x29, gdi);
@@ -2032,12 +2040,12 @@ void CTaskMain::OpenSubEquipBar(const WPoint &pt, PANGYA_ITEM_GROUP group, int s
 
 // taskmain.cpp:2677
 bool CTaskMain::OnResultSubEquipBar(int result, FrForm *) {
-	PANGYA_ITEM_GROUP group = (PANGYA_ITEM_GROUP)0x20;
 	if (result == 1) {
 		IFF_ITEM_COMMON *item = m_subEquipBar->GetResult();
+		PANGYA_ITEM_GROUP group = (PANGYA_ITEM_GROUP)0x20;
 		if (item != NULL) {
 			unsigned long typeId = item->m_typeId;
-			unsigned long itemGroup = typeId >> 26;
+			PANGYA_ITEM_GROUP itemGroup = (PANGYA_ITEM_GROUP)(typeId >> 26);
 			if (itemGroup == 5) {
 				// a ball: no item guid to equip
 				CSharedDoc::Instance()->m_myBallId = typeId;
@@ -2046,7 +2054,7 @@ bool CTaskMain::OnResultSubEquipBar(int result, FrForm *) {
 			} else {
 				m_subSelection = typeId;
 				m_subSelectionTab = m_subEquipBar->GetLastSelectedGuid();
-				if (!m_subEquipBar->SetClientEquipInfo((PANGYA_ITEM_GROUP)itemGroup, m_subSelectionTab)) {
+				if (!m_subEquipBar->SetClientEquipInfo(itemGroup, m_subSelectionTab)) {
 					m_subEquipBar = NULL;
 					return true;
 				}
@@ -2177,11 +2185,13 @@ void CTaskMain::OnOverBar_CharSelOwnerDraw(int) {
 	// the bar: a left cap, a middle sized to the icons, a right cap
 	float x = m_subSelectionWnd[0]->GetRect().x;
 	float y = m_subSelectionWnd[0]->GetRect().y;
-	float w = 8.0f;
+	float w;
 
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	x += w;
 	float itemX = x;
@@ -2193,8 +2203,10 @@ void CTaskMain::OnOverBar_CharSelOwnerDraw(int) {
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	y += 7.0f;
 	m_subSelection = 0;
@@ -2259,11 +2271,13 @@ void CTaskMain::OnOverBar_CaddieSelOwnerDraw(int) {
 
 	float x = m_subSelectionWnd[1]->GetRect().x;
 	float y = m_subSelectionWnd[1]->GetRect().y;
-	float w = 8.0f;
+	float w;
 
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	x += w;
 	float itemX = x;
@@ -2275,8 +2289,10 @@ void CTaskMain::OnOverBar_CaddieSelOwnerDraw(int) {
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	y += 7.0f;
 	m_subSelection = 0;
@@ -2366,11 +2382,13 @@ void CTaskMain::OnOverBar_ClubSelOwnerDraw(int) {
 
 	float x = m_subSelectionWnd[3]->GetRect().x;
 	float y = m_subSelectionWnd[3]->GetRect().y;
-	float w = 8.0f;
+	float w;
 
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	x += w;
 	float itemX = x;
@@ -2382,8 +2400,10 @@ void CTaskMain::OnOverBar_ClubSelOwnerDraw(int) {
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	y += 7.0f;
 	m_subSelection = 0;
@@ -2461,11 +2481,13 @@ void CTaskMain::OnOverBar_AztecSelOwnerDraw(int) {
 
 	float x = m_subSelectionWnd[2]->GetRect().x;
 	float y = m_subSelectionWnd[2]->GetRect().y;
-	float w = 8.0f;
+	float w;
 
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	x += w;
 	float itemX = x;
@@ -2477,8 +2499,10 @@ void CTaskMain::OnOverBar_AztecSelOwnerDraw(int) {
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	y += 7.0f;
 	m_subSelection = 0;
@@ -2542,11 +2566,13 @@ void CTaskMain::OnOverBar_MascotSelOwnerDraw(int) {
 
 	float x = m_subSelectionWnd[4]->GetRect().x;
 	float y = m_subSelectionWnd[4]->GetRect().y;
-	float w = 8.0f;
+	float w;
 
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	x += w;
 	float itemX = x;
@@ -2558,8 +2584,10 @@ void CTaskMain::OnOverBar_MascotSelOwnerDraw(int) {
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
-	if (bitmap)
-		gdi->DrawTexture(bitmap, WRect(x, y, 8.0f, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	if (bitmap) {
+		w = 8.0f;
+		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+	}
 
 	y += 7.0f;
 	m_subSelection = 0;
@@ -2645,7 +2673,7 @@ bool CTaskMain::OnWaitDlgResult(int result, FrForm *) {
 	if (result == 2) {
 		WSingleton<CMouseCursor>::Instance()->SetActive(false);
 
-		if (!((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI))) {
+		if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false)) {
 			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
 		}
 
@@ -2934,12 +2962,11 @@ void CTaskMain::OnOverBar_OneLineReqBtnUp(void) {
 void CTaskMain::OnOverBar_OneLineViewInit(intptr_t param) {
 	m_oneLineView = DYNAMIC_CAST(FrArea, param);
 	if (m_oneLineView) {
-		WRect rect = m_oneLineView->GetRect();
+		const WRect &cur = m_oneLineView->GetRect();
 		if (m_screenWidth < 800.0f)
-			rect.x -= 140.0f;
+			m_oneLineView->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			rect.x += m_uiOffsetX;
-		m_oneLineView->SetRect(rect);
+			m_oneLineView->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
 
 		COneLineBoard::Instance()->SetRect(m_oneLineView->GetRect());
 	}
@@ -3304,10 +3331,10 @@ bool CTaskMain::OnSpecialCardFormResult(int, FrForm *) {
 float CTaskMain::Print(float x, float y, const char *text, float space, int align, float scale, unsigned long color) {
 	float startX = x;
 
-	if (text == NULL)
-		return 0.0f;
-
-	if (strlen(text) == 0)
+	int len = 0;
+	if (text != NULL)
+		len = strlen(text);
+	if (len == 0)
 		return 0.0f;
 
 	WTitleFont *font = m_titleFont;
@@ -4588,15 +4615,22 @@ bool CTaskMain::GetBtnState(unsigned char frame, eBarButton button) {
 	if (!IsLocalContent((localContentType_t)0x56))
 		return false;
 
-	if (m_barButton[button]
-		&& m_barButton[button]->IsVisible()
-		&& m_barButton[button]->IsEnabled()) {
-		if (m_barFrame[frame]
-			&& m_barFrame[frame]->IsVisible())
-			return m_barFrame[frame]->IsEnabled();
-	}
+	FrWnd *wnd = m_barButton[button];
+	if (!wnd)
+		return false;
+	if (!wnd->IsVisible())
+		return false;
+	if (!wnd->IsEnabled())
+		return false;
 
-	return false;
+	wnd = m_barFrame[frame];
+	if (!wnd)
+		return false;
+	if (!wnd->IsVisible())
+		return false;
+	if (!wnd->IsEnabled())
+		return false;
+	return true;
 }
 
 // actor.h:121

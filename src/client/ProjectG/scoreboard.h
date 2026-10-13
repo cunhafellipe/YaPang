@@ -547,7 +547,6 @@ public:
 	void SetTypeBtn(void);
 	void Resize(void);
 	void SetDesc(void);
-	FrFrame* GetBaseFrame(void) { return m_pBaseFrm; }
 	void SetPPL(const char* name);
 	void SortLists(bool bSort);
 	void UpdatePang(void);

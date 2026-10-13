@@ -4,10 +4,10 @@
 
 #include "defines.h"
 #include "frelement.h"
+#include "frframe.h"
 #include "frwnd.h"
 
 class FrEdit;
-class FrFrame;
 class FrGuiItem;
 class FrStatic;
 class FrWndManager;
@@ -72,7 +72,7 @@ public:
 	virtual bool OnInit(void);
 
 	void SetResultCallback(FRESH_RESULT_CALLBACK pfnResult);
-	void DescHidePrivacy(void);
+	void DescHidePrivacy(void) { m_pBaseFrm->m_nFlags.Enable(0x1000); }   // frform.h:86
 	bool GetFlag(unsigned long flag) { return (m_flag & flag) ? true : false; }   // frform.h:87
 	void SetFlag(unsigned long flag) { m_flag = flag; }                 // frform.h:88
 	void EnableFlag(unsigned long flag) { m_flag |= flag; }             // frform.h:89
@@ -80,7 +80,7 @@ public:
 	void SetCloseResult(eFormRet ret) { m_defaultRetCode = ret; }       // frform.h:91
 	void Adjust(WRect& rect);
 	void SetFrameCaptionFocus(bool bFocus);
-	void SetCaptionOffset(bool b);
+	void SetCaptionOffset(bool b) { m_pBaseFrm->SetCaptionOffset(b); }   // frform.h:94
 	void SetMessageControlByType(enumGuiType type, FrWnd* pChild);
 
 	void OnMouseMove(const WPoint& pt);

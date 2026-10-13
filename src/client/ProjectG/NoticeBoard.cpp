@@ -59,7 +59,7 @@ void CNoticeBoard::Process(float elapsed) {
 					m_posY = -50.0f;
 				}
 			}
-			if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 				WSingleton<COneLineBoard>::Instance()->FadeIn();
 			}
 			return;
@@ -118,7 +118,7 @@ void CNoticeBoard::Display(void) {
 	if (m_current != m_noticeList.end()) {
 		sNotice* notice = *m_current;
 		if (m_pFont != NULL) {
-			WRect clip(g_view->GetWidth() * 0.5f - 150.0f, 0.0f, 300.0f, 40.0f);
+			WRect clip(g_view->GetWidth() * 0.5f - 150.0f, 0.0f, 300.0f, 40);
 			m_pFont->SetClippingArea(&clip);
 
 			int posX = (int)m_posX;
@@ -196,7 +196,7 @@ void CNoticeBoard::AddNotice(const char* text, int repeatCount, bool immediately
 		m_posX = g_view->GetWidth() * 0.5f + 150.0f;
 	}
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		WSingleton<COneLineBoard>::Instance()->FadeOut();
 	}
 }

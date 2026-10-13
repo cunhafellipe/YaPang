@@ -15,7 +15,9 @@ WDirect3D::WDirect3D() {
 	m_texCount1 = 128;
 	m_texCount2 = 1;
 	m_useHiQualityTex = false;
-	memset(m_texList, 0, sizeof(m_texList));
+	for (int i = 0; i < 2048; i++) {
+		m_texList[i] = TS_VOID;
+	}
 
 	m_MaxTextureBlendStages = 0;
 	ApplyGamma(1.3f);
@@ -737,10 +739,10 @@ void WDirect3D::FlushMultiPass(unsigned long flag) {
 		typeToAdd = 0;
 		increment = -1;
 	} else {
-		startIdx = 0;
 		endIdx = m_bufSortNum;
 		typeToRemove = 0;
 		typeToAdd = 0x20000000;
+		startIdx = 0;
 		increment = 1;
 	}
 
@@ -801,10 +803,10 @@ void WDirect3D::FlushOnePass(unsigned long flag) {
 		typeToAdd = 0;
 		increment = -1;
 	} else {
-		startIdx = 0;
 		endIdx = m_bufSortNum;
 		typeToRemove = 0x80000000;
 		typeToAdd = 0x20000000;
+		startIdx = 0;
 		increment = 1;
 	}
 

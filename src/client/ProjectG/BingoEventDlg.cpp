@@ -472,7 +472,7 @@ void FrBingoEventDlg::InitCharMatchMap(void) {
 	for (int i = 0; i < 10; i++) {
 		int column = (unsigned int)i % 10;
 		int row = (unsigned int)i / 10;
-		m_charMatchMap.insert(std::pair<const char, sPoint>(ch++, sPoint(column * 20.0f, row * 32.0f)));
+		m_charMatchMap.insert(std::make_pair(ch++, sPoint(column * 20.0f, row * 32.0f)));
 	}
 }
 

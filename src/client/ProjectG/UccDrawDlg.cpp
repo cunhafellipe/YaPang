@@ -796,11 +796,14 @@ void FrUccDrawDlg::OnFlipBtnOwnerDraw(int param) {
 
 // uccdrawdlg.cpp:866
 void FrUccDrawDlg::OnFlipBtnUp(void) {
-	CUccBase* pBase = m_pUccBase[m_curSide];
-	eMode mode = pBase->GetMode();
-	pBase->SetMode(UCC_MODE_DRAW);
+	eMode mode = m_pUccBase[m_curSide]->GetMode();
+	m_pUccBase[m_curSide]->SetMode(UCC_MODE_DRAW);
 
-	m_curSide = !m_curSide;
+	if (m_curSide == 0) {
+		m_curSide = 1;
+	} else {
+		m_curSide = 0;
+	}
 
 	m_pUccBase[m_curSide]->m_refreshFlags |= 1;
 
@@ -1778,7 +1781,7 @@ void FrUccDrawDlg::ChangeTab(eUccTab tab) {
 		m_pPickColorBtn->Enable(true);
 		m_pCurrentColorBtn->Enable(true);
 
-		if (m_pPenList->GetSelected() != NULL) {
+		if (m_pPenList->GetSelected()) {
 			m_brushType = 1;
 		} else {
 			m_brushType = 0;

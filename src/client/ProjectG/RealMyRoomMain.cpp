@@ -68,11 +68,6 @@ const WRTTI* CRealMyRoomMain::GetRTTI(void) const {
 CRealMyRoomMain::miniBtn_t::miniBtn_t(void) {
 }
 
-// anotherhand.h: no line record (constructor of the abstract base CHandOwner,
-// only sets the vtable)
-CHandOwner::CHandOwner(void) {
-}
-
 // realmyroommain.cpp:129 (run-time type and factory registration of CRealMyRoomMain)
 const WRTTI CRealMyRoomMain::m_RTTI("CRealMyRoomMain", &CTaskMain::m_RTTI);
 
@@ -260,7 +255,7 @@ void CRealMyRoomMain::OnInit(void) {
 	}
 
 	CCameraWork::Instance()->SelectCamera(200);
-	CCameraWork::Instance()->m_inputMode = 0;
+	CCameraWork::Instance()->SetManualType(0);
 
 	g_camera.Rotate(-0.17453292f, 0);
 
@@ -1261,6 +1256,7 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 	WMatrix mat;
 	WVector target;
 	WVector dir;
+	WVector eye;
 	float limit;
 	float fov;
 
@@ -1349,13 +1345,11 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 		mat = RotMat(WVector(-1.5707964f, 0.0f, 0.0f));
 
 		target = m_cameraOffset;
-		{
-			WVector eye = m_savedCamera.pivot;
+		eye = m_savedCamera.pivot;
 
-			eye.z += 5.0f;
-			eye.y = 25.0f;
-			mat = MakeCameraMatrix(eye, target);
-		}
+		eye.z += 5.0f;
+		eye.y = 25.0f;
+		mat = MakeCameraMatrix(eye, target);
 
 		g_camera = mat;
 		g_view->SetCamera(mat);

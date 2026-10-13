@@ -228,7 +228,13 @@ struct sCourse {
 	UNKNOWN(0x59, 0x90);
 	char m_mapName[0x28];            // 0x90, the course's file name stem ("30in_back_%s", "%s_fog.txt"); length inferred (two 0x28 strings fill 0x90-0xE0)
 	char m_ambientSound[0x28];       // 0xB8, the ambient sound the course loops ("AmbientSnd", CAvatar_Main OnLoad)
-	unsigned char courseFlags;       // 0xE0, low nibble: the course kind
+	union {
+		unsigned char courseFlags;   // 0xE0, the two nibbles below as one byte
+		struct {
+			unsigned char kind : 4;       // 0xE0 bits 0-3, the course kind
+			unsigned char difficulty : 4; // 0xE0 bits 4-7, 0 normal, 1 hard (GetDiffFlag)
+		};
+	};
 	char m_propertyFile[0x28];       // 0xE1, the course's property xml ("tuto_property.xml", MakeCourseMap); length inferred
 	UNKNOWN(0x109, 0x10C);
 	float m_rate;                    // 0x10C, 1.1 for the built-in TUTORIAL/TEST/RANDOM courses (MakeCourseMap)
@@ -602,9 +608,9 @@ struct sFurnitureAbility {
 	// classdefine.h:825
 	sFurnitureAbility() {
 		m_active = 0;
-		m_kind = -1;
+		m_kind = 0xFF;
 		m_furnitureTypeId = 0xFFFFFFFF;
-		m_conditionKind = -1;
+		m_conditionKind = 0xFF;
 		m_conditionValue = 0;
 		m_effectActive = 0;
 		m_effectTypeId = 0xFFFFFFFF;
@@ -617,9 +623,9 @@ struct sFurnitureAbility {
 	}
 
 	unsigned char m_active;          // 0x0
-	char m_kind;                     // 0x1
+	unsigned char m_kind;            // 0x1
 	unsigned long m_furnitureTypeId; // 0x4
-	char m_conditionKind;            // 0x8
+	unsigned char m_conditionKind;   // 0x8
 	unsigned long m_conditionValue;  // 0xC
 	unsigned char m_effectActive;    // 0x10
 	unsigned long m_effectTypeId;    // 0x14
@@ -841,22 +847,40 @@ CHECK_FIELD(sOfflineShop, m_saleEndYear, 0x80);
 // A caddie magic box record (MakeCadieMagicBoxMap: 0x68 bytes, copied whole
 // into CItemManager's list). Fields not transcribed yet.
 struct sCadieMagicBox {
+	// classdefine.h:740
+	sCadieMagicBox() {
+		m_number = 0;
+		m_active = 0;
+		m_category = 0;
+		m_character = 0;
+		m_level = 0;
+		m_output = 0;
+		m_outputCount = 0;
+		memset(m_element, 0, sizeof(m_element));
+		memset(m_elementCount, 0, sizeof(m_elementCount));
+		m_randSeq = 0;
+		memset(m_randName, 0, sizeof(m_randName));
+	}
+
 	unsigned long m_number;          // 0x0, the 1-based recipe number
-	UNKNOWN(0x4, 0x8);
+	unsigned char m_active;          // 0x4, cleared by the constructor; no reader known
 	unsigned long m_category;        // 0x8, 0..4: low, mid, high, special, event
-	short m_character;               // 0xC
-	UNKNOWN(0xE, 0x10);
-	unsigned char m_level;           // 0x10
-	UNKNOWN(0x11, 0x14);
+	unsigned long m_character;       // 0xC
+	unsigned long m_level;           // 0x10
 	unsigned long m_output;          // 0x14, the result item's type id
-	unsigned short m_outputCount;    // 0x18
-	UNKNOWN(0x1A, 0x1C);
+	unsigned long m_outputCount;     // 0x18
 	unsigned long m_element[4];      // 0x1C, the ingredients' type ids
 	unsigned long m_elementCount[4]; // 0x2C, the ingredients' counts
 	unsigned long m_randSeq;         // 0x3C
 	char m_randName[0x28];           // 0x40
 };
 CHECK_SIZE(sCadieMagicBox, 0x68);
+CHECK_FIELD(sCadieMagicBox, m_active, 0x4);
+CHECK_FIELD(sCadieMagicBox, m_character, 0xC);
+CHECK_FIELD(sCadieMagicBox, m_level, 0x10);
+CHECK_FIELD(sCadieMagicBox, m_outputCount, 0x18);
+CHECK_FIELD(sCadieMagicBox, m_randSeq, 0x3C);
+CHECK_FIELD(sCadieMagicBox, m_randName, 0x40);
 
 // A Tiki magic box output record (MakeTikiRecipeMap: 0x34 bytes, given to
 // CTikiMagicBoxDoc::InsertOutput).

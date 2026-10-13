@@ -268,6 +268,7 @@ unsigned int __stdcall ThreadCRCCheckProc(void *param) {
 
 	pThis->GetWork(work);
 	DWORD startTick = GetTickCount();
+	unsigned long sleepTime = pThis->GetSleepTime(); // read but unused: Calculate gets 0
 
 	CRC_32 crc32;
 	std::vector<CRC_MT::sCRC_CHKTASK *>::iterator it;

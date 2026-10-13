@@ -105,7 +105,7 @@ ntAvatarChatTask::~ntAvatarChatTask(void) {
 
 	DeleteCriticalSection(&m_burdenLock);
 
-	delete ntAvatarManager::Instance();
+	if (ntAvatarManager::IsInstantiated()) delete ntAvatarManager::Instance();
 }
 
 // avatar_task.cpp:68
@@ -397,7 +397,8 @@ void ntAvatarChatTask::Process(float dt) {
 	if (g_input->GetDown("ESCAPE", true) == 1 && !g_pFresh->GetManager()->HasEscKeyWindow()) {
 		if (CSharedDoc::Instance()->GetStateTrade()) {
 			// "You cannot leave the chat room while using the shop."
-			CChatMsg::Instance()->AddChatMsg(std::string("\xbb\xf3\xc1\xa1 \xc0\xcc\xbf\xeb\xc1\xdf\xbf\xa1\xb4\xc2 \xb4\xeb\xc8\xad\xb9\xe6\xbf\xa1\xbc\xad \xb3\xaa\xb0\xa5\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), 0xFFFF00, true, false);
+			std::string msg("\xbb\xf3\xc1\xa1 \xc0\xcc\xbf\xeb\xc1\xdf\xbf\xa1\xb4\xc2 \xb4\xeb\xc8\xad\xb9\xe6\xbf\xa1\xbc\xad \xb3\xaa\xb0\xa5\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+			CChatMsg::Instance()->AddChatMsg(msg, 0xFFFF00, true, false);
 		} else {
 			ShowQuitDialog();
 		}
