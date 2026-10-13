@@ -662,13 +662,12 @@ void COfflineTradeDlg::OnMaketListOwnerDraw(int param) {
 	pGDI->SetTextStyle(0);
 
 	sSaleItem* pSaleItem = (sSaleItem*)pItem->pData;
-	WPoint& pos = pItem->pos;
 
 	const Bitmap* pSelectBitmap = g_pFresh->GetBitmap("maketlist_select");
 
 	if (pItem->selected || pItem->underCursor) {
 		if (pSelectBitmap) {
-			pGDI->DrawTexture(pSelectBitmap, WRect(pos.x, pos.y - 5.0f, 520.0f, 23.0f), 0xFFFFFFFF, 0);
+			pGDI->DrawTexture(pSelectBitmap, WRect(pItem->pos.x, pItem->pos.y - 5.0f, 520.0f, 23.0f), 0xFFFFFFFF, 0);
 		}
 	}
 
