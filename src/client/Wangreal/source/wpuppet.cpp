@@ -38,6 +38,9 @@ int WPuppet::box_p[6][4] = {
 	{ 1, 3, 7, 5 }, { 3, 2, 6, 7 }, { 2, 0, 4, 6 }
 };
 unsigned char WPuppet::ms_boneSetPos;
+#ifdef PG_7XX
+unsigned int g_pgPetVersion = 0xFFFE0000;
+#endif
 
 // wpuppet.cpp:46
 WPuppet::WPuppet() : m_phybone(8, 0), m_addedMotionList(4, 0), m_use_tex_piece(8, 0), m_bbList(8, 8), m_fanimList(4, 4), m_boneList(4, 16) {
@@ -1477,6 +1480,14 @@ void WPuppet::LoadPET(cFile* fp, bool alphatest, char* directory, int iPetType) 
 	int texNum = 0;
 
 	m_iPetType = iPetType;
+#ifdef PG_7XX
+	// The VERS chunk (the JP 983 exe reads it first, 0xB6A010).
+	m_version = 0xFFFE0000;
+	if (SeekChunkFromPET(fp, "VERS")) {
+		fp->Read(&m_version, 4);
+	}
+	g_pgPetVersion = m_version;
+#endif
 	if ((iPetType & 1) != 0) {
 		texinfo = LoadPET_Texture(fp, alphatest, directory, &texNum);
 	}
@@ -1763,6 +1774,13 @@ WBone* WPuppet::LoadPET_Bone(cFile* fp, int version) {
 			fp->Read(&mat.xm, 4);
 			fp->Read(&mat.ym, 4);
 			fp->Read(&mat.zm, 4);
+#ifdef PG_7XX
+			// 1.3: one more float per bone (the JP exe keeps it in its WBone).
+			if (PgPetVersionAtLeast(m_version, 0xFFFE0103)) {
+				float pgExtra;
+				fp->Read(&pgExtra, 4);
+			}
+#endif
 			WVectorLen(mat.xa);
 			if (version == 6) {
 				mat.xm = mat.xm * g_CM_TO_WU;
@@ -2092,10 +2110,10 @@ void WPuppet::LoadPET_Mesh(cFile* fp, WBone* root, w_pet_texture_info* texture, 
 	triangles = new w_pet_tri_point[triangleCount * 3];
 	textures = new w_pet_texture_info*[triangleCount];
 #ifdef PG_7XX
-	// From version 0xFFFE0100 the triangle corner carries a UV-count byte and
-	// that many (u,v) pairs (the 7xx clients; see pangya-glmodels read_MESH).
+	// From version 1.2 the triangle corner carries a UV-count byte and that
+	// many (u,v) pairs (the JP 983 exe, 0xBCFD90; pangya-glmodels read_MESH).
 	// The matching build reads the original 0x18-byte corner.
-	if (m_version >= 0xFFFE0100) {
+	if (PgPetVersionAtLeast(m_version, 0xFFFE0102)) {
 		for (i = 0; i < triangleCount * 3; ++i) {
 			fp->Read(&triangles[i].pos, 4);
 			fp->Read(&triangles[i].nx, 4);
@@ -2121,6 +2139,14 @@ void WPuppet::LoadPET_Mesh(cFile* fp, WBone* root, w_pet_texture_info* texture, 
 	for (i = 0; i < triangleCount; ++i) {
 		textures[i] = &texture[fp->GetByte()];
 	}
+#ifdef PG_7XX
+	// 1.2: a second texture index per triangle (0xFF: none), not used here.
+	if (PgPetVersionAtLeast(m_version, 0xFFFE0102)) {
+		for (i = 0; i < triangleCount; ++i) {
+			fp->GetByte();
+		}
+	}
+#endif
 	m_faceNum = triangleCount;
 	if (!meshPet) {
 		fake = root->FindFakeBodyBone(vertices, vertexCount);
@@ -2134,7 +2160,14 @@ void WPuppet::LoadPET_Mesh(cFile* fp, WBone* root, w_pet_texture_info* texture, 
 				vb = bone->Transform(WVector(vertices[triangles[j + 1].pos].x, vertices[triangles[j + 1].pos].y, vertices[triangles[j + 1].pos].z));
 				vc = bone->Transform(WVector(vertices[triangles[j + 2].pos].x, vertices[triangles[j + 2].pos].y, vertices[triangles[j + 2].pos].z));
 				normal = WCrossProduct(va - vb, vc - vb);
-			} else {
+			}
+#ifdef PG_7XX
+			// 1.1: the stored normals are final (the JP exe skips the rotation).
+			else if (PgPetVersionAtLeast(m_version, 0xFFFE0101)) {
+				normal = WVector(triangles[i].nx, triangles[i].ny, triangles[i].nz);
+			}
+#endif
+			else {
 				WBone* bone = root->FindBone(vertices[triangles[i].pos].bonename, 0);
 				if (fake && (strstr(vertices[triangles[i].pos].bonename, "Bip") || strstr(vertices[triangles[i].pos].bonename, "Bone") || strstr(vertices[triangles[i].pos].bonename, "Jaw"))) {
 					normal = RotVec(WVector(triangles[i].nx, triangles[i].ny, triangles[i].nz), fake->GetMatrix());

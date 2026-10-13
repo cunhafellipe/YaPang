@@ -429,4 +429,14 @@ BEGIN_LAYOUT_CHECK(CRankingInfo)
 	CHECK_FIELD(CRankingInfo, m_pRankingDlg, 0x2c);
 END_LAYOUT_CHECK
 
+// rankingdlg.h:277
+inline CRankingInfo* RANKING(void) {
+	return CRankingInfo::Instance();
+}
+
+// rankingdlg.h:282
+inline FrRankingDlg* RANKINGDLG(void) {
+	return CRankingInfo::Instance()->GetDlg();
+}
+
 #endif // PG_CLIENT_PROJECTG_RANKINGDLG_H

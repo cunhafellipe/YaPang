@@ -214,6 +214,28 @@ CHECK_FIELD(sStall, visible, 0x0A);
 CHECK_FIELD(sStall, slots, 0x0B);
 CHECK_FIELD(sStall, name, 0x917);
 
+// One item of the buy request packet 0x1D (0x10 bytes; OfflineTradeDlg's
+// slot purchase constructs one).
+struct sBuyItem {
+	// globalnetworkdefine.h:2195
+	sBuyItem(void) {
+		memset(this, 0, sizeof(sBuyItem));
+		m_uid = -1;
+	}
+
+	int m_uid;                  // 0x0, -1 for a new item
+	unsigned long m_typeId;     // 0x4
+	unsigned short m_period;    // 0x8, rental period
+	short m_periodIndex;        // 0xa, index of the rental period, -1 for none
+	int m_count;                // 0xc
+};
+CHECK_SIZE(sBuyItem, 0x10);
+CHECK_FIELD(sBuyItem, m_uid, 0x0);
+CHECK_FIELD(sBuyItem, m_typeId, 0x4);
+CHECK_FIELD(sBuyItem, m_period, 0x8);
+CHECK_FIELD(sBuyItem, m_periodIndex, 0xa);
+CHECK_FIELD(sBuyItem, m_count, 0xc);
+
 #pragma pack(pop)
 
 #endif // PG_SHARED_GLOBALNETWORKDEFINE_H

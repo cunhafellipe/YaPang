@@ -353,8 +353,8 @@ void CFxSequence::SetLineTime(void) {
 		}
 
 		std::list<sLine>::iterator pos = it;
-		std::list<sLine>::iterator prev = it;
 		while (pos != m_lines.begin()) {
+			std::list<sLine>::iterator prev = pos;
 			--prev;
 			if (prev->m_time == -1 || prev->m_time == -2) {
 				break;

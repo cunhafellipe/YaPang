@@ -532,7 +532,7 @@ void CClub::SelectBestClub(const WVector &target) {
 
 		bool blocked = false;
 		if (CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_level < 6
-			&& (CSharedDoc::Instance()->m_pCurCourse == NULL || (CSharedDoc::Instance()->m_pCurCourse->courseFlags & 0xF) < 3)) {
+			&& GetDifficulty() < 3) {
 			float range = GetRange("1W") * 3.2f;
 
 			for (float f = 0.8f; f < 1.01f; f += 0.1f) {
@@ -554,7 +554,7 @@ void CClub::SelectBestClub(const WVector &target) {
 			}
 
 			float range = GetRange(club->m_name);
-			float score = (float)club->m_barSpeed * 0.5f - Abs(range - dist);
+			float score = club->m_barSpeed * 0.5f - Abs(range - dist);
 
 			if (range > dist)
 				score += 10.0f;
@@ -604,10 +604,10 @@ void CClub::SelectBestClub(const WVector &target) {
 
 	if (GolfBall().m_groundType == 0) {
 		if (CSharedDoc::Instance()->m_roomType == 1) {
-			if (TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] <= 1 && m_clubIndex > 2)
+			if (TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] <= (unsigned char)1 && m_clubIndex > 2)
 				SetClub("3W");
 		} else {
-			if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] <= 1 && m_clubIndex > 2)
+			if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] <= (unsigned char)1 && m_clubIndex > 2)
 				SetClub("3W");
 		}
 	}
@@ -715,7 +715,7 @@ float CClub::GetRange(const char *name) {
 				range = club->m_range + GetPowerShotFactor(); range = (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + range;
 			}
 		} else {
-			range = range + GetPowerShotFactor(); range = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power * 2.0f + range;
+			range = range + GetPowerShotFactor(); range = (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power * 2.0f + range;
 		}
 		break;
 
@@ -848,7 +848,7 @@ float CClub::GetPower(void) {
 
 	case 1:
 		power = (powerShot / m_pClub->m_range + 1.0f) * m_pClub->m_power;
-		return power + m_pClub->m_power / m_pClub->m_range * aux * 1.3f;
+		return power + (float)m_pClub->m_power / m_pClub->m_range * aux * 1.3f;
 
 
 
@@ -877,7 +877,7 @@ float CClub::GetPower(void) {
 
 
 
-		return power + m_pClub->m_power / m_pClub->m_range * aux;
+		return power + (float)m_pClub->m_power / m_pClub->m_range * aux;
 
 
 

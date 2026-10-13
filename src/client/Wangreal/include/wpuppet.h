@@ -176,7 +176,7 @@ public:
 	void Share(w_share_pet_data*);
 	void SetRenderMode(int);
 	void SetLightLine(float);
-	void SetLightMode(unsigned long);
+	void SetLightMode(unsigned long mode) { m_lightmode = mode; } // wpuppet.h:190
 	int GetLightMode() { return m_lightmode; }          // wpuppet.h:191
 	void UpdateLightSource(WScene*);
 	void Transform(WView*, float, int);
@@ -228,7 +228,7 @@ public:
 	float GetAnimationLength() { return m_aniLen; }   // wpuppet.h:275
 	unsigned int GetFrameCount() { return m_framenum; }   // wpuppet.h:276
 	char* GetFrameData(int);
-	float GetFrameDataTime(int);
+	float GetFrameDataTime(int index) { return m_frame[index].num * (1.0f / 30.0f); }   // wpuppet.h:278
 	bool GetFrameCheck(int);
 	WMatrix& GetMatrix() { return m_mat; }              // wpuppet.h:280
 	const WMatrix& GetCamMatrix(char*);

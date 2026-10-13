@@ -156,13 +156,12 @@ void FrUccPickColorDlg::MoveBrightnessCursor(unsigned char brightness) {
 		WRect rect2;
 		rect2 = m_pBrightnessCursor2->GetRect();
 
+		WPoint pt1(rect1.x, rect1.y);
 		int pos = (int)height;
 		pos -= brightness * pos / 255;
 
-		WPoint pt1(rect1.x, rect1.y);
-		WPoint pt2(rect2.x, rect2.y);
 		pt1.y = top + pos - rect1.h * 0.5f;
-		pt2.y = pt1.y;
+		WPoint pt2(rect2.x, pt1.y);
 		m_pBrightnessCursor1->MoveWindow(pt1);
 		m_pBrightnessCursor2->MoveWindow(pt2);
 	}

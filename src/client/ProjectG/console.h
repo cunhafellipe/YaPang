@@ -25,8 +25,8 @@ class CConsole : public WSingleton<CConsole> {
 public:
 	// console.h:20
 	static void Print(const char *text) {
-		if (m_pInstance) {
-			m_pInstance->AddText(text);
+		if (IsInstantiated()) {
+			Instance()->AddText(text);
 		}
 	}
 

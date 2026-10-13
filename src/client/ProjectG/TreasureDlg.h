@@ -518,6 +518,13 @@ public:
 	bool SetFrameHeight(float height);
 
 private:
+	// treasuredlg.h:418
+	void Reset(void) {
+		if (m_frames.size() != 0) {
+			m_frames.clear();
+		}
+	}
+
 	unsigned char m_count;               // 0x0, frames reserved
 	std::vector<FrArea*> m_frames;       // 0x4
 };

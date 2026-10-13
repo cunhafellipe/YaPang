@@ -465,7 +465,7 @@ int __cdecl CompareRank(const void *a, const void *b) {
 
 	if (player1->m_holes[hole - 1] < player2->m_holes[hole - 1])
 		return 0;
-	if (player1->m_holes[hole - 1] == player2->m_holes[hole - 1] && player1->m_state == 1 && player2->m_state != 1)
+	if (player2->m_holes[hole - 1] == player1->m_holes[hole - 1] && player1->m_state == 1 && player2->m_state != 1)
 		return 0;
 
 	return 1;
@@ -642,7 +642,7 @@ void CGolfDoc::ClearShotResultMsg(void) {
 
 // golfdoc.cpp:668
 void CGolfDoc::InitShotResultMsg(void) {
-	float radius = GolfBall().GetRadius(); WVector pos = GetHoleData().m_teePos; pos.y = radius + GetHoleData().m_teePos.y;
+	float radius = GolfBall().GetRadius(); WVector &tee = GetHoleData().m_teePos; WVector pos; pos.z = tee.z; pos.x = tee.x; pos.y = radius + tee.y;
 
 	for (int i = 0; i < m_playerNum; i++) {
 		m_shotResultMsg[i].m_pos.x = pos.x;

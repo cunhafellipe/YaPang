@@ -151,14 +151,14 @@ void FrAddFriendDlg::OnEditNiclInit(intptr_t param) {
 
 	m_pIdEdit->HidePrivacy(true);
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 	}
 }
 
 // addfrienddlg.cpp:150
 void FrAddFriendDlg::OnEditNickDown(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 		g_pFresh->GetManager()->SetExclusiveKey(true);
 	}
 }

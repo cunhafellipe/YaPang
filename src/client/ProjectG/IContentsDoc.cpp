@@ -44,7 +44,7 @@ bool CContentsDoc::Initialize(void) {
 
 	InsertContainer((localContentType_t)0xa0, new _gateway::CSpecialBoxDoc, false);
 
-	return m_allInserted == TRUE;
+	return m_allInserted == TRUE ? true : false;
 }
 
 // icontentsdoc.cpp:100

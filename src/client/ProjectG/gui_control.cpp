@@ -5,6 +5,8 @@
 // ... and of CClub::GetBarWidth and GetBarAlpha (club.h).
 #define GUI_CONTROL_CLUB_INLINE
 
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
+			// (keeps BAR_LENGTH dynamically initialized, docs/tough_problems/010)
 #include "gui_control.h"
 #include "fredit.h"
 #include "ObjectFactory.h"
@@ -2692,8 +2694,8 @@ void FrChatFuncDlg::OnBtnHideChatUp(void) {
 
 // gui_control.cpp:3425
 void FrChatFuncDlg::OnBtnSaveChatUp(void) {
-	int index = WSingleton<CSharedDoc>::Instance()->m_chatManager.SaveChatHistory(GOLFDOC()->m_chatHistoryIndex, 1);
-	GOLFDOC()->m_chatHistoryIndex = index;
+	int index = WSingleton<CSharedDoc>::Instance()->m_chatManager.SaveChatHistory(GOLFDOC()->GetSaveChatNum(), 1);
+	GOLFDOC()->SetSaveChatNum(index);
 }
 
 // gui_control.cpp:3431
@@ -2766,7 +2768,8 @@ void FrChatFuncDlg::OnChatViewInit(intptr_t param) {
 	if (m_pChatView) {
 		std::list<sChatLine>::iterator it;
 		for (it = CSharedDoc::Instance()->m_chatLineList.begin(); it != CSharedDoc::Instance()->m_chatLineList.end(); ++it) {
-			m_pChatView->AddLine((*it).m_text.c_str(), WSingleton<CChatMsg>::Instance()->ConvertToUIColor((*it).m_color), false);
+			sChatLine& line = *it;
+			m_pChatView->AddLine(line.m_text.c_str(), WSingleton<CChatMsg>::Instance()->ConvertToUIColor(line.m_color), false);
 		}
 	}
 }

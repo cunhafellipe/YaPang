@@ -82,6 +82,11 @@ CLIENTSETTING_WMATH_INLINE int WisEqual(const float& a, const float& b, float ep
 	return Wabs(a - b) < eps;
 }
 
+// wmath.h:86
+CLIENTSETTING_WMATH_INLINE int WisZero(const float& value, float eps) {
+	return Wabs(value) < eps;
+}
+
 class WVector;
 class WMatrix;
 
@@ -186,6 +191,7 @@ public:
 	WMatrix& operator=(const WMatrix& m);
 	void operator=(const WQuat& q);
 	void operator*=(const float f);
+	void operator*=(const WMatrix& m);
 	void Reset(void);
 	void Normalize(void);
 	void GetRotMatrix(WMatrix* m) const;
@@ -318,6 +324,8 @@ public:
 	void operator*=(const float f);
 	void operator/=(const float f);
 	void Reset(void);
+	float Magnitude(void) const;
+	float SquareMagnitude(void) const;
 	WVector2D& Normalize(void);
 
 	float x; // 0x0
@@ -364,7 +372,7 @@ CHECK_FIELD(WSphere, radius, 0xC);
 
 class Waabb {
 public:
-	Waabb() { min.Reset(); max.Reset(); }   // wmath.h:535
+	Waabb() { Reset(); }   // wmath.h:535
 	Waabb(const WVector& vmin, const WVector& vmax);   // wmath.h:536
 
 	Waabb& operator+=(const WVector& v);
@@ -390,6 +398,12 @@ public:
 		return min.x <= b.min.x && b.max.x <= max.x
 			&& min.y <= b.min.y && b.max.y <= max.y
 			&& min.z <= b.min.z && b.max.z <= max.z ? true : false;
+	}
+
+	// wmath.h:600
+	WVector GetCenter(void) const {
+		WVector center((max.x + min.x) * 0.5f, (max.y + min.y) * 0.5f, (max.z + min.z) * 0.5f);
+		return center;
 	}
 
 	WVector min;    // 0x0

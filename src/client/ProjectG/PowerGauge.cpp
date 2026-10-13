@@ -125,6 +125,13 @@ float CPowerGauge::GetAddElfEarArea(void) {
 	sCharacterInfo *pInfo = &MyRoomPlayer().m_characterInfo;
 
 	unsigned long character = pInfo->typeId & 0x3FFFFFF;
+#ifdef JP_PAKS
+	// The JP characters 10-14 are past this KR table; the JP exe has no
+	// such table (docs/JP_CLIENT.md): no bonus for them.
+	if (character >= sizeof(aEarParts) / sizeof(aEarParts[0])) {
+		return 0.0f;
+	}
+#endif
 
 	unsigned long partTypeId = pInfo->partTypeIds[aEarParts[character].slot];
 	if (partTypeId == 0) {
@@ -177,6 +184,12 @@ float CPowerGauge::GetAddWingArea(void) {
 	sCharacterInfo *pInfo = &MyRoomPlayer().m_characterInfo;
 
 	unsigned long character = pInfo->typeId & 0x3FFFFFF;
+#ifdef JP_PAKS
+	// As GetAddElfEarArea: the KR wing tables stop at character 9.
+	if (character >= sizeof(kWingSlot) / sizeof(kWingSlot[0])) {
+		return area;
+	}
+#endif
 	unsigned long partTypeId = pInfo->partTypeIds[kWingSlot[character]];
 
 	for (int i = 0; i < 6; i++) {

@@ -397,8 +397,7 @@ void CPoolReflective::Render(WView *view)
 			// A single flat quad over the area.
 			float top = m_area.max.y;
 			float lit = max(-g_lightset.nearone * WVector::UNIT_POS_Y, 0.0f);
-			// TODO: Waabb::GetCenter (wmath.h:600) is missing from wmath.h.
-			float spec = max(WVector::UNIT_POS_Y * ((view->camera.pivot - (m_area.min + m_area.max) * 0.5f).Normalize() - g_lightset.nearone).Normalize(), 0.0f);
+			float spec = max(WVector::UNIT_POS_Y * ((view->camera.pivot - m_area.GetCenter()).Normalize() - g_lightset.nearone).Normalize(), 0.0f);
 			spec = spec * spec;
 
 			unsigned long color = AddDiffuse(AddDiffuse(AddDiffuse(0, g_lightset.ambient, 0x66), g_lightset.diffuse, (unsigned char)(int)(lit * 102.0f)), 0x808080, (unsigned char)(int)(spec * 255.0f))

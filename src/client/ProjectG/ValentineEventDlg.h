@@ -26,6 +26,12 @@ public:
 	void DrawInDlg(const char* name, WPoint& pt);
 	void DrawGauge(WPoint& pt, unsigned char count);
 
+	// valentineeventdlg.h:46
+	void SetGiftFlag(unsigned long flag) {
+		m_giftFlag = flag;
+		CheckButtonClick();
+	}
+
 protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;

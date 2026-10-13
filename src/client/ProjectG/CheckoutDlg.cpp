@@ -213,6 +213,7 @@ void FrCheckoutDlg::RecalculateTotalCookie(__int64 pang, __int64 cookie, bool up
 	for (std::list<CartItem>::iterator it = m_cart.begin(); it != m_cart.end(); ++it) {
 		CartItem& item = *it;
 		__int64 price = 0xffffffff;
+		bool bItemPrice = false;
 
 		if (m_bCheckoutFlag && (item.m_pItem->m_typeId & 0xFC000000) == 0x08000000) {
 			IFF_STRUCT::sPart* pPart = ItemManager()->FindPart(item.m_pItem->m_typeId);
@@ -222,42 +223,31 @@ void FrCheckoutDlg::RecalculateTotalCookie(__int64 pang, __int64 cookie, bool up
 		} else if ((item.m_pItem->m_typeId >> 26) == 0xE) {
 			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(item.m_pItem->m_typeId);
 
-			switch ((item.m_pItem->m_typeId >> 22) & 0xF) {
-			case 5:
-			case 6: {
-				unsigned long itemPrice;
-				if (item.m_pItem->m_discountPrice > 0 && item.m_pItem->m_discountPrice < item.m_pItem->m_price)
-					itemPrice = item.m_pItem->m_discountPrice;
-				else
-					itemPrice = item.m_pItem->m_price;
-
-				if (item.m_pItem->m_flags0 & 1)
-					m_unitCookie += itemPrice;
-				else
-					m_unitPang += itemPrice;
-				break;
-			}
-			default:
+			unsigned long subType = (item.m_pItem->m_typeId >> 22) & 0xF;
+			if (subType == 5 || subType == 6) {
+				bItemPrice = true;
+			} else {
 				if (pSkin->m_flags & 1)
 					m_unitCookie += pSkin->m_periodPrices[item.m_days];
 				else
 					m_unitPang += pSkin->m_periodPrices[item.m_days];
-				break;
 			}
 		} else if ((item.m_pItem->m_typeId >> 26) == 8) {
 			IFF_STRUCT::sCadItem* pCadItem = ItemManager()->FindCadItem(item.m_pItem->m_typeId);
 
+			price = pCadItem->m_levels[item.m_days];
 			if (pCadItem->m_flags & 1)
-				m_unitCookie += pCadItem->m_levels[item.m_days];
+				m_unitCookie += price;
 			else
-				m_unitPang += pCadItem->m_levels[item.m_days];
+				m_unitPang += price;
 		} else if ((item.m_pItem->m_typeId >> 26) == 0x10) {
 			IFF_STRUCT::sMascot* pMascot = ItemManager()->FindMascot(item.m_pItem->m_typeId);
 
+			price = pMascot->m_periodPrices[item.m_days];
 			if (pMascot->m_flags & 1)
-				m_unitCookie += pMascot->m_periodPrices[item.m_days];
+				m_unitCookie += price;
 			else
-				m_unitPang += pMascot->m_periodPrices[item.m_days];
+				m_unitPang += price;
 		} else if (m_dayNameCount > 0) {
 			if (m_dayNames[item.m_days].altPeriodUnit)
 				price = m_dayNames[item.m_days].altPrice;
@@ -269,16 +259,19 @@ void FrCheckoutDlg::RecalculateTotalCookie(__int64 pang, __int64 cookie, bool up
 			else
 				m_unitPang += price;
 		} else {
-			unsigned long itemPrice;
+			bItemPrice = true;
+		}
+
+		if (bItemPrice) {
 			if (item.m_pItem->m_discountPrice > 0 && item.m_pItem->m_discountPrice < item.m_pItem->m_price)
-				itemPrice = item.m_pItem->m_discountPrice;
+				price = item.m_pItem->m_discountPrice;
 			else
-				itemPrice = item.m_pItem->m_price;
+				price = item.m_pItem->m_price;
 
 			if (item.m_pItem->m_flags0 & 1)
-				m_unitCookie += itemPrice;
+				m_unitCookie += price;
 			else
-				m_unitPang += itemPrice;
+				m_unitPang += price;
 		}
 	}
 
@@ -626,9 +619,11 @@ bool FrCheckoutDlg::OnChargeResult(int ret, FrForm*) {
 	return true;
 }
 
-// One item of the buy request packet 0x1D (0x10 bytes, sent with
-// WSendPacket::EncodeBuffer by OnConfirmResult).
-struct sBuyItem {
+// One item of the buy request packet 0x1D as OnConfirmResult fills it (0x10
+// bytes, the layout of sBuyItem, globalnetworkdefine.h). Not sBuyItem itself:
+// the original zeroes it in line (checkoutdlg.cpp:864) with no line of
+// sBuyItem's constructor, so its type has no constructor. Name provisional.
+struct sBuyRequestItem {
 	int m_uid;                  // 0x0, -1 for a new item
 	unsigned long m_typeId;     // 0x4
 	unsigned short m_period;    // 0x8, rental period (sPeriodPrice::altPeriod or days_t::m_days)
@@ -643,7 +638,7 @@ bool FrCheckoutDlg::OnConfirmResult(int ret, FrForm*) {
 
 		const char* text = m_pNum->GetLine(1, false);
 		int count = atoi(text);
-		sBuyItem buy;
+		sBuyRequestItem buy;
 		memset(&buy, 0, sizeof(buy));
 		buy.m_uid = -1;
 

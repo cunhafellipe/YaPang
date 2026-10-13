@@ -19,7 +19,13 @@ class WPuppet;
 // (released by CClub::ClearClubSet), with the preview camera and light of each
 // club type (CScreen::DrawClubInfo indexes them by CClub::GetType).
 struct sClubSet {
-	IFF_STRUCT::sClubSet *m_pItem;      // 0x0, the item record (FindClubSet matches its typeid)
+	// club.h:42. Clears only the first row of models (0x10 bytes).
+	sClubSet(void) {
+		m_pItem = NULL;
+		memset(m_puppet, 0, sizeof(m_puppet[0]));
+	}
+
+	IFF_STRUCT::sClubSet *m_pItem;     // 0x0, the item record (FindClubSet matches its typeid)
 	WPuppet *m_puppet[2][4];            // 0x4, released through g_resrcmng; [1][type] is the HUD preview model
 	WMatrix m_cameras[4];               // 0x24, the HUD preview camera per club type
 	LightSet m_lights[4];               // 0xE4, the HUD preview light per club type

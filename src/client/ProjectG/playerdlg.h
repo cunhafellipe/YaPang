@@ -191,10 +191,32 @@ private:
 		return it->first;
 	}
 
-	// The type id of the item keyed id in map, or of a random one when id
-	// is 0 (body at playerdlg.h:60, not written yet: it needs one type-id
-	// member name across sCharacterInfo/sCaddieInfo/sItemInfo/sMascotInfo).
-	template<class T> unsigned long MapFindEquipTid(T& map, unsigned long id);
+	// playerdlg.h:60. The type id of the item keyed id in map, or of a
+	// random one when id is 0. The original read one type-id member name of
+	// sCharacterInfo/sCaddieInfo/sItemInfo/sMascotInfo; ours differ
+	// (sItemInfo::m_typeId), so EquipTypeId (PlayerDlg.cpp, static, always
+	// inlined) reads it.
+	template<class T> unsigned long MapFindEquipTid(T& map, unsigned long id) {
+		if (id == 0) {
+			int count = map.size();
+			if (count == 0)
+				return 0;
+
+			typename T::iterator it = map.begin();
+
+			int skip = rand() % count;
+			for (int i = 0; i < skip; i++)
+				++it;
+
+			return EquipTypeId(it->second);
+		}
+
+		typename T::iterator it = map.find(id);
+		if (it != map.end())
+			return EquipTypeId(it->second);
+
+		return 0;
+	}
 };
 
 // Player (character selection) dialog. Only the members this unit defines so

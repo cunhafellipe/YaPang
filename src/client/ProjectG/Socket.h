@@ -15,6 +15,10 @@ class WSocket {
 public:
 	WSocket(unsigned int socket, sockaddr_in address);
 	virtual ~WSocket(void);
+
+	// socket.h:10
+	unsigned long GetPeerAddress(void) const { return m_address.sin_addr.s_addr; }
+
 	virtual void CreateSocket(void);
 	virtual void Close(void);
 	virtual int Read(unsigned char* buffer, int length);

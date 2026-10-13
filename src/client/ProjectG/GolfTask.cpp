@@ -361,9 +361,8 @@ void CGolfTask::OnDisplayWhileLoading(void) {
 
 // golftask.cpp:444
 void CGolfTask::UpdateLoadingInfo(unsigned long uid, unsigned char progress) {
-	CSharedDoc* pDoc = CSharedDoc::Instance();
-	std::list<sSlotInfo>::iterator it = std::find(pDoc->m_roomPlayerList.begin(), pDoc->m_roomPlayerList.end(), uid);
-	if (it != pDoc->m_roomPlayerList.end()) {
+	std::list<sSlotInfo>::iterator it = std::find(CSharedDoc::Instance()->m_roomPlayerList.begin(), CSharedDoc::Instance()->m_roomPlayerList.end(), uid);
+	if (it != CSharedDoc::Instance()->m_roomPlayerList.end()) {
 		m_loadingInfo[it->m_uid] = progress;
 	}
 }
@@ -375,10 +374,11 @@ void CGolfTask::DrawLoadingInfo(Fresh *pFresh) {
 		return;
 	}
 
-	int offset = 0;
+	int offset;
 	float y = g_view->GetHeight() - 100.0f;
 
-	for (std::list<sSlotInfo>::iterator it = CSharedDoc::Instance()->m_roomPlayerList.begin(); it != CSharedDoc::Instance()->m_roomPlayerList.end(); ++it) {
+	std::list<sSlotInfo>::iterator it;
+	for (it = CSharedDoc::Instance()->m_roomPlayerList.begin(), offset = 0; it != CSharedDoc::Instance()->m_roomPlayerList.end(); ++it) {
 		sSlotInfo &player = *it;
 		if (player.m_uid == CSharedDoc::Instance()->GetPangyaUserInfo().guid) {
 			continue;

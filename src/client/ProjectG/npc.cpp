@@ -99,7 +99,7 @@ void CNPC::HandleMsg(const MsgObject &msg) {
 	switch (msg.m_msg) {
 	case 392: // is there a creature of type param1? answer through param2
 		for (std::list<CCreature *>::iterator it = m_creatures.begin(); it != m_creatures.end(); ++it) {
-			if ((*it)->m_npcType == msg.m_param1) {
+			if ((*it)->GetType() == msg.m_param1) {
 				*(int *)msg.m_param2 = 1;
 				break;
 			}
@@ -109,9 +109,9 @@ void CNPC::HandleMsg(const MsgObject &msg) {
 	case 386: // switch off the active creatures
 		for (std::list<CCreature *>::iterator it = m_creatures.begin(); it != m_creatures.end(); ++it) {
 			CCreature *creature = *it;
-			if ((creature->m_flags & 1) && creature->m_npcType != 9) {
-				if (creature->m_active)
-					creature->m_active = false;
+			if ((creature->m_flags & 1) && creature->GetType() != 9) {
+				if (creature->GetActive())
+					creature->SetActive(false);
 			}
 		}
 		break;
@@ -120,7 +120,7 @@ void CNPC::HandleMsg(const MsgObject &msg) {
 		for (std::list<CCreature *>::iterator it = m_creatures.begin(); it != m_creatures.end(); ++it) {
 			CCreature *creature = *it;
 			if (creature->m_flags & 1) {
-				Waabb area = creature->m_area;
+				Waabb area = creature->GetArea();
 				if (area.IsInclude(GolfBall().m_pos)) {
 					creature->PlayEvent();
 					break;
@@ -133,7 +133,7 @@ void CNPC::HandleMsg(const MsgObject &msg) {
 		for (std::list<CCreature *>::iterator it = m_creatures.begin(); it != m_creatures.end(); ++it) {
 			CCreature *creature = *it;
 			if (creature->m_flags & 1) {
-				Waabb area = creature->m_area;
+				Waabb area = creature->GetArea();
 				if (area.IsInclude(GolfBall().m_pos)) {
 					*(int *)msg.m_param1 = 0;
 					break;
@@ -157,7 +157,7 @@ void CNPC::HandleMsg(const MsgObject &msg) {
 
 	case 394:
 		for (std::list<CCreature *>::iterator it = m_creatures.begin(); it != m_creatures.end(); ++it) {
-			if ((*it)->m_npcType == 9)
+			if ((*it)->GetType() == 9)
 				(*it)->PlayEvent();
 		}
 		break;
@@ -184,16 +184,16 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		int i;
 		for (i = 0; i < 3; i++) {
 			CSanta *santa = new CSanta("NPC_Mozzi.pet");
-			santa->m_unkAC = radius;
+			santa->SetRadius(radius);
 			santa->SetArea(points, (float)i * -0.05f, 0);
-			santa->m_npcType = 7;
+			santa->SetType(7);
 			m_creatures.push_back(santa);
 		}
 
 		CSanta *santa = new CSanta("NPC_Santa.pet");
-		santa->m_unkAC = radius;
+		santa->SetRadius(radius);
 		santa->SetArea(points, (float)(i + 1) * -0.05f, 0);
-		santa->m_npcType = 7;
+		santa->SetType(7);
 		m_creatures.push_back(santa);
 		return;
 	}
@@ -205,27 +205,27 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 	if (strstr(name, "flight")) {
 		creature = new CFighter("NPC_Fighter.pet");
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 8;
+		creature->SetType(8);
 	} else if (strstr(name, "ufo")) {
 		creature = new CUfo("sand_house12.pet");
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 0xB;
+		creature->SetType(0xB);
 	} else if (strstr(name, "penguinwalk")) {
 		creature = new ntPenguin("NPC_penguin02.pet");
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 0xC;
+		creature->SetType(0xC);
 	} else if (strstr(name, "drg")) {
 		if (!slice.Get("*d", "%f", &value))
 			value = 0;
 		creature = new ntNpc_Dragon("NPC_dragon.pet", value);
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 0xF;
+		creature->SetType(0xF);
 	} else if (strstr(name, "ship")) {
 		if (!slice.Get("*d", "%f", &value))
 			value = 0;
 		creature = new ntNpc_PolaShip("NPC_ship.pet", value);
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 0x11;
+		creature->SetType(0x11);
 	} else if (strstr(name, "vessel")) {
 		char petName[64] = "";
 		int index = 2;
@@ -237,7 +237,7 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		sprintf(petName, "gs_ship_0%d.pet", index);
 		creature = new CNPC_TRSHIP(petName, value);
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 0x14;
+		creature->SetType(0x14);
 	} else if (strstr(name, "walex")) {
 		char petName[64] = "";
 		int index = 1;
@@ -249,7 +249,7 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		sprintf(petName, "npc_alex0%d.pet", index);
 		creature = new CNPC_TORTOISE(petName, value);
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 0x17;
+		creature->SetType(0x17);
 	} else if (strstr(name, "herald")) {
 		if (!slice.Get("*vel", "%f", &value))
 			value = 1.0f;
@@ -258,7 +258,7 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		else
 			creature = new CNPC_TORTOISE("NPC_Herald03.pet", value);
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 0x17;
+		creature->SetType(0x17);
 	} else if (strstr(name, "crn") || strstr(name, "gns") || strstr(name, "pnd") || strstr(name, "toy")) {
 		char petName[256] = "";
 		char prefix[32] = "";
@@ -290,11 +290,11 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		if (tortoise) {
 			creature = new CNPC_TORTOISE(petName, value);
 			creature->SetArea(points, 0, 0);
-			creature->m_npcType = 0x17;
+			creature->SetType(0x17);
 		} else {
 			creature = new CNPC_TRSHIP(petName, value);
 			creature->SetArea(points, 0, 0);
-			creature->m_npcType = 0x14;
+			creature->SetType(0x14);
 		}
 	} else if (strstr(name, "npc_t")) {
 		const char *petName = "";
@@ -312,14 +312,14 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		node->SetScale(value);
 		creature = node;
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 0x20;
+		creature->SetType(0x20);
 	} else {
 		const char *suffix = strstr(name, "npc_");
 		if (!suffix)
 			return;
 		creature = new CDisposable(MakeStr("%s.pet", suffix + 4));
 		creature->SetArea(points, 0, 0);
-		creature->m_npcType = 9;
+		creature->SetType(9);
 	}
 
 	m_creatures.push_back(creature);
@@ -343,7 +343,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 			for (int i = 0; i < num; i++) {
 				creature = new CGull(petName);
 				creature->SetArea(area, 0);
-				creature->m_npcType = type;
+				creature->SetType(type);
 				m_creatures.push_back(creature);
 			}
 			return;
@@ -355,7 +355,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 			for (int i = 0; i < num; i++) {
 				creature = new CButterfly(petName);
 				creature->SetArea(area, 4);
-				creature->m_npcType = type;
+				creature->SetType(type);
 				m_creatures.push_back(creature);
 			}
 			return;
@@ -401,7 +401,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 			for (int i = 0; i < num; i++) {
 				creature = new ntPenguin_Sailor(petName);
 				creature->SetArea(area, 0);
-				creature->m_npcType = type;
+				creature->SetType(type);
 				m_creatures.push_back(creature);
 			}
 			return;
@@ -420,7 +420,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 			for (int i = 0; i < num; i++) {
 				creature = new ntNpc_BlackSparrow("NPC_BTsparrow.pet");
 				creature->SetArea(area, 0);
-				creature->m_npcType = type;
+				creature->SetType(type);
 				m_creatures.push_back(creature);
 			}
 			return;
@@ -435,7 +435,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 		for (int i = 0; i < num; i++) {
 			creature = new ntNpc_PolaPenguin1(petName, vel);
 			creature->SetArea(area, 0);
-			creature->m_npcType = type;
+			creature->SetType(type);
 			m_creatures.push_back(creature);
 		}
 		return;
@@ -446,7 +446,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 		for (int i = 0; i < num; i++) {
 			creature = new ntNpc_PolaPenguin2(petName);
 			creature->SetArea(area, 0);
-			creature->m_npcType = type;
+			creature->SetType(type);
 			m_creatures.push_back(creature);
 		}
 		return;
@@ -460,7 +460,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 			wizCity->SetScale(scale);
 			creature = wizCity;
 			creature->SetArea(area, 0);
-			creature->m_npcType = type;
+			creature->SetType(type);
 			m_creatures.push_back(creature);
 		}
 		return;
@@ -473,7 +473,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 		for (int i = 0; i < num; i++) {
 			creature = new CNPC_BIRD(petName, vel);
 			creature->SetArea(area, 0);
-			creature->m_npcType = type;
+			creature->SetType(type);
 			m_creatures.push_back(creature);
 		}
 		return;
@@ -484,7 +484,7 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 		for (int i = 0; i < num; i++) {
 			creature = new CNPC_PARROT(petName);
 			creature->SetArea(area, 0);
-			creature->m_npcType = type;
+			creature->SetType(type);
 			m_creatures.push_back(creature);
 		}
 		return;
@@ -493,23 +493,8 @@ void CNPC::SetNPC(const Waabb &area, char *name) {
 	}
 
 	creature->SetArea(area, flags);
-	creature->m_npcType = type;
+	creature->SetType(type);
 	m_creatures.push_back(creature);
-}
-
-// npc.h:129
-CCreature::CCreature(void) {
-	m_flags = 0;
-	m_area.min.x = m_area.min.y = m_area.min.z = 0.0f;
-	m_area.max.x = m_area.max.y = m_area.max.z = 0.0f;
-	m_pPet = NULL;
-	m_motionTime = 0.0f;
-	m_pMotion = NULL;
-	m_alpha = 0;
-	m_unkAC = 0.0f;
-	m_nodes.clear();
-	m_recordedPath.clear();
-	m_npcType = 0;
 }
 
 // npc.cpp:742
@@ -654,7 +639,7 @@ void CCreature::Init(const char *name, unsigned long flags) {
 				sAlpha alpha;
 				if (sscanf(m_pPet->m_frame[i].data, "*opa %f", &alpha.m_value)) {
 					alpha.m_value *= 2.55f;
-					alpha.m_time = m_pPet->m_frame[i].num * (1.0f / 30.0f);
+					alpha.m_time = m_pPet->GetFrameDataTime(i);
 					m_alphaList.push_back(alpha);
 				}
 			}
@@ -1110,7 +1095,8 @@ void CDuck::Display(void) {
 
 // npc.cpp:1465
 CMole::CMole(const char *name) {
-	m_flags |= 1;
+	unsigned long &flags = m_flags;
+	flags |= 1;
 	Init(name, 0);
 	m_unkAC = 6.4f;
 }
@@ -1137,7 +1123,8 @@ void CMole::PlayEvent(void) {
 
 // npc.cpp:1497
 CDolphin::CDolphin(const char *name) {
-	m_flags |= 1;
+	unsigned long &flags = m_flags;
+	flags |= 1;
 	Init(name, 0);
 	m_unkAC = 0;
 }
@@ -1151,7 +1138,8 @@ void CDolphin::PlayEvent(void) {
 
 // npc.cpp:1513
 CCrab::CCrab(const char *name) {
-	m_flags |= 1;
+	unsigned long &flags = m_flags;
+	flags |= 1;
 	Init(name, 0);
 	m_unkAC = -3.2f;
 }
@@ -2817,7 +2805,8 @@ void ntNpc_WizCityNode::Display(void) {
 
 // npc.cpp:3729
 CDisposable::CDisposable(const char *name) {
-	m_flags |= 1;
+	unsigned long &flags = m_flags;
+	flags |= 1;
 	Init(name, 0);
 }
 

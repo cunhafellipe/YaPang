@@ -81,3 +81,8 @@ inline CGolfBall::~CGolfBall(void) {
 		m_pPreDataOverflow = 0;
 	}
 }
+
+// golfball.inl:89, the point after the last one, to be written
+GOLFRULE_GOLFBALL_INLINE CGolfBall::sExpected* CGolfBall::NewPreData(void) {
+	return PreDataToWrite(++m_preDataCount);
+}

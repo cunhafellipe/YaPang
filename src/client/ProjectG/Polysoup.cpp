@@ -25,6 +25,7 @@
 #include "wind.h"
 #include "wlist.h"
 #include "wpuppet.h"
+#include "wpuppetutil.h"
 #include "wresrcmng.h"
 #include "wscene.h"
 #include "wutil.h"
@@ -412,7 +413,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 		pFile->Read(&pos, 0xC);
 		WVector at;
 		pFile->Read(&at, 0xC);
-		pCamera->m_matrix = MakeCameraMatrix(WVector(pos), WVector(at));
+		pCamera->m_matrix = MakeCameraMatrix(WVector(pos.p), WVector(at.p));
 
 		pFile->Read(&pCamera->m_fov, 4);
 		pFile->Read(&pCamera->m_param, 4);
@@ -972,15 +973,20 @@ void WPolySoup::ChangeDataStructure(sModel *pModel) {
 bool WPolySoup::DeleteDataStructure(sModel *pModel) {
 	int numObjects = m_numObjects;
 	int index = 0;
+	bool result;
 
 	if (IsLocalContent((localContentType_t)0x56)) {
+		const char *name = pModel->m_name;
 		std::vector<sModel*>::iterator it;
 		for (it = m_models.begin(); it != m_models.end(); ++it, ++index) {
-			if (stricmp((*it)->m_name, pModel->m_name) == 0) {
+			if (stricmp((*it)->m_name, name) == 0) {
 				break;
 			}
 		}
-		if (it != m_models.end()) {
+		if (it == m_models.end()) {
+			result = false;
+		} else {
+			result = true;
 			(*it)->m_pPuppet = 0;
 
 			GetPVS().MakeBaseStructure(m_pBgModel, true);
@@ -992,7 +998,7 @@ bool WPolySoup::DeleteDataStructure(sModel *pModel) {
 			}
 
 			for (it = m_models.begin(); it != m_models.end(); ++it) {
-				if (stricmp((*it)->m_name, pModel->m_name) == 0) {
+				if (stricmp((*it)->m_name, name) == 0) {
 					break;
 				}
 			}
@@ -1010,10 +1016,11 @@ bool WPolySoup::DeleteDataStructure(sModel *pModel) {
 
 				m_numObjects--;
 			}
-			return true;
 		}
+	} else {
+		result = false;
 	}
-	return false;
+	return result;
 }
 
 // polysoup.cpp:1372
@@ -1368,7 +1375,7 @@ WPolySoup::sModel *WPolySoup::FindModel(const char *name) {
 	if (name == 0 || name[0] == '\0') {
 		return m_pBgModel;
 	}
-	for (int i = 0; i < m_numObjects; i++) {
+	for (int i = 0; i < GetModelNum(); i++) {
 		if (_strcmpi(m_models[i]->m_name, name) == 0) {
 			return m_models[i];
 		}
@@ -1612,8 +1619,8 @@ static float InterpolateTriangle(float v0, float v1, float v2, float u, float v)
 
 // polysoup.cpp:2175
 // The barycentric weights of pos in the triangle (a, b, c), on the XZ plane
-// (sub_006ba820). Only called from a branch smBuildOutFragMeshes never takes
-// (see there). pt[3][2] gives the original's 0x1C frame (the whole array is
+// (sub_006ba820). Inlined in GenNewHolecupVtx; smBuildOutFragMeshes calls it
+// only from a branch it never takes (see there). pt[3][2] gives the original's 0x1C frame (the whole array is
 // homed once pt[0][0] spills off the FPU stack).
 static void GetBarycentric(const WVector &a, const WVector &b, const WVector &c, const WVector &pos, float &u, float &v) {
 	float pt[3][2];
@@ -2434,6 +2441,7 @@ void WPolySoup::EnableShadowmap(bool enable) {
 // Reloads the background puppet and its vertex colours from the map file,
 // then the shadow map and the hole cup.
 void WPolySoup::ReloadBasePet(void) {
+	sBgModel();   // a discarded temporary: the original emits sBgModel's constructor with no caller left
 	if (g_resrcmng == 0) {
 		return;
 	}
@@ -3108,14 +3116,8 @@ void WPolySoup::AddNewHolecupTri(std::vector<sHoleMesh> &meshes, sHoleTri &tri, 
 // polysoup.cpp:4170
 void WPolySoup::GenNewHolecupVtx(sHoleVtx *pVtx, sHoleTri *pTri) {
 	// The barycentric coordinates of pVtx->m_pos in the triangle, on the XZ plane.
-	float dx = pVtx->m_pos.x - pTri->m_pVertex[0]->x;
-	float dz = pVtx->m_pos.z - pTri->m_pVertex[0]->z;
-	float e1x = pTri->m_pVertex[1]->x - pTri->m_pVertex[0]->x;
-	float e1z = pTri->m_pVertex[1]->z - pTri->m_pVertex[0]->z;
-	float e2x = pTri->m_pVertex[2]->x - pTri->m_pVertex[0]->x;
-	float e2z = pTri->m_pVertex[2]->z - pTri->m_pVertex[0]->z;
-	float u = (e2z * dx - e2x * dz) / (e2z * e1x - e2x * e1z);
-	float v = (dz * e1x - e1z * dx) / (e2z * e1x - e2x * e1z);
+	float u, v;
+	GetBarycentric(pVtx->m_pos, *pTri->m_pVertex[1], *pTri->m_pVertex[2], *pTri->m_pVertex[0], u, v);
 
 	pVtx->m_pos.y = InterpolateTriangle(pTri->m_pVertex[0]->y, pTri->m_pVertex[1]->y, pTri->m_pVertex[2]->y, u, v);
 
@@ -3126,14 +3128,14 @@ void WPolySoup::GenNewHolecupVtx(sHoleVtx *pVtx, sHoleTri *pTri) {
 	}
 
 	// Each byte of the colour, interpolated alone.
-	float alpha = (float)(unsigned char)(pTri->m_color[0] >> 24);
-	float red = (float)(unsigned char)(pTri->m_color[0] >> 16);
-	float green = (float)(unsigned char)(pTri->m_color[0] >> 8);
+	float alpha = ((unsigned char *)&pTri->m_color[0])[3];
+	float red = ((unsigned char *)&pTri->m_color[0])[2];
+	float green = ((unsigned char *)&pTri->m_color[0])[1];
 	float blue = (float)(pTri->m_color[0] & 0xFF);
 	pVtx->m_color =
-		((unsigned long)(unsigned char)(int)InterpolateTriangle(alpha, (float)(unsigned char)(pTri->m_color[1] >> 24), (float)(unsigned char)(pTri->m_color[2] >> 24), u, v) << 24)
-		| ((unsigned long)(unsigned char)(int)InterpolateTriangle(red, (float)(unsigned char)(pTri->m_color[1] >> 16), (float)(unsigned char)(pTri->m_color[2] >> 16), u, v) << 16)
-		| ((unsigned long)(unsigned char)(int)InterpolateTriangle(green, (float)(unsigned char)(pTri->m_color[1] >> 8), (float)(unsigned char)(pTri->m_color[2] >> 8), u, v) << 8)
+		((((unsigned long)(unsigned char)(int)InterpolateTriangle(alpha, ((unsigned char *)&pTri->m_color[1])[3], ((unsigned char *)&pTri->m_color[2])[3], u, v) << 8
+		| (unsigned char)(int)InterpolateTriangle(red, ((unsigned char *)&pTri->m_color[1])[2], ((unsigned char *)&pTri->m_color[2])[2], u, v)) << 8
+		| (unsigned char)(int)InterpolateTriangle(green, ((unsigned char *)&pTri->m_color[1])[1], ((unsigned char *)&pTri->m_color[2])[1], u, v)) << 8)
 		| (unsigned char)(int)InterpolateTriangle(blue, (float)(pTri->m_color[1] & 0xFF), (float)(pTri->m_color[2] & 0xFF), u, v);
 
 	pVtx->m_uv[0] = InterpolateTriangle(pTri->m_uv[0][0], pTri->m_uv[1][0], pTri->m_uv[2][0], u, v);
@@ -3311,33 +3313,24 @@ void WPolySoup::DigHolecup(std::vector<sCupVtx> &cupVtxs, std::vector<sHoleTri> 
 
 	WMatrix inv;
 	inv = ~m_pBgModel->m_pPuppet->GetRootBone()->GetMatrix();
-	WVector cupPos = GOLFDOC()->GetHoleData().m_cupPos;
-	WVector center = cupPos * inv;
-
+	WVector center = GOLFDOC()->GetHoleData().m_cupPos;
+	center = center * inv;
 	float bottom = cupVtxs.begin()->m_pos.y - 1.0f;
-
 	// The light direction in the bone's space (rotation only), reversed.
-	const WVector &light = g_lightset.nearone;
-	WVector toLight;
-	toLight.x = (light.z * inv.za.x + light.y * inv.ya.x + light.x * inv.xa.x) * -1.0f;
-	toLight.y = (light.z * inv.za.y + light.y * inv.ya.y + light.x * inv.xa.y) * -1.0f;
-	toLight.z = (light.z * inv.za.z + light.y * inv.ya.z + light.x * inv.xa.z) * -1.0f;
+	WVector toLight = WVector(inv.xx * g_lightset.nearone.x + inv.xy * g_lightset.nearone.y + inv.xz * g_lightset.nearone.z,
+		inv.yx * g_lightset.nearone.x + inv.yy * g_lightset.nearone.y + inv.yz * g_lightset.nearone.z,
+		inv.zx * g_lightset.nearone.x + inv.zy * g_lightset.nearone.y + inv.zz * g_lightset.nearone.z) * -1.0f;
 	toLight.Normalize();
 
 	int i;
 	for (i = 0; i < numCupVtxs; i++) {
-		WVector &rim = cupVtxs[i].m_pos;
 		WVector dir;
-		dir.x = center.x - rim.x;
-		dir.y = 0.0f;
-		dir.z = center.z - rim.z;
+		dir = WVector(center.x - cupVtxs[i].m_pos.x, 0.0f, center.z - cupVtxs[i].m_pos.z);
 		dir.Normalize();
 
-		pCup->vecList[i * 2 + 1] = rim;
-		pCup->vecList[i * 2] = pCup->vecList[i * 2 + 1];
+		pCup->vecList[i * 2] = pCup->vecList[i * 2 + 1] = cupVtxs[i].m_pos;
 		pCup->vecList[i * 2 + 1].y = bottom;
-		pCup->normList[i * 2 + 1] = dir;
-		pCup->normList[i * 2] = dir;
+		pCup->normList[i * 2] = pCup->normList[i * 2 + 1] = dir;
 
 		float angle;
 		if (i == numCupVtxs - 1) {
@@ -3370,40 +3363,36 @@ void WPolySoup::DigHolecup(std::vector<sCupVtx> &cupVtxs, std::vector<sHoleTri> 
 	}
 
 	// The floor quad, a square of 2 * radius around the cup's centre.
-	static const float corners[4][2] = {
-		{ -1.0f, 1.0f }, { 1.0f, 1.0f }, { -1.0f, -1.0f }, { 1.0f, -1.0f }
-	};
-	int floor = numCupVtxs * 2;
 	unsigned long floorColor = g_lightset.ambient | 0xFF000000;
 	for (int k = 0; k < 4; k++) {
-		WVector &pos = pCup->vecList[floor + k];
-		pos.x = center.x + corners[k][0] * radius;
-		pos.y = center.y + radius * 0.0f;
-		pos.z = center.z + corners[k][1] * radius;
-		pos.y = bottom;
-		pCup->normList[floor + k] = up;
-		pCup->uvData[floor + k][0] = 0.0f;
-		pCup->uvData[floor + k][1] = 0.96875f;
-		pCup->originalVtxColorList[floor + k] = floorColor;
-		pCup->vtxColorList[floor + k] = floorColor;
+		int v = numCupVtxs * 2 + k;
+		pCup->vecList[v] = center + WVector((k & 1) ? 1.0f : -1.0f, 0.0f, (k & 2) ? -1.0f : 1.0f) * radius;
+		pCup->vecList[v].y = bottom;
+
+		pCup->normList[v] = up;
+
+		pCup->uvData[v][0] = 0.0f;
+		pCup->uvData[v][1] = 0.96875f;
+
+		pCup->originalVtxColorList[v] = floorColor;
+		pCup->vtxColorList[v] = floorColor;
 	}
 
 	// The wall's quads, then the floor's in the last slot.
 	for (i = 0; i < numCupVtxs - 1; i++) {
-		int base = i * 2;
-		pCup->indexList[i * 6 + 0] = base;
-		pCup->indexList[i * 6 + 1] = base + 2;
-		pCup->indexList[i * 6 + 2] = base + 1;
-		pCup->indexList[i * 6 + 3] = base + 1;
-		pCup->indexList[i * 6 + 4] = base + 2;
-		pCup->indexList[i * 6 + 5] = base + 3;
+		pCup->indexList[i * 6 + 0] = i * 2;
+		pCup->indexList[i * 6 + 1] = i * 2 + 2;
+		pCup->indexList[i * 6 + 2] = i * 2 + 1;
+		pCup->indexList[i * 6 + 3] = i * 2 + 1;
+		pCup->indexList[i * 6 + 4] = i * 2 + 2;
+		pCup->indexList[i * 6 + 5] = i * 2 + 3;
 	}
-	pCup->indexList[i * 6 + 0] = floor;
-	pCup->indexList[i * 6 + 1] = floor + 1;
-	pCup->indexList[i * 6 + 2] = floor + 2;
-	pCup->indexList[i * 6 + 3] = floor + 2;
-	pCup->indexList[i * 6 + 4] = floor + 1;
-	pCup->indexList[i * 6 + 5] = floor + 3;
+	pCup->indexList[i * 6 + 0] = numCupVtxs * 2;
+	pCup->indexList[i * 6 + 1] = numCupVtxs * 2 + 1;
+	pCup->indexList[i * 6 + 2] = numCupVtxs * 2 + 2;
+	pCup->indexList[i * 6 + 3] = numCupVtxs * 2 + 2;
+	pCup->indexList[i * 6 + 4] = numCupVtxs * 2 + 1;
+	pCup->indexList[i * 6 + 5] = numCupVtxs * 2 + 3;
 
 	WBone::CalcMeshAABB(*m_pBgModel->m_pPuppet->GetRootBone(), *pCup);
 }

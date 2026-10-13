@@ -699,10 +699,12 @@ void SetBrightness(sRGBA& color, sRGBA& brightness, sRGBA& result) {
 	float targetValue = brightnessValue * colorValue / 255.0f;
 	float ratio = targetValue / colorValue;
 
-	int value;
-	value = (int)(color.r * ratio); result.r = (unsigned char)(value > 255 ? 255 : value);
-	value = (int)(color.g * ratio); result.g = (unsigned char)(value > 255 ? 255 : value);
-	value = (int)(color.b * ratio); result.b = (unsigned char)(value > 255 ? 255 : value);
+	int r = (int)(color.r * ratio);
+	result.r = (unsigned char)(r > 255 ? 255 : r);
+	int g = (int)(color.g * ratio);
+	result.g = (unsigned char)(g > 255 ? 255 : g);
+	int b = (int)(color.b * ratio);
+	result.b = (unsigned char)(b > 255 ? 255 : b);
 	result.a = color.a;
 }
 
@@ -998,32 +1000,32 @@ sRGB sHSV::toRGB(void) {
 
 		if (h > 300) {
 			rgb.g = (unsigned char)minValue;
-			rgb.b = (unsigned char)(((hue - 360.0) / 60.0 * chroma - minValue) * -1.0);
+			double ratio = (hue - 360.0) / 60.0;
+			rgb.b = (unsigned char)((ratio * chroma - minValue) * -1.0);
 		} else {
 			rgb.b = (unsigned char)minValue;
-			rgb.g = (unsigned char)(hue / 60.0 * chroma + minValue);
+			double ratio = hue / 60.0;
+			rgb.g = (unsigned char)(ratio * chroma + minValue);
 		}
 	} else if (h < 180) {
 		rgb.g = (unsigned char)value;
 
-		double delta = (hue / 60.0 - 2.0) * chroma;
 		if (h < 120) {
 			rgb.b = (unsigned char)minValue;
-			rgb.r = (unsigned char)(minValue - delta);
+			rgb.r = (unsigned char)(minValue - (hue / 60.0 - 2.0) * chroma);
 		} else {
 			rgb.r = (unsigned char)minValue;
-			rgb.b = (unsigned char)(delta + minValue);
+			rgb.b = (unsigned char)((hue / 60.0 - 2.0) * chroma + minValue);
 		}
 	} else {
 		rgb.b = (unsigned char)value;
 
-		double delta = (hue / 60.0 - 4.0) * chroma;
 		if (h < 240) {
 			rgb.r = (unsigned char)minValue;
-			rgb.g = (unsigned char)(minValue - delta);
+			rgb.g = (unsigned char)(minValue - (hue / 60.0 - 4.0) * chroma);
 		} else {
 			rgb.g = (unsigned char)minValue;
-			rgb.r = (unsigned char)(delta + minValue);
+			rgb.r = (unsigned char)((hue / 60.0 - 4.0) * chroma + minValue);
 		}
 	}
 

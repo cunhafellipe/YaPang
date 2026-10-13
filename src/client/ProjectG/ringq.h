@@ -10,8 +10,9 @@ public:
 	TRingQ(void);
 	~TRingQ(void);
 
-	void Create(int size);
+	int Init(int size);
 
+	int IsEmpty(void) const;
 	int IsFull(void) const;
 	int IsUndersink(unsigned int count) const;
 	int IsOverflow(unsigned int count) const;
@@ -41,20 +42,28 @@ TRingQ<T>::~TRingQ(void) {
 	if (m_buf) delete[] m_buf;
 }
 
-// ringq.h:112
+// ringq.h:111
 // (Re)allocates the buffer for size entries and empties the queue; a size
-// below 2 leaves it as it is. Name invented (the PDB has none).
+// below 2 leaves it as it is and returns 1, success returns 0.
 template <class T>
-inline void TRingQ<T>::Create(int size) {
+int TRingQ<T>::Init(int size) {
 	if (size < 2)
-		return;
+		return 1;
+
 	if (m_buf) delete[] m_buf;
 	m_buf = new T[size];
 	m_size = size;
 	m_head = m_tail = 0;
+	return 0;
 }
 
 // ringq.h:128
+template <class T>
+inline int TRingQ<T>::IsEmpty(void) const {
+	return IsUndersink(1);
+}
+
+// ringq.h:129
 template <class T>
 inline int TRingQ<T>::IsFull(void) const {
 	return IsOverflow(1);

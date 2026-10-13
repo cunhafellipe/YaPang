@@ -209,6 +209,11 @@ public:
 	bool CheckChildDlgVisible(void);   // resultdlg.cpp:3311
 	bool SaveGMEvent(void);
 
+	// resultdlg.h:184
+	bool GetDone(void) {
+		return m_escClosable;
+	}
+
 private:
 	static sFRESH_ENTRY _MsgEntries[];
 

@@ -2,6 +2,9 @@
 #include "frcmdtarget.h"
 
 #include <string.h>
+#ifdef JP_PAKS
+#include <string>
+#endif
 
 // A message-map handler seen through each of its signatures (PDB type).
 union uFreshFunctions {
@@ -91,6 +94,32 @@ bool FrCmdTarget::OnFreshMsg(const char* pName, eFrCmd cmd, intptr_t var1, sFRES
 			return FreshDispatchMsg(this, var1, pEntry, pHandler);
 		}
 	}
+
+#ifdef JP_PAKS
+	// The JP data (2017) moved controls into group boxes ("map_ctrl.course"
+	// where the KR form had "course"); the KR message maps name the control
+	// without that group (docs/JP_CLIENT.md). Retry without the innermost
+	// group: "A.group.ctrl" as "A.ctrl", "group.ctrl" as "ctrl" unless the
+	// first part is a layout id (upper case: "TOPPAGE.ctrl" stays).
+	const char* pLast = strrchr(pName, '.');
+	if (pLast != 0 && pLast != pName && pLast[1] != 0) {
+		const char* pGroup = pLast;
+		while (pGroup != pName && pGroup[-1] != '.') {
+			pGroup--;
+		}
+		bool layoutId = pGroup == pName;
+		for (const char* p = pName; layoutId && p != pLast; p++) {
+			if (*p >= 'a' && *p <= 'z') {
+				layoutId = false;
+			}
+		}
+		if (!layoutId) {
+			std::string retry(pName, pGroup - pName);
+			retry += pLast + 1;
+			return OnFreshMsg(retry.c_str(), cmd, var1, pHandler);
+		}
+	}
+#endif
 
 	return true;
 }

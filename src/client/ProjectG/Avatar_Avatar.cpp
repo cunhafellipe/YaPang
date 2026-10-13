@@ -28,6 +28,29 @@ float Random(float min, float max, int seed); // commonutil.cpp:1106
 
 // Facial texture names per character, four per character type.
 extern "C" const char *data_a82938[][4];
+#ifdef JP_PAKS
+// The JP data has characters 10-14; the JP exe keeps this table in ntAvatar
+// (filled by its constructor, 0x4CEB50; row 13 empty) with partly other
+// names (docs/JP_CLIENT.md).
+static const char *g_jpFaceTexture[15][4] = {
+	{ "m_skin_01-f03.png", "m_skin_01-f04.png", "m_skin_01-f12.png", "m_skin_01-reset.png" },
+	{ "F_Skin-f05.png", "F_Skin-f01.png", "F_Skin-f06.png", "F_Skin-reset.png" },
+	{ "A_Face-f02.png", "A_Face-f03.png", "A_Face-f05.png", "A_Face-reset.png" },
+	{ "C_Face-f03.png", "C_Face-f02.png", "C_Face-f04.png", "C_Face-reset.png" },
+	{ "D_Face-f07.png", "D_Face-f04.png", "D_Face-f05.png", "D_Face-reset.png" },
+	{ "E_def_f03.png", "E_def_f05.png", "E_def_f06.png", "E_def_reset.png" },
+	{ "G_Face-blink1.png", "G_Face-f03.png", "G_Face-f06.png", "G_Face-reset.png" },
+	{ "H_def_f4.png", "H_def_f6.png", "H_def_f7.png", "H_Face-reset.png" },
+	{ "I_def_f13.png", "I_def_f23.png", "I_def_f21.png", "I_def_reset.png" },
+	{ "J_def_blink13.png", "J_def_blink23.png", "J_def_blink21.png", "J_def-reset.png" },
+	{ "K_def_f24.png", "K_def_f34.png", "K_def_f36.png", "K_def-reset.png" },
+	{ "MM_def_f13.png", "MM_def_f15.png", "MM_def_f07.png", "MM_def_reset.png" },
+	{ "FF_def_f08.png", "FF_def_f11.png", "FF_def_f18.png", "FF_def_reset.png" },
+	{ 0, 0, 0, 0 },
+	{ "CC_def_f07.png", "CC_def_f09.png", "CC_def_f23.png", "CC_def_reset.png" },
+};
+#define data_a82938 g_jpFaceTexture
+#endif
 #include "wmath.h"
 #include "s5/specialprize/specialprizeitem.h"
 #include "avatar_main.h"
@@ -87,11 +110,6 @@ float RadianDelta(float a, float b) {
 // wmath.inl:77
 int operator!=(const WVector &a, const WVector &b) {
 	return !WisEqual(a, b, 0.00001f);
-}
-
-// avatar_avatar.h:118
-unsigned long ntAvatar::GetGuid() const {
-	return m_guid;
 }
 
 // avatar_avatar.h:128
@@ -1663,7 +1681,7 @@ SpecialPrizeItem &ntAvatar::GetMySpItem(eSPAVILITYTYPE type) {
 void ntAvatar::UseSPItem(eSPAVILITYTYPE type) {
 	WSendPacket packet(GCT_USE_SP_ITEM);
 	packet.Encode1(6);
-	packet.Encode4(WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar->m_guid);
+	packet.Encode4(WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar->GetGuid());
 	packet.Encode4(type);
 	packet.Send(SEND_TO_DEFAULT);
 }

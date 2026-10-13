@@ -97,16 +97,16 @@ const char *lua_file_line_text_manager::get_line_text(const char *filename, int 
 		return NULL;
 	}
 
-	std::map<std::string, std::vector<std::string> >::iterator it = m_files.find(filename);
-	if (it == m_files.end()) {
-		return NULL;
+	std::map<std::string, std::vector<std::string> >::iterator it;
+	it = m_files.find(filename);
+	if (it != m_files.end()) {
+		std::vector<std::string> &lines = it->second;
+		if (lines.size() >= (unsigned int)line) {
+			return lines[line - 1].c_str();
+		}
 	}
 
-	if (it->second.size() < (unsigned int)line) {
-		return NULL;
-	}
-
-	return it->second[line - 1].c_str();
+	return NULL;
 }
 
 // luautilitylib.cpp:123

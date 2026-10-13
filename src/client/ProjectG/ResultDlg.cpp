@@ -861,8 +861,8 @@ bool FrResultTeamDlg::OnInit(void) {
 			SetDesc(MakeStr("%49s %s\xB1\xE6\xB5\xE5\xB0\xA1 \xBD\xC2\xB8\xAE\xC7\xCF\xBF\xB4\xBD\xC0\xB4\xCF\xB4\xD9.", "", GUILDMATCHUP(1)->m_guildName));
 		}
 
-		// The room's guild block (sRoomInfo from m_guildUID on) is an sGuildMatchInfo.
-		memcpy(&m_guildMatch, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildUID, sizeof(m_guildMatch));
+		// The room's guild block (sRoomInfo::m_guild) has sGuildMatchInfo's layout.
+		memcpy(&m_guildMatch, &WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild, sizeof(m_guildMatch));
 	}
 
 	return true;
@@ -1121,7 +1121,7 @@ void FrResultTeamDlg::OnRedInit(int param) {
 
 	if (m_pRedArea) {
 		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
-			m_pRedEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[0]);
+			m_pRedEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[0]);
 		} else {
 			m_pRedArea->SetBgImg("30in_team_redteam_dark");
 		}
@@ -1147,7 +1147,7 @@ void FrResultTeamDlg::OnBlueInit(int param) {
 
 	if (m_pBlueArea) {
 		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
-			m_pBlueEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[1]);
+			m_pBlueEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[1]);
 		} else {
 			m_pBlueArea->SetBgImg("30in_team_blueteam_dark");
 		}
@@ -2278,19 +2278,19 @@ void FrUniteResultDlg::OnTeamResultOwnerDraw(int param) {
 			gdi->DrawTexture(pBlue, WRect((117.0f - (float)(pBlue->Width() / 2)) + rect.x, (492.0f - (float)(pBlue->Height() / 2)) + rect.y, (float)pBlue->Width(), (float)pBlue->Height()), 0xFFFFFFFF, 0);
 		}
 	} else {
-		const Bitmap* pRedMark = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[0]);
+		const Bitmap* pRedMark = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[0]);
 		if (pRedMark) {
 			gdi->DrawTexture(pRedMark, WRect((117.0f - (float)(pRedMark->Width() / 2)) + rect.x, (471.0f - (float)(pRedMark->Height() / 2)) + rect.y, (float)pRedMark->Width(), (float)pRedMark->Height()), 0xFFFFFFFF, 0);
 		}
 
-		const Bitmap* pBlueMark = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[1]);
+		const Bitmap* pBlueMark = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[1]);
 		if (pBlueMark) {
 			gdi->DrawTexture(pBlueMark, WRect((117.0f - (float)(pBlueMark->Width() / 2)) + rect.x, (492.0f - (float)(pBlueMark->Height() / 2)) + rect.y, (float)pBlueMark->Width(), (float)pBlueMark->Height()), 0xFFFFFFFF, 0);
 		}
 
 		const WRect& areaRect = m_pTeamResultArea->GetRect();
-		g_pFresh->GetManager()->PrintText(WPoint(areaRect.x + 120.0f, areaRect.y + 17.0f), 0, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildName[0], -1.0f, 0xFFFFFFFF);
-		g_pFresh->GetManager()->PrintText(WPoint(areaRect.x + 120.0f, areaRect.y + 39.0f), 0, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildName[1], -1.0f, 0xFFFFFFFF);
+		g_pFresh->GetManager()->PrintText(WPoint(areaRect.x + 120.0f, areaRect.y + 17.0f), 0, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildName[0], -1.0f, 0xFFFFFFFF);
+		g_pFresh->GetManager()->PrintText(WPoint(areaRect.x + 120.0f, areaRect.y + 39.0f), 0, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildName[1], -1.0f, 0xFFFFFFFF);
 	}
 
 	rect = GetRect();
@@ -2960,56 +2960,56 @@ int FrUniteResultDlg::GetMedalIndex(unsigned long uid) {
 		}
 	}
 
-	unsigned char rank = myRank - higherCount;
+	myRank -= higherCount;
 	if (WSingleton<CSharedDoc>::Instance()->m_holes == 9) {
 		if (count <= 14) {
 			return 3;
 		} else if (count <= 18) {
-			if (rank == 1)
+			if (myRank == 1)
 				return 2;
 		} else if (count <= 22) {
-			if (rank == 1)
+			if (myRank == 1)
 				return 1;
 		} else if (count <= 26) {
-			if (rank == 1)
+			if (myRank == 1)
 				return 1;
-			if (rank == 2)
+			if (myRank == 2)
 				return 2;
 		} else {
-			if (rank == 1)
+			if (myRank == 1)
 				return 0;
-			if (rank == 2)
+			if (myRank == 2)
 				return 1;
 		}
 	} else if (WSingleton<CSharedDoc>::Instance()->m_holes == 18) {
 		if (count <= 14) {
-			if (rank == 1)
+			if (myRank == 1)
 				return 2;
 		} else if (count <= 18) {
-			if (rank == 1)
+			if (myRank == 1)
 				return 1;
-			if (rank == 2)
+			if (myRank == 2)
 				return 2;
 		} else if (count <= 22) {
-			if (rank == 1)
+			if (myRank == 1)
 				return 0;
-			if (rank == 2)
+			if (myRank == 2)
 				return 1;
-			if (rank == 3)
+			if (myRank == 3)
 				return 2;
 		} else if (count <= 26) {
-			if (rank == 1)
+			if (myRank == 1)
 				return 0;
-			if (rank == 2)
+			if (myRank == 2)
 				return 1;
-			if (rank <= 4)
+			if (myRank <= 4)
 				return 2;
 		} else {
-			if (rank == 1)
+			if (myRank == 1)
 				return 0;
-			if (rank <= 3)
+			if (myRank <= 3)
 				return 1;
-			if (rank <= 6)
+			if (myRank <= 6)
 				return 2;
 		}
 	}

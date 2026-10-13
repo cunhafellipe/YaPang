@@ -71,7 +71,7 @@ FrReportDlg::FrReportDlg(void) {
 
 // reportdlg.cpp:50
 FrReportDlg::~FrReportDlg(void) {
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) && !CChatMsg::Instance()->IsOpened())
+	if (((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) && !CChatMsg::Instance()->IsOpened())
 		g_pFresh->GetManager()->SetExclusiveKey(false);
 }
 
@@ -198,10 +198,10 @@ void FrReportDlg::OnOK(void) {
 
 	FrForm::OnOK();
 
-	if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 
 		AfxGetTask()->GetActor("GolfRule") << MsgObject(0, 0x23, (intptr_t)"\xBD\xC5\xB0\xED\xB0\xA1 \xC1\xA4\xBB\xF3\xC0\xFB\xC0\xB8\xB7\xCE \xC1\xA2\xBC\xF6\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
-	} else if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI)) {
+	} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false) {
 
 		AfxGetTask()->GetActor("AvatarChat") << MsgObject(0, 0x23, (intptr_t)"\xBD\xC5\xB0\xED\xB0\xA1 \xC1\xA4\xBB\xF3\xC0\xFB\xC0\xB8\xB7\xCE \xC1\xA2\xBC\xF6\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
 	} else {

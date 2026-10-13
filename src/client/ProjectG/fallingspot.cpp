@@ -56,15 +56,14 @@ static __impCSpot s_impCSpot;
 CSpot::CSpot(void) : m_pFont1c(NULL), m_pFont20(NULL), m_pRangeInfo(NULL), m_hTexture9c(0), m_hTexturea0(0), m_hTexturea4(0), m_hTexturea8(0), m_pOverlayc4(NULL), m_pOverlayc8(NULL), m_pSimpleUI(NULL), m_hTextured4(0), m_pRivals(NULL), m_pMaskedFont(NULL) {
 	AddSkipList(0x1400);
 
+	m_priority = 1;
 	m_pVertices[0] = &m_vertices[0];
 	m_pVertices[1] = &m_vertices[1];
+	m_pVertices[2] = &m_vertices[3];
 	m_pVertices[3] = &m_vertices[2];
-
 	m_pVertices[4] = NULL;
 	m_pOverlaybc = NULL;
 	m_pOverlayc0 = NULL;
-	m_priority = 1;
-	m_pVertices[2] = &m_vertices[3];
 }
 
 // fallingspot.cpp:59
@@ -353,7 +352,13 @@ void CSpot::Display(void) {
 
 	WVector pos;
 	if (GOLFDOC()->m_target.m_unk10) {
-		if (GOLFDOC()->m_gameState == 2 || GOLFDOC()->m_gameState == 6 || GOLFDOC()->m_gameState == 11 || GOLFDOC()->m_gameState == 10 || GOLFDOC()->m_gameState == 13 || GOLFDOC()->m_gameState == 14) {
+		switch (GOLFDOC()->m_gameState) {
+		case 2:
+		case 6:
+		case 11:
+		case 10:
+		case 13:
+		case 14: {
 			float size = GOLFDOC()->m_gameState == 2 ? 2.0f : 1.0f;
 
 			for (int i = 0; i < 4; i++) {
@@ -368,16 +373,21 @@ void CSpot::Display(void) {
 			}
 
 			g_view->DrawPolygonFan(m_pVertices, m_hTextured4 & 0x7ff, 0x400, false);
-		} else {
+			break;
+		}
+		default: {
 			WMatrix m;
 			m = RotMat(m_unknownd0, 1);
 			m *= 0.5f;
-			m.pivot = GOLFDOC()->m_target.m_pos;
+			// A plain three-dword copy in the original, not WVector::operator=.
+			memcpy(&m.pivot, &GOLFDOC()->m_target.m_pos, sizeof(WVector));
 
 			GOLFDOC()->m_target.m_cameraTarget->ApplyBones(NULL, m);
 			GOLFDOC()->m_target.m_cameraTarget->Transform(NULL, 1.0f, 0);
 			GOLFDOC()->m_target.m_cameraTarget->UpdateLightSource(&g_lightset, false, NULL);
 			GOLFDOC()->m_target.m_cameraTarget->Render(g_view, true, 1.0f, false, true, false);
+			break;
+		}
 		}
 	}
 
@@ -683,20 +693,20 @@ void CSpot::Display(void) {
 
 // fallingspot.cpp:1082
 bool CSpot::_ValidTopViewLineDraw(void) {
-	WView* view = g_view;
-	if (view->InFrustum(GolfBall().m_pos) || view->InFrustum(m_spotPos)) {
+	if (g_view->InFrustum(GolfBall().m_pos) || g_view->InFrustum(m_spotPos)) {
 		return true;
 	}
 
-	WVector2D cam(g_camera.pivot.x, g_camera.pivot.z);
+	WVector cam;
+	cam.x = g_camera.pivot.x; cam.z = g_camera.pivot.z;
 	WVector2D ball(GolfBall().m_pos.x, GolfBall().m_pos.z);
 
-	WVector2D spot(m_spotPos.x, m_spotPos.z);
-	WVector2D toCam(cam.x - ball.x, cam.y - ball.y);
-	WVector2D toSpot(spot.x - ball.x, spot.y - ball.y);
-	float camDist = sqrtf(toCam.x * toCam.x + toCam.y * toCam.y);
-	float spotDist = sqrtf(toSpot.x * toSpot.x + toSpot.y * toSpot.y);
-	if (spotDist > camDist) {
+	WVector spot;
+	spot.x = m_spotPos.x; spot.z = m_spotPos.z;
+	WVector toCam;
+	toCam.x = cam.x - ball.x; toCam.z = cam.z - ball.y;
+	WVector2D toSpot(spot.x - ball.x, spot.z - ball.y);
+	if (sqrtf(toCam.x * toCam.x + toCam.z * toCam.z) > sqrtf(toSpot.x * toSpot.x + toSpot.y * toSpot.y)) {
 		return false;
 	}
 
@@ -888,31 +898,28 @@ void CSpot::DrawIndicator(const WVector& pos, int color) {
 	}
 
 	float halfWidth = m_unknown94 * 0.5f;
-	float left = vtx.sx - halfWidth;
-	float top = vtx.sy - m_unknown98;
-	float right = halfWidth + vtx.sx;
 
-	m_vertices[0].sx = left;
-	m_vertices[0].sy = vtx.sy;
+	m_vertices[0].sx = vtx.sx - halfWidth;
 	m_vertices[0].tu = 0.0f;
 	m_vertices[0].tv = 1.0f;
+	m_vertices[0].sy = vtx.sy;
 
-	m_vertices[1].sx = left;
-	m_vertices[1].sy = top;
+	m_vertices[1].sx = vtx.sx - halfWidth;
+	m_vertices[1].sy = vtx.sy - m_unknown98;
 	m_vertices[1].tu = 0.0f;
 	m_vertices[1].tv = 0.0f;
 
-	m_vertices[2].sx = right;
+	m_vertices[2].sx = halfWidth + vtx.sx;
 	m_vertices[2].sy = vtx.sy;
 	m_vertices[2].tu = 1.0f;
 	m_vertices[2].tv = 1.0f;
 
-	m_vertices[3].sx = right;
-	m_vertices[3].sy = top;
+	m_vertices[3].sx = halfWidth + vtx.sx;
+	m_vertices[3].sy = vtx.sy - m_unknown98;
 	m_vertices[3].tu = 1.0f;
 	m_vertices[3].tv = 0.0f;
 
-	if (left > g_view->GetWidth() - 0.5f || right < 0.5f || vtx.sy < 0.5f || g_view->GetHeight() - 0.5f < top) {
+	if (m_vertices[0].sx > g_view->GetWidth() - 0.5f || m_vertices[2].sx < 0.5f || vtx.sy < 0.5f || g_view->GetHeight() - 0.5f < m_vertices[1].sy) {
 		return;
 	}
 
@@ -920,7 +927,7 @@ void CSpot::DrawIndicator(const WVector& pos, int color) {
 		ClipIndicator(j);
 	}
 
-	g_view->DrawPolygonFan(m_pVertices, (m_hTexture9c & 0x7ff) | 0x2400000, 0, true);
+	g_view->DrawProjPolygonFan(m_pVertices, (m_hTexture9c & 0x7ff) | 0x2400000, 0);
 }
 
 // fallingspot.cpp:1356

@@ -412,26 +412,6 @@ BEGIN_LAYOUT_CHECK(CMissionEvent)
 	CHECK_FIELD(CMissionEvent, m_missionInfo, 0xC);
 END_LAYOUT_CHECK
 
-// The rank of a player in his guild (only 1-3 are members; names
-// invented).
-enum GUILD_CLASS_IDX {
-	GUILD_CLASS_NONE = 0,
-	GUILD_CLASS_MASTER = 1      // the rank handed over by the master delegation
-};
-
-
-// One member of a guild member page (0x54 bytes from the list node
-// allocation; layout partly known).
-struct GUILD_USER_LIST {
-	UNKNOWN(0x0, 0x4);
-	unsigned long uid;          // 0x4: the member's user id
-	GUILD_CLASS_IDX m_classIdx; // 0x8: the member's rank
-	char text[0x2E];            // 0xC: the guild talk, passed through ExchangeQuotation
-	char nickname[0x16];        // 0x3A: shown by the user info window
-	unsigned char online;       // 0x50: 1 online, 0 offline (the member row's state icon)
-	UNKNOWN(0x51, 0x54);
-};
-
 // One guild of a guild search page (0xC4 bytes, packed). globalgamedefine.h
 // declares it in the original (its constructor's line info); transcribed
 // here until that shared header carries it.
@@ -459,19 +439,6 @@ struct GUILD_LIST {
 };
 #pragma pack(pop)
 
-// One entry of the guild history (0x34 bytes from the list node allocation,
-// packed). CGuildMainForm::RefreshMyGuildHistory prints the year, month and
-// day of the date and the message of the state.
-#pragma pack(push, 1)
-struct GUILD_HISTORY {
-	UNKNOWN(0x0, 0x1D);
-	int state;                  // 0x1D: a GUILD_STATE_IDX (guildformcontroller.h, not included here)
-	_SYSTEMTIME date;           // 0x21: wYear 0x21, wMonth 0x23, wDay 0x27 read
-	UNKNOWN(0x31, 0x34);
-};
-#pragma pack(pop)
-
-CHECK_SIZE(GUILD_USER_LIST, 0x54);
 CHECK_SIZE(GUILD_LIST, 0xC4);
 BEGIN_LAYOUT_CHECK(GUILD_LIST)
 	CHECK_FIELD(GUILD_LIST, guildNumber, 0x0);
@@ -482,18 +449,6 @@ BEGIN_LAYOUT_CHECK(GUILD_LIST)
 	CHECK_FIELD(GUILD_LIST, data9E, 0x9E);
 	CHECK_FIELD(GUILD_LIST, dataA2, 0xA2);
 	CHECK_FIELD(GUILD_LIST, dataB8, 0xB8);
-END_LAYOUT_CHECK
-CHECK_SIZE(GUILD_HISTORY, 0x34);
-BEGIN_LAYOUT_CHECK(GUILD_HISTORY)
-	CHECK_FIELD(GUILD_HISTORY, state, 0x1D);
-	CHECK_FIELD(GUILD_HISTORY, date, 0x21);
-END_LAYOUT_CHECK
-BEGIN_LAYOUT_CHECK(GUILD_USER_LIST)
-	CHECK_FIELD(GUILD_USER_LIST, uid, 0x4);
-	CHECK_FIELD(GUILD_USER_LIST, m_classIdx, 0x8);
-	CHECK_FIELD(GUILD_USER_LIST, text, 0xC);
-	CHECK_FIELD(GUILD_USER_LIST, nickname, 0x3A);
-	CHECK_FIELD(GUILD_USER_LIST, online, 0x50);
 END_LAYOUT_CHECK
 
 namespace _guild {

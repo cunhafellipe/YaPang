@@ -9,6 +9,7 @@
 
 #include <list>
 
+#include <stdlib.h>
 #include <string.h>
 
 // Function object for std::for_each over containers of owned pointers.
@@ -73,7 +74,10 @@ CHECK_FIELD(sUserPosition, m_channelName, 0x0B);
 // byte-packed). Looked up by id (operator==, globalgamedefine.h:3377).
 #pragma pack(push, 1)
 struct sChannelInfo {
-	bool operator==(const unsigned char &id) const;
+	// globalgamedefine.h:3377 (std::find on the channel list by id)
+	bool operator==(const unsigned char &channelId) const {
+		return id == channelId;
+	}
 
 	char name[0x40];              // 0x00
 	unsigned short maxUsers;      // 0x40
@@ -90,6 +94,41 @@ CHECK_FIELD(sChannelInfo, maxUsers, 0x40);
 CHECK_FIELD(sChannelInfo, curUsers, 0x42);
 CHECK_FIELD(sChannelInfo, id, 0x44);
 CHECK_FIELD(sChannelInfo, eventCourseMask, 0x49);
+
+// One server of a server list (0x5C bytes, byte-packed: list<sGameServerInfo>
+// nodes are 0x64).
+#pragma pack(push, 1)
+struct sGameServerInfo {
+	// globalgamedefine.h:3442 (ServerDlg constructs its members with it)
+	sGameServerInfo(void) {
+		name[0] = 0;
+		m_address[0] = 0;
+	}
+
+	char name[0x28];                     // 0x00
+	unsigned long id;                    // 0x28
+	int m_maxUsers;                      // 0x2C
+	int m_curUsers;                      // 0x30
+	char m_address[0x12];                // 0x34
+	unsigned long m_port;                // 0x46
+	unsigned long flags;                 // 0x4A
+	int m_badgeCount;                    // 0x4E (ServerDlg draws it as a number when > 0)
+	unsigned long m_flags2;              // 0x52 (ServerListCompare tests bit 0x40 of its low byte)
+	UNKNOWN(0x56, 0x5A);
+	unsigned short m_iconKey;            // 0x5A (key of FrServerDlg::m_textMap: the name of the server's icon)
+};
+#pragma pack(pop)
+CHECK_SIZE(sGameServerInfo, 0x5C);
+CHECK_FIELD(sGameServerInfo, name, 0x00);
+CHECK_FIELD(sGameServerInfo, id, 0x28);
+CHECK_FIELD(sGameServerInfo, flags, 0x4A);
+CHECK_FIELD(sGameServerInfo, m_maxUsers, 0x2C);
+CHECK_FIELD(sGameServerInfo, m_curUsers, 0x30);
+CHECK_FIELD(sGameServerInfo, m_address, 0x34);
+CHECK_FIELD(sGameServerInfo, m_port, 0x46);
+CHECK_FIELD(sGameServerInfo, m_badgeCount, 0x4E);
+CHECK_FIELD(sGameServerInfo, m_flags2, 0x52);
+CHECK_FIELD(sGameServerInfo, m_iconKey, 0x5A);
 
 // An item of the player's inventory (0xA8 bytes; constructor
 // globalgamedefine.h:1950). Only the members the transcribed functions read
@@ -210,6 +249,35 @@ CHECK_FIELD(sCaddieInfo, days, 0x12);
 CHECK_FIELD(sCaddieInfo, contract, 0x17);
 CHECK_FIELD(sCaddieInfo, checkEquip, 0x18);
 
+// One entry of the guild history (0x34 bytes from the list node allocation,
+// packed; packet 0x1BC sends 0x31 bytes each). CGuildMainForm::
+// RefreshMyGuildHistory prints the year, month and day of the date and the
+// message of the state.
+#pragma pack(push, 1)
+struct GUILD_HISTORY {
+	// globalgamedefine.h:111
+	GUILD_HISTORY(void) : data0(-1), data4(0), state(0) {
+		memset(data8, 0, sizeof(data8));
+	}
+
+	int data0;                  // 0x0: -1 by default (meaning not yet known)
+	int data4;                  // 0x4
+	char data8[0x15];           // 0x8: a name-sized string, zeroed by the constructor
+	int state;                  // 0x1D: a GUILD_STATE_IDX (guildformcontroller.h)
+	_SYSTEMTIME date;           // 0x21: wYear 0x21, wMonth 0x23, wDay 0x27 read; not initialised
+	UNKNOWN(0x31, 0x34);
+};
+#pragma pack(pop)
+
+CHECK_SIZE(GUILD_HISTORY, 0x34);
+BEGIN_LAYOUT_CHECK(GUILD_HISTORY)
+	CHECK_FIELD(GUILD_HISTORY, data0, 0x0);
+	CHECK_FIELD(GUILD_HISTORY, data4, 0x4);
+	CHECK_FIELD(GUILD_HISTORY, data8, 0x8);
+	CHECK_FIELD(GUILD_HISTORY, state, 0x1D);
+	CHECK_FIELD(GUILD_HISTORY, date, 0x21);
+END_LAYOUT_CHECK
+
 #pragma pack(push, 1)
 // A guild member's view of his guild (0x119 bytes, packed: the copy in
 // CGuildInfo::SetMyGuildUserInfo moves 0x46 dwords + 1 byte).
@@ -265,6 +333,44 @@ BEGIN_LAYOUT_CHECK(GUILD_USER_INFO)
 END_LAYOUT_CHECK
 CHECK_SIZE(GUILD_INFO, 0x129);
 CHECK_FIELD(GUILD_INFO, data119, 0x119);
+
+// The rank of a player in his guild (only 1-3 are members; names
+// invented).
+enum GUILD_CLASS_IDX {
+	GUILD_CLASS_NONE = 0,
+	GUILD_CLASS_MASTER = 1      // the rank handed over by the master delegation
+};
+
+// One member of a guild member page (0x54 bytes from the list node
+// allocation; packet 0x1C4 sends 0x51 bytes each).
+struct GUILD_USER_LIST {
+	// globalgamedefine.h:207
+	GUILD_USER_LIST(void) : data0(0), uid(-1), m_classIdx(GUILD_CLASS_NONE), online(0) {
+		memset(nickname, 0, sizeof(nickname));
+		memset(data25, 0, sizeof(data25));
+		memset(text, 0, sizeof(text));
+	}
+
+	int data0;                  // 0x0 (meaning not yet known)
+	unsigned long uid;          // 0x4: the member's user id
+	GUILD_CLASS_IDX m_classIdx; // 0x8: the member's rank
+	char text[0x19];            // 0xC: the guild talk, passed through ExchangeQuotation
+	char data25[0x15];          // 0x25: a name-sized string, zeroed by the constructor
+	char nickname[0x16];        // 0x3A: shown by the user info window
+	unsigned char online;       // 0x50: 1 online, 0 offline (the member row's state icon)
+	UNKNOWN(0x51, 0x54);
+};
+
+CHECK_SIZE(GUILD_USER_LIST, 0x54);
+BEGIN_LAYOUT_CHECK(GUILD_USER_LIST)
+	CHECK_FIELD(GUILD_USER_LIST, data0, 0x0);
+	CHECK_FIELD(GUILD_USER_LIST, uid, 0x4);
+	CHECK_FIELD(GUILD_USER_LIST, m_classIdx, 0x8);
+	CHECK_FIELD(GUILD_USER_LIST, text, 0xC);
+	CHECK_FIELD(GUILD_USER_LIST, data25, 0x25);
+	CHECK_FIELD(GUILD_USER_LIST, nickname, 0x3A);
+	CHECK_FIELD(GUILD_USER_LIST, online, 0x50);
+END_LAYOUT_CHECK
 
 // A guild member as the messenger server lists him (0x37 bytes, packed: CTask
 // decodes 0x37 bytes per member in packets 0x38 and 0x39 and copies it into an
@@ -513,11 +619,12 @@ CHECK_FIELD(sPangYaUserStatistics, recordCount, 0xDB);
 // copies three dwords). FrUserInfoForm::OnListBoxOwnerDraw_TRI_SPECIALBOX
 // draws the trophy's icon and count.
 struct sSpecialTrophy {
-	UNKNOWN(0x0, 0x4);
+	unsigned long m_id;             // 0x0, decoded from the packet, not read by the client
 	unsigned long m_typeId;         // 0x4, the trophy item's type id
 	unsigned long m_count;          // 0x8
 };
 CHECK_SIZE(sSpecialTrophy, 0xC);
+CHECK_FIELD(sSpecialTrophy, m_id, 0x0);
 CHECK_FIELD(sSpecialTrophy, m_typeId, 0x4);
 CHECK_FIELD(sSpecialTrophy, m_count, 0x8);
 
@@ -581,6 +688,145 @@ CHECK_FIELD(sBriefUserInfo, titleTypeId, 0x25);
 CHECK_FIELD(sBriefUserInfo, lobbyFlags, 0x3F);
 CHECK_FIELD(sBriefUserInfo, nickColorType, 0x40);
 
+// The game style of a room; its enumerators are not transcribed yet.
+enum eGameStyle;
+
+// A room's game class: its style and a byte value (8 bytes; the constructor
+// stores a dword at 0x0 and a byte at 0x4). Its out-of-line constructor is
+// the stdafx unit's.
+struct stGameClass {
+	// globalgamedefine.h:663
+	stGameClass(eGameStyle style, unsigned char value) {
+		m_style = style; m_value = value;
+	}
+
+	eGameStyle m_style;     // 0x0
+	unsigned char m_value;  // 0x4, name provisional
+};
+CHECK_SIZE(stGameClass, 0x8);
+CHECK_FIELD(stGameClass, m_style, 0x0);
+CHECK_FIELD(stGameClass, m_value, 0x4);
+
+// The two guilds of a guild-match room (0x4A bytes, byte-packed).
+#pragma pack(push, 1)
+struct sGuildRoomInfo {
+	// globalgamedefine.h:3058 (the out-of-line copy is SharedDoc's)
+	void Reset(void) {
+		memset(m_guildUID, 0, sizeof(m_guildUID));
+		memset(m_guildName, 0, sizeof(m_guildName));
+		memset(m_guildMark, 0, sizeof(m_guildMark));
+	}
+
+	// globalgamedefine.h:3072 (the out-of-line copy is LobbyMain's)
+	void Reset(int team) {
+		if (team < 2) {
+			m_guildUID[team] = 0; m_guildName[team][0] = 0;
+			m_guildMark[team][0] = 0;
+		}
+	}
+
+	unsigned long m_guildUID[2];  // 0x00
+	char m_guildName[2][0x15];    // 0x08
+	char m_guildMark[2][0xC];     // 0x32
+};
+#pragma pack(pop)
+CHECK_SIZE(sGuildRoomInfo, 0x4A);
+CHECK_FIELD(sGuildRoomInfo, m_guildUID, 0x00);
+CHECK_FIELD(sGuildRoomInfo, m_guildName, 0x08);
+CHECK_FIELD(sGuildRoomInfo, m_guildMark, 0x32);
+
+struct EncryptKey {
+public:
+	// globalgamedefine.h:1116
+	EncryptKey(void) {
+		memset(m_key, 0, sizeof(m_key));
+		for (int i = 0; i < 16; i++)
+			m_key[i] = (unsigned char)(rand() % 255);
+	}
+	~EncryptKey(void) {}               // globalgamedefine.h:1122
+
+	unsigned char GetKey(int index);   // globalgamedefine.h:1132
+
+private:
+	unsigned char m_key[16]; // 0x0
+};
+
+CHECK_SIZE(EncryptKey, 0x10);
+
+// Packed: m_roomNumber sits at the odd offset 0x49. 0xB2 bytes
+// (FrDtRoomDlg::SetRoomInfo copies 0x2C dwords + 1 word). The destructor is
+// implicit: the original's 1-byte ??1sRoomInfo has no line info.
+#pragma pack(push, 1)
+struct sRoomInfo {
+	// globalgamedefine.h:3163
+	sRoomInfo(void) {
+		m_title[0] = 0;
+		m_password[0] = 0;
+		m_intrusionAccess = 0;
+		m_trophy = 0;
+		m_option[0] = 0;
+		m_option[1] = 0;
+		m_roomMode = 0;
+		m_roomNumber = 0xFFFF;
+		m_isPublic = 1;
+		m_guild.Reset();
+	}
+
+	// globalgamedefine.h:3186 (std::find on the room list by room number)
+	bool operator==(const unsigned long &roomNumber) const {
+		return m_roomNumber == roomNumber;
+	}
+
+	char m_title[0x20];              // 0x00 (FrChangeRoomInfoDlg::OnTitleInit shows it)
+	char m_password[0x10];           // 0x20 (FrChangeRoomInfoDlg::OnPasswordInit shows it)
+	unsigned char m_isPublic;        // 0x30 (0: FrDtRoomDlg::OnJoinBtnUp asks for the password)
+	unsigned char m_intrusionAccess; // 0x31 (set once CIntrusion::OnAccessRoom lets a player join the game in progress)
+	bool m_state;                    // 0x32 (true = game in progress, returned by CIntrusion::IsIntrusionGame)
+	unsigned char m_userLimit;       // 0x33 (100 for a lounge-sized room: the lobby's room list sorts those first)
+	unsigned char m_userCount;       // 0x34 (second key of RoomUserCompare)
+	EncryptKey m_key;                // 0x35
+	unsigned char m_galleryCount;    // 0x45 (spectators in the room; FrDtRoomDlg::OnGalleryBtnUp refuses a join when it reaches m_galleryLimit)
+	unsigned char m_galleryLimit;    // 0x46 (CLobbyTask::OnPacket 0x48 updates it; the spectator capacity, FrDtRoomDlg::OnGalleryBtnUp)
+	unsigned char m_holeCount;       // 0x47 (RoomHoleCompare)
+	unsigned char m_gameType;        // 0x48 (RoomGameTypeCompare)
+	unsigned short m_roomNumber;     // 0x49 (matched by CIntrusion::IsIntrusionGame)
+	unsigned char m_value4B;         // 0x4B (CLobbyTask::OnPacket 0x48 updates it and sends it to the lobby with message 0x12)
+	unsigned char m_course;          // 0x4C (RoomCourseCompare)
+	unsigned long m_value4D;         // 0x4D (CLobbyTask::OnPacket 0x48; one of the two time limits of the packet layout)
+	unsigned long m_value51;         // 0x51 (likewise, the other time limit)
+	unsigned long m_trophy;          // 0x55 (cleared by the constructor; name from the packet layout: mode, course, two time limits, trophy)
+	unsigned char m_option[2];       // 0x59 (two bytes the constructor clears; meaning not yet known)
+	sGuildRoomInfo m_guild;          // 0x5B (the two guilds of a guild match; FrDtRoomDlg::OnJoinBtnUp checks the player's guild against them)
+	PADDING(0xA5, 0xAD);            // untranscribed room fields
+	unsigned long m_masterUID;       // 0xAD (compared with CSharedDoc::m_myUID by CLobbyTask::OnPacket 0x47: the local player owns the room)
+	unsigned char m_roomMode;        // 0xB1 (the constructor clears it; 14 shows the blank score panels)
+};
+#pragma pack(pop)
+
+CHECK_SIZE(sRoomInfo, 0xB2);
+CHECK_FIELD(sRoomInfo, m_title, 0x00);
+CHECK_FIELD(sRoomInfo, m_password, 0x20);
+CHECK_FIELD(sRoomInfo, m_isPublic, 0x30);
+CHECK_FIELD(sRoomInfo, m_intrusionAccess, 0x31);
+CHECK_FIELD(sRoomInfo, m_state, 0x32);
+CHECK_FIELD(sRoomInfo, m_userLimit, 0x33);
+CHECK_FIELD(sRoomInfo, m_userCount, 0x34);
+CHECK_FIELD(sRoomInfo, m_key, 0x35);
+CHECK_FIELD(sRoomInfo, m_holeCount, 0x47);
+CHECK_FIELD(sRoomInfo, m_gameType, 0x48);
+CHECK_FIELD(sRoomInfo, m_roomNumber, 0x49);
+CHECK_FIELD(sRoomInfo, m_course, 0x4C);
+CHECK_FIELD(sRoomInfo, m_trophy, 0x55);
+CHECK_FIELD(sRoomInfo, m_option, 0x59);
+CHECK_FIELD(sRoomInfo, m_guild, 0x5B);
+CHECK_FIELD(sRoomInfo, m_masterUID, 0xAD);
+CHECK_FIELD(sRoomInfo, m_galleryCount, 0x45);
+CHECK_FIELD(sRoomInfo, m_galleryLimit, 0x46);
+CHECK_FIELD(sRoomInfo, m_value4B, 0x4B);
+CHECK_FIELD(sRoomInfo, m_value4D, 0x4D);
+CHECK_FIELD(sRoomInfo, m_value51, 0x51);
+CHECK_FIELD(sRoomInfo, m_roomMode, 0xB1);
+
 // An item attached to a mail (0x35 bytes, byte-packed: the list node's
 // copy moves 0xD dwords + 1 byte; constructor globalgamedefine.h:4416).
 // Filled from a sTradeItem by CPost_SendDlg::GetSendList.
@@ -590,7 +836,6 @@ struct sMailIncludeItem {
 	sMailIncludeItem(void) {
 		guid = (unsigned long)-1;
 		typeId = (unsigned long)-1;
-		extraId = (unsigned long)-1;
 		count = 0;
 		flag = 0;
 		stats[4] = 0;
@@ -600,6 +845,7 @@ struct sMailIncludeItem {
 		stats[0] = 0;
 		charCardSlots = 0;
 		caddieCardSlots = 0;
+		extraId = (unsigned long)-1; // stored with guid/typeId: the -1 register stays live past the zeros
 		extraValue = 0;
 		memset(uccKey, 0, sizeof(uccKey));
 		uccValue = 0;

@@ -228,9 +228,9 @@ void CFamilyMain::cFamily::Render(void) {
 			pos.x += (m_rect.w - charFrame->Width()) * 0.5f;
 			pGDI->DrawTexture(charFrame, WRect(pos.x, pos.y, (float)charFrame->Width(), (float)charFrame->Height()), 0xFFFFFFFF, 0);
 
-			float y = (charFrame->Height() - text->Height()) * 0.5f + pos.y;
-			float x = (charFrame->Width() - text->Width()) * 0.5f + pos.x;
-			pGDI->DrawTexture(text, WRect(x, y, (float)text->Width(), (float)text->Height()), 0xFFFFFFFF, 0);
+			pos.y += (charFrame->Height() - text->Height()) * 0.5f;
+			pos.x += (charFrame->Width() - text->Width()) * 0.5f;
+			pGDI->DrawTexture(text, WRect(pos.x, pos.y, (float)text->Width(), (float)text->Height()), 0xFFFFFFFF, 0);
 		}
 	}
 
@@ -852,7 +852,14 @@ void CFamilyMain::TurnOffControls(void) {
 	m_barButton[14]->Enable(false);
 	m_barButton[2]->Enable(false);
 	m_barButton[3]->Enable(false);
+#ifdef JP_PAKS
+	// No "itemstorage" button in the JP under bar (CTaskMain::EnableUnderBar).
+	if (m_barButton[4]) {
+		m_barButton[4]->Enable(false);
+	}
+#else
 	m_barButton[4]->Enable(false);
+#endif
 	m_barButton[6]->Enable(false);
 	m_barButton[8]->Enable(false);
 	m_barButton[16]->Enable(false);
@@ -1339,13 +1346,12 @@ bool CFamilyMain::OnResultSubEquipBar(int result, FrForm* pForm) {
 		IFF_ITEM_COMMON* item = m_subEquipBar->GetResult();
 		if (item) {
 			int group = item->m_typeId >> 26;
-			if (group == 5) {
+			if (group == 5)
 				family->SetUserEquip(group, item->m_typeId);
-				m_selectedItem->pData = item;
-			} else {
+			else
 				family->SetUserEquip(group, m_subEquipBar->GetLastSelectedGuid());
-				m_selectedItem->pData = item;
-			}
+
+			m_selectedItem->pData = item;
 		} else {
 			switch (m_subEquipBar->GetCategory()) {
 			case 0x10:

@@ -56,10 +56,6 @@
 #include "frgraphicinterface.h"
 #include "client/Wangreal/include/wutil.h"
 
-// wmath.h:86 (out-of-line copy in ClientSetting); TODO: belongs in wmath.h as a
-// CLIENTSETTING_WMATH_INLINE body next to WisEqual, not owned by this unit.
-int WisZero(const float &value, float eps);
-
 // The original's max compiles as `a < b ? b : a` (wutil Max uses >=); its
 // header is unknown, as for river.cpp's MaxOf.
 template <class T> T MaxOf(T a, T b) { return a < b ? b : a; }

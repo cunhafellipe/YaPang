@@ -454,7 +454,6 @@ END_LAYOUT_CHECK
 class FrTradeBuyDlg : public FrForm {
 	LAYOUT_CHECK_FRIEND;
 	friend class FrTradeDlg;   // OnPackagePurchaseLButtonUp
-	friend class CTask;   // OnPacketCommon case 0xeb reads m_pBuyItem
 public:
 	static const WRTTI m_RTTI;
 	virtual const WRTTI* GetRTTI(void) const { return &m_RTTI; }   // tradedlg.h:154
@@ -472,6 +471,7 @@ public:
 
 	bool IsClosing(void) { return m_bClosing; }   // tradedlg.h:220
 	void SetClosing(bool bClosing);          // tradedlg.h:222
+	sTradeItem* GetBuyItem(void) { return m_pBuyItem; }   // tradedlg.h:227
 	void SetPackageSale(void);               // tradedlg.h:233
 	eTypeSalesTrade GetPackageSale(void);    // tradedlg.h:234
 	void ClearTradeList(void) { m_pPurchaseList->ClearItem(); }   // tradedlg.h:236

@@ -207,4 +207,9 @@ BEGIN_LAYOUT_CHECK(NetResourceManager)
 	CHECK_FIELD(NetResourceManager, m_postArguments, 0x4afc);
 END_LAYOUT_CHECK
 
+// netresourcemanager.h:205
+inline NetResourceManager* NetResManager(void) {
+	return NetResourceManager::Instance();
+}
+
 #endif // PG_CLIENT_PROJECTG_NETRESOURCEMANAGER_H

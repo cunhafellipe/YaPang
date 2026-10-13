@@ -175,12 +175,14 @@ bool ts_Parser::PTS_OpenFile(const char *fileName, eFileType type) {
 
 			if (m_file != NULL) {
 				m_opened = true;
-				return true;
+				result = true;
+			} else {
+				result = false;
 			}
 		}
 	}
 
-	return false;
+	return result;
 }
 
 // ts_parser.cpp:243
@@ -404,15 +406,17 @@ const char *ts_Parser::GetToken(void) {
 
 // ts_parser.cpp:593
 const char *ts_Parser::GetLine(void) {
-	if (!IsOpenedFile() ||
-		feof(m_file)) return NULL;
+	if (!IsOpenedFile()) return NULL;
+	if (feof(m_file)) return NULL;
 
 	fpos_t pos;
 	if (fgetpos(m_file, &pos) != 0) return NULL;
 
 	fgets(m_line, sizeof(m_line), m_file);
 
-	return fsetpos(m_file, &pos) == 0 ? m_line : NULL;
+	if (fsetpos(m_file, &pos) != 0) return NULL;
+
+	return m_line;
 }
 
 // ts_parser.cpp:611

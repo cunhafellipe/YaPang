@@ -27,35 +27,37 @@ CHECK_FIELD(sTradeBuyBase, countType, 0x152);
 
 #pragma pack(pop)
 
-// m_param2 of the "trade buy item" message (names invented).
-struct sTradeBuyResult {
+// m_param2 of the "trade buy item" message, filled from packet 0x1D6.
+struct sTradeBuyParam {
 	std::vector<sTradeBuyBase> itemList; // 0x00
 	int result;                          // 0x10, passed to SetTradeResult
 	PADDING(0x14, 0x18);
 	__int64 pang;                        // 0x18, the local player's new pang
 };
-CHECK_FIELD(sTradeBuyResult, result, 0x10);
-CHECK_FIELD(sTradeBuyResult, pang, 0x18);
+CHECK_FIELD(sTradeBuyParam, result, 0x10);
+CHECK_FIELD(sTradeBuyParam, pang, 0x18);
 
-// m_param2 of the "trade sell item" message (names invented).
-struct sTradeSellResult {
+// m_param2 of the "trade sell item" message, filled from packet 0x1D7.
+struct sTradeSellParam {
 	std::vector<sTradeItem> itemList; // 0x00
-	PADDING(0x10, 0x18);
+	int result;                       // 0x10, 1 once the packet is read
+	PADDING(0x14, 0x18);
 	__int64 pang;                     // 0x18, the pang earned
 };
-CHECK_FIELD(sTradeSellResult, pang, 0x18);
+CHECK_FIELD(sTradeSellParam, result, 0x10);
+CHECK_FIELD(sTradeSellParam, pang, 0x18);
 
-// m_param2 of the "trade minus item" message: items taken off a shop's list
-// (names invented).
-struct sTradeMinusResult {
+// m_param2 of the "trade minus item" message, filled from packet 0x1D8:
+// items taken off a shop's list.
+struct sTradeMinusParam {
 	std::vector<sTradeItem> itemList; // 0x00, removed with CSharedDoc::MinusListTradeItem
 	std::string ownerName;            // 0x10, the shop owner's nickname
 	int shopState;                    // 0x2C, an eStateTrade; 3 is copied to CSharedDoc::SetStateTrade
 	unsigned long shopUID;            // 0x30, compared with CSharedDoc::GetTradeUID
 };
-CHECK_FIELD(sTradeMinusResult, ownerName, 0x10);
-CHECK_FIELD(sTradeMinusResult, shopState, 0x2C);
-CHECK_FIELD(sTradeMinusResult, shopUID, 0x30);
+CHECK_FIELD(sTradeMinusParam, ownerName, 0x10);
+CHECK_FIELD(sTradeMinusParam, shopState, 0x2C);
+CHECK_FIELD(sTradeMinusParam, shopUID, 0x30);
 
 // tradehandler.cpp:272
 struct sTransformHelper {

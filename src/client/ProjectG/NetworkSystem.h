@@ -51,7 +51,8 @@ public:
 		}
 	}
 
-	int GetConnectionType(void) const;  // networksystem.h:90, emitted by lobbymain.cpp
+	// networksystem.h:90
+	int GetConnectionType(void) const { return m_connectionType; }
 
 private:
 	unsigned long m_sendTime;           // 0x28, GetTickCount of the last send (SendTTL)
@@ -68,5 +69,10 @@ BEGIN_LAYOUT_CHECK(WNetworkSystem)
 	CHECK_FIELD(WNetworkSystem, m_units, 0x30);
 	CHECK_FIELD(WNetworkSystem, m_connectionType, 0x40);
 END_LAYOUT_CHECK
+
+// networksystem.h:113
+inline WNetworkSystem *NET(void) {
+	return WSingleton<WNetworkSystem>::Instance();
+}
 
 #endif // PG_CLIENT_PROJECTG_NETWORKSYSTEM_H

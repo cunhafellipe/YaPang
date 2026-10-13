@@ -100,7 +100,7 @@ void FrCardBoxDlg::Init(unsigned long typeId, unsigned long packId, int count) {
 	std::list<std::string> names;
 
 	for (int i = 0; i < 5; i++)
-		names.push_back(MakeStr("particle_shine_%d", i));
+		names.push_back(std::string(MakeStr("particle_shine_%d", i)));
 
 	m_pParticle = new CParticle2D;
 	m_pParticle->Initialize(names, m_rcBg, 20, CParticle2D::STYLE_NORMAL, 20.0f, 100.0f, WVector2D(0.0f, 1.0f), WVector2D(0.0f, 1.0f));
@@ -439,8 +439,8 @@ void FrCardBoxDlg::OnResultBtnUp(void) {
 	FrTotalItemDlg* pDlg = CreateForm<FrTotalItemDlg>(g_pFresh->GetManager(), this, "total_item", 0);
 	if (pDlg) {
 
-		for (std::map<unsigned long, unsigned int>::iterator it = m_map.begin(); it != m_map.end(); ++it) {
-
+		std::map<unsigned long, unsigned int>::iterator it = m_map.begin();
+		while (it != m_map.end()) {
 
 
 
@@ -450,6 +450,7 @@ void FrCardBoxDlg::OnResultBtnUp(void) {
 			ball.m_typeId = it->first;
 			ball.m_count = it->second;
 			resultList.push_back(ball);
+			++it;
 		}
 
 

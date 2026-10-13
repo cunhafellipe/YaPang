@@ -46,6 +46,7 @@ class CFxSequence {
 	friend class CGolfPlayer;
 	friend class CScreen;           // HandleMsg writes m_pos
 	friend class CRealMyRoomMain;   // OnLoad writes m_pos
+	friend class CGolfRule;         // DoDebugCamera writes m_matrix
 public:
 	// One script line: when it runs (a random time between m_minTime and
 	// m_maxTime, or -1/-2 for untimed lines) and its text.

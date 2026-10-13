@@ -530,8 +530,8 @@ void SetListParts(std::vector<sWarpItem*>& items) {
 
 // privatetradedlg.cpp:559
 void SetListAztec(std::vector<sWarpItem*>& items) {
-	std::list<sItemInfo>* pGearList = &WSingleton<CSharedDoc>::Instance()->m_myGearList;
 	unsigned long ballId = WSingleton<CSharedDoc>::Instance()->m_myBallId;
+	std::list<sItemInfo>* pGearList = &WSingleton<CSharedDoc>::Instance()->m_myGearList;
 
 	items.reserve(pGearList->size());
 
@@ -840,11 +840,7 @@ FrNumEdit::~FrNumEdit(void) {
 
 // privatetradedlg.cpp:916
 void FrNumEdit::SetValue(unsigned long value) {
-	if (m_value >= m_minValue && m_value <= m_maxValue) {
-		m_value = value;
-	} else {
-		m_value = m_minValue;
-	}
+	SAFE_RANGEVALUE(m_value, m_minValue, m_maxValue, value);
 
 	char buf[32] = { 0 };
 	m_pEdit->SetLine(1, _itoa(m_value, buf, 10), 0, false, 0);
@@ -867,15 +863,14 @@ void FrNumEdit::OnProc(const float dt) {
 		const char* text = m_pEdit->GetLine(1, false);
 		std::string digits;
 		for (unsigned int i = 0; i < strlen(text); i++) {
-			char c = text[i];
-			if (c & 0x80) {
+			if (text[i] & 0x80) {
 				continue;
 			}
 
 			const char* numbers = "0123456789";
 			for (unsigned int j = 0; j < strlen(numbers); j++) {
-				if (c == numbers[j]) {
-					digits += c;
+				if (text[i] == numbers[j]) {
+					digits += text[i];
 					break;
 				}
 			}
@@ -892,7 +887,7 @@ void FrNumEdit::OnProc(const float dt) {
 		}
 
 		char buf[32] = { 0 };
-		_itoa(value, buf, 10);
+		itoa(value, buf, 10);
 		m_pEdit->ForcedEdit(buf, 0);
 	}
 }
@@ -928,11 +923,7 @@ bool FrNumEdit::OnEditEnter(intptr_t param) {
 		value = atoi(text);
 	}
 
-	if (m_value >= m_minValue && m_value <= m_maxValue) {
-		m_value = value;
-	} else {
-		m_value = m_minValue;
-	}
+	SAFE_RANGEVALUE(m_value, m_minValue, m_maxValue, value);
 
 	return FrForm::Close(FrOK, true);
 }
@@ -990,16 +981,15 @@ void FrPangEdit::OnProc(const float dt) {
 		std::string digits;
 		bool bFiltered = false;
 		for (unsigned int i = 0; i < strlen(text); i++) {
-			char c = text[i];
-			if (c & 0x80) {
+			if (text[i] & 0x80) {
 				continue;
 			}
 
 			const char* numbers = "0123456789";
 			unsigned int j;
 			for (j = 0; j < strlen(numbers); j++) {
-				if (c == numbers[j]) {
-					digits += c;
+				if (text[i] == numbers[j]) {
+					digits += text[i];
 					break;
 				}
 			}
@@ -1018,10 +1008,9 @@ void FrPangEdit::OnProc(const float dt) {
 			if (value > 0) {
 				__int64 tex = m_texRate * value / 100;
 
-				CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
-				if (pDoc->m_myPang <= value + tex) {
+				if (WSingleton<CSharedDoc>::Instance()->m_myPang <= value + tex) {
 					// The most pang the player can put on with the tax.
-					value = pDoc->m_myPang * 100 / (m_texRate + 100);
+					value = WSingleton<CSharedDoc>::Instance()->m_myPang * 100 / (m_texRate + 100);
 
 					char buf[32] = { 0 };
 					_i64toa(value, buf, 10);
@@ -2148,7 +2137,9 @@ void FrPrivateTradeWnd::OpenNumEditWnd(int index) {
 		return;
 	}
 
-	WPoint pos(pButton->GetRect().x, pButton->GetRect().y);
+	WRect rect;
+	rect.x = pButton->GetRect().x;
+	rect.y = pButton->GetRect().y;
 	if (m_pNumEditWnd == 0) {
 		OnSendItemUpdate();
 
@@ -2159,7 +2150,7 @@ void FrPrivateTradeWnd::OpenNumEditWnd(int index) {
 		m_pNumEditWnd->SetValue(pItem->count);
 		m_pNumEditWnd->SetReturnParam(pListItem);
 		m_pNumEditWnd->SetEditRange(0, GetMyItemCount(pItem->itemId, pItem->typeId));
-		m_pNumEditWnd->Open((FRESH_RESULT_CALLBACK)&FrPrivateTradeWnd::OnResultEditNum, WPoint(pos.x + 10.0f, pos.y + 10.0f), 1);
+		m_pNumEditWnd->Open((FRESH_RESULT_CALLBACK)&FrPrivateTradeWnd::OnResultEditNum, WPoint(rect.x + 10.0f, rect.y + 10.0f), 1);
 	}
 }
 
@@ -2325,7 +2316,7 @@ void FrPrivateTradeWnd::OnListDraw(intptr_t param) {
 		pDevice->DrawTexture(pBg, src, rect, 0xa0ffffff, 0);
 		pDevice->LineBox(WRect(rect.x + 1.0f, rect.y + 1.0f, rect.w - 2.0f, rect.h - 2.0f), 0xff0000ff, 0, 0.0f);
 
-		if (pItem->idx >= 0 && pItem->idx <= 3) {
+		if (IS_INRANGE(pItem->idx, 0, 3)) {
 			m_buttons[pItem->idx]->SetVisible(false);
 		}
 		return;
@@ -2365,11 +2356,11 @@ void FrPrivateTradeWnd::OnListDraw(intptr_t param) {
 	unsigned long group = pSingle->typeId >> 26;
 	if (group == 6 || group == 0x1f) {
 		m_pFont->Print(g_view, rect.x + 10.0f, rect.y + rect.h - 25.0f, MakeStr("%d", (unsigned short)pSingle->count), 0, 0xffffffff, 0);
-		if (pItem->idx >= 0 && pItem->idx <= 3 && m_bActiveControl) {
+		if (IS_INRANGE(pItem->idx, 0, 3) && m_bActiveControl) {
 			m_buttons[pItem->idx]->SetVisible(true);
 		}
 	} else {
-		if (pItem->idx >= 0 && pItem->idx <= 3) {
+		if (IS_INRANGE(pItem->idx, 0, 3)) {
 			m_buttons[pItem->idx]->SetVisible(false);
 		}
 	}
@@ -2546,27 +2537,27 @@ void FrPrivateTrade::SetCompanion(const std::string &nickName, unsigned long gui
 bool FrPrivateTrade::OnInit(void) {
 	FrForm::OnInit();
 
-	FrPrivateTradeWnd* pCompanion = CreateForm<FrPrivateTradeWnd>(g_pFresh->GetManager(), 0, "FrPrivateTradeWnd", this);
-	if (pCompanion == 0) {
+	FrPrivateTradeWnd* pTradeWnd = CreateForm<FrPrivateTradeWnd>(g_pFresh->GetManager(), 0, "FrPrivateTradeWnd", this);
+	if (pTradeWnd == 0) {
 		return false;
 	}
-	pCompanion->SetFixed(true);
-	pCompanion->EnableDrag(false);
-
-	pCompanion->Open((FRESH_RESULT_CALLBACK)0, WPoint(m_rect.x + 16.0f, m_rect.y + 16.0f), 12);
-	m_pCompanionTradeWnd = pCompanion;
-	pCompanion->EnableActiveControl(false);
+	pTradeWnd->SetFixed(true);
+	pTradeWnd->EnableDrag(false);
+	const WRect& companionRect = pTradeWnd->GetRect();
+	pTradeWnd->Open((FRESH_RESULT_CALLBACK)0, WPoint(m_rect.x + 16.0f, m_rect.y + 16.0f), 12);
+	m_pCompanionTradeWnd = pTradeWnd;
+	pTradeWnd->EnableActiveControl(false);
 	m_pCompanionTradeWnd->SetNick(m_companionNick);
 	m_pCompanionTradeWnd->SetAvatarIndex(m_companionTypeId & 0x3ffffff);
 
-	FrPrivateTradeWnd* pMine = CreateForm<FrPrivateTradeWnd>(g_pFresh->GetManager(), 0, "FrPrivateTradeWnd", this);
-	if (pMine == 0) {
+	pTradeWnd = CreateForm<FrPrivateTradeWnd>(g_pFresh->GetManager(), 0, "FrPrivateTradeWnd", this);
+	if (pTradeWnd == 0) {
 		return false;
 	}
-	pMine->SetFixed(true);
-	pMine->EnableDrag(false);
-	pMine->Open((FRESH_RESULT_CALLBACK)0, WPoint(m_rect.x + 16.0f, pCompanion->GetRect().y + pCompanion->GetRect().h + 16.0f), 12);
-	m_pMyTradeWnd = pMine;
+	pTradeWnd->SetFixed(true);
+	pTradeWnd->EnableDrag(false);
+	pTradeWnd->Open((FRESH_RESULT_CALLBACK)0, WPoint(m_rect.x + 16.0f, companionRect.y + companionRect.h + 16.0f), 12);
+	m_pMyTradeWnd = pTradeWnd;
 	m_pMyTradeWnd->SetNick(std::string(WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname));
 	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
 	std::map<unsigned int, sCharacterInfo>::iterator it = pDoc->m_characterMap.find(pDoc->m_myCharacterId);
@@ -2575,8 +2566,9 @@ bool FrPrivateTrade::OnInit(void) {
 	}
 	m_pMyTradeWnd->AddPangBarStyle(EncapsulatedPang::STYLE_EDITABLE);
 
-	WRect myRect = pMine->GetRect();
-	EncapsulatedPang::SetRect(WRect(myRect.w + myRect.x - 150.0f, myRect.Bottom() + 5.0f, 150.0f, 20.0f));
+	WRect myRect = pTradeWnd->GetRect();
+	float right = myRect.w + myRect.x;
+	EncapsulatedPang::SetRect(WRect(right - 150.0f, myRect.h + myRect.y + 5.0f, 150.0f, 20.0f));
 
 	FrMyWareHouse* pWareHouse = CreateForm<FrMyWareHouse>(g_pFresh->GetManager(), 0, "FrMyWareHouse", this);
 	if (pWareHouse == 0) {

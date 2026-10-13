@@ -14,9 +14,6 @@
 #include "client/Wangreal/include/wview.h"
 #include "client/ProjectG/SoundManager.h"
 
-// Wangreal float helper (out of line in ClientSetting); its header is not
-// transcribed yet.
-int WisZero(const float& f, float eps);
 
 // frwnd.cpp:18 (run-time type and factory registration of FrWnd)
 const WRTTI FrWnd::m_RTTI("FrWnd", &IObject::m_RTTI);
@@ -275,7 +272,7 @@ FrWnd* FrWnd::FindChildByStyle(unsigned long style) {
 // frwnd.cpp:294
 FrWnd* FrWnd::FindChildForm(const char* name) {
 	for (std::list<FrWnd*>::iterator it = m_childList.begin(); it != m_childList.end(); ++it) {
-		if ((__rtti_obj = *it) != 0 && ((IObject*)*it)->IsKindOf(&FrForm::m_RTTI) && (*it)->m_wndName == name) {
+		if (((__rtti_obj = *it) != 0 ? ((IObject*)*it)->IsKindOf(&FrForm::m_RTTI) : false) && (*it)->m_wndName == name) {
 			return *it;
 		}
 	}
@@ -339,7 +336,7 @@ void FrWnd::CloseChildForm(bool bDestroy, bool bAll) {
 			|| (*it)->m_nFlags.GetFlag(0x20)) {
 			continue;
 		}
-		if ((__rtti_obj = *it) != 0 && ((IObject*)*it)->IsKindOf(&FrForm::m_RTTI)) {
+		if ((__rtti_obj = *it) != 0 ? ((IObject*)*it)->IsKindOf(&FrForm::m_RTTI) : false) {
 			(*it)->Close(bDestroy);
 		}
 	}
@@ -696,7 +693,7 @@ void FrWnd::OnProcess(const float deltaTime, FrInputState& istate, bool checkTop
 				}
 			}
 		} else if (IsVisible()) {
-			if ((__rtti_obj = this) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI)) {
+			if ((__rtti_obj = this) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI) : false) {
 				if (m_rect.IsInRect(istate.mousePos)) {
 					m_pWndManager->SetWheelFocus(m_pWndManager->GetDesktop()->GetScrollBar());
 				}
@@ -864,7 +861,7 @@ void FrWnd::SetViewFocus(bool bReset) {
 	}
 
 	for (FrWnd* pWnd = this; pWnd; pWnd = pWnd->m_pParentWnd) {
-		if (!pWnd->m_pParentWnd || ((__rtti_obj = pWnd) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI))) {
+		if (!pWnd->m_pParentWnd || (((__rtti_obj = pWnd) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI) : false))) {
 			pWnd->m_nFlags.Enable(0x8);
 			return;
 		}
@@ -908,7 +905,7 @@ bool FrWnd::IsViewFocused(void) const {
 		if (pWnd->m_nFlags.GetFlag(0x8) || pWnd->m_dwStyle.GetFlag(0x100)) {
 			return true;
 		}
-		if ((__rtti_obj = (void*)pWnd) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI)) {
+		if ((__rtti_obj = (void*)pWnd) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI) : false) {
 			break;
 		}
 		pWnd = pWnd->m_pParentWnd;
@@ -941,7 +938,7 @@ void FrWnd::MoveWindow(const WPoint& pt) {
 	m_rect.y = pt.y;
 
 	for (std::list<FrWnd*>::iterator it = m_childList.begin(); it != m_childList.end(); ++it) {
-		if ((__rtti_obj = *it) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI)) {
+		if ((__rtti_obj = *it) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrForm::m_RTTI) : false) {
 			continue;
 		}
 		WPoint childPt = (*it)->m_rect.TopLeft();

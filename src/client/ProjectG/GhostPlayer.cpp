@@ -659,10 +659,10 @@ void CGhostPlayer::cMovieStyleDisplay::Process(float fDelta) {
 void CGhostPlayer::cMovieStyleDisplay::Render(void) {
 	float maxHeight = g_view->GetHeight() * (1.0f / 7.0f);
 
-	unsigned long color = ((unsigned char)(m_height / maxHeight * 255.0f) << 24) | 0xFFFFFF;
-	m_pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(0.0f, 0.0f, g_view->GetWidth(), m_height), 0, color, 0.0f, 0);
+	float alpha = 255.0f * (m_height / maxHeight);
+	m_pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(0.0f, 0.0f, g_view->GetWidth(), m_height), 0, ((unsigned char)alpha << 24) | 0xFFFFFF, 0.0f, 0);
 
-	m_pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(0.0f, g_view->GetHeight() - m_height, g_view->GetWidth(), m_height), 0, color, 0.0f, 0);
+	m_pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(0.0f, g_view->GetHeight() - m_height, g_view->GetWidth(), m_height), 0, ((unsigned char)alpha << 24) | 0xFFFFFF, 0.0f, 0);
 }
 
 // ghostplayer.cpp:702

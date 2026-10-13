@@ -41,26 +41,6 @@
 const char *GetStrConst(const char *pSrc, char *pDest);
 const char *GetCharsTillSpace(const char *pSrc, char *pDest);
 
-// shareddoc.inl:503, inline in the original; GolfRule.cpp holds the
-// out-of-line copy.
-inline unsigned char MyIndex(void) {
-	CSharedDoc *doc = WSingleton<CSharedDoc>::Instance();
-	if (doc->m_userInfo.IsIdentity(2)) {
-		switch (doc->m_roomType) {
-		case 4:
-		case 5:
-		case 6:
-		case 9:
-		case 10:
-			return doc->GetIndex(doc->m_userInfo.galleryGuid);
-		default:
-			return doc->m_pGolfDoc->m_myPlayerIndex;
-		}
-	}
-
-	return doc->GetIndex(doc->m_userInfo.guid);
-}
-
 // ?g_lightset@@3ULightSet@@A; its header (wscene.h) does not declare it yet.
 extern LightSet g_lightset;
 // The axis swap between the puppet's and the scene's frames, and its inverse
@@ -208,10 +188,9 @@ void CGolfPlayer::RegisterClub(int index) {
 			WPuppet *pPuppet = *it;
 
 			for (int type = 0; type < 4; type++) {
-				sClub &club = m_clubs[player][type];
 
-				club.m_ballPos.Reset();
-				club.m_gripPos = 0;
+				m_clubs[player][type].m_ballPos.Reset();
+				m_clubs[player][type].m_gripPos = 0;
 				w_motion_data *pMotion = pPuppet->FindMotionData(motionNames[type]);
 				if (pMotion == NULL) {
 					continue;
@@ -227,10 +206,10 @@ void CGolfPlayer::RegisterClub(int index) {
 
 				char *frameData = pPuppet->GetFrameData(frameIndex);
 				WSliceStr slice(frameData);
-				slice.Get("*ball_dist", "%f", &club.m_ballPos.x);
-				slice.Get("*grip_pos", "%f", &club.m_gripPos);
-				club.m_ballPos.y = 0;
-				club.m_ballPos.z = 0.4f;
+				slice.Get("*ball_dist", "%f", &m_clubs[player][type].m_ballPos.x);
+				slice.Get("*grip_pos", "%f", &m_clubs[player][type].m_gripPos);
+				m_clubs[player][type].m_ballPos.y = 0;
+				m_clubs[player][type].m_ballPos.z = 0.4f;
 				if (pClubSet && pChar) {
 					w_bound_box *pBall = pClubSet->m_puppet[0][type]->m_bbList.Find("Ball");
 					w_bound_box *pTarget = pClubSet->m_puppet[0][type]->m_bbList.Find("Ball_Target");
@@ -241,8 +220,8 @@ void CGolfPlayer::RegisterClub(int index) {
 						WVector diff;
 						diff = (pBall->info->spherePivot * pBall->bone->GetMatrix() - pTarget->info->spherePivot * pTarget->bone->GetMatrix()) * pChar->m_cameraScale;
 
-						club.m_ballPos.x += diff.x;
-						club.m_ballPos.z += diff.z;
+						m_clubs[player][type].m_ballPos.x += diff.x;
+						m_clubs[player][type].m_ballPos.z += diff.z;
 					}
 				}
 			}
@@ -2671,7 +2650,7 @@ void CGolfPlayer::SearchGround(void) {
 	do {
 		ground = GetPVS().GetGroundPoint(m_position + dir * t, true, NULL, false);
 		next = t + 0.1f;
-		nextGround = GetPVS().GetGroundPoint(m_position + dir * next, true, NULL, false);
+		nextGround = GetPVS().GetGroundPoint(m_position + dir * (t + 0.1f), true, NULL, false);
 
 		if ((WVectorLen(ground - m_position) - m_ballDist) * (WVectorLen(nextGround - m_position) - m_ballDist) <= 0.0f) {
 			break;
@@ -2682,10 +2661,10 @@ void CGolfPlayer::SearchGround(void) {
 
 	float end = t + 0.1f;
 
-	for (; t < end; t = next) {
-		ground = GetPVS().GetGroundPoint(m_position + dir * t, true, NULL, false);
-		next = t + 0.01f;
-		nextGround = GetPVS().GetGroundPoint(m_position + dir * next, true, NULL, false);
+	for (float s = t; s < end; s = t) {
+		ground = GetPVS().GetGroundPoint(m_position + dir * s, true, NULL, false);
+		t = s + 0.01f;
+		nextGround = GetPVS().GetGroundPoint(m_position + dir * (s + 0.01f), true, NULL, false);
 
 		if ((WVectorLen(ground - m_position) - m_ballDist) * (WVectorLen(nextGround - m_position) - m_ballDist) <= 0.0f) {
 			m_displayMatrix.xa = nextGround - m_position;
@@ -2968,7 +2947,7 @@ void CGolfPlayer::PowerShotInput(void) {
 	if (IsMyTurn(false) && !WSingleton<CQuitWindow>::Instance()->IsActive() && CItemWindow::IsClosed()) {
 		if (m_powerShotKeyState == 0) {
 			if (g_input->GetUp("LALT") || g_input->GetUp("RALT")) {
-				if (m_powerShotOn) {
+				if (m_powerShotOn == true) {
 					Cancel_PowerShot();
 					m_powerShotOn = false;
 				} else if (IsLocalContent((localContentType_t)0x31) && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000027) {
@@ -2983,7 +2962,7 @@ void CGolfPlayer::PowerShotInput(void) {
 			if (g_input->GetDown("LALT", true) || g_input->GetDown("RALT", true)) {
 				if (timeGetTime() < m_powerShotKeyTime + 500) {
 					m_powerShotKeyState = 2;
-				} else if (m_powerShotOn) {
+				} else if (m_powerShotOn == true) {
 					Cancel_PowerShot();
 					m_powerShotOn = false;
 					m_powerShotKeyState = 0;

@@ -2,8 +2,13 @@
 #include "../include/wboneset.h"
 #include "../include/wmath.h"
 
+#ifdef JP_PAKS
+WBoneKey WBoneSet::m_preAlloc[PG_JP_BONESET_KEYS];
+unsigned int WBoneSet::m_curAlloc = 0;
+#else
 WBoneKey WBoneSet::m_preAlloc[256];
 unsigned char WBoneSet::m_curAlloc = 0;
+#endif
 
 
 // wboneset.cpp:21
@@ -16,10 +21,18 @@ void WBoneSet::AddBoneKey(char *name, WQuat *quat, WVector *pivot, float *scale,
 
 
 			pKey = &m_data[m_index++];
+#ifdef JP_PAKS
+			// A ring too: the unsigned char index wrapped by itself.
+			m_index %= PG_JP_BONESET_KEYS;
+#endif
 
 		} else {
 
 			pKey = &m_preAlloc[m_curAlloc++];
+#ifdef JP_PAKS
+			// Likewise for the shared ring.
+			m_curAlloc %= PG_JP_BONESET_KEYS;
+#endif
 		}
 
 

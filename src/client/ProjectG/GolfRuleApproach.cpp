@@ -43,14 +43,16 @@ void CGolfRuleApproach::SetPlayer(void) {
 			sRivalData data;
 			data.m_hole = WSingleton<CSharedDoc>::Instance()->m_holeOrder[0];
 
+			data.m_rank = 1; data.m_state = 0; data.m_totalShots = 0; data.m_score = 0; data.m_pang = 0; data.m_extraPang = 0;
 			data.m_id = (*it).m_ruleUID;
 			data.m_uid = (*it).m_uid;
 			data.m_ballPos = GetRandomStartPos((*it).m_uid);
 
 			data.m_titleTypeId = (*it).m_titleTypeId;
+			data.m_team = (*it).m_attribute & 3;
 			data.m_characterType = (*it).m_attribute >> 5;
 
-			data.m_team = (*it).m_attribute & 3; data.m_state = 0; data.m_totalShots = 0; data.m_rank = 1; data.m_score = 0; data.m_pang = 0; data.m_extraPang = 0; memset(data.m_holeShots, 0, sizeof(data.m_holeShots)); data.m_joined = 1; data.m_present = 1;
+			memset(data.m_holeShots, 0, sizeof(data.m_holeShots)); data.m_joined = 1; data.m_present = 1;
 			memset(data.m_holeScore, 0, sizeof(data.m_holeScore));
 			memset(data.m_holePang, 0, sizeof(data.m_holePang));
 
@@ -67,6 +69,7 @@ void CGolfRuleApproach::SetPlayer(void) {
 
 			WVector cup = GOLFDOC()->GetHoleData().m_cupPos; WVector diff; diff = cup - data.m_ballPos;
 
+			data.m_uniteGuildIndex = 0;
 			float dist = sqrtf(diff.x * diff.x + diff.z * diff.z) * 10.0f; data.m_approachDistanceCopy = (int)floor(dist * 0.3125f);
 			data.m_approachDistance = 0xFFFFFFFF;
 			data.m_approachPoint = -1;
@@ -74,7 +77,6 @@ void CGolfRuleApproach::SetPlayer(void) {
 			data.m_mascotTypeId = (*it).m_mascotTypeId;
 			data.m_itemBoostFlags = (*it).m_itemBoostFlags;
 			data.m_extraFlags = (*it).m_extraFlags;
-			data.m_uniteGuildIndex = 0;
 			WSingleton<CSharedDoc>::Instance()->m_gameResultList.push_back(data);
 
 			if ((*it).m_uid == MyGuid(true)) {
@@ -123,7 +125,7 @@ struct CSharedDocRandoms {
 WVector CGolfRuleApproach::GetRandomStartPos(unsigned long seed) {
 	// WPolySoup 0xEC: the course's bounding box (a Waabb polysoup.h does not
 	// declare yet).
-	Waabb box = *(Waabb *)((char *)GOLFDOC()->m_pPolySoup + 0xEC);
+	Waabb box = GOLFDOC()->m_pPolySoup->GetExtraHoleStartArea();
 	const CSharedDocRandoms *doc = (const CSharedDocRandoms *)WSingleton<CSharedDoc>::Instance();
 
 	WVector pos;

@@ -287,6 +287,7 @@ void CSky::LoadSky(const char* name, float param) {
 		colors[1] = colors[2] = color | 0xFF000000;
 
 		unsigned char* vtx = video->xLockVertexBuffer(vb, 0, 0);
+		float x, z, u;
 		for (int row = 0; row < rows; row++) {
 			for (int col = 0; col < cols; col++) {
 				if (layer <= 1) {
@@ -294,34 +295,34 @@ void CSky::LoadSky(const char* name, float param) {
 
 					int base = (row * cols + col) * stride;
 					float angle = (step * 0.03125f - turn[layer]) * 6.28318548f;
-					float x = (float)(cos(angle) * radius);
-					float z = (float)(sin(angle) * radius);
-					float u = 1.0f - (rows * col) * 0.03125f;
+					x = (float)(cos(angle) * radius);
+					z = (float)(sin(angle) * radius);
+					u = 1.0f - (rows * col) * 0.03125f;
 					int off = base;
-					*(float*)(vtx + off) = x; off += 4;
-					*(float*)(vtx + off) = ys[0]; off += 4;
-					*(float*)(vtx + off) = z; off += 4;
-					*(unsigned int*)(vtx + off) = colors[0]; off += 4;
-					*(float*)(vtx + off) = u; off += 4;
-					*(float*)(vtx + off) = vs[0];
+					memcpy(vtx + off, &x, 4); off += 4;
+					memcpy(vtx + off, &ys[0], 4); off += 4;
+					memcpy(vtx + off, &z, 4); off += 4;
+					memcpy(vtx + off, &colors[0], 4); off += 4;
+					memcpy(vtx + off, &u, 4); off += 4;
+					memcpy(vtx + off, &vs[0], 4);
 
 					off = base + bandBytes;
-					*(float*)(vtx + off) = x; off += 4;
-					*(float*)(vtx + off) = ys[1]; off += 4;
-					*(float*)(vtx + off) = z; off += 4;
-					*(unsigned int*)(vtx + off) = colors[1]; off += 4;
-					*(float*)(vtx + off) = u; off += 4;
-					*(float*)(vtx + off) = vs[1];
+					memcpy(vtx + off, &x, 4); off += 4;
+					memcpy(vtx + off, &ys[1], 4); off += 4;
+					memcpy(vtx + off, &z, 4); off += 4;
+					memcpy(vtx + off, &colors[1], 4); off += 4;
+					memcpy(vtx + off, &u, 4); off += 4;
+					memcpy(vtx + off, &vs[1], 4);
 
 					off = base + bandBytes * 2;
-					*(float*)(vtx + off) = x; off += 4;
-					*(float*)(vtx + off) = ys[2]; off += 4;
-					*(float*)(vtx + off) = z; off += 4;
-					*(unsigned int*)(vtx + off) = colors[2]; off += 4;
-					*(float*)(vtx + off) = u; off += 4;
-					*(float*)(vtx + off) = vs[2];
+					memcpy(vtx + off, &x, 4); off += 4;
+					memcpy(vtx + off, &ys[2], 4); off += 4;
+					memcpy(vtx + off, &z, 4); off += 4;
+					memcpy(vtx + off, &colors[2], 4); off += 4;
+					memcpy(vtx + off, &u, 4); off += 4;
+					memcpy(vtx + off, &vs[2], 4);
 				} else {
-					float u = 0.0f;
+					u = 0.0f;
 					if (col % 2 == 0) {
 						u = 1.0f;
 					}
@@ -329,14 +330,14 @@ void CSky::LoadSky(const char* name, float param) {
 					int base = (row * cols + col) * stride;
 					for (int j = 0; j < 2; j++) {
 						int off = base + bandBytes * j;
-						float x = (col ? 1.0f : -1.0f) * 500.0f;
-						float z = j ? -500.0f : 500.0f;
-						*(float*)(vtx + off) = x; off += 4;
-						*(float*)(vtx + off) = ys[0]; off += 4;
-						*(float*)(vtx + off) = z; off += 4;
-						*(unsigned int*)(vtx + off) = colors[0]; off += 4;
-						*(float*)(vtx + off) = u; off += 4;
-						*(float*)(vtx + off) = vs[j];
+						x = (col ? 1.0f : -1.0f) * 500.0f;
+						z = j ? -500.0f : 500.0f;
+						memcpy(vtx + off, &x, 4); off += 4;
+						memcpy(vtx + off, &ys[0], 4); off += 4;
+						memcpy(vtx + off, &z, 4); off += 4;
+						memcpy(vtx + off, &colors[0], 4); off += 4;
+						memcpy(vtx + off, &u, 4); off += 4;
+						memcpy(vtx + off, &vs[j], 4);
 					}
 				}
 			}
@@ -587,8 +588,8 @@ void CSky::GenerateMoons(void) {
 			}
 
 			Attacher attacher;
-			attacher.m_pMatrix[0] = NULL;
 			attacher.m_pOffset[0] = &g_view->camera.pivot;
+			attacher.m_pMatrix[0] = NULL;
 
 			pSpray->m_pAttacher = &attacher;
 			pSpray->m_fAttachLimitA = attacher.m_fLimitA;
@@ -722,7 +723,7 @@ void CSky::Process(float elapsed) {
 
 		// And toward the course's origin, on the ground plane.
 		WVector diff;
-		diff = cloud.m_pos - GOLFDOC()->m_pPolySoup->m_pBgModel->m_basePos;
+		diff = cloud.m_pos - GOLFDOC()->m_pPolySoup->GetBaseModel()->m_basePos;
 		float dist = sqrtf(diff.x * diff.x + diff.z * diff.z);
 		t = MaxOf(0.0f, 1.0f - dist / m_cloudRadius);
 		if (t < 0.1f) {
@@ -910,15 +911,12 @@ void CSky::RenderFlatCloud(WView* view) {
 	for (int i = 0; i < m_cloudCount; i++) {
 		if (m_clouds[i].m_active) {
 			for (int k = 0; k < 4; k++) {
-				float sx = (k & 1) ? 0.25f : -0.25f;
-				float sy = (k & 2) ? 0.5f : -0.5f;
-
 				WVector pos;
-				pos = WVector(sy, 0.0f, sx) * m_clouds[i].m_size + m_clouds[i].m_pos;
+				pos = WVector((k & 2) ? 0.5f : -0.5f, 0.0f, (k & 1) ? 0.25f : -0.25f) * m_clouds[i].m_size + m_clouds[i].m_pos;
 				verts[k].SetPosition(pos);
 				verts[k].tu = m_clouds[i].m_flip ? ((k & 2) ? 0.0f : 1.0f) : ((k & 2) ? 1.0f : 0.0f);
 				verts[k].tv = (float)(((~k) & 1) + m_clouds[i].m_texIndex) * 0.25f;
-				verts[k].diffuse = ModifyColor(m_skyColor, WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_fogBrightness)
+				verts[k].diffuse = ModifyColor(m_skyColor, GOLFDOC()->m_fogBrightness)
 					| 0xFF000000;
 			}
 			view->DrawPolygonFan(vl, (m_cloudTex & 0x7FF) | 0x20300000, 0x400, false);

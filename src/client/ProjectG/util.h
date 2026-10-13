@@ -19,7 +19,7 @@ namespace Ut {
 struct Spatial {
 	// util.h:30
 	Spatial(void) {
-		m_scale = 1.0f; m_rotation = gaQ::ID; m_position = gaV3::ZERO;
+		Reset();
 	}
 
 	// util.h:36

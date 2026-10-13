@@ -388,9 +388,6 @@ struct sPangCashResult {
 CHECK_SIZE(sPangCashResult, 0x18);
 
 // realmyroomtask.cpp:475
-// FIRST PASS: the switch carries only the cases written so far; 0x116 (the
-// caddie report: CSharedDoc 0x4514's element type is not known yet) still
-// goes to OnPacketCommon.
 int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 	g_iRecvPacketType = packet.Decode2();
 
@@ -1108,6 +1105,66 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 		break;
 	}
 
+	case 0x116:
+		if (IsLocalContent((localContentType_t)0x14)) {
+			GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
+
+			WSingleton<CSharedDoc>::Instance()->m_tikiReportList.clear();
+
+			long count = packet.Decode4();
+			unsigned char header[0x10];
+			packet.DecodeBuffer(header, sizeof(header));
+
+			if (count == 0) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xBF\xAD\xB6\xF7\xBF\xA1 \xBD\xC7\xC6\xD0 \xC7\xCF\xBF\xB4\xBD\xC0\xB4\xCF\xB4\xD9. ", 0, 0, 0, 0));
+				break;
+			}
+			else if (count == -2) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xB5\xA5\xC0\xCC\xC5\xB8\xB0\xA1 \xC0\xAF\xC8\xBF\xC7\xCF\xC1\xF6 \xBE\xCA\xC0\xBA \xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
+				break;
+			}
+			else if (count == -1) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xB3\xAF\xC2\xA5\xB0\xA1 \xC0\xAF\xC8\xBF\xC7\xCF\xC1\xF6 \xBE\xCA\xC0\xBA \xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
+				break;
+			}
+
+			if (IsLocalContent((localContentType_t)0x58)) {
+				WSingleton<CSharedDoc>::Instance()->m_value4843 = 1;
+			}
+
+			unsigned long serial = 0;
+			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x204, (intptr_t)&serial, 0, 0, 0, 0);
+			std::list<sItemInfo>::iterator it;
+			for (it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
+				if (it->m_serial == serial)
+					break;
+			}
+
+			if (it == WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end())
+				return 0;
+
+			for (int i = 0; i < count; ++i) {
+				--it->m_count;
+
+				if (it->m_count <= 0)
+					break;
+			}
+
+			WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
+			GetActor("RealMyRoom") << MsgObject(0, 0xDD, 0, 0, 0, 0, 0);
+
+			for (int j = 0; j < count; ++j) {
+				sCaddieReportData report;
+				packet.DecodeBuffer(&report, sizeof(report));
+				WSingleton<CSharedDoc>::Instance()->m_tikiReportList.push_back(report);
+			}
+
+			WSingleton<CSharedDoc>::Instance()->BuildTikiReportList();
+
+			GetActor("RealMyRoom") << MsgObject(0, 0x205, (intptr_t)header, 0, 0, 0, 0);
+		}
+		break;
+
 	case 0x124:
 		if (IsLocalContent((localContentType_t)0x56)) {
 			unsigned long result = packet.Decode4();
@@ -1158,9 +1215,7 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 	}
 
 	case 0x181:
-		// The original reaches the singleton through the inline NET()
-		// (networksystem.h:113), not declared in NetworkSystem.h yet.
-		if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
+		if (NET()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
 			WSendPacket request(0x27);
 			request.EncodeStr(WSingleton<CSharedDoc>::Instance()->m_userInfo.id);
 			request.EncodeStr(WSingleton<CSharedDoc>::Instance()->m_userInfo.id);
@@ -1173,9 +1228,7 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 		break;
 
 	case 0x13E: {
-		// The original reaches the singleton through the inline NET()
-		// (networksystem.h:113), not declared in NetworkSystem.h yet.
-		if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
+		if (NET()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
 			WSendPacket request(0x27);
 
 			request.Encode4(WSingleton<CSharedDoc>::Instance()->m_myUID);

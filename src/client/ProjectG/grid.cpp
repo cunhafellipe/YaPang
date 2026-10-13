@@ -200,9 +200,9 @@ void CGrid::CheckGridPass(void) {
 		WVector d(ball.x - m_blocks[0][0].m_pos.x, 0.0f, ball.z - m_blocks[0][0].m_pos.z);
 
 		float size = (strstr(GolfClub().GetName(), "1PT") ? m_puttExtraSize : 0.0f) + m_blockSize;
-		WVector p = d * (1.0f / size);
-		int ix = (int)(p.x * m_axisX.x + p.y * m_axisX.y + p.z * m_axisX.z);
-		int iz = (int)(p.x * m_axisZ.x + p.y * m_axisZ.y + p.z * m_axisZ.z);
+		d /= size;
+		int ix = (int)(d * m_axisX);
+		int iz = (int)(d * m_axisZ);
 
 		if (ix < m_gridCountX + (strstr(GolfClub().GetName(), "1PT") ? m_puttExtraCountX : 0) - 1
 			&& iz < m_gridCountZ + (strstr(GolfClub().GetName(), "1PT") ? m_puttExtraCountZ : 0) - 1)
@@ -344,7 +344,7 @@ void CGrid::HandleMsg(const MsgObject &msg) {
 void CGrid::MakeStaticGrid(void) {
 	for (int i = 0; i < m_gridCountX; i++) {
 		for (int j = 0; j < m_gridCountZ; j++) {
-			WVector pos((j - m_gridCountZ / 2) * m_blockSize + m_center.x, m_center.y, (i - m_gridCountX / 2) * m_blockSize + m_center.z);
+			WVector pos = WVector((j - m_gridCountZ / 2) * m_blockSize, 0.0f, (i - m_gridCountX / 2) * m_blockSize) + m_center;
 			m_blocks[i][j].m_pos = GetPVS().GetGroundPoint(pos, true, 0, true) + WVector(0.0f, GolfBall().m_radius, 0.0f);
 		}
 	}

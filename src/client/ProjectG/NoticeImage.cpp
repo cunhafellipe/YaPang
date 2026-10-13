@@ -46,7 +46,7 @@ void LoadNoticeImageFile(const char* fileName, std::vector<sNoticeImage>& images
 				else if (*p == ')') {
 					sNoticeImage::sBn bn;
 					skipSpace = true;
-					sscanf(token.c_str(), "%d %f %f %f %f", &bn.index, &bn.x, &bn.y, &bn.w, &bn.h);
+					sscanf(token.c_str(), "%d %f %f %f %f", &bn.index, &bn.rect.x, &bn.rect.y, &bn.rect.w, &bn.rect.h);
 					image.buttons.push_back(bn);
 				}
 				else if (*p != '\r') {

@@ -51,7 +51,40 @@ public: virtual bool CanEquip() {
 
 // titles_client.cpp:92
 class Title24 : public Title { public: virtual bool CanEquip(); };
+// titles_client.cpp:93
+bool Title24::CanEquip() {
+	std::map<unsigned char, sMapStatistics> stat;
+	stat.clear();
 
+	std::map<unsigned long, sUserInfoTime>::iterator it;
+	int found = WSingleton<CSharedDoc>::Instance()->FindUserInfoTimeUID(WSingleton<CSharedDoc>::Instance()->m_myUID, it);
+	if (found)
+	{
+		sUserInfoTime *info = &it->second;
+		if (info != NULL)
+		{
+			sMapStatistics *classicStat = info->m_classicMapStatistics;
+			if (classicStat != NULL)
+			{
+				for (int i = 0; i < 20; i++)
+				{
+					if (classicStat[i].m_bestScore != 0x7F)
+					{
+						stat[i] = classicStat[i];
+					}
+				}
+			}
+		}
+	}
+
+	// The local player's information starts at CSharedDoc 0x3E0 (m_mySlot):
+	// CSharedDoc does not hold it as one sMyInfo member yet.
+	if (!CheckCourseMaster(reinterpret_cast<sMyInfo &>(WSingleton<CSharedDoc>::Instance()->m_mySlot), WSingleton<CSharedDoc>::Instance()->GetMyPastMapStat(0), stat))
+	{
+		return false;
+	}
+	return true;
+}
 
 
 

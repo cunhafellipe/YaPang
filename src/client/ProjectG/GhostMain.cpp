@@ -364,28 +364,24 @@ void CGhostMain::Initialize(void) {
 	m_tipImage = new cImgBinder(2);
 	m_tipImage->AddImage("ghost_main_tip1", WPoint(0.0f, 0.0f));
 	m_tipImage->AddImage("ghost_main_tip2", WPoint(256.0f, 0.0f));
-	for (std::vector<cImgBinder::sImgInfo>::iterator it = m_tipImage->m_vecImage.begin(); it != m_tipImage->m_vecImage.end(); ++it) { it->m_rect.x += 200.0f; it->m_rect.y -= 120.0f; }
+	m_tipImage->AddPos(200.0f, -120.0f);
 
 	m_tipWait = 5.0f;
 	m_tipHiding = false;
 	m_userStatImage = new cImgBinder(2);
 	m_userStatImage->AddImage("ghost_user_stat1", WPoint(0.0f, 0.0f));
 	m_userStatImage->AddImage("ghost_user_stat2", WPoint(256.0f, 0.0f));
-	float dx = g_view->GetWidth() * 0.5f;
-	float dy = g_view->GetHeight() - 162.0f - 77.0f;
-	for (std::vector<cImgBinder::sImgInfo>::iterator it = m_userStatImage->m_vecImage.begin(); it != m_userStatImage->m_vecImage.end(); ++it) { it->m_rect.x -= dx; it->m_rect.y += dy; }
+	m_userStatImage->AddPos(-(g_view->GetWidth() * 0.5f), g_view->GetHeight() - 162.0f - 77.0f);
 
 	m_ghostStatImage = new cImgBinder(2);
 	m_ghostStatImage->AddImage("ghost_ghost_stat1", WPoint(0.0f, 0.0f));
 	m_ghostStatImage->AddImage("ghost_ghost_stat2", WPoint(256.0f, 0.0f));
-	dx = g_view->GetWidth();
-	dy = g_view->GetHeight() - 162.0f - 77.0f;
-	for (std::vector<cImgBinder::sImgInfo>::iterator it = m_ghostStatImage->m_vecImage.begin(); it != m_ghostStatImage->m_vecImage.end(); ++it) { it->m_rect.x += dx; it->m_rect.y += dy; }
+	m_ghostStatImage->AddPos(g_view->GetWidth(), g_view->GetHeight() - 162.0f - 77.0f);
 
 	m_userStatStopX = 17.0f;
 	m_ghostStatStopX = g_view->GetWidth() - 129.0f - 256.0f - 17.0f;
-	m_ghostStatSpeed = 402.0f;
 	m_userStatSpeed = g_view->GetWidth() * 0.5f + 17.0f;
+	m_ghostStatSpeed = 402.0f;
 
 	m_userStat = BuildStatusBar(0);
 	m_ghostStat = BuildStatusBar(1);
@@ -816,87 +812,80 @@ void CGhostMain::OnDownUserEquip(void) {
 		dlg->Open((FRESH_RESULT_CALLBACK)&CGhostMain::CallBackEquipItemResult, 3);
 		return;
 	}
+	{
+		unsigned int count = 1;
+		switch (pItem->idx) {
+		case 1:
+			count = WSingleton<CSharedDoc>::Instance()->m_caddieMap.size();
+			break;
+		case 4:
+			if (WSingleton<CSharedDoc>::Instance()->m_myMascotMap.size() == 0)
+				return;
+			break;
+		}
+		if (count == 0)
+			return;
 
-	unsigned int count = 1;
-	switch (pItem->idx) {
-	case 1:
-		count = WSingleton<CSharedDoc>::Instance()->m_caddieMap.size();
-		break;
-	case 4:
-		count = WSingleton<CSharedDoc>::Instance()->m_myMascotMap.size();
-		break;
+		FrSubEquipBar *bar = CreateForm<FrSubEquipBar>(g_pFresh->GetManager(), this, "EQUIPBAR_SUB", 0);
+		if (bar == 0)
+			return;
+
+		m_selectedIcon = pItem;
+
+		WPoint pt = pItem->pos;
+		int category = 1;
+		switch (pItem->idx) {
+		case 4: category = 0x10; break;
+		case 1: category = 7; break;
+		case 0: category = 1; break;
+		case 2: category = 4; break;
+		case 3: category = 5; break;
+		}
+
+		bar->Open((FRESH_RESULT_CALLBACK)&CGhostMain::OnResultSubEquipBar,
+			(FrSubEquipBar::eCategory)category, pt, (FrSubEquipBar::eSubType)1);
+
+		WRect rect = bar->GetRect();
+		rect.y -= rect.h;
+
+		WView *view = g_view;
+
+		if (rect.x + rect.w + 5.0f > view->GetWidth())
+			rect.x = view->GetWidth() - rect.w - 5.0f;
+		bar->SetRect(rect);
 	}
-	if (count == 0)
-		return;
-
-	FrSubEquipBar *bar = CreateForm<FrSubEquipBar>(g_pFresh->GetManager(), this, "EQUIPBAR_SUB", 0);
-	if (bar == 0)
-		return;
-
-	m_selectedIcon = pItem;
-
-	WPoint pt = pItem->pos;
-	int category = 1;
-	switch (pItem->idx) {
-	case 4: category = 0x10; break;
-	case 1: category = 7; break;
-	case 0: category = 1; break;
-	case 2: category = 4; break;
-	case 3: category = 5; break;
-	}
-
-	bar->Open((FRESH_RESULT_CALLBACK)&CGhostMain::OnResultSubEquipBar,
-		(FrSubEquipBar::eCategory)category, pt, (FrSubEquipBar::eSubType)1);
-
-	WRect rect = bar->GetRect();
-	rect.y -= rect.h;
-
-	WView *view = g_view;
-
-	if (rect.x + rect.w + 5.0f > view->GetWidth())
-		rect.x = view->GetWidth() - rect.w - 5.0f;
-	bar->SetRect(rect);
 }
 
 // ghostmain.cpp:1063
 bool CGhostMain::OnResultSubEquipBar(int result, FrForm *form) {
-	if (result == 1) {
-		FrSubEquipBar *bar = (FrSubEquipBar *)form;
-		IFF_ITEM_COMMON *item = bar->GetResult();
-		if (item != NULL) {
-			unsigned long typeId = item->m_typeId;
-			unsigned long itemGroup = typeId >> 26;
-			if (itemGroup == 5)
-				SendPacketEquipResult((PANGYA_ITEM_GROUP)itemGroup, typeId);
-			else
-				SendPacketEquipResult((PANGYA_ITEM_GROUP)itemGroup, bar->GetLastSelectedGuid());
-		} else {
-			switch (bar->GetCategory()) {
-			case 0x10: {
-				{
-					WSendPacket packet((int)GCT_LOBBY_USERINFO_CHANGED);
-					packet.Encode1(5);
-					packet.Encode4(0);
-					packet.Send(SEND_TO_DEFAULT);
-				}
-				std::string *icon = (std::string *)m_selectedIcon->pData;
-				unsigned long none = 0;
-				*icon = GetIconName(none);
-				break;
-			}
-			case 7: {
-				{
-					WSendPacket packet((int)GCT_LOBBY_USERINFO_CHANGED);
-					packet.Encode1(1);
-					packet.Encode4(0);
-					packet.Send(SEND_TO_DEFAULT);
-				}
-				std::string *icon = (std::string *)m_selectedIcon->pData;
-				unsigned long none = 0;
-				*icon = GetIconName(none);
-				break;
-			}
-			}
+	if (result != 1)
+		return true;
+
+	FrSubEquipBar *bar = (FrSubEquipBar *)form;
+	IFF_ITEM_COMMON *item = bar->GetResult();
+	if (item != NULL) {
+		unsigned long typeId = item->m_typeId;
+		unsigned long itemGroup = typeId >> 26;
+		if (itemGroup == 5)
+			SendPacketEquipResult((PANGYA_ITEM_GROUP)itemGroup, typeId);
+		else
+			SendPacketEquipResult((PANGYA_ITEM_GROUP)itemGroup, bar->GetLastSelectedGuid());
+	} else {
+		switch (bar->GetCategory()) {
+		case 0x10: {
+			SendPacketEquipResult((PANGYA_ITEM_GROUP)0x10, 0);
+			std::string *icon = (std::string *)m_selectedIcon->pData;
+			unsigned long none = 0;
+			*icon = GetIconName(none);
+			break;
+		}
+		case 7: {
+			SendPacketEquipResult((PANGYA_ITEM_GROUP)7, 0);
+			std::string *icon = (std::string *)m_selectedIcon->pData;
+			unsigned long none = 0;
+			*icon = GetIconName(none);
+			break;
+		}
 		}
 	}
 	return true;
@@ -1067,9 +1056,9 @@ void CGhostMain::OnInitGhostZone(int param) {
 
 // ghostmain.cpp:1308
 void CGhostMain::OnDrawGhostZone(void) {
-	if ((__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop")) != 0 && ((IObject *)__rtti_obj)->IsKindOf(&FrBongdariShopDlg::m_RTTI)
-		|| (__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("recycledlg")) != 0 && ((IObject *)__rtti_obj)->IsKindOf(&FrRecycleDlg::m_RTTI)
-		|| (__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("equip")) != 0 && ((IObject *)__rtti_obj)->IsKindOf(&FrEquipDlg::m_RTTI))
+	if (((__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop")) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&FrBongdariShopDlg::m_RTTI) : false)
+		|| ((__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("recycledlg")) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&FrRecycleDlg::m_RTTI) : false)
+		|| ((__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("equip")) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&FrEquipDlg::m_RTTI) : false))
 		return;
 
 	if (m_hand.IsWorking(0))

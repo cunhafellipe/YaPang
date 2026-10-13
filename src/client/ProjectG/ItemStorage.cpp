@@ -1587,11 +1587,12 @@ void CItemStorage::SetEnableBackGroundUI(bool bEnable) {
 // itemstorage.cpp:1717
 // Prints text with the title font; align 1 centres it on x, 2 ends it at x.
 void CItemStorage::Print(float x, float y, const char* text, float spacing, int align, float scale, unsigned long color) {
-	if (!text) {
+	const char* p = text;
+	if (!p) {
 		return;
 	}
 
-	if (strlen(text) == 0) {
+	if (strlen(p) == 0) {
 		return;
 	}
 
@@ -1603,38 +1604,38 @@ void CItemStorage::Print(float x, float y, const char* text, float spacing, int 
 
 	switch (align) {
 	case 1:
-		for (const char* p = text; *p; ) {
-			int ch = *p;
+		while (*p) {
+			int ch = *p++;
 
-			int index = strchr(charSet, ch) - charSet;
-			p++;
+			const char* found = strchr(charSet, ch);
 
-			width += m_pTitleFont->GetCharWidthA(g_view, index) + spacing * scale;
+			width += m_pTitleFont->GetCharWidthA(g_view, found - charSet) + spacing * scale;
 		}
+		p = text;
 		width = (width - spacing) * 0.5f;
 		break;
 	case 2:
-		for (const char* p = text; *p; ) {
-			int ch = *p;
+		while (*p) {
+			int ch = *p++;
 
-			int index = strchr(charSet, ch) - charSet;
-			p++;
+			const char* found = strchr(charSet, ch);
 
-			width += m_pTitleFont->GetCharWidthA(g_view, index) + spacing * scale;
+			width += m_pTitleFont->GetCharWidthA(g_view, found - charSet) + spacing * scale;
 		}
+		p = text;
 		width -= spacing;
 		break;
 	}
 
 	x -= width;
 
-	while (*text) {
-		int ch = *text;
+	while (*p) {
+		int ch = *p++;
 
-		int index = strchr(charSet, ch) - charSet;
-		text++;
+		const char* found = strchr(charSet, ch);
 
-		x += m_pTitleFont->PutChar(g_view, x, y, index, 0, color) + spacing;
+		float advance = m_pTitleFont->PutChar(g_view, x, y, found - charSet, 0, color);
+		x += advance + spacing;
 	}
 
 	m_pTitleFont->SetScale(oldScale);

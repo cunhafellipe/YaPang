@@ -607,7 +607,7 @@ bool ntAvatarChatMain::OnChatInputEnterKey(intptr_t param) {
 
 		if (!OnlinePlay()) {
 			// Offline: echo the line locally, on the own avatar's balloon and face.
-			std::string line(WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar->m_nickName);
+			std::string line(WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar->GetNickName());
 			line += " : ";
 			line += msg;
 

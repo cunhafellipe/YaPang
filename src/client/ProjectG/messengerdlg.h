@@ -17,6 +17,10 @@
 #include "frcontextmenuctrl.h"
 #include "client/Wangreal/include/wtypes.h"
 #include "buddymanager.h"
+#ifndef _WINSOCKAPI_   // winsock2 must precede the <windows.h> shared/globalgamedefine.h pulls in
+#include <winsock2.h>
+#endif
+#include "shared/globalgamedefine.h"
 
 class FrAddFriendDlg;
 class FrGuildNoticeDlg;
@@ -118,6 +122,9 @@ public:
 	void SetTargetNick(const char* nick);
 	void OpenAddFriendNickDlg(void);
 	void UpdateFriendList(void);
+
+	// messengerdlg.h:125
+	void EnableInvite(bool enable) { m_inviteEnabled = enable; }
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];
@@ -243,42 +250,6 @@ END_LAYOUT_CHECK
 
 #pragma pack(push, 1)
 
-// One server of a server list (0x5C bytes: list<sGameServerInfo> nodes are
-// 0x64). Its original header is not known yet; it is declared here, next to
-// its only user so far.
-struct sGameServerInfo {
-	// Inline in the original (ServerDlg constructs its members with it).
-	sGameServerInfo(void) {
-		name[0] = 0;
-		m_address[0] = 0;
-	}
-
-	char name[0x28];                     // 0x00
-	unsigned long id;                    // 0x28
-	int m_maxUsers;                      // 0x2C
-	int m_curUsers;                      // 0x30
-	char m_address[0x12];                // 0x34
-	unsigned long m_port;                // 0x46
-	unsigned long flags;                 // 0x4A
-	int m_badgeCount;                    // 0x4E (ServerDlg draws it as a number when > 0)
-	unsigned long m_flags2;              // 0x52 (ServerListCompare tests bit 0x40 of its low byte)
-	UNKNOWN(0x56, 0x5A);
-	unsigned short m_iconKey;            // 0x5A (key of FrServerDlg::m_textMap: the name of the server's icon)
-};
-CHECK_SIZE(sGameServerInfo, 0x5C);
-BEGIN_LAYOUT_CHECK(sGameServerInfo)
-	CHECK_FIELD(sGameServerInfo, name, 0x00);
-	CHECK_FIELD(sGameServerInfo, id, 0x28);
-	CHECK_FIELD(sGameServerInfo, flags, 0x4A);
-	CHECK_FIELD(sGameServerInfo, m_maxUsers, 0x2C);
-	CHECK_FIELD(sGameServerInfo, m_curUsers, 0x30);
-	CHECK_FIELD(sGameServerInfo, m_address, 0x34);
-	CHECK_FIELD(sGameServerInfo, m_port, 0x46);
-	CHECK_FIELD(sGameServerInfo, m_badgeCount, 0x4E);
-	CHECK_FIELD(sGameServerInfo, m_flags2, 0x52);
-	CHECK_FIELD(sGameServerInfo, m_iconKey, 0x5A);
-END_LAYOUT_CHECK
-
 // One messenger server of the list the login server sends (0x5D bytes: the
 // list's _Buynode copies 0x17 dwords and a byte into a 0x68 node).
 struct MSNServerInfo : public sGameServerInfo {
@@ -334,6 +305,7 @@ public:
 
 	// messengerdlg.h:371
 	void SetComplete(eConnectStatus status) { m_serverListRequest = status; }
+	eConnectStatus GetComplete(void) { return (eConnectStatus)m_serverListRequest; }   // messengerdlg.h:372
 
 	// messengerdlg.h:375
 	bool IsWaitingForServerList(void) { return m_waitingForServerList; }
@@ -341,6 +313,9 @@ public:
 
 	// messengerdlg.h:379
 	void SetCurrentServerIndex(int index) { m_currentServerIndex = index; }
+
+	// messengerdlg.h:384
+	void EnableInvite(bool enable) { m_inviteEnabled = enable; }
 
 protected:
 	void SaveCurrentFocus(void);

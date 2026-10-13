@@ -447,7 +447,7 @@ void CPetBody::AddScriptHandle(const char *name, IActor *actor, int id) {
 
 // petbody.cpp:419
 void CPetBody::AddLocalLight(const LightSet &light, WVector pos) {
-	sLightSet lightSet = { light, pos };
+	sLightSet lightSet; lightSet.light = light; lightSet.pos = pos;
 	m_localLights.push_back(lightSet);
 }
 
@@ -895,22 +895,21 @@ void CPetBody::LookUpProcess(float delta) {
 		m_lookAngleTarget.x = 0.0f;
 	}
 
-	float dx = m_lookAngleTarget.x - m_lookAngle.x;
-	float dy = m_lookAngleTarget.y - m_lookAngle.y;
+	WVector2D diff = m_lookAngleTarget - m_lookAngle;
 
 
-	if (Abs(dx) > data_9ed708) {
+	if (Abs(diff.x) > data_9ed708) {
 
 
 		m_flags.Enable(0x20);
-		m_lookAngle.x += MinOf(delta / (float)sqrt(dy * dy + dx * dx) * 1.5707964f, 1.0f) * dx;
+		m_lookAngle.x += MinOf(delta / diff.Magnitude() * 1.5707964f, 1.0f) * diff.x;
 	}
 
-	if (Abs(dy) > data_9ed708) {
+	if (Abs(diff.y) > data_9ed708) {
 
 
 		m_flags.Enable(0x20);
-		m_lookAngle.y += MinOf(delta / (float)sqrt(dy * dy + dx * dx) * 1.5707964f, 1.0f) * dy;
+		m_lookAngle.y += MinOf(delta / diff.Magnitude() * 1.5707964f, 1.0f) * diff.y;
 	}
 }
 

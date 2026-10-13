@@ -220,6 +220,7 @@ public:
 	virtual ~CTaskManager(void);
 
 	CTask *GetPreservedTask(void) const;
+	void SetWork(CWork *work);
 	void ReleaseWork(void);
 	void CreateTask(const char *taskName, const char *param, bool preserve);
 	void ChangeTask(const char *taskName, const char *param, bool preserve);
@@ -349,6 +350,13 @@ TASKMAIN_TASKMANAGER_INLINE CTask *AfxGetPreservedTask(void) {
 #ifndef TASKMANAGER_TASKMANAGER_INLINE
 #define TASKMANAGER_TASKMANAGER_INLINE inline
 #endif
+
+// taskmanager.h:304
+TASKMANAGER_TASKMANAGER_INLINE void CTaskManager::SetWork(CWork *work) {
+	if (work != m_pWork && m_pWork)
+		delete m_pWork;
+	m_pWork = work;
+}
 
 // taskmanager.h:309
 TASKMANAGER_TASKMANAGER_INLINE void CTaskManager::ReleaseWork(void) {

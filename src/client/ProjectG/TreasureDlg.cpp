@@ -578,9 +578,10 @@ sFRESH_ENTRY FrTreasureCourse::_MsgEntries[] = {
 
 // treasuredlg.cpp:561
 FrTreasureCourse::FrTreasureCourse(void) {
+	FrButton* pNullBtn = 0;
 	m_mapBtns.reserve(20);
 
-	m_mapBtns.insert(m_mapBtns.begin(), 20, (FrButton*)0);
+	m_mapBtns.insert(m_mapBtns.begin(), 20, pNullBtn);
 
 	for (int i = 0; i < 20; i++) {
 		m_mapBitmaps[i] = 0;
@@ -1441,7 +1442,7 @@ CTFrame::CTFrame(unsigned char count)
 
 // treasuredlg.cpp:1701
 CTFrame::~CTFrame(void) {
-	if (m_frames.size() > 0) m_frames.clear();
+	Reset();
 }
 
 // treasuredlg.cpp:1706
@@ -1463,13 +1464,16 @@ bool CTFrame::SetFrameWidth(float width) {
 	unsigned char size = (unsigned char)m_frames.size();
 
 	if (size == 3) {
-		start = 3; end = 6;
+		start = size;
+		end = 6;
 	} else if (size == 9) {
-		start = 0; end = 3;
+		start = 0;
+		end = 3;
 	}
 
-	for (unsigned char i = start; i < end; ++i) {
-		WRect rect = m_frames[i]->GetRect();
+	for (unsigned char i = start; i < end; i++) {
+		WRect rect;
+		rect = m_frames[i]->GetRect();
 		rect.w += width;
 		m_frames[i]->SetRect(rect);
 	}
@@ -1493,17 +1497,19 @@ bool CTFrame::SetFrameHeight(float height) {
 		start = 0; mid = 3; end = 6;
 	}
 
-	for (unsigned char i = start; i < mid; ++i) {
+	unsigned char i;
+	for (i = start; i < mid; i++) {
 		WRect rect;
 		rect = m_frames[i]->GetRect();
 		rect.h += height;
 		m_frames[i]->SetRect(rect);
 	}
 
-	for (unsigned char j = mid; j < end; ++j) {
-		WRect rect = m_frames[j]->GetRect();
+	for (i = mid; i < end; i++) {
+		WRect rect;
+		rect = m_frames[i]->GetRect();
 		rect.y += height;
-		m_frames[j]->SetRect(rect);
+		m_frames[i]->SetRect(rect);
 	}
 
 	return true;
@@ -1676,21 +1682,24 @@ void FrTreasureGift::OnInit_GridArea(int param) {
 
 // treasuredlg.cpp:1933
 void FrTreasureGift::OnOwnerDraw_GridArea(int param) {
-	WRect rect;
-	rect = m_boxOpener.m_pGiftList->GetRect();
+	WRect rect = m_boxOpener.m_pGiftList->GetRect();
 
 	// Horizontal lines of the gift grid.
-	WOverlay::DrawBox(g_view, WRect(rect.x + 25.0f, rect.y + 30.0f, rect.w - 65.0f, 1.0f), 0, data_a94af8, 0.0f);
+	_WRECT line = { rect.x + 25.0f, rect.y + 30.0f, rect.w - 65.0f, 1.0f };
+	WOverlay::DrawBox(g_view, line, 0, data_a94af8, 0.0f);
 
 	if (m_unknown151 == 2) {
-		WOverlay::DrawBox(g_view, WRect(rect.x + 25.0f, rect.y + 98.0f, rect.w - 65.0f, 1.0f), 0, data_a94af8, 0.0f);
+		_WRECT line2 = { rect.x + 25.0f, rect.y + 98.0f, rect.w - 65.0f, 1.0f };
+		WOverlay::DrawBox(g_view, line2, 0, data_a94af8, 0.0f);
 	} else if (m_unknown151 == 3) {
-		WOverlay::DrawBox(g_view, WRect(rect.x + 25.0f, rect.y + 166.0f, rect.w - 65.0f, 1.0f), 0, data_a94af8, 0.0f);
+		_WRECT line3 = { rect.x + 25.0f, rect.y + 166.0f, rect.w - 65.0f, 1.0f };
+		WOverlay::DrawBox(g_view, line3, 0, data_a94af8, 0.0f);
 	}
 
 	// Vertical lines.
 	for (int i = 0; i < 8; ++i) {
-		WOverlay::DrawBox(g_view, WRect(rect.x + i * 65.0f + 33.0f, rect.y + 35.0f, 1.0f, rect.h - 60.0f), 0, data_a94af8, 0.0f);
+		_WRECT line4 = { rect.x + i * 65.0f + 33.0f, rect.y + 35.0f, 1.0f, rect.h - 60.0f };
+		WOverlay::DrawBox(g_view, line4, 0, data_a94af8, 0.0f);
 	}
 }
 
@@ -1767,6 +1776,7 @@ bool FrTestDlg_combo::OnInit(void) {
 
 // treasuredlg.cpp:2021
 void FrTestDlg_combo::ONLBTN_DOWN(void) {
+	unsigned char idx = m_pCombo->GetCurrentIdx();
 }
 
 // treasuredlg.cpp:2030

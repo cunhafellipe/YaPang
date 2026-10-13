@@ -28,6 +28,28 @@
 // Motion tables (nameless data): a row of motion indices per motion set, -1
 // ends a row; the indices select a name in the name tables.
 extern const int data_a08310[][12];        // character motion sets
+#ifdef JP_PAKS
+// The JP characters 10-14 are past this KR table (10 rows): the JP exe's
+// table (0xD33D78), whose row 8 also lost motion 10 (docs/JP_CLIENT.md).
+static const int g_jpCharMotionSets[15][12] = {
+	{ 0, 1, 3, 5, 6, -1, 0, 0, 0, 0, 0, 0 },
+	{ 0, 1, 3, 5, 6, -1, 0, 0, 0, 0, 0, 0 },
+	{ 0, 1, 3, 5, 6, -1, 0, 0, 0, 0, 0, 0 },
+	{ 0, 1, 3, 5, 6, -1, 0, 0, 0, 0, 0, 0 },
+	{ 0, 3, 1, 5, 6, -1, 0, 0, 0, 0, 0, 0 },
+	{ 0, 3, 5, 6, -1, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 6, 3, -1, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 3, 5, 7, -1, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 3, 5, 7, 10, -1, 0, 0, 0, 0, 0, 0 },
+	{ 0, 3, 5, 7, -1, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0 },
+	{ 0 },
+	{ 0 },
+	{ 0 },
+};
+#define data_a08310 g_jpCharMotionSets
+#endif
 extern const int data_a084f0[][9];         // caddie motion sets (28 rows)
 extern const char* const data_a96128[];    // character motion names
 extern const char* const data_a96158[];    // caddie motion names
@@ -1943,19 +1965,22 @@ void CExhibition::MoveModel(const WPoint& point, const WRect* pRect, float fov) 
 	float width = pRect ? pRect->w : g_view->GetWidth();
 	float height = pRect ? pRect->h : g_view->GetHeight();
 
-	// The area center and the point, unprojected at the camera distance.
-	WVector from;
+	// The area center and the point, unprojected at the camera distance
+	// (the WView::GetScreen2World_Perspective formula).
+	WVector from, to;
 	from.z = m_curDistance;
-	WVector to;
+	float scale = (float)tan((fov * kDegree) * 0.5f) * from.z / (width * 0.5f);
+	from.x = (m_center.x - width * 0.5f) * scale;
+	from.y = (m_center.y - height * 0.5f) * scale * -1.0f;
+
 	to.z = m_curDistance;
-	float t = tan(0.5f * (fov * kDegree));
-	from.x = (m_center.x - width * 0.5f) * (t * from.z / (width * 0.5f));
-	from.y = (m_center.y - height * 0.5f) * (t * from.z / (width * 0.5f)) * -1.0f;
-	to.x = (point.x - width * 0.5f) * (t * to.z / (width * 0.5f));
-	to.y = (point.y - height * 0.5f) * (t * to.z / (width * 0.5f)) * -1.0f;
+	scale = (float)tan((fov * kDegree) * 0.5f) * to.z / (width * 0.5f);
+	to.x = (point.x - width * 0.5f) * scale;
+	to.y = (point.y - height * 0.5f) * scale * -1.0f;
 	from = from - to;
 
-	if (m_model) {
-		m_model->MoveBone(m_model->GetRootBone()->GetBoneName(), from);
+	WPuppet *model = m_model;
+	if (model) {
+		model->MoveBone(model->GetRootBone()->GetBoneName(), from);
 	}
 }

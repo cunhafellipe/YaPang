@@ -49,6 +49,12 @@ CHECK_FIELD(sSoundBox, m_box, 0x2C);
 // 0x28 (GetResrcManager) opens the map file in ReloadBasePet.
 class WPolySoup : public WResource {
 public:
+	// polysoup.h:47
+	void SetCullDistance(float distance) { m_cullDistance = distance; }
+
+	// polysoup.h:51
+	Waabb GetExtraHoleStartArea() { return m_extraBox; }
+
 	// A vertex of the hole cup's rim (IsInPoly strides 0x14).
 	struct sCupVtx {
 		WVector m_pos;                // 0x00
@@ -186,8 +192,8 @@ public:
 
 		short m_count;                // 0x00, the entries of m_pList (CQuadTree::GetMeshList)
 		int *m_pList;                 // 0x04
-		unsigned char m_count2;       // 0x08, the entries of m_pList2 (cleared with it by the destructor; no reader found yet)
-		int *m_pList2;                // 0x0C, a second list deleted with delete[] (element type not known)
+		unsigned char m_count2;       // 0x08, the entries of m_pList2
+		short *m_pList2;              // 0x0C, the object indices of the quad (QuadTree reads them as shorts)
 	};
 
 	// A model placed in the soup. Its constructor (polysoup.h:191) is emitted
@@ -354,6 +360,8 @@ public:
 	int GetAreaNum(void) { return m_numAreas; }
 	// polysoup.h:337
 	int GetRmrModelNum(void) { return m_numStructuredObjects; }
+	// polysoup.h:345
+	sModel *GetBaseModel(void) { return m_pBgModel; }
 	// polysoup.h:350
 	sArea *GetArea(int index) { return &m_pAreas[index]; }
 

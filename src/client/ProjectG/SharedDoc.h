@@ -250,13 +250,20 @@ inline sRoomSlot::sRoomSlot(void) {
 	m_pPet = 0;
 }
 
-// An entry of the replay file list (CSharedDoc::m_replayFileList), as
-// FrReplayModeDlg::OnOkBtnUp searches it by file name. The size is not
-// known yet.
-struct sReplayFileInfo {
-	PADDING(0x0, 0xBC);
-	char m_fileName[0x24];          // 0xBC, compared (_stricmp) with CSharedDoc::m_fileName; length not known
+// A saved replay of the replay file list (CSharedDoc::m_replayFileList),
+// 0xDD bytes (list<sRecordedItemInfo>::_Buynode copies 0x37 dwords and a
+// byte). The name is the PDB's; its implicit constructor (shareddoc.cpp,
+// no line record) only constructs the sItemInfo at 0x0. The original header
+// is not known. FrReplayModeDlg::OnOkBtnUp searches it by file name.
+struct sRecordedItemInfo : sItemInfo {
+	unsigned long m_course;         // 0xA8, the course byte of the save file
+	SYSTEMTIME m_date;              // 0xAC, when the replay was recorded
+	char m_fileName[0x20];          // 0xBC, compared (_stricmp) with CSharedDoc::m_fileName
+	unsigned char m_playable;       // 0xDC, 1 when the replay can be played (CRealMyRoomMain)
 };
+
+// The name the callers transcribed first.
+typedef sRecordedItemInfo sReplayFileInfo;
 
 // One player's line of the game's result list (CSharedDoc::m_gameResultList),
 // 0x190 bytes; FrFinalRankDlg lists and sorts them, GUILDMATCHUP returns one.
@@ -392,6 +399,56 @@ CHECK_FIELD(sTeamResult, m_score, 0x0);
 CHECK_FIELD(sTeamResult, m_pang, 0x8);
 #pragma pack(pop)
 
+// One player's line of a "tiki" (caddie) report the server sends
+// (CSharedDoc::m_tikiReportList, 0x7F bytes); BuildTikiReportList turns each
+// into an sRivalData of the result list. The original name and header are not
+// known.
+#pragma pack(push, 1)
+struct sCaddieReportData {
+	unsigned long m_uid;            // 0x0, the player's UID (sRivalData::m_id and m_uid)
+	__int64 m_pang;                 // 0x4, sRivalData::m_pang
+	__int64 m_extraPang;            // 0xC, sRivalData::m_extraPang
+	unsigned long m_matchTypeId;    // 0x14, CSharedDoc::m_matchTypeId for the local player
+	unsigned long m_exp;            // 0x18, the local player's statistics exp
+	unsigned long m_mascotTypeId;   // 0x1C, sRivalData::m_mascotTypeId
+	unsigned char m_isGM;           // 0x20, non-zero sets identity flag 0x80
+	signed char m_boostKind;        // 0x21, 1/2/3: item boost, extra, both
+	unsigned short m_level;         // 0x22, sRivalData::m_level
+	PADDING(0x24, 0x26);
+	signed char m_score;            // 0x26, sRivalData::m_score
+	unsigned char m_awardFlags;     // 0x27, bits 0-5: award ceremony slots 0-5
+	unsigned char m_value28;        // 0x28, sRivalData::m_holeShots[0], CSharedDoc::m_value456C
+	PADDING(0x29, 0x3F);
+	char m_nickname[0x16];          // 0x3F, sRivalData::m_nickname
+	PADDING(0x55, 0x59);
+	int m_guildUID;                 // 0x59, sRivalData::m_hasEmblem
+	char m_emblemName[0xC];         // 0x5D, sRivalData::m_emblemName
+	unsigned char m_roomType;       // 0x69, CSharedDoc::m_roomType for the local player
+	PADDING(0x6A, 0x6D);
+	unsigned char m_flags;          // 0x6D, the team; bit 2: skipped (sRivalData::m_state 3)
+	unsigned char m_winningTeam;    // 0x6E, CSharedDoc::m_winningTeam for the local player
+	PADDING(0x6F, 0x7F);
+};
+#pragma pack(pop)
+CHECK_SIZE(sCaddieReportData, 0x7F);
+CHECK_FIELD(sCaddieReportData, m_pang, 0x4);
+CHECK_FIELD(sCaddieReportData, m_extraPang, 0xC);
+CHECK_FIELD(sCaddieReportData, m_matchTypeId, 0x14);
+CHECK_FIELD(sCaddieReportData, m_exp, 0x18);
+CHECK_FIELD(sCaddieReportData, m_mascotTypeId, 0x1C);
+CHECK_FIELD(sCaddieReportData, m_isGM, 0x20);
+CHECK_FIELD(sCaddieReportData, m_boostKind, 0x21);
+CHECK_FIELD(sCaddieReportData, m_level, 0x22);
+CHECK_FIELD(sCaddieReportData, m_score, 0x26);
+CHECK_FIELD(sCaddieReportData, m_awardFlags, 0x27);
+CHECK_FIELD(sCaddieReportData, m_value28, 0x28);
+CHECK_FIELD(sCaddieReportData, m_nickname, 0x3F);
+CHECK_FIELD(sCaddieReportData, m_guildUID, 0x59);
+CHECK_FIELD(sCaddieReportData, m_emblemName, 0x5D);
+CHECK_FIELD(sCaddieReportData, m_roomType, 0x69);
+CHECK_FIELD(sCaddieReportData, m_flags, 0x6D);
+CHECK_FIELD(sCaddieReportData, m_winningTeam, 0x6E);
+
 // An item of the offline shop's sale list (CSharedDoc::m_maketList), 0x5E
 // bytes (list<sSaleItem>::_Buynode copies 0x17 dwords and a word). The
 // original header is not known; FrListBox items point at it
@@ -470,7 +527,9 @@ CHECK_FIELD(sGameResultInfo, m_holePang, 0x98);
 CHECK_FIELD(sGameResultInfo, m_totalShots, 0x13C);
 CHECK_FIELD(sGameResultInfo, m_approachDistance, 0x178);
 CHECK_FIELD(sGameResultInfo, m_approachPoint, 0x17C);
-CHECK_FIELD(sReplayFileInfo, m_fileName, 0xBC);
+CHECK_SIZE(sRecordedItemInfo, 0xDD);
+CHECK_FIELD(sRecordedItemInfo, m_fileName, 0xBC);
+CHECK_FIELD(sRecordedItemInfo, m_playable, 0xDC);
 CHECK_SIZE(sUserInfo, 0xB92);
 CHECK_FIELD(sUserInfo, m_slot, 0x0);
 CHECK_FIELD(sUserInfo, m_skinTypeIds, 0x298);
@@ -558,18 +617,18 @@ CHECK_FIELD(sUserInfoTime, m_userInfo.m_characterInfo.auxParts, 0x9E0);
 
 // One entry of CSharedDoc::m_gameTypeNames (8 bytes: the stride of
 // FrDtRoomDlg::OnGameDescInit's index).
-struct sGameTypeName {
+struct sGameTypeInfo {
 	const char *name;            // 0x0, the room name SetGameType copies into m_roomName
 	unsigned char maxPlayers;    // 0x4, 4 for stroke/match, 2 for the ladder, 30 for lobbies and tourneys (InitGameType)
 	unsigned char defaultPlayers; // 0x5, 2 for stroke/match, 10 for lobbies and tourneys (InitGameType)
 	unsigned char defaultHoles;  // 0x6, 3 for stroke, 9 for the ladder and tourneys, 18 for the last two types (InitGameType)
 	UNKNOWN(0x7, 0x8);
 };
-CHECK_FIELD(sGameTypeName, name, 0x0);
-CHECK_FIELD(sGameTypeName, maxPlayers, 0x4);
-CHECK_FIELD(sGameTypeName, defaultPlayers, 0x5);
-CHECK_FIELD(sGameTypeName, defaultHoles, 0x6);
-CHECK_SIZE(sGameTypeName, 0x8);
+CHECK_FIELD(sGameTypeInfo, name, 0x0);
+CHECK_FIELD(sGameTypeInfo, maxPlayers, 0x4);
+CHECK_FIELD(sGameTypeInfo, defaultPlayers, 0x5);
+CHECK_FIELD(sGameTypeInfo, defaultHoles, 0x6);
+CHECK_SIZE(sGameTypeInfo, 0x8);
 
 // A map event (the element of CSharedDoc::m_mapEventList; its list node is
 // 0x30 bytes, hence sizeof 0x28). The members are not known yet.
@@ -798,6 +857,9 @@ public:
 	const char *GetDefaultTitle(unsigned char gameType);
 	std::map<unsigned char, sMapStatistics> &GetMyPastMapStat(unsigned char course);
 
+	// shareddoc.h:502 (GolfItemHandler's copy)
+	const std::list<sItemInfo> &GetConstMyItemList(void) { return m_itemInfoList; }
+
 	// shareddoc.h:505 (inline; GuildActor emitted the copy the linker kept)
 	const sPangYaUserInfo &GetPangyaUserInfo(void) {
 		return m_userInfo;
@@ -857,8 +919,24 @@ public:
 		return m_userInfo.timeBlock;
 	}
 
+	// shareddoc.h:565 (TaskManager's copy)
+	int GetSizeTradeItem(void) { return m_listTradeItem.size(); }
+
 	unsigned long GetFriendGameSvrUID(void);        // shareddoc.h:1058
 	void SetForceNicknameChange(unsigned char force); // shareddoc.h:1074
+	// shareddoc.h:1075 (LobbyMain's copy)
+	unsigned char GetForceNicknameChange(void) const { return m_forceNicknameChange; }
+
+	// shareddoc.h:1173 (LobbyMain's copy)
+	eAppGiftDownloadState GetAppGiftDownLoadState(void) const
+	{
+		return (eAppGiftDownloadState)m_value5D08;
+	}
+
+	// shareddoc.h:1205 (LobbyMain's copy)
+	bool IsOpenFirstLoginAlarm(void) const { return m_loginDlgCreated; }
+	// shareddoc.h:1206 (LobbyMain's copy)
+	void SetNeedFirstLoginAlarm(bool need) { m_loginDlgCreated = need; }
 
 	// Emitted by messengerdlg.cpp (inline below, MESSENGERDLG_SHAREDDOC_INLINE).
 	void SetFriendGameSvrUID(unsigned long uid);    // shareddoc.h:1057
@@ -1053,7 +1131,7 @@ public:
 	sRoomGameDesc m_gameDesc;                        // 0xCC, the room FrDtRoomDlg describes (CLobbyTask::OnPacket 0x84)
 	// The room name of each game type (SetGameType copies the entry into
 	// m_roomName; FrDtRoomDlg::OnGameDescInit shows it).
-	sGameTypeName m_gameTypeNames[15];               // 0xD8, indexed by game type (m_roomType)
+	sGameTypeInfo m_gameTypeNames[15];               // 0xD8, indexed by game type (m_roomType)
 
 protected:
 	PADDING(0x150, 0x158);
@@ -1173,7 +1251,7 @@ public:
 protected:
 
 public:
-	std::list<sReplayFileInfo> m_replayFileList;     // 0x11AC, the saved replays (FrReplayModeDlg deletes from it)
+	std::list<sRecordedItemInfo> m_replayFileList;   // 0x11AC, the saved replays (FrReplayModeDlg deletes from it)
 
 public:
 	// Two more owned-item lists (SortAllMyItemList sorts them, UccLibrary's
@@ -1245,8 +1323,10 @@ public:
 public:
 	std::vector<sRivalData> m_gameResultList;        // 0x4504, the finished game's results (FrFinalRankDlg)
 
+public:
+	std::vector<sCaddieReportData> m_tikiReportList; // 0x4514, the server's report lines (BuildTikiReportList)
+
 protected:
-	std::vector<unsigned long> m_vector4514;         // 0x4514 (only constructed so far; element type not known)
 	std::vector<sGuildMatchup> m_vector4524;         // 0x4524, the guild match pairings (CLobbyTask::OnPacket 0xBD)
 	std::list<sGuildMatchFlagInfo> m_guildMatchFlags; // 0x4534 (only constructed so far)
 	unsigned char m_block4540[0x1C];                 // 0x4540, a block the server sends whole (CLobbyTask::OnPacket 0xBE, then CUserInfo::Refresh)
@@ -1394,7 +1474,7 @@ public:
 	std::list<sGameServerInfo> m_gameServerList;     // 0x4A88, the game servers (FrServerDlg::BuildServerList, CProjectG::OnGameServerResult)
 
 protected:
-	std::vector<unsigned long> m_vector4A94;         // 0x4A94 (only constructed so far; element type not known)
+	std::vector<sGameServerInfo> m_vector4A94;       // 0x4A94 (only constructed so far)
 	std::list<sRoomUserInfo> m_roomUserList;         // 0x4AA4 (only constructed so far)
 
 public:
@@ -2114,6 +2194,24 @@ int IsAdministrator(unsigned long identity);
 bool IsGameType(unsigned char type);
 bool IsAngelWing(unsigned long typeId);         // shareddoc.inl:562 (SharedDoc's copy, defined in SharedDoc.inl)
 bool IsMannerPlayer(void);                      // shareddoc.inl:602 (RealMyRoomMainUI's copy)
+
+// shareddoc.inl:602, inline in the original. RealMyRoomMainUI emitted the copy
+// the linker kept: RealMyRoomMainUI.cpp defines REALMYROOMMAINUI_SHAREDDOC_INLINE
+// before its first include and gets the out-of-line definition here.
+#ifdef REALMYROOMMAINUI_SHAREDDOC_INLINE
+bool IsMannerPlayer(void) {
+	unsigned long games = WSingleton<CSharedDoc>::Instance()->m_myStatGamesPlayed;
+	if (games < 1) {
+		games = 1;
+	}
+
+	if ((float)WSingleton<CSharedDoc>::Instance()->m_myStatNoMannerGames / (float)games * 100.0f < 3.0f) {
+		return true;
+	}
+
+	return false;
+}
+#endif
 bool IsUsedItembyMe(unsigned long typeId);      // shareddoc.inl:684, inline below with GolfDoc.h (club's copy 0x474ed0)
 
 // shareddoc.cpp:2009, SortAllMyItemList's order: by type id (0x4073f0)
@@ -2174,6 +2272,11 @@ inline const char *GetCurMapName(void) {
 	return 0;
 }
 
+// shareddoc.inl:155: the current course's item record
+inline IFF_STRUCT::sCourse *GetCurMapProp(void) {
+	return WSingleton<CSharedDoc>::Instance()->m_pCurCourse;
+}
+
 // shareddoc.inl:184 (SharedDoc emitted the copy the linker kept)
 SHAREDDOC_INLINE void SetGameType(unsigned char type) {
 	WSingleton<CSharedDoc>::Instance()->m_roomType = type;
@@ -2191,9 +2294,32 @@ inline bool IsValidHole(unsigned char hole) {
 	return false;
 }
 
+// shareddoc.inl:197 (LobbyMain's copy): a game type's info, 0 past the table
+inline const sGameTypeInfo *GetGameTypeInfo(unsigned char gameType) {
+	if (gameType >= 15)
+		return 0;
+
+	return &WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[gameType];
+}
+
+// shareddoc.inl:647 (LobbyMain's copy): the course of the current room
+inline unsigned char GetCurRoomMapType(void) {
+	return WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_course;
+}
+
 // shareddoc.inl:288
 inline unsigned char GetWeather(void) {
 	return WSingleton<CSharedDoc>::Instance()->m_weather;
+}
+
+// shareddoc.inl:298, the current course's kind (low nibble of its flags), 1
+// without a course.
+inline unsigned char GetDifficulty(void) {
+	IFF_STRUCT::sCourse *course = WSingleton<CSharedDoc>::Instance()->m_pCurCourse;
+	if (!course)
+		return 1;
+
+	return course->kind;
 }
 
 // shareddoc.inl:308 (wind emitted the copy the linker kept): the current
@@ -2203,7 +2329,7 @@ inline unsigned char GetDiffFlag(void) {
 	if (!course)
 		return 0;
 
-	return course->courseFlags >> 4;
+	return course->difficulty;
 }
 
 // shareddoc.inl:323
@@ -2407,6 +2533,16 @@ CLIENTSETTING_SHAREDDOC_INLINE char *MyId(void) {
 	return WSingleton<CSharedDoc>::Instance()->m_userInfo.id;
 }
 
+// shareddoc.inl:515
+inline __int64 MyPang(void) {
+	return WSingleton<CSharedDoc>::Instance()->m_myPang;
+}
+
+// shareddoc.inl:516
+inline __int64 MyCookie(void) {
+	return WSingleton<CSharedDoc>::Instance()->m_myCash;
+}
+
 // shareddoc.inl:518 (TaskMain emitted the copy the linker kept)
 TASKMAIN_SHAREDDOC_INLINE __int64 MyOutsideCash(void) {
 	return WSingleton<CSharedDoc>::Instance()->m_outsideCash;
@@ -2502,6 +2638,27 @@ GOLFRULE_SHAREDDOC_INLINE sBar &Bar(void) {
 // shareddoc.inl:345 (GolfRule emitted the copy the linker kept)
 inline sTeamData *TEAM(unsigned char index) {
 	return GOLFDOC()->GetTeam(index);
+}
+
+// shareddoc.inl:503 (GolfRule emitted the copy the linker kept). This
+// client's player index: a gallery member's by its gallery GUID (in rooms 4
+// to 6, 9 and 10) or the golf doc's, else by its own GUID.
+GOLFRULE_SHAREDDOC_INLINE unsigned char MyIndex(void) {
+	CSharedDoc *doc = WSingleton<CSharedDoc>::Instance();
+	if (doc->m_userInfo.IsIdentity(2)) {
+		switch (doc->m_roomType) {
+		case 4:
+		case 5:
+		case 6:
+		case 9:
+		case 10:
+			return doc->GetIndex(doc->m_userInfo.galleryGuid);
+		default:
+			return doc->m_pGolfDoc->m_myPlayerIndex;
+		}
+	}
+
+	return doc->GetIndex(doc->m_userInfo.guid);
 }
 
 // s5/DemonLandDlg.cpp defines DEMONLANDDLG_SHAREDDOC_INLINE empty before its

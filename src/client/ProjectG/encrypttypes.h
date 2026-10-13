@@ -42,6 +42,11 @@ public:
 		return *this;
 	}
 
+	// encrypttypes.h:41
+	bool operator==(T value) {
+		return Get() == value;
+	}
+
 	// encrypttypes.h:45
 	bool operator>(T value) {
 		return Get() > value;
@@ -55,6 +60,11 @@ public:
 	// encrypttypes.h:53
 	bool operator>=(T value) {
 		return Get() >= value;
+	}
+
+	// encrypttypes.h:57
+	bool operator<=(T value) {
+		return Get() <= value;
 	}
 
 	// encrypttypes.h:61
@@ -77,6 +87,16 @@ public:
 	// encrypttypes.h:85
 	T operator-(T value) {
 		return Get() - value;
+	}
+
+	// encrypttypes.h:89
+	T operator*(T value) {
+		return Get() * value;
+	}
+
+	// encrypttypes.h:93
+	T operator/(T value) {
+		return Get() / value;
 	}
 
 	// encrypttypes.h:102

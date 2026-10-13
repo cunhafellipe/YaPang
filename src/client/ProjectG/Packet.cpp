@@ -240,7 +240,7 @@ bool WSendPacket::SetSendPacket(const unsigned char* data, unsigned int length, 
 
 // packet.cpp:500
 unsigned int WSendPacket::GetLengthData(void) {
-	unsigned int length = m_length;
+	unsigned int length = GetLength();
 	return length <= 7 ? 0 : length - 7;
 }
 

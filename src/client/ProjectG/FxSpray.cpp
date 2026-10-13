@@ -129,7 +129,7 @@ static float GetVolumeFactor(const Waabb& inner, const WVector& pos, const Waabb
 	}
 	else {
 		WVector d = pos - outer.min;
-		float dist = sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
+		float dist = sqrtf(d.y * d.y + d.x * d.x + d.z * d.z);
 
 		if (dist <= inner.max.x) {
 			if (!(WAbsBySign(inner.max.x) < WMATH_EPSILON))
@@ -1502,8 +1502,8 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 	pParticle->m_fTailTime = 0.0f;
 
 	if (m_param.m_bTail > 0) {
-		pParticle->m_tails.Create(m_param.m_bTail + 1);
-		pParticle->m_bandanas.Create(m_param.m_bTail + 1);
+		pParticle->m_tails.Init(m_param.m_bTail + 1);
+		pParticle->m_bandanas.Init(m_param.m_bTail + 1);
 	}
 
 	pParticle->m_spawnCount = 0;
@@ -1646,7 +1646,7 @@ void CFxSpray::DrawSprite(WView* pView, CFxParticle* pParticle, const WVector& p
 // Draws the particle's tail: its points' sprites, or lines from point to
 // point, the colour fading from the particle's to the tail colour.
 void CFxSpray::DrawTail(WView* pView, CFxParticle* pParticle, const WVector& pos) {
-	if (pParticle->m_tails.GetLen() < 1)
+	if (pParticle->m_tails.IsEmpty())
 		return;
 
 	m_displayedCount2++;
@@ -1712,7 +1712,7 @@ void CFxSpray::DrawTail(WView* pView, CFxParticle* pParticle, const WVector& pos
 // the strip's length (with "monolith") and its colour fading to the tail
 // colour.
 void CFxSpray::DrawBandana(WView* pView, CFxParticle* pParticle, const WVector& pos) {
-	if (pParticle->m_bandanas.GetLen() < 1)
+	if (pParticle->m_bandanas.IsEmpty())
 		return;
 
 	float total = 0.0f;

@@ -66,22 +66,22 @@ void FrRentalExtensionDlg::Initialize(const sItemInfo* itemInfo) {
 	m_itemInfo = new sItemInfo;
 	*m_itemInfo = *itemInfo;
 
-	FrEdit* pName = DYNAMIC_CAST(FrEdit, FindChildByName("ed_name"));
-	if (pName) {
-		pName->AddText(ItemManager()->GetItemName(m_itemInfo->m_typeId), false, true);
+	FrEdit* pEdit = DYNAMIC_CAST(FrEdit, FindChildByName("ed_name"));
+	if (pEdit) {
+		pEdit->AddText(ItemManager()->GetItemName(m_itemInfo->m_typeId), false, true);
 	}
 
-	FrEdit* pDesc = DYNAMIC_CAST(FrEdit, FindChildByName("ed_desc"));
-	if (pDesc) {
-		pDesc->AddText("\\c0xffff0000\\c\xc7\xd8\xb4\xe7 \xc0\xc7\xbb\xf3\xc0\xc7 \xbb\xe7\xbf\xeb\xb1\xe2\xb0\xa3\xc0\xcc \xb8\xb8\xb7\xe1\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.", false, true);
+	pEdit = DYNAMIC_CAST(FrEdit, FindChildByName("ed_desc"));
+	if (pEdit) {
+		pEdit->AddText("\\c0xffff0000\\c\xc7\xd8\xb4\xe7 \xc0\xc7\xbb\xf3\xc0\xc7 \xbb\xe7\xbf\xeb\xb1\xe2\xb0\xa3\xc0\xcc \xb8\xb8\xb7\xe1\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.", false, true);
 
-		pDesc->AddText(MakeStr("\\c0xff000000\\c- \xbb\xe7\xbf\xeb \xb1\xe2\xb0\xa3\xc0\xbb \xbf\xac\xc0\xe5\xc7\xcf\xbd\xc7 \xb0\xe6\xbf\xec \xc1\xef\xbd\xc3 %s \xc2\xf7\xb0\xa8 \xb5\xcb\xb4\xcf\xb4\xd9.", "\xc6\xce\xc0\xcc"), false, true);
+		pEdit->AddText(MakeStr("\\c0xff000000\\c- \xbb\xe7\xbf\xeb \xb1\xe2\xb0\xa3\xc0\xbb \xbf\xac\xc0\xe5\xc7\xcf\xbd\xc7 \xb0\xe6\xbf\xec \xc1\xef\xbd\xc3 %s \xc2\xf7\xb0\xa8 \xb5\xcb\xb4\xcf\xb4\xd9.", "\xc6\xce\xc0\xcc"), false, true);
 	}
 
 	IFF_STRUCT::sPart* pPart = ItemManager()->FindPart(m_itemInfo->m_typeId);
-	FrEdit* pPrice = DYNAMIC_CAST(FrEdit, FindChildByName("ed_price"));
-	if (pPrice && pPart) {
-		pPrice->AddText(MakeStr("\xb1\xe2\xb0\xa3 \xbf\xac\xc0\xe5 \xba\xf1\xbf\xeb : %d%s(%d\xc0\xcf)", pPart->m_rentalPrice, "\xc6\xce", 7), false, true);
+	pEdit = DYNAMIC_CAST(FrEdit, FindChildByName("ed_price"));
+	if (pEdit && pPart) {
+		pEdit->AddText(MakeStr("\xb1\xe2\xb0\xa3 \xbf\xac\xc0\xe5 \xba\xf1\xbf\xeb : %d%s(%d\xc0\xcf)", pPart->m_rentalPrice, "\xc6\xce", 7), false, true);
 	}
 
 	FrButton* pExtension = DYNAMIC_CAST(FrButton, FindChildByName("bt_extension"));
@@ -97,7 +97,17 @@ void FrRentalExtensionDlg::Initialize(const sItemInfo* itemInfo) {
 		}
 	} else {
 		if (pExtension) {
-			if (WSingleton<CSharedDoc>::Instance()->m_myPang < pPart->m_rentalPrice) {
+			// A cookie-priced rental branch the compiler folds away: its string
+			// temporary still takes EH state 2 and its MyCookie() call emits
+			// the inline's copy (the tooltip text is not in the binary).
+			const bool cookiePrice = false;
+			if (cookiePrice) {
+				if (MyCookie() < pPart->m_rentalPrice) {
+					pExtension->Enable(false);
+					pExtension->SetToolTipText("\xb1\xe2\xb0\xa3 \xbf\xac\xc0\xe5\xbf\xa1 \xc7\xca\xbf\xe4\xc7\xd1 \xc4\xed\xc5\xb0\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.");
+					pExtension->EnableToolTip(true);
+				}
+			} else if (MyPang() < pPart->m_rentalPrice) {
 				pExtension->Enable(false);
 				pExtension->SetToolTipText("\xb1\xe2\xb0\xa3 \xbf\xac\xc0\xe5\xbf\xa1 \xc7\xca\xbf\xe4\xc7\xd1 \xc6\xce\xc0\xcc \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.");
 				pExtension->EnableToolTip(true);

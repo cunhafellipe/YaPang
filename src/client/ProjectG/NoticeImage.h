@@ -6,17 +6,16 @@
 #include <vector>
 
 #include "defines.h"
+#include "client/Wangreal/include/wtypes.h"
 
 // A named image of a notice file with its buttons, read by
 // LoadNoticeImageFile (size 0x2c: its element count is divided by 0x2c).
 struct sNoticeImage {
-	// One "(%d %f %f %f %f)" entry of the file.
+	// One "(%d %f %f %f %f)" entry of the file. The WRect member (user
+	// constructors) gives sBn the implicit constructor the unit emits.
 	struct sBn {
 		int index;   // 0x0
-		float x;     // 0x4
-		float y;     // 0x8
-		float w;     // 0xc
-		float h;     // 0x10
+		WRect rect;  // 0x4
 	};
 
 	// noticeimage.h:20
@@ -29,6 +28,7 @@ struct sNoticeImage {
 };
 
 CHECK_SIZE(sNoticeImage::sBn, 0x14);
+CHECK_FIELD(sNoticeImage::sBn, rect, 0x4);
 CHECK_SIZE(sNoticeImage, 0x2c);
 CHECK_FIELD(sNoticeImage, name, 0x0);
 CHECK_FIELD(sNoticeImage, buttons, 0x20);

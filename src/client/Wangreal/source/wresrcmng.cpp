@@ -601,6 +601,16 @@ WFont* WResourceManager::GetFntFont(const char* filename) {
 
 // wresrcmng.cpp:842
 WFont* WResourceManager::GetFixedFont(const char* filename) {
+#ifdef JP_PAKS
+	// The JP client's text is Shift-JIS: its exe loads the Japanese fonts
+	// where the KR code loads the Korean Dotum (both are 64K tables indexed
+	// by the raw byte pair, docs/JP_CLIENT.md).
+	if (stricmp(filename, "fnt_\xb5\xb8\xbf\xf2\xc3\xbc_12.wft") == 0) {
+		filename = "fnt_japan_12.wft";
+	} else if (stricmp(filename, "fnt_\xb5\xb8\xbf\xf2\xc3\xbc_11.wft") == 0) {
+		filename = "ms_ui_gothic_11_jp.wft";
+	}
+#endif
 	WFont* font = GetFntClone(filename);
 	if (font)
 		return font;

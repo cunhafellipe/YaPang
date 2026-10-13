@@ -775,7 +775,7 @@ private:
 	bool m_roomOptionB;                 // 0x906, cleared by OnGameRoom_Init (role not known)
 	bool m_roomOptionC;                 // 0x907, OnGameRoom_Init: set for identity 2 (role not known)
 	bool m_roomOptionD;                 // 0x908, cleared by OnGameRoom_Init (role not known)
-	PADDING(0x909, 0x90A);
+	unsigned char m_roomCategory;       // 0x909, the room category a quick join picks a random game type from (message 0x3B, GetRandGameTypeByCate)
 	bool m_away;                        // 0x90A, the local player is away from keyboard (ProcessLobbyUI: 60 s idle in the game room); cleared by OnGameRoom_Init
 	PADDING(0x90B, 0x90C);
 	std::list<sSlotInfo*> m_slotList1;  // 0x90C, constructed by the constructor
@@ -882,6 +882,7 @@ BEGIN_LAYOUT_CHECK(CLobbyMain)
 	CHECK_FIELD(CLobbyMain, m_roomOptionB, 0x906);
 	CHECK_FIELD(CLobbyMain, m_roomOptionC, 0x907);
 	CHECK_FIELD(CLobbyMain, m_roomOptionD, 0x908);
+	CHECK_FIELD(CLobbyMain, m_roomCategory, 0x909);
 	CHECK_FIELD(CLobbyMain, m_away, 0x90A);
 	CHECK_FIELD(CLobbyMain, m_removeFriendUid, 0x92C);
 	CHECK_FIELD(CLobbyMain, m_toppageNoticeBtn, 0x1F8);

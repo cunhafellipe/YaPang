@@ -9,8 +9,8 @@ public:
 	// work.h:7
 	virtual ~CWork(void) {}
 
-	// Slot 1: run once per CEventThread tick (name not in the PDB).
-	virtual void Process(void) = 0;
+	// Slot 1: run once per CEventThread tick (CWorkAliveCheck::Act).
+	virtual void Act(void) = 0;
 };
 
 #endif // PG_CLIENT_PROJECTG_WORK_H

@@ -1,4 +1,7 @@
 // Original: d:\build\custom\temp\code\client\projectg\contentsdoc.cpp
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
+			// (keeps GUILD_DATE_FORMAT dynamically initialized, docs/tough_problems/010)
+#include "guilddefine.h"
 #include "contentsdoc.h"
 #include "Packet.h"
 #include "commonutil.h"

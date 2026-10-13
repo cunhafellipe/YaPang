@@ -326,7 +326,7 @@ void FrNoticeDlg::OnViewBtnDown(void) {
 	std::list<sNoticeImage::sBn>::iterator it;
 	for (it = m_images[m_page].buttons.begin(); it != m_images[m_page].buttons.end(); ++it) {
 		WPoint pos(m_pView->GetRect().x, m_pView->GetRect().y);
-		WRect rect(pos.x + it->x, pos.y + it->y, it->w, it->h);
+		WRect rect(pos.x + it->rect.x, pos.y + it->rect.y, it->rect.w, it->rect.h);
 
 		if (mouse.x >= rect.x && mouse.x <= rect.x + rect.w && mouse.y >= rect.y && mouse.y <= rect.y + rect.h) {
 			m_typeId = it->index;

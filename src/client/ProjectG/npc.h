@@ -79,8 +79,18 @@ public:
 	virtual void PlayEvent(void);
 	virtual void CheckTarget(float dt);
 
+	// npc.h:96
+	bool GetActive(void) { return m_active; }
 	// npc.h:97
 	void SetActive(bool active) { m_active = active; }
+	// npc.h:98
+	Waabb GetArea(void) { return m_area; }
+	// npc.h:105
+	void SetType(int type) { m_npcType = type; }
+	// npc.h:106
+	int GetType(void) { return m_npcType; }
+	// npc.h:107
+	void SetRadius(float radius) { m_unkAC = radius; }
 	// npc.h:108
 	WPuppet *GetPet(void) { return m_pPet; }
 	// npc.h:109
@@ -100,7 +110,8 @@ protected:
 		float m_time;           // 0x4, the frame time in seconds
 	};
 
-	CCreature(void);            // npc.h:129
+	// npc.h:129
+	CCreature(void) : m_flags(0), m_pPet(NULL), m_motionTime(0.0f), m_pMotion(NULL), m_pBuffer(NULL), m_unkAC(0.0f) {}
 
 	void Init(const char *name, unsigned long flags);
 

@@ -193,7 +193,7 @@ FrRecycleDlg::FrRecycleDlg(void) {
 FrRecycleDlg::~FrRecycleDlg(void) {
 	if (IsLocalContent((localContentType_t)0x59)) {
 
-		if (WSingleton<WNetworkSystem>::Instance()) {
+		if (WSingleton<WNetworkSystem>::IsInstantiated()) {
 
 			WSendPacket packet(GCT_UCC_REQUEST);
 			packet.Encode1(1);

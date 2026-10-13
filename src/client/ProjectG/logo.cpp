@@ -66,9 +66,10 @@ void CLogo::OnProcess(float elapsed) {
 // logo.cpp:53
 void CLogo::OnDisplay(void) {
 	if (m_pOverlay) {
-		int x = (int)((g_view->GetWidth() - m_pOverlay->GetWidth()) * 0.5f);
+		float x = (float)(int)((g_view->GetWidth() - m_pOverlay->GetWidth()) * 0.5f);
 
-		m_pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect((float)x, 0.0f, (float)m_pOverlay->GetWidth(), (float)m_pOverlay->GetHeight()), 0, ((unsigned char)(m_alpha * 255.0f) << 24) | 0xFFFFFF, 0.0f, 0);
+		_WRECT rc = { x, 0.0f, (float)m_pOverlay->GetWidth(), (float)m_pOverlay->GetHeight() };
+		m_pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), rc, 0, ((unsigned char)(m_alpha * 255.0f) << 24) | 0xFFFFFF, 0.0f, 0);
 	}
 }
 

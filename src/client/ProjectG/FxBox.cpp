@@ -15,10 +15,6 @@
 
 // fxbox.cpp:32
 CFxBox::CFxBox(void) {
-	m_pCorners[0] = &m_corners[0];
-	m_pCorners[1] = &m_corners[1];
-	m_pCorners[2] = &m_corners[3];
-	m_pCorners[3] = &m_corners[2];
 	m_pResourceManager = 0;
 	m_flag110 = false;
 	m_value114 = 0;
@@ -32,6 +28,10 @@ CFxBox::CFxBox(void) {
 	m_pCamera = 0;
 	m_groundAreaHigh = 99.0f;
 	m_groundAreaLow = -99.0f;
+	m_pCorners[0] = &m_corners[0];
+	m_pCorners[1] = &m_corners[1];
+	m_pCorners[2] = &m_corners[3];
+	m_pCorners[3] = &m_corners[2];
 	m_pCorners[4] = NULL;
 
 	for (int i = 0; i < 4; i++) {

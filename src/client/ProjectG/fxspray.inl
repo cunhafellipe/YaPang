@@ -23,6 +23,11 @@ inline WVector& CFxSpray::Pos(void) {
 	return m_pos;
 }
 
+// fxspray.inl:77
+inline WVector& CFxSpray::Vel(void) {
+	return m_spawnDir;
+}
+
 // fxspray.inl:84
 inline WVector& CFxSpray::InitialMinVel(void) {
 	return m_param.m_initialMinVel;

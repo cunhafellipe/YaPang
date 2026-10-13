@@ -138,7 +138,8 @@ void CRealMyRoomData::OnLoad(void) {
 	if (!WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT)) {
 		if (ItemManager()->m_furnitureMap.size() != 0) {
 			for (std::map<unsigned int, IFF_STRUCT::sFurniture>::iterator it = ItemManager()->m_furnitureMap.begin(); it != ItemManager()->m_furnitureMap.end(); ++it) {
-				sFurniture_List furniture = {0};
+				sFurniture_List furniture;
+				memset(&furniture, 0, sizeof(furniture));
 				furniture.m_typeId = it->second.m_typeId;
 				furniture.m_id = rand() % 100;
 				furniture.m_pos.x = it->second.m_pos[0];
@@ -1395,10 +1396,10 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 // mode: along the floor (2), along the wall it hangs on (3), sliding along
 // the walls (5), or pushed out of the other furniture (7).
 WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup::sModel *pData) {
-	WVector result = WVector::ZERO;
 	trace_s trace;
 	WVector move;
 	WVector newPos;
+	WVector result = WVector::ZERO;
 
 	WVector roomMax = GetPVS().m_pBaseModel->m_aabb.max;
 
@@ -1406,7 +1407,7 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 	case 2: {
 		move = m_targetPos - pModel->m_pModelData->m_basePos;
 
-		move = WVector(move.x, 0.0f, move.y);
+		move.z = move.y; move.y = 0.0f;
 
 		WVector dir = move;
 
@@ -1813,7 +1814,7 @@ void cModel::OBBToAABB() {
 
 	// Starts inverted (min at the room's max, max at its min) so the corners
 	// pull it to their bounds; the bottom is kept between 0 and 30.
-	Waabb box(pRoom->m_aabb.max, pRoom->m_aabb.min); box.min.y = 30.0f;
+	Waabb room = pRoom->m_aabb; Waabb box(room.max, room.min); box.min.y = 30.0f;
 
 	WVector center; center = m_pModelData->m_obb.center;
 	WVector ext0; ext0 = m_pModelData->m_obb.extend[0];
@@ -1821,16 +1822,18 @@ void cModel::OBBToAABB() {
 	WVector ext2; ext2 = m_pModelData->m_obb.extend[2];
 
 	box.max.y = 0.0f;
-	WVector corner[8] = {
-		center + ext0 * -1.0f + ext1 + ext2 * -1.0f,
-		center + ext0 * -1.0f + ext1 * -1.0f + ext2 * -1.0f,
-		center + ext0 + ext1 * -1.0f + ext2 * -1.0f,
-		center + ext0 + ext1 + ext2 * -1.0f,
-		center + ext0 * -1.0f + ext1 + ext2,
-		center + ext0 * -1.0f + ext1 * -1.0f + ext2,
-		center + ext0 + ext1 * -1.0f + ext2,
-		center + ext0 + ext1 + ext2,
-	};
+	// Each corner goes through a temporary copied into the array, and the
+	// sums are grouped per corner as the original adds them (the ext1/ext2
+	// pair is shared between corners).
+	WVector corner[8];
+	corner[0] = center + (ext0 * -1.0f + (ext1 + ext2 * -1.0f));
+	corner[1] = center + (ext0 * -1.0f + (ext1 * -1.0f + ext2 * -1.0f));
+	corner[2] = center + (ext1 * -1.0f + ext2 * -1.0f) + ext0;
+	corner[3] = center + (ext1 + ext2 * -1.0f) + ext0;
+	corner[4] = center + ext0 * -1.0f + (ext1 + ext2);
+	corner[5] = center + ext0 * -1.0f + (ext1 * -1.0f + ext2);
+	corner[6] = center + (ext1 * -1.0f + ext2) + ext0;
+	corner[7] = center + (ext1 + ext2) + ext0;
 
 	WVector *pCorner = corner;
 	for (int count = 8; count != 0; count--, pCorner++) {

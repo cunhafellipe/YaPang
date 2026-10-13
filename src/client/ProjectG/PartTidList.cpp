@@ -48,6 +48,10 @@ bool CPartTidList::SetTids(unsigned long tidChar, unsigned char hairClr, unsigne
 	}
 
 	unsigned long charIndex = tidChar & 0x3FFFFFF;
+	// JP_PAKS: the JP data (2017) has none of these forced parts (Kooh's
+	// 0x8152400 is gone, so SetTids failed and the avatar got no mesh), and
+	// the JP exe's SetTids (0x8B3050) has no such table (docs/JP_CLIENT.md).
+#ifndef JP_PAKS
 	if (charIndex == 4) {
 		partTids[18] = 0x8124400;
 		partTids[19] = 0x8126400;
@@ -75,6 +79,7 @@ bool CPartTidList::SetTids(unsigned long tidChar, unsigned char hairClr, unsigne
 			partTids[22] = 0x826C400;
 		}
 	}
+#endif
 
 	if (m_numTotalParts != 0) {
 		memset(m_partTids, 0, m_numTotalParts * sizeof(unsigned long));

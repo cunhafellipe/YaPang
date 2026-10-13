@@ -112,7 +112,7 @@ void C3dFont::Printf(WView* view, int spacing, const char* format, ...)
 		m_vertex[1].tv = v;
 		m_vertex[2].tu = u + m_cellU;
 		m_vertex[2].tv = v;
-		m_vertex[3].tu = u + m_cellU;
+		m_vertex[3].tu = m_vertex[2].tu;
 		m_vertex[3].tv = v + m_cellV;
 
 		float left = m_offsetX - (m_charWidth * len + (len - 1) * spacing) * 0.5f + (m_charWidth + spacing) * n;
@@ -120,23 +120,19 @@ void C3dFont::Printf(WView* view, int spacing, const char* format, ...)
 		float top = m_offsetY - m_charHeight * 0.5f;
 		float bottom = top + m_charHeight;
 
-		float x0 = pos.x + left;
-		float x1;
-		float y0;
-		float y1;
-		if (x0 > g_view->GetWidth() - 0.5f || (x1 = pos.x + right) < 0.5f
-			|| (y0 = pos.y + top) > g_view->GetHeight() - 0.5f || (y1 = pos.y + bottom) < 0.5f) {
+		if ((left += pos.x) > g_view->GetWidth() - 0.5f || (right += pos.x) < 0.5f
+			|| (top += pos.y) > g_view->GetHeight() - 0.5f || (bottom += pos.y) < 0.5f) {
 			continue;
 		}
 
-		m_vertex[0].x = x0;
-		m_vertex[0].y = y1;
-		m_vertex[1].x = x0;
-		m_vertex[1].y = y0;
-		m_vertex[2].x = x1;
-		m_vertex[2].y = y0;
-		m_vertex[3].x = x1;
-		m_vertex[3].y = y1;
+		m_vertex[0].x = left;
+		m_vertex[0].y = bottom;
+		m_vertex[1].x = left;
+		m_vertex[1].y = top;
+		m_vertex[2].x = right;
+		m_vertex[2].y = top;
+		m_vertex[3].x = right;
+		m_vertex[3].y = bottom;
 
 		for (int j = 0; j < 4; j++) {
 			ClipChar(j);

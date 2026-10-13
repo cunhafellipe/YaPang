@@ -3,6 +3,7 @@
 // initializers of the headers it includes (golfdoc.h:282-283 and the six
 // hatmanager.h:38-43 FilteringNick strings).
 #define PG_HATMANAGER_FILE_STRINGS
+#define PG_GOLFDOC_BAR_CENTER	// golfdoc.h:283 initializer
 #include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
 #include "GolfDoc.h"
 #include "hatManager.h"

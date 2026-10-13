@@ -178,12 +178,12 @@ void CMascot::HandleMsg(const MsgObject &msg) {
 	switch (msg.m_msg) {
 	case 0x164:
 		if (m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird) {
-			static_cast<CCameraBird *>(m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird)->SetActive(false);
+			m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird->SetActive(false);
 		}
 		break;
 	case 0x163:
 		if (m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird) {
-			static_cast<CCameraBird *>(m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird)->SetActive(true);
+			m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird->SetActive(true);
 		}
 		break;
 	case 0x4E:
@@ -200,8 +200,8 @@ void CMascot::HandleMsg(const MsgObject &msg) {
 			if (pBird) {
 				pBird->ChangePet(MakeStr("%s.pet", pIff->m_model));
 
-				int handle = ChangeMascotMsgInTex(m_mascots[GOLFDOC()->m_myPlayerIndex].m_pPlayer->message, pIff, static_cast<CCameraBird *>(m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird)->GetPet(), MakeStr("_golf%02d", GOLFDOC()->m_myPlayerIndex));
-				static_cast<CCameraBird *>(m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird)->SetAddTex(handle);
+				int handle = ChangeMascotMsgInTex(m_mascots[GOLFDOC()->m_myPlayerIndex].m_pPlayer->message, pIff, m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird->GetPet(), MakeStr("_golf%02d", GOLFDOC()->m_myPlayerIndex));
+				m_mascots[GOLFDOC()->m_myPlayerIndex].m_pBird->SetAddTex(handle);
 			}
 		}
 		break;

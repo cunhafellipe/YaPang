@@ -145,7 +145,7 @@ void CGolfBg::DoInitAfterLoad(void) {
 	SendMsg(this, "Camera", 0xEF, 0, 0, 0, 0);
 
 	WPolySoup::sPoint *point;
-	if (CSharedDoc::Instance()->m_pCurCourse && (CSharedDoc::Instance()->m_pCurCourse->courseFlags >> 4) == 1) {
+	if (GetDiffFlag() == 1) {
 		point = GOLFDOC()->m_pPolySoup->FindPoint("\xB1\xD7\xB8\xAE\xB5\xE5");
 	} else {
 		point = GOLFDOC()->m_pPolySoup->FindPoint("\xB1\xD7\xB8\xAE\xB5\xE5" "2");

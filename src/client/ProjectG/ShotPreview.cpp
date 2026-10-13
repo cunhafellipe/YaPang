@@ -1,4 +1,6 @@
 // Original: d:\build\custom\temp\code\client\projectg\shotpreview.cpp
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
+			// (keeps BAR_LENGTH dynamically initialized, docs/tough_problems/010)
 #include "shotpreview.h"
 
 #include <string.h>

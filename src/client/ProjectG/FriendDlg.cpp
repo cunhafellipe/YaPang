@@ -1,10 +1,13 @@
 // Original: d:\build\custom\temp\code\client\projectg\frienddlg.cpp
+#include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
+
 #include "FriendDlg.h"
 #include "ObjectFactory.h"
 #include "frlistbox.h"
 #include "buddymanager.h"
 #include "GiftDlg.h"
 #include "Post_SendDlg.h"
+#include "StandingInLine.h"   // its s_standingNames initializer is the unit's first
 #include "fredit.h"
 #include "fresh.h"
 #include "frgraphicinterface.h"

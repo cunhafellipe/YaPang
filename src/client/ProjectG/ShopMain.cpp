@@ -2112,7 +2112,11 @@ void CShopMain::DrawRentalPrice(float x, float y, IFF_ITEM_COMMON &item, FrListI
 	if (part == NULL)
 		return;
 
-	g_pFresh->GetManager()->GetGDI()->Print11(WPoint(x, y) + listItem->pos, 2, MakeStr("%d\xc6\xce(%d\xc0\xcf)", part->m_rentalPrice, 7));
+	// One original line (3256): the GDI is fetched before the text and the
+	// position after it.
+	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
+	const char* text = MakeStr("%d\xc6\xce(%d\xc0\xcf)", part->m_rentalPrice, 7);
+	gdi->Print11(WPoint(x, y) + listItem->pos, 2, text);
 }
 
 // shopmain.cpp:3260
@@ -4860,8 +4864,7 @@ void CShopMain::TakeOff_AuxPartNCartList(CPartTidList &tidList, unsigned long ov
 			if (overlapMask & overlapped) {
 
 				UnselectItemFromItemList(item->m_typeId);
-				FrListBox::ITEM_LIST::iterator next = DeleteItemFromAuxCartList(item->m_typeId);
-				i = next;
+				i = DeleteItemFromAuxCartList(item->m_typeId);
 
 				if (tidList.IsEquipped(item->m_typeId, 0)) {
 
@@ -4872,6 +4875,10 @@ void CShopMain::TakeOff_AuxPartNCartList(CPartTidList &tidList, unsigned long ov
 
 				continue;
 			}
+
+			++i;
+
+			continue;
 		}
 
 		++i;

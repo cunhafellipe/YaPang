@@ -31,6 +31,9 @@
 #include "fresh.h"
 #include "frgraphicinterface.h"
 #include "frwndmanager.h"
+#ifdef JP_PAKS
+#include "frgroupbox.h"
+#endif
 #include "frlistbox.h"
 #include "LoginDlg.h"
 #include "EquipDlg.h"
@@ -3012,7 +3015,7 @@ void CLobbyMain::ProcessLobbyUI(float dt) {
 			FrUniteResultDlg* resultDlg = (FrUniteResultDlg*)m_resultReportDlg;
 			if (resultDlg == NULL)
 				expired = true;
-			else if (resultDlg->m_escClosable && !resultDlg->CheckChildDlgVisible())
+			else if (resultDlg->GetDone() && !resultDlg->CheckChildDlgVisible())
 				expired = true;
 		}
 
@@ -3202,7 +3205,7 @@ void CLobbyMain::ProcessLobbyUI(float dt) {
 		}
 	}
 
-	if (CSharedDoc::Instance()->m_value5D08 == 2 && CSharedDoc::Instance()->m_roomType == 10 && m_approachGiftDlg == NULL) {
+	if (CSharedDoc::Instance()->GetAppGiftDownLoadState() == 2 && CSharedDoc::Instance()->m_roomType == 10 && m_approachGiftDlg == NULL) {
 		unsigned char giftCount = CTHunter::Instance()->GetGiftSize();
 		if (giftCount <= 8)
 			m_approachGiftTimer = -9.0f;
@@ -3688,13 +3691,26 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 			HidePet(uid);
 			std::map<unsigned long, sRoomSlot>::iterator it = CSharedDoc::Instance()->m_roomSlotMap.find(uid);
 			if (it != CSharedDoc::Instance()->m_roomSlotMap.end()) {
-				// TODO(boot): lobbymain.cpp:3453, the slot's pet area
-				// (sRoomSlot 0x0) SetMouseEvent(false)
+				if (it->second.m_pPetArea)
+					it->second.m_pPetArea->SetMouseEvent(false);
 				CSharedDoc::Instance()->m_roomSlotMap.erase(it);
 			}
-			// TODO(boot): lobbymain.cpp:3460, re-place the remaining pets
-			// (sRoomSlot 0x0 = m_petArea[connection - 1], SetCenter on the
-			// area's centre, AttachAngelWingFx for bit 1 of 0x28C)
+			// lobbymain.cpp:3460, the players after the one who left moved up
+			// one place: each pet goes to its new place's area
+			for (it = CSharedDoc::Instance()->m_roomSlotMap.begin(); it != CSharedDoc::Instance()->m_roomSlotMap.end(); ++it) {
+				std::list<sSlotInfo>& players = CSharedDoc::Instance()->m_roomPlayerList;
+				std::list<sSlotInfo>::iterator player = std::find(players.begin(), players.end(), it->first);
+				if (player != players.end()) {
+					FrArea* area = m_petArea[player->m_connection - 1];
+					it->second.m_pPetArea = area;
+					if (it->second.m_pPet) {
+						it->second.m_pPet->SetCenter(area->GetRect().x + area->GetRect().w * 0.5f,
+							area->GetRect().y + area->GetRect().h * 0.5f);
+						if (it->second.m_angelFlags.flag1)
+							it->second.m_pPet->AttachAngelWingFx();
+					}
+				}
+			}
 			if (m_roomUserListBox && m_roomUserListBox->GetCurrentItemSize(true) < 4)
 				m_roomUserListBox->AddItem(NULL);
 		}
@@ -3881,7 +3897,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		if (m_mapGauge) {
 			m_mapGauge->ResetGauge();
 			if (course < 0x7F) {
-				unsigned long gauge = CTHunter::Instance()->GetTHunterGauge((eMapType)CSharedDoc::Instance()->m_roomInfo.m_course);
+				unsigned long gauge = CTHunter::Instance()->GetTHunterGauge((eMapType)GetCurRoomMapType());
 				m_mapGauge->SetPos(gauge < 701 ? 0 : gauge - 700);
 			} else {
 				m_mapGauge->SetPos(0);
@@ -4424,7 +4440,146 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		break;
 	}
 
-	// TODO(boot): 0x3B: lobbymain.cpp:4454
+	case 0x3B:
+		// lobbymain.cpp:4454, the answer to a room create or enter request:
+		// param1 the result code. Failures show a notice; code 12 (no room
+		// found for a quick join) creates one itself.
+		switch ((unsigned char)msg.m_param1) {
+		case 2:
+			// "The room is full"
+			this << MsgObject(0, 0x23, (intptr_t)"\xC1\xA4\xBF\xF8\xC0\xCC \xC3\xCA\xB0\xFA \xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+			break;
+
+		case 3:
+			// "The room does not exist"
+			this << MsgObject(0, 0x23, (intptr_t)"\xC1\xB8\xC0\xE7\xC7\xCF\xC1\xF6 \xBE\xCA\xB4\xC2 \xB9\xE6\xC0\xD4\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+			break;
+
+		case 4:
+			// "Wrong password"
+			this << MsgObject(0, 0x23, (intptr_t)"\xBA\xF1\xB9\xD0\xB9\xF8\xC8\xA3\xB0\xA1 \xC6\xB2\xB7\xC8\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+			break;
+
+		case 7:
+		case 9:
+			// "The room creation request failed"
+			this << MsgObject(0, 0x23, (intptr_t)"\xB9\xE6\xB8\xB8\xB5\xE9\xB1\xE2 \xBF\xE4\xC3\xBB\xC0\xCC \xBD\xC7\xC6\xD0\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+			break;
+
+		case 8:
+			// "The game in this room has started"
+			this << MsgObject(0, 0x23, (intptr_t)"\xB0\xD4\xC0\xD3 \xC1\xF8\xC7\xE0\xC1\xDF\xC0\xCE \xB9\xE6\xC0\xD4\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+			break;
+
+		case 5:
+			// "At your current level you cannot create or enter a room."
+			this << MsgObject(0, 0x23, (intptr_t)"\xC7\xF6\xC0\xE7 \xB7\xB9\xBA\xA7\xBF\xA1\xBC\xAD\xB4\xC2 \xB9\xE6\xC0\xBB \xB8\xB8\xB5\xE9\xB0\xC5\xB3\xAA \xB9\xE6\xBF\xA1 \xC0\xD4\xC0\xE5\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+			break;
+
+		case 13:
+			// "You must join a guild."
+			this << MsgObject(0, 0x23, (intptr_t)"\xB1\xE6\xB5\xE5\xBF\xA1 \xB0\xA1\xC0\xD4\xC7\xD8\xBE\xDF \xC7\xD5\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+			break;
+
+		case 18:
+			// "Rooms cannot be opened on the Fantasy PangYa island."
+			this << MsgObject(0, 0x23, (intptr_t)"\xC8\xAF\xBB\xF3\xC0\xC7 \xC6\xCE\xBE\xDF\xBC\xB6\xBF\xA1\xBC\xAD\xB4\xC2 \xB9\xE6 \xB0\xB3\xBC\xB3\xC0\xCC \xBA\xD2\xB0\xA1\xB4\xC9\xC7\xD5\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+			break;
+
+		case 12: {
+			// lobbymain.cpp:4491, no room to join: a match channel offers to
+			// create a match room
+			if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x80) {
+				FrForm* form = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify_yesno", NULL);
+				// "There is no suitable match player at the moment..."; the
+				// literal's name keeps only its first 32 of 67 bytes, the
+				// rest of the text is not known yet.
+				form->SetMessage("\xC7\xF6\xC0\xE7 \xC0\xFB\xB4\xE7\xC7\xD1 \xB8\xC5\xC4\xA1 \xC7\xC3\xB7\xB9\xC0\xCC\xBE\xEE\xB0\xA1 \xBE\xF8\xBD\xC0", false);
+				form->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnMatchRoomCreateDlgResult, 0);
+				return;
+			}
+
+			// lobbymain.cpp:4501
+			if ((WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x400)
+				&& WSingleton<CSharedDoc>::Instance()->m_myLevel < 11
+				&& !AdminMode()) {
+				// "Could not find a room you can play in."
+				this << MsgObject(0, 0x23, (intptr_t)"\xB0\xD4\xC0\xD3\xC0\xBB \xC7\xD2 \xBC\xF6 \xC0\xD6\xB4\xC2 \xB9\xE6\xC0\xBB \xC3\xA3\xC1\xF6 \xB8\xF8\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+				return;
+			}
+
+			// lobbymain.cpp:4507, create a room of the channel's kind
+			WSendPacket packet((enumClientPacket)8);
+			packet.Encode1(0);
+
+			unsigned char gameType = 0x10;
+			unsigned char course = FirstMap();
+
+			if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 2) {
+				packet.Encode4(0);
+				packet.Encode4(2400000);
+
+				packet.Encode1(WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[4].maxPlayers);
+
+				packet.Encode1(4);
+				packet.Encode1(18);
+			} else if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x80) {
+				packet.Encode4(60000);
+				packet.Encode4(0);
+
+				packet.Encode1(WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[3].maxPlayers);
+
+				packet.Encode1(3);
+				packet.Encode1(9);
+			} else if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x4000) {
+				packet.Encode4(40000);
+				packet.Encode4(0);
+
+				packet.Encode1(WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[7].maxPlayers);
+
+				packet.Encode1(7);
+				packet.Encode1(6);
+			} else {
+				gameType = GetRandGameTypeByCate(m_roomCategory);
+
+				packet.Encode4(GetShotTimeLimitByGameType(gameType));
+				packet.Encode4(GetGameTimeLimitByGameType(gameType));
+
+				packet.Encode1(GetGameTypeInfo(gameType)->maxPlayers);
+
+				packet.Encode1(gameType);
+				packet.Encode1(GetGameTypeInfo(gameType)->defaultHoles);
+
+				if (gameType == 10) {
+					course = 0x7F;
+				}
+			}
+
+			packet.Encode1(course);
+			packet.Encode1(gameType == 10 ? 2 : 0);
+			packet.EncodeStr(std::string(WSingleton<CSharedDoc>::Instance()->GetDefaultTitle(gameType)));
+			packet.EncodeStr(std::string(""));
+			packet.Send(SEND_TO_DEFAULT);
+
+			this << MsgObject(0, 0x16, 1, 0, 0, 0, 0);
+			return;
+		}
+
+		case 15:
+			// "Not enough pins for the pin battle"
+			this << MsgObject(0, 0x23, (intptr_t)"\xC6\xCE\xB9\xE8\xC6\xB2\xBF\xA1 \xC7\xCA\xBF\xE4\xC7\xD1 \xC6\xCE\xC0\xCC \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+			break;
+
+		case 17:
+			// "Not enough pins for the approach game."
+			this << MsgObject(0, 0x23, (intptr_t)"\xBE\xEE\xC7\xC1\xB7\xCE\xC4\xA1\xB0\xD4\xC0\xD3\xBF\xA1 \xC7\xCA\xBF\xE4\xC7\xD1 \xC6\xCE\xC0\xCC \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+			break;
+		}
+
+		// lobbymain.cpp:4593
+		EnableRoomEnterControls(true);
+		break;
+
 	case 0x3D: {
 		// lobbymain.cpp:4599, a room player's dive bit: param1 the UID,
 		// param2 1 to set it
@@ -4658,9 +4813,19 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		}
 		break;
 
-	// TODO(boot): 0x248 (lobbymain.cpp:4940, "valentine_event_s4"
-	// FrValEventDlg + SetGiftFlag) waits for the inline
-	// FrValEventDlg::SetGiftFlag (valentineeventdlg.h:46) in ValentineEventDlg.h.
+	case 0x248:
+		// lobbymain.cpp:4940, the valentine event dialog
+		if (IsLocalContent((localContentType_t)0x78) == true) {
+			if (m_valEventDlg == NULL)
+				m_valEventDlg = CreateForm<FrValEventDlg>(g_pFresh->GetManager(), this, "valentine_event_s4", NULL);
+
+			if (m_valEventDlg) {
+				((FrValEventDlg*)m_valEventDlg)->SetGiftFlag(msg.m_param1);
+
+				m_valEventDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnValEventDlgResult, 0x19);
+			}
+		}
+		break;
 
 	case 0x249:
 		// lobbymain.cpp:4959, the nickname creation: param1 1 opens the
@@ -4818,13 +4983,6 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		PG_BOOT_TODOF(("lobbymain.cpp:4620 empty case %#x (of 0x41, 0x6B, 0xB2, 0xB4, 0x211, 0x21B)", (unsigned)(msg.m_msg)));
 		break;
 
-#ifdef PG_BOOT_TRACE // trace cases for the TODO(boot) ids above (CMake build only)
-		goto pg_boot_todo_default_1; // a case falling through to the default
-	case 0x3B:
-		PG_BOOT_TODO("msg 0x3B: lobbymain.cpp:4454");
-		goto pg_boot_todo_default_1;
-	pg_boot_todo_default_1:
-#endif
 	default:
 		// lobbymain.cpp:5265
 		HandleMsgCommon(msg);
@@ -4892,7 +5050,7 @@ void CLobbyMain::OpenParanNickChange(void) {
 
 // lobbymain.cpp:5409
 void CLobbyMain::OpenCaddieWarningForm(void) {
-	if (m_caddieWarningPending && CSharedDoc::Instance()->m_loginDlgCreated) {
+	if (m_caddieWarningPending && CSharedDoc::Instance()->IsOpenFirstLoginAlarm()) {
 		m_caddieWarningPending = false;
 
 		for (int i = 0; i < 12; i++) {
@@ -4915,7 +5073,7 @@ void CLobbyMain::OpenCaddieWarningForm(void) {
 
 // lobbymain.cpp:5442
 void CLobbyMain::OpenNoteForm(void) {
-	if (CSharedDoc::Instance()->m_loginDlgCreated && CSharedDoc::Instance()->m_noteList.size() > 0) {
+	if (CSharedDoc::Instance()->IsOpenFirstLoginAlarm() && CSharedDoc::Instance()->m_noteList.size() > 0) {
 		if (m_mailBoxDlg == 0) {
 			m_mailBoxDlg = CreateForm<FrMailBoxDlg>(g_pFresh->GetManager(), this, "mailbox", NULL);
 			m_mailBoxDlg->EnableDrag(false);
@@ -5188,7 +5346,7 @@ void CLobbyMain::OnToppage_NewInit(intptr_t param) {
 void CLobbyMain::OnToppage_NewOwnerDraw(int) {
 	if (m_toppagePangysStudyBtn) {
 		if (m_newTabBitmap) {
-			WRect rect = m_toppagePangysStudyBtn->GetRect();
+			WRECT rect = m_toppagePangysStudyBtn->GetRect();
 			g_pFresh->GetManager()->GetGDI()->DrawTexture(m_newTabBitmap, WRect(rect.x + 58.0f, rect.y + 12.0f, m_newTabBitmap->Width(), m_newTabBitmap->Height()), 0xFFFFFFFF, 0);
 		}
 	}
@@ -5504,8 +5662,8 @@ void CLobbyMain::OnToppage_Christmas2007EventDown(void) {
 void CLobbyMain::OnToppage_TicketExchangeInit(intptr_t param) {
 	m_toppageTicketExchangeBtn = DYNAMIC_CAST(FrButton, param);
 	if (IsLocalContent((localContentType_t)0x7A)) {
-		CTicketExchange* pExchange = (CTicketExchange*)WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0x7A);
-		if (pExchange) {
+		CTicketExchange* pExchange;
+		if (WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0x7A, pExchange)) {
 			if (pExchange->GetFlag()) {
 				m_toppageTicketExchangeBtn->SetVisible(true);
 				m_toppageTicketExchangeBtn->Enable(true);
@@ -5802,7 +5960,7 @@ void CLobbyMain::OnBlank_Init(int) {
 
 // lobbymain.cpp:6820
 void CLobbyMain::OnBlank_Finish(void) {
-	unsigned char forceNickname = CSharedDoc::Instance()->m_forceNicknameChange;
+	unsigned char forceNickname = CSharedDoc::Instance()->GetForceNicknameChange();
 	if (forceNickname == 1 || forceNickname == 2) {
 		GetActor("Lobby") << MsgObject(0, 0x249, 1, 0, 0, 0, 0);
 	}
@@ -5907,7 +6065,7 @@ bool CLobbyMain::OnGuildNoticeDlgResult(int, FrForm*) {
 	m_guildNoticeDlg = 0; if (m_guildNewsReader) { delete m_guildNewsReader; m_guildNewsReader = 0; }
 
 	OpenPCBangNoticeForm();
-	CSharedDoc::Instance()->m_loginDlgCreated = false;
+	CSharedDoc::Instance()->SetNeedFirstLoginAlarm(false);
 	return true;
 }
 
@@ -6893,7 +7051,7 @@ void CLobbyMain::SetRoomControls(bool isMaster) {
 	}
 
 	if (IsLocalContent((localContentType_t)0x54))
-		CMessengerInfo::Instance()->m_inviteEnabled = isMaster;
+		CMessengerInfo::Instance()->EnableInvite(isMaster);
 }
 
 // lobbymain.cpp:8326
@@ -7106,9 +7264,9 @@ void CLobbyMain::MakeRoomUserList(void) {
 				unsigned char index = WSingleton<CSharedDoc>::Instance()->GetIndex(player->m_uid);
 
 				if (WSingleton<CSharedDoc>::Instance()->m_gameResultList[index].m_state == 2) {
-					if (player->m_guildUID == WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildUID[0])
+					if (player->m_guildUID == WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildUID[0])
 						m_slotList1.push_back(player);
-					else if (player->m_guildUID == WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildUID[1])
+					else if (player->m_guildUID == WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildUID[1])
 						m_slotList2.push_back(player);
 				}
 			}
@@ -7209,9 +7367,9 @@ void CLobbyMain::RemakeTeam(bool rebuild) {
 		std::list<sSlotInfo>::iterator it;
 		for (it = WSingleton<CSharedDoc>::Instance()->m_roomPlayerList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_roomPlayerList.end(); ++it) {
 			if (WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType == 6) {
-				if (it->m_guildUID == WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildUID[0])
+				if (it->m_guildUID == WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildUID[0])
 					m_slotList1.push_back(&*it);
-				else if (it->m_guildUID == WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildUID[1])
+				else if (it->m_guildUID == WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildUID[1])
 					m_slotList2.push_back(&*it);
 			} else {
 				if (!(it->m_attribute & 3))
@@ -7221,19 +7379,11 @@ void CLobbyMain::RemakeTeam(bool rebuild) {
 			}
 		}
 
-		if (m_slotList1.size() == 0) {
-			sRoomInfo& room = WSingleton<CSharedDoc>::Instance()->m_roomInfo;
-			room.m_guildUID[0] = 0;
-			room.m_guildName[0][0] = '\0';
-			room.m_guildMark[0][0] = '\0';
-		}
+		if (m_slotList1.size() == 0)
+			WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.Reset(0);
 
-		if (m_slotList2.size() == 0) {
-			sRoomInfo& room = WSingleton<CSharedDoc>::Instance()->m_roomInfo;
-			room.m_guildUID[1] = 0;
-			room.m_guildName[1][0] = '\0';
-			room.m_guildMark[1][0] = '\0';
-		}
+		if (m_slotList2.size() == 0)
+			WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.Reset(1);
 	}
 
 	m_roomUserListBox->ClearItem();
@@ -8012,8 +8162,8 @@ bool RoomGuildCompare(const void* lhs, const void* rhs) {
 	// The original compares the left room's distance with itself: both sides read lhs.
 	const sRoomInfo* pLhs = (const sRoomInfo*)lhs;
 	int myGuild = WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guildUID;
-	int lhsGuild0 = pLhs->m_guildUID[0] - myGuild;
-	int lhsGuild1 = pLhs->m_guildUID[1] - myGuild;
+	int lhsGuild0 = pLhs->m_guild.m_guildUID[0] - myGuild;
+	int lhsGuild1 = pLhs->m_guild.m_guildUID[1] - myGuild;
 
 	return min(Abs(lhsGuild0), Abs(lhsGuild1)) > min(Abs(lhsGuild0), Abs(lhsGuild1));
 }
@@ -8277,6 +8427,13 @@ void CLobbyMain::OnRoomList_Init(int param) {
 // lobbymain.cpp:10101
 void CLobbyMain::OnRoomList_Finish(void) {
 	m_titleArea->SetBgImg("title_roomlist");
+#ifdef JP_PAKS
+	// The JP form draws its own title row where the over bar sits; the bar
+	// stays for the controls this code keeps (docs/JP_CLIENT.md).
+	if (m_barFrame[0] != 0) {
+		m_barFrame[0]->SetVisible(false);
+	}
+#endif
 
 	if (WSingleton<CSharedDoc>::Instance()->m_tutorialFinish) {
 		this << MsgObject(0, 0xAA, 1, 0, 0, 0, 0);
@@ -8421,14 +8578,14 @@ void CLobbyMain::OnRoomList_RoomListOwnerDraw(int param) {
 
 	switch (pRoom->m_gameType) {
 	case 6:
-		if (pRoom->m_guildUID[0]) {
-			const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pRoom->m_guildMark[0]);
+		if (pRoom->m_guild.m_guildUID[0]) {
+			const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pRoom->m_guild.m_guildMark[0]);
 			if (pEmblem)
 				pGDI->DrawTexture(pEmblem, WRect(pItem->pos.x + 237.0f, pItem->pos.y + 12.0f, pEmblem->Width(), pEmblem->Height()), 0xFFFFFFFF, 0);
 		}
 
-		if (pRoom->m_guildUID[1]) {
-			const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pRoom->m_guildMark[1]);
+		if (pRoom->m_guild.m_guildUID[1]) {
+			const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pRoom->m_guild.m_guildMark[1]);
 			if (pEmblem)
 				pGDI->DrawTexture(pEmblem, WRect(pItem->pos.x + 294.0f, pItem->pos.y + 12.0f, pEmblem->Width(), pEmblem->Height()), 0xFFFFFFFF, 0);
 		}
@@ -8612,7 +8769,7 @@ void CLobbyMain::OnRoomList_RoomListDClick(void) {
 					bRefuse = true;
 				}
 
-				if (static_cast<sRoomInfo*>(m_selectedRoomData)->m_guildUID[0] != guildUID && static_cast<sRoomInfo*>(m_selectedRoomData)->m_guildUID[0] != 0 && static_cast<sRoomInfo*>(m_selectedRoomData)->m_guildUID[1] != guildUID && static_cast<sRoomInfo*>(m_selectedRoomData)->m_guildUID[1] != 0) {
+				if (static_cast<sRoomInfo*>(m_selectedRoomData)->m_guild.m_guildUID[0] != guildUID && static_cast<sRoomInfo*>(m_selectedRoomData)->m_guild.m_guildUID[0] != 0 && static_cast<sRoomInfo*>(m_selectedRoomData)->m_guild.m_guildUID[1] != guildUID && static_cast<sRoomInfo*>(m_selectedRoomData)->m_guild.m_guildUID[1] != 0) {
 					message = "\xC5\xB8\xB1\xE6\xB5\xE5\xC0\xC7 \xB4\xEB\xC0\xFC\xC0\xD4\xB4\xCF\xB4\xD9.";
 					bRefuse = true;
 				}
@@ -9279,22 +9436,21 @@ void CLobbyMain::OnRoomList_UserListInit(intptr_t param) {
 
 	m_userListBox->UseRightButton(true);
 
-	for (std::map<unsigned long, sBriefUserInfo>::iterator it = CSharedDoc::Instance()->m_userMap.begin();
+	for (std::map<unsigned long, sBriefUserInfo>::const_iterator it = CSharedDoc::Instance()->m_userMap.begin();
 		it != CSharedDoc::Instance()->m_userMap.end(); ++it) {
-		CSharedDoc* doc = CSharedDoc::Instance();
+		const sBriefUserInfo* user = &it->second;
 
-		// An administrator sees everyone; others do not see hidden administrators.
-		if (!doc->m_userInfo.identityBits.administrator) {
-			sBriefUserInfo user = it->second;
-			if (user.identityBits.administrator) {
-				sBriefUserInfo admin = it->second;
-				if (admin.invisible) {
+		// An administrator sees everyone; others see an administrator only
+		// while its invisible bit is set.
+		if (!CSharedDoc::Instance()->m_userInfo.identityBits.administrator) {
+			if (sBriefUserInfo(*user).identityBits.administrator) {
+				if (!sBriefUserInfo(*user).invisible) {
 					continue;
 				}
 			}
 		}
 
-		m_userListBox->AddItem(&it->second);
+		m_userListBox->AddItem((void*)user);
 	}
 }
 
@@ -9926,30 +10082,50 @@ void CLobbyMain::ResetControlsRoomListSort(float dt) {
 		}
 	}
 
-	if (stricmp(g_pFresh->GetManager()->GetLayoutID(), "ROOMLIST") != 0)
+	if (strcmpi(g_pFresh->GetManager()->GetLayoutID(), "ROOMLIST") != 0)
 		return;
 
 	if (g_input->GetButton(LEFT_BUTTON) == 3) {
-		WVector mouse = g_input->GetMousePoint();
-		WVector down = g_input->GetButtonDownPos(LEFT_BUTTON);
-		FrButton* tabs[3] = { m_cateVSBtn, m_cateMassBtn, m_cateBattleBtn };
-		FrListBox* lists[3] = { m_cateVSList, m_cateMassList, m_cateBattleList };
+		WVector mouse = g_input->GetMousePoint(), down = g_input->GetButtonDownPos(LEFT_BUTTON);
 
-		for (int i = 0; i < 3; i++) {
-			WRect tabRect = tabs[i]->GetRect();
-			WRect listRect = lists[i]->GetRect();
-			WPoint downPt(down.x, down.y);
-			WPoint mousePt(mouse.x, mouse.y);
+		WRect vsRect = m_cateVSBtn->GetRect(), vsListRect = m_cateVSList->GetRect();
+		WRect massRect = m_cateMassBtn->GetRect(), massListRect = m_cateMassList->GetRect();
+		WRect battleRect = m_cateBattleBtn->GetRect(), battleListRect = m_cateBattleList->GetRect();
 
-			if (tabs[i]->GetStatus() == 2 && tabRect.IsInRect(downPt)
-				&& (tabRect.IsInRect(mousePt) || listRect.IsInRect(mousePt))) {
-				m_cateNewRoom[i] += dt;
-				if (m_cateNewRoom[i] > 0.8f)
-					lists[i]->SetVisible(true);
-			} else {
-				m_cateNewRoom[i] = 0.0f;
-				lists[i]->SetVisible(false);
-			}
+		if (m_cateVSBtn->GetStatus() == 2 && vsRect.IsInRect(WPoint(down.x, down.y))
+			&& (vsRect.IsInRect(WPoint(mouse.x, mouse.y)) || vsListRect.IsInRect(WPoint(mouse.x, mouse.y)))) {
+			m_cateNewRoom[0] += dt;
+
+			if (m_cateNewRoom[0] > 0.8f)
+				m_cateVSList->SetVisible(true);
+
+		} else {
+			m_cateNewRoom[0] = 0.0f;
+			m_cateVSList->SetVisible(false);
+		}
+
+		if (m_cateMassBtn->GetStatus() == 2 && massRect.IsInRect(WPoint(down.x, down.y))
+			&& (massRect.IsInRect(WPoint(mouse.x, mouse.y)) || massListRect.IsInRect(WPoint(mouse.x, mouse.y)))) {
+			m_cateNewRoom[1] += dt;
+
+			if (m_cateNewRoom[1] > 0.8f)
+				m_cateMassList->SetVisible(true);
+
+		} else {
+			m_cateNewRoom[1] = 0.0f;
+			m_cateMassList->SetVisible(false);
+		}
+
+		if (m_cateBattleBtn->GetStatus() == 2 && battleRect.IsInRect(WPoint(down.x, down.y))
+			&& (battleRect.IsInRect(WPoint(mouse.x, mouse.y)) || battleListRect.IsInRect(WPoint(mouse.x, mouse.y)))) {
+			m_cateNewRoom[2] += dt;
+
+			if (m_cateNewRoom[2] > 0.8f)
+				m_cateBattleList->SetVisible(true);
+
+		} else {
+			m_cateNewRoom[2] = 0.0f;
+			m_cateBattleList->SetVisible(false);
 		}
 	} else {
 		if (m_cateVSList->IsVisible())
@@ -10000,15 +10176,11 @@ void CLobbyMain::ToggleChatBtn(bool resize) {
 	if (COption::Instance()->gGetChatWndUp()) {
 		m_chatWndBtn->SetButtonImg("chatwnd_down", FrButton::NORMAL);
 		if (resize) {
-			WRect rect = m_chatBg->GetRect();
-			rect.y -= 200.0f;
-			rect.h += 200.0f;
-			m_chatBg->SetRect(rect);
+			const WRect& bgRect = m_chatBg->GetRect();
+			m_chatBg->SetRect(WRect(bgRect.x, bgRect.y - 200.0f, bgRect.w, bgRect.h + 200.0f));
 
-			rect = m_chatView->GetRect();
-			rect.y -= 200.0f;
-			rect.h += 200.0f;
-			m_chatView->SetRect(rect);
+			const WRect& viewRect = m_chatView->GetRect();
+			m_chatView->SetRect(WRect(viewRect.x, viewRect.y - 200.0f, viewRect.w, viewRect.h + 200.0f));
 
 			if (m_chatView->GetScrollBar()) {
 				m_chatView->GetScrollBar()->ScrollToBottom();
@@ -10017,15 +10189,11 @@ void CLobbyMain::ToggleChatBtn(bool resize) {
 	} else {
 		m_chatWndBtn->SetButtonImg("chatwnd_up", FrButton::NORMAL);
 		if (resize) {
-			WRect rect = m_chatBg->GetRect();
-			rect.y += 200.0f;
-			rect.h -= 200.0f;
-			m_chatBg->SetRect(rect);
+			const WRect& bgRect = m_chatBg->GetRect();
+			m_chatBg->SetRect(WRect(bgRect.x, bgRect.y + 200.0f, bgRect.w, bgRect.h - 200.0f));
 
-			rect = m_chatView->GetRect();
-			rect.y += 200.0f;
-			rect.h -= 200.0f;
-			m_chatView->SetRect(rect);
+			const WRect& viewRect = m_chatView->GetRect();
+			m_chatView->SetRect(WRect(viewRect.x, viewRect.y + 200.0f, viewRect.w, viewRect.h - 200.0f));
 
 			if (m_chatView->GetScrollBar()) {
 				m_chatView->GetScrollBar()->ScrollToBottom();
@@ -10190,6 +10358,13 @@ void CLobbyMain::OnGameRoom_Init(int) {
 // lobbymain.cpp:13059
 void CLobbyMain::OnGameRoom_Finish(void) {
 	m_titleArea->SetBgImg("title_vs");
+#ifdef JP_PAKS
+	// The JP form draws its own title row where the over bar sits; the bar
+	// stays for the controls this code keeps (docs/JP_CLIENT.md).
+	if (m_barFrame[0] != 0) {
+		m_barFrame[0]->SetVisible(false);
+	}
+#endif
 
 	std::list<sSlotInfo>::iterator it;
 	for (it = WSingleton<CSharedDoc>::Instance()->m_roomPlayerList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_roomPlayerList.end(); ++it) {
@@ -11083,12 +11258,11 @@ void CLobbyMain::OnGameRoom_AztecOwnerDraw(int) {
 				for (it = WSingleton<CSharedDoc>::Instance()->m_myGearList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myGearList.end(); ++it) {
 					if (it->m_typeId == WSingleton<CSharedDoc>::Instance()->m_myBallId) {
 						pInfo = &*it;
+						count = it->m_count;
 						break;
 					}
 				}
 
-				if (pInfo)
-					count = pInfo->m_count;
 				if (!pInfo) {
 					WSingleton<CSharedDoc>::Instance()->m_myBallId = 0x14000000;
 					pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(WSingleton<CSharedDoc>::Instance()->m_myBallId);
@@ -11788,7 +11962,7 @@ void CLobbyMain::OnGameRoom_StartBtnUp(void) {
 		packet.Send(SEND_TO_DEFAULT);
 
 		if (IsLocalContent((localContentType_t)0x54))
-			CMessengerInfo::Instance()->m_inviteEnabled = false;
+			CMessengerInfo::Instance()->EnableInvite(false);
 		return;
 	}
 
@@ -12546,30 +12720,30 @@ void CLobbyMain::OnGameRoomExt_GuildNumOwnerDraw(int) {
 	WRect rect = m_teamNumArea->GetRect();
 	pGDI->SetTextStyle(1);
 
-	if (CSharedDoc::Instance()->m_roomInfo.m_guildUID[0] != 0) {
-		const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(CSharedDoc::Instance()->m_roomInfo.m_guildMark[0]);
+	if (CSharedDoc::Instance()->m_roomInfo.m_guild.m_guildUID[0] != 0) {
+		const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(CSharedDoc::Instance()->m_roomInfo.m_guild.m_guildMark[0]);
 
 		if (pEmblem)
 			pGDI->DrawTexture(pEmblem, WRect(rect.x + 24.0f, rect.y + 8.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
 	}
 
 	pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
-	g_pFresh->GetManager()->PrintText(WPoint(rect.x + 60.0f, rect.y + 12.0f), 0, CSharedDoc::Instance()->m_roomInfo.m_guildName[0], -1.0f, 0xFFFFFFFF);
+	g_pFresh->GetManager()->PrintText(WPoint(rect.x + 60.0f, rect.y + 12.0f), 0, CSharedDoc::Instance()->m_roomInfo.m_guild.m_guildName[0], -1.0f, 0xFFFFFFFF);
 	g_pFresh->GetManager()->PrintText(WPoint(rect.x + 209.0f, rect.y + 12.0f), 0, MakeStr("(%d)", m_slotList1.size()), -1.0f, 0xFFFFFFFF);
 
 	if (strcmp("GAMEROOM_EXTRES", g_pFresh->GetManager()->GetLayoutID()) == 0) {
 		g_pFresh->GetManager()->PrintText(WPoint(rect.x + 180.0f, rect.y + 12.0f), 0, MakeStr("%d", CSharedDoc::Instance()->m_teamPoint[0]), -1.0f, 0xFFFFFFFF);
 	}
 
-	if (CSharedDoc::Instance()->m_roomInfo.m_guildUID[1] != 0) {
-		const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(CSharedDoc::Instance()->m_roomInfo.m_guildMark[1]);
+	if (CSharedDoc::Instance()->m_roomInfo.m_guild.m_guildUID[1] != 0) {
+		const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(CSharedDoc::Instance()->m_roomInfo.m_guild.m_guildMark[1]);
 
 		if (pEmblem)
 			pGDI->DrawTexture(pEmblem, WRect(rect.x + 273.0f, rect.y + 8.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
 	}
 
 	pGDI->SetTextColor(0xFF0060FF, 0xFFFFFFFF);
-	g_pFresh->GetManager()->PrintText(WPoint(rect.x + 309.0f, rect.y + 12.0f), 0, CSharedDoc::Instance()->m_roomInfo.m_guildName[1], -1.0f, 0xFFFFFFFF);
+	g_pFresh->GetManager()->PrintText(WPoint(rect.x + 309.0f, rect.y + 12.0f), 0, CSharedDoc::Instance()->m_roomInfo.m_guild.m_guildName[1], -1.0f, 0xFFFFFFFF);
 	g_pFresh->GetManager()->PrintText(WPoint(rect.x + 458.0f, rect.y + 12.0f), 0, MakeStr("(%d)", m_slotList2.size()), -1.0f, 0xFFFFFFFF);
 
 	if (strcmp("GAMEROOM_EXTRES", g_pFresh->GetManager()->GetLayoutID()) == 0) {
@@ -12897,8 +13071,8 @@ void CLobbyMain::OnGameRoomExtRes_RoomGuildRankInit(int param) {
 		m_guildRankListBox->GetScrollBar()->SetGuideVisible(true);
 	}
 
-	m_guildMatchEmblem[0] = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[0]);
-	m_guildMatchEmblem[1] = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guildMark[1]);
+	m_guildMatchEmblem[0] = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[0]);
+	m_guildMatchEmblem[1] = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_guild.m_guildMark[1]);
 
 	m_guildRankBitmap = g_pFresh->RegisterBitmap("30in_rank_02");
 }
@@ -13422,8 +13596,7 @@ bool CLobbyMain::OnCreateNickResult(int ret, FrForm*) {
 	if (ret == 0) {
 	} else if (ret == 1) {
 		if (IsLocalContent((localContentType_t)0x81) && m_serverDlg) {
-			if (m_serverDlg->m_pServerList)
-				m_serverDlg->m_pServerList->Enable(true);
+			m_serverDlg->ClickDisableList(true);
 		}
 	}
 

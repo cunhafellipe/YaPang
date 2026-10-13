@@ -66,6 +66,7 @@ public:
 	virtual void Flush(unsigned long flags);
 	virtual void Render(void);
 	virtual void DrawPolygonFan(WTVertex** vl, int num, int flags, bool clip);
+	void DrawProjPolygonFan(WTVertex** vl, int num, int flags) { DrawPolygonFan(vl, num, flags, true); }   // wview.h:117
 	virtual void DrawIndexedTriangles(WTVertex* vtx, int nvtx, unsigned short* idx, int nidx, int flags, int texhandle);
 	virtual bool IsShadowView(void) { return false; }   // wview.h:119
 	virtual void DrawIndexedTrianglesDirect(WTVertex* vtx, int nvtx, unsigned short* idx, int nidx, int flags, int texhandle);
@@ -78,7 +79,6 @@ public:
 	void SetPrevCamera(const WMatrix& cam);
 	WVector Projection(const WVector& v);
 	void Projection2(WTVertex* vtx, const WVector& v);
-	void DrawProjPolygonFan(WTVertex** vl, int num, int flags);
 	void DrawLine2D(const WVector& v1, const WVector& v2, unsigned long color, float lineWidth);
 	void DrawLine2D(const _WPOINT& a, const _WPOINT& b, unsigned long colorA, unsigned long colorB, int flags);
 	void DrawLine2D(const _WPOINT& a, const _WPOINT& b, unsigned long color, int flags);
@@ -136,7 +136,7 @@ public:
 	const WMatrix& GetInvCamera(void) const { return invcamera; }               // wview.h:154
 	float GetClipNearValue(void) const { return clip_near; }                    // wview.h:156
 	float GetClipFarValue(void) const { return clip_far; }                      // wview.h:157
-	float GetFOV(void) const { return SCREEN_YS / SCREEN_XS * FOV * (4.0f / 3.0f); }   // wview.h:158
+	float GetFOV(void) const { return FOV * (SCREEN_YS / SCREEN_XS) * (4.0f / 3.0f); }   // wview.h:158
 	float GetWidth(void) const { return SCREEN_XS; }                            // wview.h:159
 	float GetHeight(void) const { return SCREEN_YS; }                           // wview.h:160
 	float GetRatio(void) const { return SCREEN_YS / SCREEN_XS; }                // wview.h:161

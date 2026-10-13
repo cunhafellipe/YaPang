@@ -120,7 +120,9 @@ LEVEL_INFO LEVEL_TABLE[71] = {
 };
 
 // The exception log written next to a ghost file and zipped into it.
+namespace {
 const char *const GHOST_EXCEPTION_LOG_FILENAME = "ghost_exception_log.txt";
+}
 
 // ghostdocument.cpp:27
 // Copies the bits of a value into a variable of another type of the same
@@ -300,8 +302,8 @@ GHOST_SHOT_DATA const *CGhostHoleData::RecordShotData(sShotProtocol const *pProt
 	if (GetCurMap() == 7) {
 		// The special wind's start frame is recorded as the special wind
 		// action.
-		unsigned long startFrame = Wind().GetSpWindStartFrame();
-		GHOST_SHOT_DATA *pShot = m_pRecordingShot; pShot->m_actions[3].m_changed = true; pShot->m_actions[3].m_arg = 2; memset(pShot->m_actions[3].m_param, 0xFF, sizeof(pShot->m_actions[3].m_param)); pShot->m_actions[3].m_param[0].m_dw = startFrame;
+		int startFrame = Wind().GetSpWindStartFrame();
+		RecordAct(3, 2, &startFrame, 1);
 	}
 
 	m_pRecordingShot->m_windDirection = Wind().GetGlobalDirection();
@@ -589,10 +591,7 @@ bool CGhostDocument::WriteTextFile(FILE *fp, GHOST_SHOT_DATA const *pShotData) c
 	fprintf(fp, "CENTER         : %.02f\n", protocol.barStartPosition);
 	fprintf(fp, "CLUB INDEX     : %d(%s)\n", protocol.club, GolfClub().GetClubString((CClub::eClub)protocol.club));
 	fprintf(fp, "RANDOM POWER   : %.02f\n", protocol.randomPower);
-	// The original loads GHOST_SHOT_PROTOCOL 0x30 as a float (ghosttypes.h
-	// declares it unsigned long `spot`); the conversion stands in until the
-	// header is fixed.
-	fprintf(fp, "RANDOM ANGLE   : %.02f\n", (float)protocol.spot);
+	fprintf(fp, "RANDOM ANGLE   : %.02f\n", protocol.spot);
 	fprintf(fp, "CAMERA ANGLE   : %.02f\n", pShotData->m_cameraAngle);
 	fprintf(fp, "\n");
 
@@ -708,7 +707,7 @@ void memory_buffer::encode(void const *data, unsigned int size) {
 	if (m_length + size > m_capacity) {
 		for (m_capacity = 1; m_capacity < m_length + size; m_capacity <<= 1) {
 		}
-		m_buffer = (char *)(m_buffer == 0 ? calloc(m_capacity, 1) : realloc(m_buffer, m_capacity));
+		reserve(m_capacity);
 	}
 
 	memcpy(m_buffer + m_length, data, size);
@@ -758,8 +757,7 @@ void CGhostDocument::Export(const std::string &fileName) {
 	buffer.encode(m_pGameData, sizeof(GHOST_GAME_DATA));
 
 	for (int i = 0; i < 18; i++) {
-		const CGhostHoleData *pHoleData = &m_pHoleData[i];
-		const std::list<GHOST_SHOT_DATA *> &shotDataList = pHoleData->GetShotDataList();
+		const std::list<GHOST_SHOT_DATA *> &shotDataList = m_pHoleData[i].GetShotDataList();
 		unsigned int shotCount = shotDataList.size();
 		buffer.encode(&shotCount, sizeof(shotCount));
 

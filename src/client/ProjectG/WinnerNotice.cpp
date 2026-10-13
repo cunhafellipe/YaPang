@@ -80,7 +80,7 @@ void CWinnerNotice::Process(float elapsed) {
 					m_posY = -50.0f;
 				}
 			}
-			if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 				WSingleton<COneLineBoard>::Instance()->FadeIn();
 			}
 			return;
@@ -242,10 +242,9 @@ bool CWinnerNotice::GetColornText(const char* pszText, std::string& text, unsign
 
 // winnernotice.cpp:261
 float CWinnerNotice::GetTextTailPoint(int count) {
-	FrWndManager* manager = g_pFresh->GetManager();
+	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	sWinnerNotice* notice = *m_current;
-	FrGraphicInterface* gdi = manager->GetGDI();
 	float tail = 0.0f;
 
 	for (int i = 0; i < count; i++) {

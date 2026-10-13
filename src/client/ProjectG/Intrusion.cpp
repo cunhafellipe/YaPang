@@ -75,7 +75,7 @@ void CIntrusion::DoIntrusionAccess(WReceivedPacket& packet, eIntrusionPermitCode
 		CSharedDoc::Instance()->m_chatManager.FilteringHack(CSharedDoc::Instance()->m_roomInfo.m_title, false);
 		CSharedDoc::Instance()->m_mySlot = CSharedDoc::Instance()->m_roomInfo.m_roomNumber;
 
-		if (WSingleton<WNetworkSystem>::Instance()->IsConnected((WNetworkSystem::eNetUnit)1) && CMessengerInfo::Instance()->m_serverListRequest == 4) {
+		if (WSingleton<WNetworkSystem>::Instance()->IsConnected((WNetworkSystem::eNetUnit)1) && CMessengerInfo::Instance()->GetComplete() == CONNECT_STATUS_COMPLETE) {
 			// Tells the messenger where the player is.
 #pragma pack(push, 1)
 			struct {
@@ -427,8 +427,9 @@ void CIntrusion::PlayersUpdate(int param) {
 
 	for (std::list<sSlotInfo>::iterator it = players.begin(); it != players.end(); ++it) {
 		unsigned long uid = it->m_uid;
+		std::vector<sRivalData>::iterator end = rivals.end();
 		std::vector<sRivalData>::iterator found;
-		for (found = rivals.begin(); found != rivals.end(); ++found) {
+		for (found = rivals.begin(); found != end; ++found) {
 			if (found->m_uid == uid) {
 				break;
 			}

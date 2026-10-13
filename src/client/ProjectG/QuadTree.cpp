@@ -728,13 +728,13 @@ void CQuadTree::MakeObjStructure(short objIndex, int option, bool bRebuild) {
 
 				if (quad.m_count2 == 0) {
 					short *pNewList = new short[4];
-					quad.m_pList2 = (int *)pNewList;    // the list holds short object indices
+					quad.m_pList2 = pNewList;
 					pNewList[0] = objIndex;
 					quad.m_count2 = 1;
 					continue;
 				}
 
-				short *pList = (short *)quad.m_pList2;
+				short *pList = quad.m_pList2;
 				int j;
 				for (j = 0; j < quad.m_count2; j++) {
 					if (pList[j] == objIndex)
@@ -751,7 +751,7 @@ void CQuadTree::MakeObjStructure(short objIndex, int option, bool bRebuild) {
 					delete[] pList;
 					pList = new short[quad.m_count2 + 4];
 					memcpy(pList, pTemp, quad.m_count2 * sizeof(short));
-					quad.m_pList2 = (int *)pList;
+					quad.m_pList2 = pList;
 
 					delete[] pTemp;
 				}
@@ -1671,12 +1671,12 @@ void CQuadTree::GetObjList(Waabb box) {
 				// the list holds short object indices
 				int j;
 				for (j = 0; j < m_objNum; j++) {
-					if (((short *)m_pQuads[row * m_quadCols + col].m_pList2)[i] == m_objList[j])
+					if (m_pQuads[row * m_quadCols + col].m_pList2[i] == m_objList[j])
 						break;
 				}
 
 				if (j == m_objNum) {
-					m_objList[m_objNum] = ((short *)m_pQuads[row * m_quadCols + col].m_pList2)[i];
+					m_objList[m_objNum] = m_pQuads[row * m_quadCols + col].m_pList2[i];
 					m_objNum++;
 				}
 			}
@@ -1759,12 +1759,12 @@ void CQuadTree::GetObjList(WVector pos, const WVector &dir) {
 					// the list holds short object indices
 					int j;
 					for (j = 0; j < m_objNum; j++) {
-						if (((short *)m_pQuads[(minRow + row) * m_quadCols + col + minCol].m_pList2)[i] == m_objList[j])
+						if (m_pQuads[(minRow + row) * m_quadCols + col + minCol].m_pList2[i] == m_objList[j])
 							break;
 					}
 
 					if (j == m_objNum) {
-						m_objList[m_objNum] = ((short *)m_pQuads[(minRow + row) * m_quadCols + col + minCol].m_pList2)[i];
+						m_objList[m_objNum] = m_pQuads[(minRow + row) * m_quadCols + col + minCol].m_pList2[i];
 						m_objNum++;
 					}
 				}
@@ -3020,8 +3020,7 @@ float CQuadTree::IntersectRollingBallGround(const WVector &pos, const WVector &d
 		t = intersection::IntersectPlane(start, dir, plane, bothSides);
 
 		if (t < 1.0f) {
-			WVector move = dir * t;
-			WVector hit = start + move;
+			WVector hit = start + dir * t;
 			if (intersection::SameSide(hit, pTri->m_vertex[0], pTri->m_vertex[1], pTri->m_vertex[2])
 				&& intersection::SameSide(hit, pTri->m_vertex[1], pTri->m_vertex[0], pTri->m_vertex[2])
 				&& intersection::SameSide(hit, pTri->m_vertex[2], pTri->m_vertex[0], pTri->m_vertex[1])) {
@@ -3029,7 +3028,7 @@ float CQuadTree::IntersectRollingBallGround(const WVector &pos, const WVector &d
 				break;
 			}
 
-			WVector closest = intersection::closestPointOnTriangle(start + move, pTri->m_vertex[0], pTri->m_vertex[1], pTri->m_vertex[2]);
+			WVector closest = intersection::closestPointOnTriangle(start + dir * t,pTri->m_vertex[0], pTri->m_vertex[1], pTri->m_vertex[2]);
 			t = intersection::intersectPolygon(closest, pos, dir, GolfBall().GetRadius());
 
 			if (t < 1.0f) {
@@ -5716,39 +5715,38 @@ int CQuadTree::Get_WallSlidingAngle(const WVector &pos, WPolySoup::sModel *pMode
 void CQuadTree::OBBToAABB(Wobb obb, Waabb &aabb, WVector &center) {
 	WPolySoup::sModel *pModel = GOLFDOC()->m_pPolySoup->FindModel(0);
 
-	// Start from the course box inverted, between the ground and 30 units up.
-	Waabb box = pModel->m_aabb; box.min.y = 0.0f; box.max.y = 30.0f;
+	// Starts inverted (min at the course's max, max at its min) so the corners
+	// pull it to their bounds; the bottom is kept between 0 and 30.
+	Waabb course = pModel->m_aabb; Waabb box(course.max, course.min); box.min.y = 30.0f;
 
 	WVector c = obb.center;
-	WVector e0 = obb.extend[0];
-	WVector e1 = obb.extend[1];
-	WVector e2 = obb.extend[2];
-	WVector ne0 = e0 * -1.0f;
-	WVector ne1 = e1 * -1.0f;
-	WVector ne2 = e2 * -1.0f;
+	WVector ext0 = obb.extend[0];
+	WVector ext1 = obb.extend[1];
+	WVector ext2 = obb.extend[2];
 
-	WVector corners[8];
-	corners[0] = c + (ne0 + (e1 + ne2));
-	corners[1] = c + (ne0 + (ne1 + ne2));
-	corners[2] = c + (e0 + (ne1 + ne2));
-	corners[3] = c + (e0 + (e1 + ne2));
-	corners[4] = c + (ne0 + (e1 + e2));
-	corners[5] = c + (ne0 + (ne1 + e2));
-	corners[6] = c + (e0 + (ne1 + e2));
-	corners[7] = c + (e0 + (e1 + e2));
+	box.max.y = 0.0f;
+	WVector corner[8];
+	corner[0] = c + (ext0 * -1.0f + (ext1 + ext2 * -1.0f));
+	corner[1] = c + (ext0 * -1.0f + (ext1 * -1.0f + ext2 * -1.0f));
+	corner[2] = c + (ext0 + (ext1 * -1.0f + ext2 * -1.0f));
+	corner[3] = c + (ext0 + (ext1 + ext2 * -1.0f));
+	corner[4] = c + (ext0 * -1.0f + (ext1 + ext2));
+	corner[5] = c + (ext0 * -1.0f + (ext1 * -1.0f + ext2));
+	corner[6] = c + (ext0 + (ext1 * -1.0f + ext2));
+	corner[7] = c + (ext0 + (ext1 + ext2));
 
-	// box.min collects the largest coordinates, box.max the smallest.
-	for (int i = 0; i < 8; i++) {
-		if (!(box.min.x > corners[i].x)) box.min.x = corners[i].x;
-		if (!(box.min.y > corners[i].y)) box.min.y = corners[i].y;
-		if (!(box.min.z > corners[i].z)) box.min.z = corners[i].z;
-		if (!(box.max.x < corners[i].x)) box.max.x = corners[i].x;
-		if (!(box.max.y < corners[i].y)) box.max.y = corners[i].y;
-		if (!(box.max.z < corners[i].z)) box.max.z = corners[i].z;
+	WVector *pCorner = corner;
+	for (int count = 8; count != 0; count--, pCorner++) {
+		if (!(box.max.x > pCorner->x)) box.max.x = pCorner->x;
+		if (!(box.max.y > pCorner->y)) box.max.y = pCorner->y;
+		if (!(box.max.z > pCorner->z)) box.max.z = pCorner->z;
+		if (!(box.min.x < pCorner->x)) box.min.x = pCorner->x;
+		if (!(box.min.y < pCorner->y)) box.min.y = pCorner->y;
+		if (!(box.min.z < pCorner->z)) box.min.z = pCorner->z;
 	}
 
-	aabb.max = box.min;
-	aabb.min = box.max;
+	aabb.max = box.max;
+	aabb.min = box.min;
 }
 
 // quadtree.cpp:8058

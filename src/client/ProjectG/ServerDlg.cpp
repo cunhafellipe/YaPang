@@ -492,9 +492,9 @@ bool FrServerDlg::OnInit(void) {
 		std::string text;
 		std::string remain;
 
-		if (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().timeBlock > 0) {
-			unsigned int days = WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().timeBlock / 24;
-			unsigned int hours = WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().timeBlock % 24;
+		if (WSingleton<CSharedDoc>::Instance()->GetTimeBlock() > 0) {
+			unsigned int days = WSingleton<CSharedDoc>::Instance()->GetTimeBlock() / 24;
+			unsigned int hours = WSingleton<CSharedDoc>::Instance()->GetTimeBlock() % 24;
 			if (days > 0)
 				remain += MakeStr("%d\xc0\xcf ", days);
 
@@ -1039,8 +1039,9 @@ void FrServerDlg::OnServerListBtnDown(void) {
 // serverdlg.cpp:1158
 bool FrServerDlg::IsNotDrawServerList(FrListItem* pItem) {
 	if (!m_pServerList) return true;
-	return pItem == NULL
-		|| pItem->pData == NULL;
+	if (pItem == NULL) return true;
+	if (pItem->pData == NULL) return true;
+	return false;
 }
 
 // serverdlg.cpp:1166
@@ -1419,8 +1420,9 @@ void FrServerDlg::OnConnectMessageInit(intptr_t param) {
 		m_pConnectMessage->SetVisible(false);
 		if (!m_pProgressBar) {
 
-			WRect rect = m_pConnectMessage->GetRect();
-			WRect barRect(rect.x, rect.y - 25, 180, 30);
+			const WRect& r = m_pConnectMessage->GetRect();
+			WRect rect(r.x, r.y, r.w, r.h);
+			WRect barRect(rect.x, r.y - 25, 180, 30);
 
 
 

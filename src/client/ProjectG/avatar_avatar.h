@@ -63,7 +63,7 @@ public:
 	bool IsFollowing(void) const { return m_followName[0] ? true : false; } // avatar_avatar.h:113
 	bool IsHoldState(void) const { return (m_state & 0x7E) ? true : false; } // avatar_avatar.h:115
 	unsigned long GetUID(void) const { return m_uid; }          // avatar_avatar.h:117
-	unsigned long GetGuid() const;                              // avatar_avatar.h:118
+	unsigned long GetGuid(void) const { return m_guid; }        // avatar_avatar.h:118
 	const char *GetIDName(void) const { return m_idName; }      // avatar_avatar.h:119
 	const char *GetNickName(void) const { return m_nickName; }  // avatar_avatar.h:120
 	const WVector &GetPosition() const;                         // avatar_avatar.h:128

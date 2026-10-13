@@ -7,6 +7,48 @@
 
 #include <string.h>
 
+#ifdef PG_7XX
+// The palette slot of a bone in its mesh's palette (w_mesh::pgPalette),
+// added on first use. The JP exe's lookup (0xB9F980) returns the position of
+// the bone in the mesh's bone vector.
+static int PgPaletteSlot(w_mesh* pMesh, WBone* pBone) {
+	int id = pBone->GetID();
+	for (int i = 0; i < pMesh->pgPaletteNum; ++i) {
+		if (pMesh->pgPalette[i] == id)
+			return i;
+	}
+	if (pMesh->pgPaletteNum >= (int)(sizeof(pMesh->pgPalette) / sizeof(pMesh->pgPalette[0])))
+		return 0;
+	pMesh->pgPalette[pMesh->pgPaletteNum] = id;
+	return pMesh->pgPaletteNum++;
+}
+
+// Starts a mesh's palette over; slot 0 is the batch's bone, which the
+// vertices after rigidNum use and xUpdateMatrixIdx does not rewrite.
+static void PgResetPalette(w_mesh* pMesh, WBone* pBatchBone) {
+	pMesh->pgPaletteNum = 0;
+	PgPaletteSlot(pMesh, pBatchBone);
+}
+
+// Storage for the matrix pointers of a draw's palette. The device may keep
+// the batch state until its flush later in the frame (WDirect3D::DrawBuffered),
+// so the arrays cannot live on the stack: a ring large enough for many frames
+// of draws.
+static const WMatrix** PgPaletteRing(int n) {
+	static const WMatrix* s_ring[1 << 18];
+	static int s_pos = 0;
+	if (s_pos + n > (int)(sizeof(s_ring) / sizeof(s_ring[0])))
+		s_pos = 0;
+	const WMatrix** p = &s_ring[s_pos];
+	s_pos += n;
+	return p;
+}
+
+#define PG_MATRIX_IDX(pMesh, pBone) PgPaletteSlot(pMesh, pBone)
+#else
+#define PG_MATRIX_IDX(pMesh, pBone) (pBone)->m_id
+#endif
+
 // wxtnlbuffer.cpp:23
 WxVb::WxVb(unsigned long dwFVF, unsigned long dwUsage)
 	: xhVb(0), xnVtxs(0), xdwFVF(dwFVF), xdwUsage(dwUsage), xpNext(NULL) {
@@ -180,7 +222,12 @@ void WxBatchGrp::xRenderAtOnce(WView* pView, WxBatchState* pBState, bool bPerTra
 				pFirst = pBatch;
 				nBatches = 1;
 			} else if (pFirst) {
-				if (pBatch->xpBone->GetAlpha() != pFirst->xpBone->GetAlpha() || pBatch->xpMesh->drawFlag != pFirst->xpMesh->drawFlag || pBatch->xpMesh->xiDrawFlag2 != pFirst->xpMesh->xiDrawFlag2 || stricmp(pBatch->xpMesh->mpetName, pFirst->xpMesh->mpetName) != 0) {
+				if (pBatch->xpBone->GetAlpha() != pFirst->xpBone->GetAlpha() || pBatch->xpMesh->drawFlag != pFirst->xpMesh->drawFlag || pBatch->xpMesh->xiDrawFlag2 != pFirst->xpMesh->xiDrawFlag2 || stricmp(pBatch->xpMesh->mpetName, pFirst->xpMesh->mpetName) != 0
+#ifdef PG_7XX
+					// One draw has one palette: meshes with their own palettes are drawn apart.
+					|| ((pBatch->xpMesh->xiDrawFlag2 & 0x1000) && (pBatch->xpMesh->pgPaletteNum != pFirst->xpMesh->pgPaletteNum || memcmp(pBatch->xpMesh->pgPalette, pFirst->xpMesh->pgPalette, pBatch->xpMesh->pgPaletteNum * sizeof(int)) != 0))
+#endif
+					) {
 					xRenderSubset(pView, pBState, pFirst, nBatches);
 					pFirst = pBatch;
 					nBatches = 1;
@@ -717,6 +764,9 @@ void WxTnLBuffer::xFillVertexBufferByMesh(unsigned char* pData, WxBatchGrp* pBat
 		int iOffs = 12;
 		int nRigid = 0;
 		float afWeights[3];
+#ifdef PG_7XX
+		PgResetPalette(pMesh, pBatch->xpBone);
+#endif
 
 		if (pMesh->blendedRigidNum > 0) {
 			do {
@@ -726,13 +776,13 @@ void WxTnLBuffer::xFillVertexBufferByMesh(unsigned char* pData, WxBatchGrp* pBat
 				int j = 0;
 				for (; fTotalWeight < 0.999f && j < 3; ++j, ++nRigid) {
 					if (pMesh->blendedBoneList[nRigid]) {
-						dwMatIdx |= pMesh->blendedBoneList[nRigid]->m_id << (j * 8);
+						dwMatIdx |= PG_MATRIX_IDX(pMesh, pMesh->blendedBoneList[nRigid]) << (j * 8);
 						afWeights[j] = pMesh->blendWeightList[nRigid];
 						fTotalWeight += pMesh->blendWeightList[nRigid];
 					}
 				}
 				if (j == 3 && fTotalWeight < 0.999f && pMesh->blendedBoneList[nRigid]) {
-					dwMatIdx |= pMesh->blendedBoneList[nRigid]->m_id << 24;
+					dwMatIdx |= PG_MATRIX_IDX(pMesh, pMesh->blendedBoneList[nRigid]) << 24;
 					++nRigid;
 				}
 
@@ -750,14 +800,14 @@ void WxTnLBuffer::xFillVertexBufferByMesh(unsigned char* pData, WxBatchGrp* pBat
 		if ((int)iWeightSize > 0) {
 			if (i < pMesh->rigidNum) {
 				do {
-					int iId = pMesh->boneList[i]->m_id;
+					int iId = PG_MATRIX_IDX(pMesh, pMesh->boneList[i]);
 					memcpy(&pData[iOffs], afWeights, iWeightSize);
 					*(int*)(pData + iWeightSize + iOffs) = iId;
 					++i;
 					iOffs += iStride;
 				} while (i < pMesh->rigidNum);
 			}
-			int iId = pBatch->xpBone->m_id;
+			int iId = PG_MATRIX_IDX(pMesh, pBatch->xpBone);
 			if (i < pMesh->vtxNum) {
 				do {
 					memcpy(&pData[iOffs], afWeights, iWeightSize);
@@ -769,12 +819,12 @@ void WxTnLBuffer::xFillVertexBufferByMesh(unsigned char* pData, WxBatchGrp* pBat
 		} else {
 			if (i < pMesh->rigidNum) {
 				do {
-					*(int*)(pData + iWeightSize + iOffs) = pMesh->boneList[i]->m_id;
+					*(int*)(pData + iWeightSize + iOffs) = PG_MATRIX_IDX(pMesh, pMesh->boneList[i]);
 					++i;
 					iOffs += iStride;
 				} while (i < pMesh->rigidNum);
 			}
-			int iId = pBatch->xpBone->m_id;
+			int iId = PG_MATRIX_IDX(pMesh, pBatch->xpBone);
 			if (i < pMesh->vtxNum) {
 				do {
 					*(int*)(pData + iOffs + iWeightSize) = iId;
@@ -899,6 +949,9 @@ void WxTnLBuffer::xUpdateMatrixIdx(unsigned char* paData, WxBatchGrp* pBatchGrp,
 		int i;
 		int iBone = 0;
 		int iOffs = 0x18;
+#ifdef PG_7XX
+		PgResetPalette(pMesh, pBatch->xpBone);
+#endif
 
 		for (i = 0; i < pMesh->blendedRigidNum; ++i) {
 			unsigned int dwMatIdx = 0;
@@ -907,14 +960,14 @@ void WxTnLBuffer::xUpdateMatrixIdx(unsigned char* paData, WxBatchGrp* pBatchGrp,
 			do {
 				if (j >= 3)
 					break;
-				dwMatIdx |= pMesh->blendedBoneList[iBone]->m_id << (j * 8);
+				dwMatIdx |= PG_MATRIX_IDX(pMesh, pMesh->blendedBoneList[iBone]) << (j * 8);
 				fTotalWeight += pMesh->blendWeightList[iBone];
 				++j;
 				++iBone;
 			} while (fTotalWeight < 0.999f);
 
 			if (j == 3 && fTotalWeight < 0.999f) {
-				dwMatIdx |= pMesh->blendedBoneList[iBone++]->m_id << 24;
+				dwMatIdx |= PG_MATRIX_IDX(pMesh, pMesh->blendedBoneList[iBone++]) << 24;
 			}
 			*(unsigned int*)(paData + iOffs) = dwMatIdx;
 			iOffs += iStride;
@@ -923,7 +976,7 @@ void WxTnLBuffer::xUpdateMatrixIdx(unsigned char* paData, WxBatchGrp* pBatchGrp,
 		if (i < pMesh->rigidNum) {
 			int* pIdx = (int*)(paData + iOffs);
 			do {
-				*pIdx = pMesh->boneList[i]->m_id;
+				*pIdx = PG_MATRIX_IDX(pMesh, pMesh->boneList[i]);
 				++i;
 				pIdx = (int*)((char*)pIdx + iStride);
 			} while (i < pMesh->rigidNum);
@@ -1026,6 +1079,30 @@ void xRender(WView* pView, WxBatchState* pBState, WBone* pBone, w_mesh* pMesh) {
 		}
 	}
 
+#ifdef PG_7XX
+	// The mesh's palette (PgPaletteSlot): slot i draws with the puppet's
+	// matrices of the bone id pgPalette[i].
+	int nTransfsBackup = pBState->xnmTransfs;
+	const WMatrix* const* matBackup = pBState->xpapmW;
+	const WMatrix* const* orgMatMesh = pBState->xpapmO;
+	if (pMesh && (pBState->xiFlag1 & 0x1000) && pBState->xnmTransfs > 0 && pMesh->pgPaletteNum > 0) {
+		const WMatrix** apmW = PgPaletteRing(pMesh->pgPaletteNum * 2);
+		const WMatrix** apmO = apmW + pMesh->pgPaletteNum;
+		for (int i = 0; i < pMesh->pgPaletteNum; ++i) {
+			int id = pMesh->pgPalette[i];
+			bool inList = id >= 0 && id < nTransfsBackup;
+			apmW[i] = inList && matBackup[id] ? matBackup[id] : &WMatrix::IDENTITY;
+			apmO[i] = inList && orgMatMesh && orgMatMesh[id] ? orgMatMesh[id] : &WMatrix::IDENTITY;
+		}
+		pBState->xnmTransfs = pMesh->pgPaletteNum;
+		pBState->xpapmW = apmW;
+		pBState->xpapmO = orgMatMesh ? apmO : NULL;
+	}
+#endif
 	pView->xDrawIndexedTriangles(*pBState);
+#ifdef PG_7XX
+	pBState->xnmTransfs = nTransfsBackup;
+	pBState->xpapmW = matBackup;
+#endif
 	pBState->xpapmO = orgMatBackup;
 }

@@ -55,7 +55,10 @@ CCaddieBonus::~CCaddieBonus(void) {
 
 // caddiebonus.cpp:81
 bool CCaddieBonus::IsHaveCaddie(eCaddie caddie) {
-	return (caddie | 0x1C000000) == WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_caddieInfo.typeId ? true : false;
+	if ((caddie | 0x1C000000) == WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_caddieInfo.typeId) {
+		return true;
+	}
+	return false;
 }
 
 // caddiebonus.cpp:93

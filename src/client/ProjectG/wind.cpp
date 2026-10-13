@@ -433,7 +433,7 @@ void CWind::AddWindArea(const Waabb& area, char* desc) {
 	case '*':
 		sscanf(desc + 1, "%f %f %f %s", &w.m_intensity, &w.m_yaw, &w.m_pitch, level);
 
-		w.m_flag = 1; w.m_wind = (m_intensity * w.m_intensity) * (RotMat(w.m_pitch * 0.017453292f, 0) * RotMat(w.m_yaw * 0.017453292f, 1)).za;
+		w.m_flag = 1; w.m_wind = ((float)m_intensity * w.m_intensity) * (RotMat(w.m_pitch * 0.017453292f, 0) * RotMat(w.m_yaw * 0.017453292f, 1)).za;
 		break;
 
 	case '+':
@@ -627,5 +627,5 @@ void CWind::DrawWindArea(WView* view) {
 
 // wind.cpp:804
 bool CWind::IsGlobalWind_Compare(void) {
-	return WisEqual(m_wind, m_globalWind, 0.00001f) ? true : false;
+	return m_wind == m_globalWind ? true : false;
 }

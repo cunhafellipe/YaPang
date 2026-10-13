@@ -212,7 +212,7 @@ void FrValEventDlg::DrawInDlg(const char* name, WPoint& pt) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
-float x = m_rect.x;
+		float x = m_rect.x;
 		float y = m_rect.y;
 		WPoint pos = WPoint(x, y) + WPoint(2.0f, 23.0f);
 
@@ -235,10 +235,9 @@ void FrValEventDlg::DrawGauge(WPoint& pt, unsigned char count) {
 		float x = m_rect.x;
 		float y = m_rect.y;
 
-		WRect rc(x + 2.0f, y + 23.0f, (float)bmp->Width(), (float)bmp->Height());
+		WRect rc(x + 2.0f, y + 23.0f, bmp->Width(), bmp->Height());
 		float offset = (10 - count) * rc.h * 0.1f;
-		float dy = offset + pt.y;
-		pGDI->DrawTexture(bmp, WRect(rc.x + pt.x, dy + rc.y, (float)bmp->Width(), (float)bmp->Height() - offset), 0xFFFFFFFF, 0);
+		pGDI->DrawTexture(bmp, WRect(rc.TopLeft() + WPoint(pt.x, offset + pt.y), (float)bmp->Width(), (float)bmp->Height() - offset), 0xFFFFFFFF, 0);
 	}
 }
 

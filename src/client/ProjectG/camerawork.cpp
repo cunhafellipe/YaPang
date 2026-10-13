@@ -32,10 +32,8 @@ extern char *data_a7ee68;
 
 extern WMatrix g_camera;
 
-// commonutil.cpp:714 (?Random@@YIMMMH@Z) and wmath (?WisZero@@YIHABMM@Z);
-// commonutil.h and wmath.h do not declare them yet.
+// commonutil.cpp:714 (?Random@@YIMMMH@Z); commonutil.h does not declare it yet.
 float Random(float min, float max, int seed);
-int WisZero(const float &value, float eps);
 
 // Nameless .rdata floats of Wangreal's math (pi, pi/2, degrees to radians,
 // radians to degrees, epsilon), read through memory rather than literals.
@@ -239,7 +237,7 @@ void CCameraWork::ReplayCamera(bool keep) {
 		} while (driveTable[index].m_weight <= 0);
 	}
 
-	m_inputUsed = false; m_inputYaw = 0.0f; m_inputPitch = 0.0f; m_inputZoom = 0.0f;
+	m_input.Reset();
 	m_cameraIndex = index;
 	m_nextCameraType = -1;
 	m_stateFlag = false;
@@ -253,7 +251,7 @@ void CCameraWork::ReplayCamera(bool keep) {
 
 // camerawork.cpp:266
 void CCameraWork::SelectCamera(int type) {
-	m_inputUsed = false; m_inputYaw = 0.0f; m_inputPitch = 0.0f; m_inputZoom = 0.0f;
+	m_input.Reset();
 	m_nextCameraType = -1;
 	m_destFollowsGround = false;
 	m_pScriptMotion = 0;
@@ -450,7 +448,7 @@ void CCameraWork::SetCamera(int type, bool immediately) {
 	}
 
 	if (!m_keepInputOffsets) {
-		m_inputUsed = false; m_inputYaw = 0.0f; m_inputPitch = 0.0f; m_inputZoom = 0.0f;
+		m_input.Reset();
 	}
 	if (immediately) {
 		m_sourceCamera = m_baseMatrix.pivot;
@@ -1314,25 +1312,25 @@ void CCameraWork::InputProcess(float elapsed) {
 
 	// The arrow keys, by their Korean names (up, down, left, right).
 	if (g_input->GetDown("\xbb\xf3", true) || g_input->GetDown("\xc7\xcf", true) || g_input->GetDown("\xc1\xc2", true) || g_input->GetDown("\xbf\xec", true))
-		m_inputUsed = true;
+		m_input.m_used = true;
 
 	if (g_input->Get("LSHIFT", true) || g_input->Get("RSHIFT", true)) {
 		if (g_input->Get("\xbb\xf3", true))
-			m_inputYaw -= elapsed * 0.52359879f;
+			m_input.m_yaw -= elapsed * 0.52359879f;
 
 		if (g_input->Get("\xc7\xcf", true))
-			m_inputYaw += elapsed * 0.52359879f;
+			m_input.m_yaw += elapsed * 0.52359879f;
 	}
 
-	if (!g_input->Get("\xbb\xf3", true) && !g_input->Get("\xc7\xcf", true) && !(WAbsBySign(m_inputYaw) < data_9eb420[4]) && m_inputMode == 2) {
-		if (m_inputYaw > 0.0f) {
-			m_inputYaw -= elapsed * 1.0471976f;
-			if (m_inputYaw < 0.0f)
-				m_inputYaw = 0.0f;
+	if (!g_input->Get("\xbb\xf3", true) && !g_input->Get("\xc7\xcf", true) && !(WAbsBySign(m_input.m_yaw) < data_9eb420[4]) && m_inputMode == 2) {
+		if (m_input.m_yaw > 0.0f) {
+			m_input.m_yaw -= elapsed * 1.0471976f;
+			if (m_input.m_yaw < 0.0f)
+				m_input.m_yaw = 0.0f;
 		} else {
-			m_inputYaw += elapsed * 1.0471976f;
-			if (m_inputYaw > 0.0f)
-				m_inputYaw = 0.0f;
+			m_input.m_yaw += elapsed * 1.0471976f;
+			if (m_input.m_yaw > 0.0f)
+				m_input.m_yaw = 0.0f;
 		}
 	}
 
@@ -1346,22 +1344,22 @@ void CCameraWork::InputProcess(float elapsed) {
 	if (!g_input->Get("LSHIFT", true) && !g_input->Get("RSHIFT", true)) {
 		if (g_input->Get("\xbb\xf3", true)) {
 			if (m_inputMode == 1 || m_freePitch)
-				m_inputPitch += speed * elapsed;
+				m_input.m_pitch += speed * elapsed;
 		}
 
 		if (g_input->Get("\xc7\xcf", true))
-			m_inputPitch -= speed * elapsed;
+			m_input.m_pitch -= speed * elapsed;
 	}
 
-	if (!g_input->Get("\xbb\xf3", true) && !g_input->Get("\xc7\xcf", true) && !(WAbsBySign(m_inputPitch) < data_9eb420[4]) && m_inputMode == 2) {
-		if (m_inputPitch > 0.0f) {
-			m_inputPitch -= speed * elapsed * 2.0f;
-			if (m_inputPitch < 0.0f)
-				m_inputPitch = 0.0f;
+	if (!g_input->Get("\xbb\xf3", true) && !g_input->Get("\xc7\xcf", true) && !(WAbsBySign(m_input.m_pitch) < data_9eb420[4]) && m_inputMode == 2) {
+		if (m_input.m_pitch > 0.0f) {
+			m_input.m_pitch -= speed * elapsed * 2.0f;
+			if (m_input.m_pitch < 0.0f)
+				m_input.m_pitch = 0.0f;
 		} else {
-			m_inputPitch += speed * elapsed * 2.0f;
-			if (m_inputPitch > 0.0f)
-				m_inputPitch = 0.0f;
+			m_input.m_pitch += speed * elapsed * 2.0f;
+			if (m_input.m_pitch > 0.0f)
+				m_input.m_pitch = 0.0f;
 		}
 	}
 
@@ -1371,50 +1369,50 @@ void CCameraWork::InputProcess(float elapsed) {
 		speed = 0.52359879f;
 
 	if (g_input->Get("\xc1\xc2", true))
-		m_inputZoom -= speed * elapsed;
+		m_input.m_zoom -= speed * elapsed;
 
 	if (g_input->Get("\xbf\xec", true))
-		m_inputZoom += speed * elapsed;
+		m_input.m_zoom += speed * elapsed;
 
-	if (!g_input->Get("\xc1\xc2", true) && !g_input->Get("\xbf\xec", true) && !(WAbsBySign(m_inputZoom) < data_9eb420[4]) && m_inputMode == 2) {
-		if (m_inputZoom > 0.0f) {
-			m_inputZoom -= speed * elapsed * 2.0f;
-			if (m_inputZoom < 0.0f)
-				m_inputZoom = 0.0f;
+	if (!g_input->Get("\xc1\xc2", true) && !g_input->Get("\xbf\xec", true) && !(WAbsBySign(m_input.m_zoom) < data_9eb420[4]) && m_inputMode == 2) {
+		if (m_input.m_zoom > 0.0f) {
+			m_input.m_zoom -= speed * elapsed * 2.0f;
+			if (m_input.m_zoom < 0.0f)
+				m_input.m_zoom = 0.0f;
 		} else {
-			m_inputZoom += speed * elapsed * 2.0f;
-			if (m_inputZoom > 0.0f)
-				m_inputZoom = 0.0f;
+			m_input.m_zoom += speed * elapsed * 2.0f;
+			if (m_input.m_zoom > 0.0f)
+				m_input.m_zoom = 0.0f;
 		}
 	}
 
 	if (m_inputMode != 2)
-		m_inputZoom = CAMERA_CLAMP(m_inputZoom, -1.0471976f, 1.0471976f);
-	m_inputPitch = CAMERA_CLAMP(m_inputPitch, -0.52359879f, 0.52359879f);
+		m_input.m_zoom = CAMERA_CLAMP(m_input.m_zoom, -1.0471976f, 1.0471976f);
+	m_input.m_pitch = CAMERA_CLAMP(m_input.m_pitch, -0.52359879f, 0.52359879f);
 
-	if (!m_inputUsed) {
-		m_inputYaw = 0.0f;
-		m_inputPitch = 0.0f; m_inputZoom = 0.0f;
+	if (!m_input.m_used) {
+		m_input.m_yaw = 0.0f;
+		m_input.m_pitch = 0.0f; m_input.m_zoom = 0.0f;
 	}
 
 	if (m_keepInputOffsets) {
-		float fov = m_inputYaw + 0.95993108f;
+		float fov = m_input.m_yaw + 0.95993108f;
 		if (fov < 0.17453292f)
 			fov = 0.17453292f;
 		else if (fov > data_9eb420[1])
 			fov = 1.5707964f;
 		g_view->SetFOV(fov);
 
-		if (WAbsBySign(m_inputZoom) < data_9eb420[4] && WAbsBySign(m_inputPitch) < data_9eb420[4]) {
+		if (WAbsBySign(m_input.m_zoom) < data_9eb420[4] && WAbsBySign(m_input.m_pitch) < data_9eb420[4]) {
 			g_camera = m_baseMatrixCopy;
 			return;
 		}
 
-		g_camera = GetCameraMatrix(m_baseMatrixCopy.pivot, WVector(sinf(m_inputZoom) * cosf(m_inputPitch), sinf(m_inputPitch), cosf(m_inputZoom) * cosf(m_inputPitch)) * m_baseMatrix, m_bankAngle);
+		g_camera = GetCameraMatrix(m_baseMatrixCopy.pivot, WVector(sinf(m_input.m_zoom) * cosf(m_input.m_pitch), sinf(m_input.m_pitch), cosf(m_input.m_zoom) * cosf(m_input.m_pitch)) * m_baseMatrix, m_bankAngle);
 		return;
 	}
 
-	float fov = m_zoomAngle + m_inputYaw;
+	float fov = m_zoomAngle + m_input.m_yaw;
 	if (fov < 0.17453292f)
 		fov = 0.17453292f;
 	else if (fov > data_9eb420[1])
@@ -1423,21 +1421,21 @@ void CCameraWork::InputProcess(float elapsed) {
 
 	m_baseMatrixCopy = GetCameraMatrix(m_sourceCamera, m_destCamera, m_bankAngle);
 
-	if (WAbsBySign(m_inputZoom) < data_9eb420[4] && WAbsBySign(m_inputPitch) < data_9eb420[4]) {
+	if (WAbsBySign(m_input.m_zoom) < data_9eb420[4] && WAbsBySign(m_input.m_pitch) < data_9eb420[4]) {
 		g_camera = m_baseMatrixCopy;
 	} else if (m_inputMode == 2) {
 		WVector dir = m_baseMatrixCopy.pivot - *m_pTarget;
-		float distance = MaxOf(10.0f, (1.0f - (m_inputZoom > 0.0f ? m_inputZoom : -m_inputZoom) * 0.47746483f) * dir.Magnitude());
+		float distance = MaxOf(10.0f, (1.0f - (m_input.m_zoom > 0.0f ? m_input.m_zoom : -m_input.m_zoom) * 0.47746483f) * dir.Magnitude());
 
 		dir.Normalize();
 		dir *= distance;
 
-		WVector source = dir * RotMat(m_baseMatrixCopy.xa, m_inputPitch) * RotMat(m_inputZoom, 1) + *m_pTarget;
-		WVector dest = m_baseMatrixCopy.za * RotMat(m_baseMatrixCopy.xa, m_inputPitch) * RotMat(m_inputZoom, 1) + source;
+		WVector source = dir * RotMat(m_baseMatrixCopy.xa, m_input.m_pitch) * RotMat(m_input.m_zoom, 1) + *m_pTarget;
+		WVector dest = m_baseMatrixCopy.za * RotMat(m_baseMatrixCopy.xa, m_input.m_pitch) * RotMat(m_input.m_zoom, 1) + source;
 
 		g_camera = GetCameraMatrix(source, dest, m_bankAngle);
 	} else {
-		g_camera = GetCameraMatrix(m_baseMatrixCopy.pivot, WVector(sinf(m_inputZoom) * cosf(m_inputPitch), sinf(m_inputPitch), cosf(m_inputZoom) * cosf(m_inputPitch)) * m_baseMatrixCopy, m_bankAngle);
+		g_camera = GetCameraMatrix(m_baseMatrixCopy.pivot, WVector(sinf(m_input.m_zoom) * cosf(m_input.m_pitch), sinf(m_input.m_pitch), cosf(m_input.m_zoom) * cosf(m_input.m_pitch)) * m_baseMatrixCopy, m_bankAngle);
 	}
 }
 
@@ -1540,7 +1538,7 @@ void CCameraWork::Process(float elapsed, float time) {
 			}
 		}
 
-		if (m_cameraType == 0xcb && Finished()) {
+		if (m_cameraType == 0xcb && m_transitionTime > 0.0f && m_cameraTime > m_transitionTime) {
 			s_targetSent = false;
 			m_destFollowsGround = false;
 			SetCamera(0xcc, false);

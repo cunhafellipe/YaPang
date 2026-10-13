@@ -677,8 +677,7 @@ void CPost_ReciveDlg::OnPostListBtnDown(void) {
 	if (pBrief == 0)
 		return;
 
-	if (WRect(pItem->pos.x + m_miniBtns[1].m_rect.x, pItem->pos.y + m_miniBtns[1].m_rect.y,
-			m_miniBtns[1].m_rect.w, m_miniBtns[1].m_rect.h).IsInRect(g_pFresh->GetManager()->GetMousePos())) {
+	if ((m_miniBtns[1].m_rect + pItem->pos).IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 		if (pBrief->m_hasItem > 0) {
 			IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(pBrief->m_item.typeId);
 			if (pCommon) {

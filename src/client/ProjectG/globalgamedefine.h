@@ -3,105 +3,11 @@
 #define PG_CLIENT_PROJECTG_GLOBALGAMEDEFINE_H
 
 #include "defines.h"
+// EncryptKey, sGuildRoomInfo and sRoomInfo (the PDB places them there).
+#include "shared/globalgamedefine.h"
 
 #include <stdlib.h>
 #include <string.h>
-
-struct EncryptKey {
-public:
-	// globalgamedefine.h:1116
-	EncryptKey(void) {
-		memset(m_key, 0, sizeof(m_key));
-		for (int i = 0; i < 16; i++)
-			m_key[i] = (unsigned char)(rand() % 255);
-	}
-	~EncryptKey(void) {}               // globalgamedefine.h:1122
-
-	unsigned char GetKey(int index);   // globalgamedefine.h:1132
-
-private:
-	unsigned char m_key[16]; // 0x0
-};
-
-CHECK_SIZE(EncryptKey, 0x10);
-
-// Packed: m_roomNumber sits at the odd offset 0x49. 0xB2 bytes
-// (FrDtRoomDlg::SetRoomInfo copies 0x2C dwords + 1 word). The destructor is
-// implicit: the original's 1-byte ??1sRoomInfo has no line info.
-#pragma pack(push, 1)
-struct sRoomInfo {
-	// globalgamedefine.h:3163
-	sRoomInfo(void) {
-		m_title[0] = 0;
-		m_password[0] = 0;
-		m_intrusionAccess = 0;
-		m_trophy = 0;
-		m_option[0] = 0;
-		m_option[1] = 0;
-		m_roomMode = 0;
-		m_roomNumber = 0xFFFF;
-		m_isPublic = 1;
-		memset(m_guildUID, 0, sizeof(m_guildUID)); memset(m_guildName, 0, sizeof(m_guildName)); memset(m_guildMark, 0, sizeof(m_guildMark));
-	}
-
-	// globalgamedefine.h:3186 (std::find on the room list by room number)
-	bool operator==(const unsigned long &roomNumber) const {
-		return m_roomNumber == roomNumber;
-	}
-
-	char m_title[0x20];              // 0x00 (FrChangeRoomInfoDlg::OnTitleInit shows it)
-	char m_password[0x10];           // 0x20 (FrChangeRoomInfoDlg::OnPasswordInit shows it)
-	unsigned char m_isPublic;        // 0x30 (0: FrDtRoomDlg::OnJoinBtnUp asks for the password)
-	unsigned char m_intrusionAccess; // 0x31 (set once CIntrusion::OnAccessRoom lets a player join the game in progress)
-	bool m_state;                    // 0x32 (true = game in progress, returned by CIntrusion::IsIntrusionGame)
-	unsigned char m_userLimit;       // 0x33 (100 for a lounge-sized room: the lobby's room list sorts those first)
-	unsigned char m_userCount;       // 0x34 (second key of RoomUserCompare)
-	EncryptKey m_key;                // 0x35
-	unsigned char m_galleryCount;    // 0x45 (spectators in the room; FrDtRoomDlg::OnGalleryBtnUp refuses a join when it reaches m_galleryLimit)
-	unsigned char m_galleryLimit;    // 0x46 (CLobbyTask::OnPacket 0x48 updates it; the spectator capacity, FrDtRoomDlg::OnGalleryBtnUp)
-	unsigned char m_holeCount;       // 0x47 (RoomHoleCompare)
-	unsigned char m_gameType;        // 0x48 (RoomGameTypeCompare)
-	unsigned short m_roomNumber;     // 0x49 (matched by CIntrusion::IsIntrusionGame)
-	unsigned char m_value4B;         // 0x4B (CLobbyTask::OnPacket 0x48 updates it and sends it to the lobby with message 0x12)
-	unsigned char m_course;          // 0x4C (RoomCourseCompare)
-	unsigned long m_value4D;         // 0x4D (CLobbyTask::OnPacket 0x48; one of the two time limits of the packet layout)
-	unsigned long m_value51;         // 0x51 (likewise, the other time limit)
-	unsigned long m_trophy;          // 0x55 (cleared by the constructor; name from the packet layout: mode, course, two time limits, trophy)
-	unsigned char m_option[2];       // 0x59 (two bytes the constructor clears; meaning not yet known)
-	unsigned long m_guildUID[2];     // 0x5B (the two guilds of a guild match; FrDtRoomDlg::OnJoinBtnUp checks the player's guild against them)
-	char m_guildName[2][21];         // 0x63 (cleared with m_guildUID)
-	char m_guildMark[2][12];         // 0x8D (cleared with m_guildUID)
-	PADDING(0xA5, 0xAD);            // untranscribed room fields
-	unsigned long m_masterUID;       // 0xAD (compared with CSharedDoc::m_myUID by CLobbyTask::OnPacket 0x47: the local player owns the room)
-	unsigned char m_roomMode;        // 0xB1 (the constructor clears it; 14 shows the blank score panels)
-};
-#pragma pack(pop)
-
-CHECK_SIZE(sRoomInfo, 0xB2);
-CHECK_FIELD(sRoomInfo, m_title, 0x00);
-CHECK_FIELD(sRoomInfo, m_password, 0x20);
-CHECK_FIELD(sRoomInfo, m_isPublic, 0x30);
-CHECK_FIELD(sRoomInfo, m_intrusionAccess, 0x31);
-CHECK_FIELD(sRoomInfo, m_state, 0x32);
-CHECK_FIELD(sRoomInfo, m_userLimit, 0x33);
-CHECK_FIELD(sRoomInfo, m_userCount, 0x34);
-CHECK_FIELD(sRoomInfo, m_key, 0x35);
-CHECK_FIELD(sRoomInfo, m_holeCount, 0x47);
-CHECK_FIELD(sRoomInfo, m_gameType, 0x48);
-CHECK_FIELD(sRoomInfo, m_roomNumber, 0x49);
-CHECK_FIELD(sRoomInfo, m_course, 0x4C);
-CHECK_FIELD(sRoomInfo, m_trophy, 0x55);
-CHECK_FIELD(sRoomInfo, m_option, 0x59);
-CHECK_FIELD(sRoomInfo, m_guildUID, 0x5B);
-CHECK_FIELD(sRoomInfo, m_guildName, 0x63);
-CHECK_FIELD(sRoomInfo, m_guildMark, 0x8D);
-CHECK_FIELD(sRoomInfo, m_masterUID, 0xAD);
-CHECK_FIELD(sRoomInfo, m_galleryCount, 0x45);
-CHECK_FIELD(sRoomInfo, m_galleryLimit, 0x46);
-CHECK_FIELD(sRoomInfo, m_value4B, 0x4B);
-CHECK_FIELD(sRoomInfo, m_value4D, 0x4D);
-CHECK_FIELD(sRoomInfo, m_value51, 0x51);
-CHECK_FIELD(sRoomInfo, m_roomMode, 0xB1);
 
 // A player of the room the local player is in (CSharedDoc::m_roomPlayerList
 // is a std::list<sSlotInfo>, whose node copies 0x54 dwords + 1 word: 0x152

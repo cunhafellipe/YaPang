@@ -126,4 +126,24 @@ CHECK_FIELD(w_pet_texture_info, scalex, 0x64);
 CHECK_FIELD(w_pet_texture_info, scaley, 0x68);
 CHECK_FIELD(w_pet_texture_info, group, 0x6c);
 
+#ifdef PG_7XX
+// The versioned .pet of the later clients: a VERS chunk holding
+// 0xFFFE<major><minor> (0xFFFE0000 when absent). Their readers compare the
+// major byte, then the minor one (the JP 983 exe's loader, 0xB6A2F0):
+// 1.1 keeps the stored mesh normals, 1.2 adds the UV sets of a triangle
+// corner and a second texture index per triangle, 1.3 an extra float per
+// bone and a fourth animation key block. The matching build has none of it.
+inline bool PgPetVersionAtLeast(unsigned int version, unsigned int ref) {
+	unsigned int major = (version >> 8) & 0xff, refMajor = (ref >> 8) & 0xff;
+	if (major != refMajor) {
+		return major > refMajor;
+	}
+	return (version & 0xff) >= (ref & 0xff);
+}
+
+// The version of the .pet WPuppet::LoadPET is reading, for the readers
+// that are not WPuppet members (WBone::LoadAnimationKey).
+extern unsigned int g_pgPetVersion;
+#endif
+
 #endif // PG_CLIENT_WANGREAL_INCLUDE_WPETFILE_H

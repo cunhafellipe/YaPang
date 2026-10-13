@@ -424,9 +424,9 @@ void CQuitWindow::CreateOptionWindow(void) {
 		m_pOptionWindow->SetCloseResult(FrCANCEL);
 
 		if (m_pQuitForm) {
-			m_pOptionWindow->SetRect(m_pQuitForm->GetOptionBtnRect());
+			m_pOptionWindow->SetIconRect(m_pQuitForm->GetOptionBtnRect());
 		} else {
-			m_pOptionWindow->SetRect(WRect(g_view->GetWidth() - 64.0f, 181.0f, 64.0f, 24.0f));
+			m_pOptionWindow->SetIconRect(WRect(g_view->GetWidth() - 64.0f, 181.0f, 64.0f, 24.0f));
 		}
 	}
 }

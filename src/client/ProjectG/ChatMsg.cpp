@@ -1093,10 +1093,12 @@ void CChatMsg::SetChatText(const char* text, bool keepCursor) {
 	} else {
 		m_cursorPos = m_inputLength;
 		m_cursorX = x;
+		cursorX = x;
 	}
 
-	if (m_cursorX > m_inputWidth)
-		m_cursorX = m_inputWidth;
+	if (cursorX > m_inputWidth)
+		cursorX = m_inputWidth;
+	m_cursorX = cursorX;
 }
 
 // chatmsg.cpp:1953
@@ -1118,7 +1120,7 @@ void CChatMsg::PrintInScreen(void) {
 	m_printed = true;
 
 	if (g_CurrentTime - m_lastPrintTime > 10000) {
-		if ((__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+		if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 			AfxGetTask()->PassMsgToActor("GolfRule", MsgObject(0, 0x96, 0, 0, 0, 0, 0));
 		}
 
