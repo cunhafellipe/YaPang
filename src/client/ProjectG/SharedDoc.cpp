@@ -195,10 +195,8 @@ sStall::sStall(void) {
 CSharedDoc::CSharedDoc(void)
 	: m_curMap(0), m_pCurCourse(NULL), m_roomType(0), m_roomName(), m_holes(18), m_weather(0),
 	  m_shotTimeLimit(0), m_gameTimeLimit(0), m_value4CE4(8), m_string4D4C(""), m_serverProperty(0),
-	  m_pGolfDoc(NULL), m_loginDlgCreated(true) {
-	// The original also clears 0x4B39 (inside m_serverChannel as transcribed).
-	m_serverName[0] = 0;
-
+	  m_loginDlgCreated(true) {
+	m_pGolfDoc = NULL;
 	ClearAll();
 
 	m_value47CC = 0;
@@ -494,7 +492,8 @@ void CSharedDoc::ClearUserInfoTimeMap(unsigned long uid) {
 		}
 		m_userInfoTimeMap.clear();
 	} else {
-		std::map<unsigned long, sUserInfoTime>::iterator it = m_userInfoTimeMap.find(uid);
+		std::map<unsigned long, sUserInfoTime>::iterator it;
+		it = m_userInfoTimeMap.find(uid);
 		if (it != m_userInfoTimeMap.end()) {
 			sUserInfoTime &info = (*it).second;
 			if (info.m_pArray1 != NULL) {
@@ -583,7 +582,7 @@ void CSharedDoc::ClearCurrentChannel(bool notify) {
 // shareddoc.cpp:711
 void CSharedDoc::ClearServerVars(void) {
 	memset(&m_currentChannel, 0, sizeof(m_currentChannel)); m_currentChannel.id = 0xFF;
-	memset(m_serverName, 0, 0x5C); // the server's name and channel, one 0x5C-byte block up to 0x4B61
+	memset(&m_curServer, 0, sizeof(m_curServer));
 	m_gameServerList.clear();
 	m_channelList.clear();
 }
@@ -732,7 +731,7 @@ void CSharedDoc::LoadItemDb(void) {
 
 // shareddoc.cpp:850
 void CSharedDoc::InitGolfDoc(void) {
-	IFF_STRUCT::sCourse *course = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCourse(0x28000000);
+	IFF_STRUCT::sCourse *course = ItemManager()->FindCourse(0x28000000);
 	if (course != 0) {
 		WSingleton<CSharedDoc>::Instance()->m_curMap = 0;
 		WSingleton<CSharedDoc>::Instance()->m_pCurCourse = course;
@@ -812,8 +811,7 @@ bool CSharedDoc::SetExtPrize(unsigned long uid, int count, sPrizeInfo *pPrizes) 
 				int added = 0;
 				for (unsigned int slot = 0; slot < 128; slot++) {
 					if (slot >= PLAYER(i)->m_extPrizeCount && added < count) {
-						PLAYER(i)->m_extPrizes[slot] = *pPrizes++;
-						added++;
+						PLAYER(i)->m_extPrizes[slot] = pPrizes[added++];
 					}
 				}
 			}
@@ -931,8 +929,12 @@ float CSharedDoc::GetWtPepPangyaComboGauge(unsigned char team) {
 
 		for (int j = 0; j < sizeof(pepPangyaParts) / sizeof(pepPangyaParts[0]); j++) {
 			if (pepPangyaParts[j] == typeId) {
-				return 16.0f;
+				gauge = 16.0f;
+				break;
 			}
+		}
+		if (gauge != 0.0f) {
+			break;
 		}
 	}
 
@@ -1144,8 +1146,8 @@ void CSharedDoc::AddCard(unsigned long typeId, unsigned long guid, unsigned shor
 		sCards card;
 		memset(&card, 0, sizeof(card));
 
-		card.m_guid = guid;
 		card.m_typeId = typeId;
+		card.m_guid = guid;
 		card.m_count = count;
 		WSingleton<CSharedDoc>::Instance()->m_myCardList.push_back(card);
 	}
@@ -1206,7 +1208,7 @@ int CSharedDoc::GetNumAddItemSlotByMascot(void) {
 
 	if (pMascotInfo != NULL) {
 		if (pMascotInfo->remainHours > num) {
-			if (ItemManager()->CompareSystemTime(pMascotInfo->endTime, WSingleton<CSharedDoc>::Instance()->m_serverTime) > 0) {
+			if (ItemManager()->CompareSystemTime(pMascotInfo->endTime, WSingleton<CSharedDoc>::Instance()->GetServerTime()) > 0) {
 				IFF_STRUCT::sMascot *pMascot = ItemManager()->FindMascot(pMascotInfo->typeId);
 
 				if (pMascot != NULL) {
@@ -1232,7 +1234,7 @@ void CSharedDoc::SendEquipItemSlotByMascot(void) {
 
 		if (pMascot != NULL) {
 			if (pMascot->m_addItemSlots > 0) {
-				if (ItemManager()->CompareSystemTime(pMascotInfo->endTime, WSingleton<CSharedDoc>::Instance()->m_serverTime) > 0) {
+				if (ItemManager()->CompareSystemTime(pMascotInfo->endTime, WSingleton<CSharedDoc>::Instance()->GetServerTime()) > 0) {
 					return;
 				}
 			}
@@ -1267,7 +1269,7 @@ void CSharedDoc::SendEquipItemSlot(void) {
 
 		if (pMascot != NULL) {
 			if (pMascot->m_addItemSlots > 0) {
-				if (ItemManager()->CompareSystemTime(pMascotInfo->endTime, WSingleton<CSharedDoc>::Instance()->m_serverTime) > 0 && cardSlot > 0) {
+				if (ItemManager()->CompareSystemTime(pMascotInfo->endTime, WSingleton<CSharedDoc>::Instance()->GetServerTime()) > 0 && cardSlot > 0) {
 					return;
 				}
 			}
@@ -1295,9 +1297,7 @@ void CSharedDoc::SetCurEquipInfo(sUserEquip *equip) {
 
 	if (m_myCaddieId != 0) {
 		if (m_myCaddieId != 0xFFFFFFFF) {
-			std::map<unsigned int, sCaddieInfo>::iterator it = m_caddieMap.find(m_myCaddieId);
-
-			if (it == m_caddieMap.end()) {
+			if (m_caddieMap.find(m_myCaddieId) == m_caddieMap.end()) {
 				if (m_caddieMap.size() > 0) {
 					m_myCaddieId = m_caddieMap.begin()->first;
 				}
@@ -1307,9 +1307,7 @@ void CSharedDoc::SetCurEquipInfo(sUserEquip *equip) {
 
 	if (m_myMascotId != 0) {
 		if (m_myMascotId != 0xFFFFFFFF) {
-			std::map<unsigned int, sMascotInfo>::iterator it = m_myMascotMap.find(m_myMascotId);
-
-			if (it == m_myMascotMap.end()) {
+			if (m_myMascotMap.find(m_myMascotId) == m_myMascotMap.end()) {
 				m_myMascotId = 0;
 			}
 		}
@@ -1398,12 +1396,13 @@ bool CSharedDoc::BuildMyPartTidListDefault(unsigned long typeId) {
 void CSharedDoc::BuildMyPartTidList(void) {
 	sCharacterInfo defaultChar = sCharacterInfo();
 	sCharacterInfo *pChar;
-	std::map<unsigned int, sCharacterInfo>::iterator it = m_characterMap.find(m_myCharacterId);
+	std::map<unsigned int, sCharacterInfo>::iterator it;
+	it = m_characterMap.find(m_myCharacterId);
 
 	if (it == m_characterMap.end()) {
 		memset(&defaultChar, 0, sizeof(defaultChar));
 		defaultChar.typeId = 0x4000000 | (WSingleton<CSharedDoc>::Instance()->m_userInfo.eventFlags >> 1 & 1) % 2;
-		WSingleton<CSharedDoc>::Instance()->m_itemManager.GetDefCombo(defaultChar.typeId, defaultChar.partTypeIds);
+		ItemManager()->GetDefCombo(defaultChar.typeId, defaultChar.partTypeIds);
 		pChar = &defaultChar;
 	} else {
 		pChar = &it->second;
@@ -1644,12 +1643,14 @@ void CSharedDoc::SetEquipCharCaddieInfoFromMyInfo(void) {
 	m_roomPlayers[0].m_statistics = m_myStatistics;
 	m_roomPlayers[0].m_equip = m_myEquip;
 
-	std::map<unsigned int, sCharacterInfo>::iterator itChar = m_characterMap.find(m_myCharacterId);
+	std::map<unsigned int, sCharacterInfo>::iterator itChar;
+	itChar = m_characterMap.find(m_myCharacterId);
 	if (itChar != m_characterMap.end()) {
 		m_roomPlayers[0].m_characterInfo = (*itChar).second;
 	}
 
-	std::map<unsigned int, sCaddieInfo>::iterator itCaddie = m_caddieMap.find(m_myCaddieId);
+	std::map<unsigned int, sCaddieInfo>::iterator itCaddie;
+	itCaddie = m_caddieMap.find(m_myCaddieId);
 	if (itCaddie != m_caddieMap.end()) {
 		m_roomPlayers[0].m_caddieInfo = (*itCaddie).second;
 
@@ -1661,19 +1662,21 @@ void CSharedDoc::SetEquipCharCaddieInfoFromMyInfo(void) {
 			m_roomPlayers[0].m_caddieInfo.typeId = 0;
 	}
 
-	std::map<unsigned int, sMascotInfo>::iterator itMascot = m_myMascotMap.find(m_myMascotId);
+	std::map<unsigned int, sMascotInfo>::iterator itMascot;
+	itMascot = m_myMascotMap.find(m_myMascotId);
 	if (itMascot != m_myMascotMap.end()) {
 		m_roomPlayers[0].m_mascot = (*itMascot).second;
 
 		ItemManager()->FindMascot(m_roomPlayers[0].m_mascot.typeId);
 	}
 
-	std::map<unsigned int, sItemInfo>::iterator itClub = m_myItemMap.find(m_myClubId);
+	std::map<unsigned int, sItemInfo>::iterator itClub;
+	itClub = m_myItemMap.find(m_myClubId);
 	if (itClub != m_myItemMap.end()) {
 		IFF_STRUCT::sClubSet *pClubSet = ItemManager()->FindClubSet((*itClub).second.m_typeId);
 
 		if (pClubSet != NULL &&
-			((m_myLevel < (pClubSet->m_level & 0x7F) && (pClubSet->m_level & 0x80)) ||
+			((m_myLevel < (pClubSet->m_level & 0x7F) && !(pClubSet->m_level & 0x80)) ||
 			 (m_myLevel > (pClubSet->m_level & 0x7F) && (pClubSet->m_level & 0x80)))) {
 			for (std::map<unsigned int, sItemInfo>::iterator it = m_myItemMap.begin(); it != m_myItemMap.end(); ++it) {
 				if ((*it).second.m_typeId == 0x10000000) {
@@ -1756,45 +1759,30 @@ int CSharedDoc::CollapseItemSlot(unsigned char player) {
 
 // shareddoc.cpp:2312
 const char *CSharedDoc::GetDefaultTitle(unsigned char gameType) {
-	const char **titles;
-	int index;
-
 	switch (gameType) {
 	case 0:
 	case 1:
-		index = rand() % 9;
-		titles = defaultTitles_vs;
-		break;
+		return defaultTitles_vs[rand() % 9];
 
 	case 4:
 	case 5:
 	case 6:
 	case 0xE:
-		index = rand() % 6;
-		titles = defaultTitles_mass;
-		break;
+		return defaultTitles_mass[rand() % 6];
 
 	case 7:
-		index = rand() % 4;
-		titles = defaultTitles_battle;
-		break;
+		return defaultTitles_battle[rand() % 4];
 
 	case 0xA:
-		index = rand() % 3;
-		titles = defaultTitles_approach;
-		break;
+		return defaultTitles_approach[rand() % 3];
 
 	case 2:
 	case 8:
-		index = rand() % 7;
-		titles = defaultTitles_chat;
-		break;
+		return defaultTitles_chat[rand() % 7];
 
 	default:
 		return "No Title!";
 	}
-
-	return titles[index];
 }
 
 // <direct.h>'s mkdir (the toolchain has no direct.h yet).
@@ -1940,7 +1928,7 @@ bool CSharedDoc::AddWhisperPartner(FrComboBox *pComboBox, const char *name) {
 	if (name != 0) {
 		fromName = true;
 	} else {
-		if (strlen(pComboBox->GetLine(1, false)) == 0 || strcmp(WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname, pComboBox->GetLine(1, false)) == 0) {
+		if (strlen(pComboBox->GetLine(1, false)) == 0 || strcmp(pComboBox->GetLine(1, false), WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname) == 0) {
 			return false;
 		}
 
@@ -1951,7 +1939,8 @@ bool CSharedDoc::AddWhisperPartner(FrComboBox *pComboBox, const char *name) {
 		return false;
 	}
 
-	std::list<std::string>::iterator it = std::find(m_list4CD8.begin(), m_list4CD8.end(), name);
+	std::list<std::string>::iterator it;
+	it = std::find(m_list4CD8.begin(), m_list4CD8.end(), name);
 	if (it != m_list4CD8.end()) {
 		if (!fromName) {
 			m_string4CE8 = name;
@@ -2274,9 +2263,7 @@ void CSharedDoc::ChageListStallitem(sStall *pStall) {
 // tells the player the offline shop was not bought.
 bool CSharedDoc::SendOfflineTradeEditShop(void) {
 	if (IsLocalContent((localContentType_t)0x66)) {
-		sStall *pStall = WSingleton<CSharedDoc>::Instance()->GetStallItem();
-
-		if (pStall == NULL || pStall->ownerUID == 0) {
+		if (WSingleton<CSharedDoc>::Instance()->GetStallItem() == NULL || WSingleton<CSharedDoc>::Instance()->GetStallItem()->ownerUID == 0) {
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xC1\xF8\xBF\xAD\xC0\xE5 \xB1\xB8\xB8\xC5\xB8\xA6 \xC7\xCF\xC1\xF6\xBE\xCA\xC0\xB8\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9. \xB1\xB8\xB8\xC5\xC7\xCF\xB0\xED \xC0\xCC\xBF\xEB\xC7\xD8 \xC1\xD6\xBC\xBC\xBF\xE4.~", 0, 0, 0, 0));
 		} else {
 			WSingleton<CSharedDoc>::Instance()->m_tradeMode = 5;
@@ -2318,8 +2305,8 @@ bool CSharedDoc::SendOfflineTradeVisitor(unsigned long uid) {
 
 // shareddoc.cpp:3453
 bool CSharedDoc::SendTradeOpenShop(void) {
-	if (m_stateTrade != STATE_TRADE_READY) return false;
-	if (m_listTradeItem.size() <= 0) return false;
+	if (GetStateTrade() != STATE_TRADE_READY) return false;
+	if (GetListTradeItem()->size() <= 0) return false;
 
 	WSendPacket packet(GCT_TRADE_OPEN_SHOP);
 	packet.Send(SEND_TO_DEFAULT);
@@ -2329,7 +2316,7 @@ bool CSharedDoc::SendTradeOpenShop(void) {
 
 // shareddoc.cpp:3465
 bool CSharedDoc::SendTradeCloseShop(void) {
-	if (m_stateTrade == STATE_TRADE_NONE) return false;
+	if (GetStateTrade() == STATE_TRADE_NONE) return false;
 
 	WSendPacket packet(GCT_TRADE_CLOSE_SHOP);
 	packet.Send(SEND_TO_DEFAULT);
@@ -2513,8 +2500,7 @@ unsigned char GetCurMap(void) {
 
 // shareddoc.cpp:3796
 bool SetCurMap(unsigned char map) {
-	unsigned long id = (map > 0x7F && map != 0xFD) ? map - 0x80 : map;
-	IFF_STRUCT::sCourse *course = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCourse(id | 0x28000000);
+	IFF_STRUCT::sCourse *course = ItemManager()->FindCourse(0x28000000 | ((map > 0x7F && map != 0xFD) ? map - 0x80 : map));
 
 	if (!course)
 		return false;
@@ -2867,7 +2853,7 @@ void CSharedDoc::RefreshAllCookie(void) {
 // shareddoc.cpp:4307
 bool CSharedDoc::CanUseRookieChannelMap(unsigned int map) {
 	bool canUse = true;
-	IFF_STRUCT::sCourse *pCourse = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCourse(((map > 0x7F && map != 0xFD) ? map - 0x80 : map) | 0x28000000);
+	IFF_STRUCT::sCourse *pCourse = ItemManager()->FindCourse(0x28000000 | ((map > 0x7F && map != 0xFD) ? map - 0x80 : map));
 	if (pCourse) {
 		if ((pCourse->courseFlags & 0xF) > 3) {
 			return false;
@@ -3112,21 +3098,21 @@ float CalcPowerBarPosition(void) {
 	WVector pinPos = GOLFDOC()->GetHoleData().m_cupPos;
 	CGolfBall &ball = GolfBall();
 
-	float dx = ball.m_pos.x - pinPos.x;
-	float dz = ball.m_pos.z - pinPos.z;
+	WVector diff = ball.m_pos - pinPos;
+	diff.y = 0.0f;
 	float range = GolfClub().GetRange(0) * 3.2f;
 
-	if (sqrtf(dx * dx + dz * dz) > range) {
+	if (diff.Magnitude() > range) {
 		return 500.0f;
 	}
 
 	char text[32] = "";
 	sPlayerData *pPlayer = PLAYER(GOLFDOC()->m_myPlayerIndex);
 	pinPos = GOLFDOC()->GetHoleData().m_cupPos;
-	dx = pinPos.x - pPlayer->m_ballPos.x;
-	dz = pinPos.z - pPlayer->m_ballPos.z;
+	WVector toPin = pinPos - pPlayer->m_ballPos;
+	toPin.y = 0.0f;
 
-	float yard = sqrtf(dx * dx + dz * dz) * 0.3125f;
+	float yard = sqrtf(toPin * toPin) * 0.3125f;
 	if (yard < 100.0f) {
 		sprintf(text, "%.1f", yard);
 	} else {

@@ -58,8 +58,14 @@ void FrNewRecordDlg::OnCourseListInit(intptr_t param) {
 
 	std::map<unsigned int, IFF_STRUCT::sCourse>& courseMap = ItemManager()->m_courseMap;
 
+#ifdef JP_PAKS
+	// JP data: the lobby's JP order (SharedDoc.h), which has every JP course.
+	for (int i = 0; i < JP_COURSE_ORDER_COUNT; i++) {
+		std::map<unsigned int, IFF_STRUCT::sCourse>::iterator it = courseMap.find(s_courseOrder[i] | 0x28000000);
+#else
 	for (int i = 0; i < 18; i++) {
 		std::map<unsigned int, IFF_STRUCT::sCourse>::iterator it = courseMap.find(data_00a244fc[i] | 0x28000000);
+#endif
 		if (it == courseMap.end()) {
 			continue;
 		}
@@ -98,6 +104,14 @@ void FrNewRecordDlg::OnCourseListOwnerDraw(int param) {
 		return;
 
 	int course = pCourse->m_typeId & 0x3FFFFFF;
+#ifdef JP_PAKS
+	// JP data: the statistics have 20 rows (courses 0-19, the packet's
+	// layout); a later course (0x14, 0x15, 0x40) or random has no record.
+	if (course >= 20) {
+		pGDI->DrawTexture(pBitmap, WRect(pItem->pos.x, pItem->pos.y, (float)pBitmap->Width(), (float)pBitmap->Height()), 0x60000000, 0);
+		return;
+	}
+#endif
 
 	sMapStatistics* pStat = S5::CLASSICSRV::IsClassicServer(S5::UTIL::GetServerProperty())
 		? &WSingleton<CSharedDoc>::Instance()->m_myMapStatistics2[course]

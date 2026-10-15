@@ -115,9 +115,9 @@ CRealMyRoomMain::CRealMyRoomMain(void) {
 	m_decalTexture = g_resrcmng->LoadTexture("~GlowBall.jpg", 0, 0, 0);
 
 	tagWTITLEFONT font;
+	char* fileNames[1] = { "[font_wind.jpg" };
 	memset(&font, 0, sizeof(font));
 
-	char* fileNames[1] = { "[font_wind.jpg" };
 	font.filename = fileNames; font.fonth = 16;
 	font.fontw = 16;
 	font.numPages = 1;
@@ -265,9 +265,9 @@ void CRealMyRoomMain::OnInit(void) {
 	m_pCameras[0]->m_matrix.pivot.x -= 5.0f;
 
 	m_pCameras[0]->m_fov = g_view->GetFOV();
-	m_savedCamera = g_camera;
-	m_savedFov = g_view->GetFOV();
-	m_savedCamera.pivot.y -= 5.0f;
+	m_savedCamera.m_matrix = g_camera;
+	m_savedCamera.m_fov = g_view->GetFOV();
+	m_savedCamera.m_matrix.pivot.y -= 5.0f;
 	g_camera.pivot.y -= 7.0f;
 	m_uiState = 0;
 	g_view->SetFOV(0.78539819f);
@@ -451,9 +451,9 @@ void CRealMyRoomMain::OnLoad(void) {
 
 	CSceneManager::Instance()->ToogleNoOverlapCamera();
 
-	WPolySoup::sModel* base = GetPVS().m_pBaseModel;
-	WVector boxMin = base->m_aabb.min;
-	WVector boxMax = base->m_aabb.max;
+	const Waabb& aabb = GetPVS().m_pBaseModel->m_aabb;
+	WVector boxMin = aabb.min;
+	WVector boxMax = aabb.max;
 
 	float top = boxMax.y;
 	WPolySoup::sModel* wall = GOLFDOC()->m_pPolySoup->FindModel("wall_a.pet");
@@ -1298,7 +1298,7 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 		m_lookAt.y = g_camera.pivot.y;
 
 		if (CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar && CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar->m_hide && target.z < m_cameraDropOrigin.z) {
-			g_camera.pivot.y = m_savedCamera.pivot.y - fabsf(target.z - m_cameraDropOrigin.z);
+			g_camera.pivot.y = m_savedCamera.m_matrix.pivot.y - fabsf(target.z - m_cameraDropOrigin.z);
 			m_lookAt.y = 8.0f;
 		}
 
@@ -1345,7 +1345,7 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 		mat = RotMat(WVector(-1.5707964f, 0.0f, 0.0f));
 
 		target = m_cameraOffset;
-		eye = m_savedCamera.pivot;
+		eye = m_savedCamera.m_matrix.pivot;
 
 		eye.z += 5.0f;
 		eye.y = 25.0f;
@@ -1370,9 +1370,12 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 			}
 
 			CalculationCameraMat(mat, target, WVector::ZERO, g_camera.pivot, m_eyeFov, fov, elapsed * 5.0f);
+			g_camera = mat;
+			g_view->SetCamera(g_camera);
+			break;
 		} else {
-			fov = g_view->GetFOV();
-			CalculationCameraMat(mat, target, dir, g_camera.pivot, fov, fov, elapsed * 5.0f);
+			float curFov = g_view->GetFOV();
+			CalculationCameraMat(mat, target, dir, g_camera.pivot, curFov, curFov, elapsed * 5.0f);
 		}
 
 		g_camera = mat;
@@ -1380,8 +1383,8 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 		break;
 
 	case 2:
-		dir = m_eyePos - g_camera.pivot;
 		target = WVector(0.0f, 0.0f, 5.0f);
+		dir = m_eyePos - g_camera.pivot;
 		if (dir.Magnitude() < 1.0f) {
 			data_a888d0++;
 			if (data_a888d0 == 4) {
@@ -1405,13 +1408,13 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 	case 5:
 		g_view->SetFOV(m_cameraFov);
 
-		dir = m_eyePos - g_camera.pivot;
 		target = WVector(0.0f, 0.0f, 5.0f);
+		dir = m_eyePos - g_camera.pivot;
 		if (dir.Magnitude() < 1.0f) {
-			mat = MakeCameraMatrix(g_camera.pivot, m_cameraOffset);
+			mat =MakeCameraMatrix(g_camera.pivot, m_cameraOffset);
 		} else {
-			fov = g_view->GetFOV();
-			CalculationCameraMat(mat, target, dir, g_camera.pivot, fov, fov, elapsed * 8.0f);
+			float curFov = g_view->GetFOV();
+			CalculationCameraMat(mat, target, dir, g_camera.pivot, curFov, curFov, elapsed * 8.0f);
 		}
 
 		g_camera = mat;
@@ -1505,19 +1508,19 @@ void CRealMyRoomMain::SetCameraDisplayType(int type) {
 				g_camera = m_pCameras[6]->m_matrix;
 				g_view->SetFOV(m_pCameras[0]->m_fov);
 			} else {
-				g_camera = m_savedCamera;
-				g_view->SetFOV(m_savedFov);
+				g_camera = m_savedCamera.m_matrix;
+				g_view->SetFOV(m_savedCamera.m_fov);
 			}
 
-			m_eyePos = m_savedCamera.pivot;
-			m_eyeFov = m_savedFov;
+			m_eyePos = m_savedCamera.m_matrix.pivot;
+			m_eyeFov = m_savedCamera.m_fov;
 			break;
 
 		case 5:
 			if (m_pCameras[data_af5a8c + 2])
 				g_camera = m_pCameras[data_af5a8c + 2]->m_matrix;
 			else
-				g_camera = m_savedCamera;
+				g_camera = m_savedCamera.m_matrix;
 
 			g_view->SetFOV(70.0f);
 
@@ -1536,13 +1539,13 @@ void CRealMyRoomMain::SetCameraDisplayType(int type) {
 			if (m_pCameras[data_af5a8c + 2])
 				m_eyePos = m_pCameras[data_af5a8c + 2]->m_matrix.pivot;
 			else
-				m_eyePos = m_savedCamera.pivot;
+				m_eyePos = m_savedCamera.m_matrix.pivot;
 			break;
 		}
 	} else {
 		if (m_cameraDisplayType != 4)
-			g_camera = m_savedCamera;
-		g_view->SetFOV(m_savedFov);
+			g_camera = m_savedCamera.m_matrix;
+		g_view->SetFOV(m_savedCamera.m_fov);
 	}
 
 	m_cameraDisplayType = type;

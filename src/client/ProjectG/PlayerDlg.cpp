@@ -1287,9 +1287,9 @@ void FrPlayerDlg::SetLevelBar(void) {
 		switch (i) {
 		case 0:
 			if (m_pStatGauge[0] != NULL) {
-				int excess = level - penalty - 20;
-				m_pStatGauge[1]->SetExpand(-MaxOf(0, excess));
-				m_pStatGauge[2]->SetExpand(-MaxOf(0, excess));
+				int overPenalty = level - penalty;
+				m_pStatGauge[1]->SetExpand(-MaxOf(0, overPenalty - 20));
+				m_pStatGauge[2]->SetExpand(-MaxOf(0, overPenalty - 20));
 			}
 			break;
 		case 1:

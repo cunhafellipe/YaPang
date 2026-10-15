@@ -922,7 +922,6 @@ static unsigned long data_b79dc8;
 // itemmanager.cpp:1587
 void CItemManager::MakeRandomBoxMap(char *data, int count) {
 	IFF_STRUCT::sRandomBox record;
-	std::map<unsigned int, _private::sRandomBox>::iterator it;
 
 	sIffHeader header = *(sIffHeader *)data;
 	char *p = data + sizeof(sIffHeader);
@@ -940,7 +939,7 @@ void CItemManager::MakeRandomBoxMap(char *data, int count) {
 			continue;
 		}
 
-		it = m_randomBoxMap.find(record.m_boxTypeId);
+		std::map<unsigned int, _private::sRandomBox>::iterator it = m_randomBoxMap.find(record.m_boxTypeId);
 
 		if (it == m_randomBoxMap.end() && record.m_kind == 1) {
 			std::pair<std::map<unsigned int, _private::sRandomBox>::iterator, bool> result = m_randomBoxMap.insert(std::map<unsigned int, _private::sRandomBox>::value_type(record.m_boxTypeId, _private::sRandomBox()));
@@ -1593,8 +1592,10 @@ void CItemManager::MakeCutinInforMationTableMap(char *data, int count) {
 	sIffHeader header = *(sIffHeader *)data;
 	char *record = data + sizeof(sIffHeader);
 
+	IFF_STRUCT::S5::sCutinInformation info;
+
 	for (int i = 0; i < header.m_count; i++) {
-		IFF_STRUCT::S5::sCutinInformation info = *(IFF_STRUCT::S5::sCutinInformation *)record;
+		info = *(IFF_STRUCT::S5::sCutinInformation *)record;
 		record += sizeof(IFF_STRUCT::S5::sCutinInformation);
 		if (info.m_active) {
 			m_cutinInformationMap.insert(std::pair<const unsigned int, IFF_STRUCT::S5::sCutinInformation>(info.m_typeId, info));
@@ -1670,7 +1671,8 @@ IFF_STRUCT::sHairStyle *CItemManager::FindHairStyle(unsigned char style, unsigne
 	} else {
 		for (it = m_hairStyleMap.begin(); it != m_hairStyleMap.end(); ++it) {
 			if (it->second.m_style == style && it->second.m_color == color) {
-				return &it->second;
+				result = &it->second;
+				break;
 			}
 		}
 	}
@@ -1707,7 +1709,7 @@ IFF_STRUCT::sChildItem *CItemManager::FindChildItem(unsigned long typeId, int in
 			if (child) {
 				if (child->m_typeId == typeId) {
 					if (index == count) {
-						return child;
+						break;
 					}
 					count++;
 				}
@@ -3298,14 +3300,20 @@ unsigned char CItemManager::GetCapacity(eLvlType type, unsigned long charTypeId,
 	IFF_STRUCT::sClubSet *clubSet = FindClubSet(clubTypeId);
 
 	if (character) {
-		if (type == 0) {
+		switch (type) {
+		case 0:
 			capacity = (unsigned char)character->m_capacity[0];
 
 			if (extra >= 6) {
 				capacity += (extra - 1) / 5;
 			}
-		} else if (type > 0 && type <= 4) {
+			break;
+		case 1:
+		case 2:
+		case 3:
+		case 4:
 			capacity = (unsigned char)character->m_capacity[type];
+			break;
 		}
 	} else {
 		capacity = 0;
@@ -3329,11 +3337,12 @@ unsigned char CItemManager::GetCapacity(eLvlType type, unsigned long charTypeId,
 		capacity += (unsigned char)clubSet->m_maxStat[type];
 	}
 
+	IFF_STRUCT::sCaddie *caddie;
 	if ((ballTypeId & 0xFC000000) == 0x20000000) {
-		ballTypeId = ((ballTypeId >> 21) & 0x1F) | 0x1C000000;
+		caddie = FindCaddie(((ballTypeId >> 21) & 0x1F) | 0x1C000000);
+	} else {
+		caddie = FindCaddie(ballTypeId);
 	}
-
-	IFF_STRUCT::sCaddie *caddie = FindCaddie(ballTypeId);
 	unsigned char caddieValue;
 
 	if (caddie && (caddie->m_level & 0x7F) <= extra) {
@@ -3459,11 +3468,12 @@ unsigned char CItemManager::GetLevel(eLvlType type, unsigned long charTypeId, co
 		clubLevel += (unsigned char)clubLevels[type];
 	}
 
+	IFF_STRUCT::sCaddie *caddie;
 	if ((ballTypeId & 0xFC000000) == 0x20000000) {
-		ballTypeId = ((ballTypeId >> 21) & 0x1F) | 0x1C000000;
+		caddie = FindCaddie(((ballTypeId >> 21) & 0x1F) | 0x1C000000);
+	} else {
+		caddie = FindCaddie(ballTypeId);
 	}
-
-	IFF_STRUCT::sCaddie *caddie = FindCaddie(ballTypeId);
 	unsigned char caddieLevel;
 
 	if (caddie && (caddie->m_level & 0x7F) <= extra) {

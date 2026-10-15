@@ -47,43 +47,42 @@ int EncodingUrl(const char* src, char* dst) {
 		return 0;
 	}
 
+	const char* p = src;
 	char safeChars[] = "/?:=,<>\"-_.~'(){}\\[]";
 
-	const char* end = src + len;
-	const char* p = src;
 	int count = 0;
-	while (p < end) {
-		if (*p == ' ' || (*p >= '0' && *p <= '9') || (*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z') || strchr(safeChars, *p)) {
-		} else {
+	const char* end = src + len;
+	for (; p < end; p++) {
+		if (!(*p == ' ' || (*p >= '0' && *p <= '9') || (*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z') || strchr(safeChars, *p))) {
 			count++;
 		}
-		p++;
 	}
 
 	int size = len + count * 2 + 1;
 	if (dst) {
+		char* out = dst;
 		while (src < end) {
 			if (*src == ' ') {
-				*dst = '+';
+				*out = '+';
 			} else if ((*src >= '0' && *src <= '9') || (*src >= 'A' && *src <= 'Z') || (*src >= 'a' && *src <= 'z') || strchr(safeChars, *src)) {
-				*dst = *src;
+				*out = *src;
 			} else {
-				*dst = '%';
+				*out = '%';
 				if (((unsigned char)*src >> 4) <= 9) {
-					*++dst = ((unsigned char)*src >> 4) + '0';
+					*++out = ((unsigned char)*src >> 4) + '0';
 				} else {
-					*++dst = ((unsigned char)*src >> 4) + 'A' - 10;
+					*++out = ((unsigned char)*src >> 4) + 'A' - 10;
 				}
 				if (((unsigned char)*src & 0x0F) <= 9) {
-					*++dst = (*src & 0x0F) + '0';
+					*++out = (*src & 0x0F) + '0';
 				} else {
-					*++dst = (*src & 0x0F) + 'A' - 10;
+					*++out = (*src & 0x0F) + 'A' - 10;
 				}
 			}
 			src++;
-			dst++;
+			out++;
 		}
-		*dst = '\0';
+		*out = '\0';
 	}
 	return size;
 }
@@ -98,8 +97,8 @@ int DecodingUrl(const char* src, char* dst) {
 		return 0;
 	}
 
-	const char* end = src + len;
 	const char* p = src;
+	const char* end = src + len;
 	int count = 0;
 	while (p < end - 2) {
 		if (*p == '%' && IS_HEX_DIGIT(p[1]) && IS_HEX_DIGIT(p[2])) {
@@ -115,11 +114,11 @@ int DecodingUrl(const char* src, char* dst) {
 		while (src < end) {
 			if (*src == '%' && IS_HEX_DIGIT(src[1]) && IS_HEX_DIGIT(src[2])) {
 				if (src[1] >= '0' && src[1] <= '9') {
-					*dst = (src[1] - '0') << 4;
+					*dst = (src[1] - '0') * 16;
 				} else if (src[1] >= 'A' && src[1] <= 'F') {
-					*dst = (src[1] - 'A' + 10) << 4;
+					*dst = (src[1] - 'A' + 10) * 16;
 				} else {
-					*dst = (src[1] - 'a' + 10) << 4;
+					*dst = (src[1] - 'a' + 10) * 16;
 				}
 				if (src[2] >= '0' && src[2] <= '9') {
 					*dst += src[2] - '0';
@@ -163,6 +162,16 @@ int GetEquipSkinIndex(eEquipSkin& skin, unsigned long typeId) {
 	return FALSE;
 }
 
+// wtemplate.h (not yet in src/client/ProjectG/wtemplate.h): finds an item
+// by its serial; each unit using it carries its own copy.
+struct _FindByGuid {
+	unsigned long m_guid;
+
+	_FindByGuid(unsigned long guid) : m_guid(guid) {}
+	template <class T>
+	bool operator()(const T& item) const { return m_guid == item.m_serial; }
+};
+
 // utilities.cpp:346
 int ErasePartsCardAll(unsigned long partsId, std::list<unsigned long>& typeIds) {
 	std::list<sSCardAvilityPeriodInfo>& cards = WSingleton<CSharedDoc>::Instance()->m_cardPeriodList[0];
@@ -178,14 +187,8 @@ int ErasePartsCardAll(unsigned long partsId, std::list<unsigned long>& typeIds) 
 		}
 	}
 
-	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
-	std::list<sItemInfo>::iterator part;
-	for (part = pDoc->m_myPartsList.begin(); part != pDoc->m_myPartsList.end(); ++part) {
-		if (partsId == part->m_serial) {
-			break;
-		}
-	}
-	if (part != pDoc->m_myPartsList.end()) {
+	std::list<sItemInfo>::iterator part = std::find_if(WSingleton<CSharedDoc>::Instance()->m_myPartsList.begin(), WSingleton<CSharedDoc>::Instance()->m_myPartsList.end(), _FindByGuid(partsId));
+	if (part != WSingleton<CSharedDoc>::Instance()->m_myPartsList.end()) {
 		for (int i = 0; i < 12; i++) {
 			if (part->m_cardSlots[i] != 0) {
 				std::list<unsigned long>::iterator id = typeIds.begin();
@@ -246,7 +249,7 @@ int Base64Encode(char* src, int len, char* dst) {
 	char* last = src + len - 1;
 	int size = (len / 3) * 4 + ((len % 3) ? 4 : 0) + 1;
 	int i = 0;
-	for (char* p = src; p <= last; p++, i++) {
+	for (char* p = src; p <= last; i++, p++) {
 		int mod = i % 3;
 		in[mod] = *p;
 		if (mod == 2 || p == last) {
@@ -267,7 +270,7 @@ int Base64Encode(char* src, int len, char* dst) {
 
 // utilities.cpp:420
 int Base64Decode(char* src, unsigned char* dst, int dstSize) {
-	int phase = 0, prev = 0, written = 0;
+	int prev = 0, written = 0, phase = 0;
 	for (int i = 0; src[i] != '\0'; i++) {
 		int value = data_ac0160.decode[src[i]];
 		if (value == -1) {
@@ -430,9 +433,9 @@ bool CalculateUVPos(WRect& rc, int textureWidth, int textureHeight, float cellWi
 	float invWidth = 1.0f / (float)textureWidth;
 	int column = index / rows;
 	int row = index % rows;
-	rc.x = (float)column * cellWidth * invWidth;
+	rc.x = invWidth * ((float)column * cellWidth);
 	float invHeight = 1.0f / (float)textureHeight;
-	rc.y = (float)row * cellHeight * invHeight;
+	rc.y = invHeight * ((float)row * cellHeight);
 	rc.w = cellWidth * invWidth;
 	rc.h = cellHeight * invHeight;
 	return true;
@@ -524,7 +527,7 @@ const char* GetNormalServerServiceMessage(int property) {
 
 // utilities.cpp:746
 bool IsAvatarChatServer(int flag) {
-	return (WSingleton<CSharedDoc>::Instance()->m_serverChannel.flags & flag) ? true : false;
+	return (WSingleton<CSharedDoc>::Instance()->m_curServer.m_flags2 & flag) ? true : false;
 }
 
 // utilities.cpp:755

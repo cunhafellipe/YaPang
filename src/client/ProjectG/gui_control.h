@@ -9,6 +9,7 @@
 #include "wlist.h"
 #include "woverlay.h"
 #include "wresrcmng.h"
+#include <bitset>
 
 class Bitmap;
 class CAccuracyInfo;
@@ -143,7 +144,7 @@ private:
 	sHitMark m_hitMarks[11];       // 0x2CC
 	PADDING(0x324, 0x374);
 	float m_blinkTime;             // 0x374, OnProcess adds the elapsed time (0.25 s period)
-	unsigned long m_drawFlags;     // 0x378, OnInit sets bit 2
+	std::bitset<2> m_drawFlags;    // 0x378: bit 0 = draw the mission mark, bit 1 = shot input enabled (OnInit sets it)
 	float m_cammodeAlpha;          // 0x37C, alpha of the camera mode text
 	float m_ballStateCut;          // 0x380, top fraction of the ball-state icon left out (DrawClubBallUI)
 	bool m_missionMarkShown[0x10]; // 0x384, per tutorial game state; OnProcess blinks the current one (DrawClubInfo, OnDisplay)

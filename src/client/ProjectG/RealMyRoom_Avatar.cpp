@@ -624,8 +624,8 @@ static bool SlideMove(const WVector &velocity, const WVector &pos, const Waabb &
 		}
 
 		for (i = 0; i < numPlanes; i++) {
-			if (WDotProduct(trace.m_normal, planes[i].normal) > 0.99f) {
-				dir += trace.m_normal;
+			if (WDotProduct(trace.m_plane.normal, planes[i].normal) > 0.99f) {
+				dir += trace.m_plane.normal;
 				break;
 			}
 		}
@@ -633,8 +633,8 @@ static bool SlideMove(const WVector &velocity, const WVector &pos, const Waabb &
 			continue;
 		}
 
-		planes[numPlanes].normal = trace.m_normal;
-		planes[numPlanes].dis = trace.m_planeDist;
+		planes[numPlanes].normal = trace.m_plane.normal;
+		planes[numPlanes].dis = trace.m_plane.dis;
 		numPlanes++;
 	}
 

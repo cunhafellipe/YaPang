@@ -1105,7 +1105,7 @@ void CSceneManager::Render_RenderWeatherFullScreenOverlay(WView* pView) {
 void CSceneManager::Render_RenderDropPosition(WView* pView) {
 	if (GOLFDOC()->GameMode() & 0x200) {
 		for (std::list<sDrop>::iterator it = m_drops.begin(); it != m_drops.end(); ++it) {
-			pView->DrawLine(it->m_pos - (pView->camera.ya + pView->camera.xa) * 4.0f, it->m_color, it->m_pos + (pView->camera.xa + pView->camera.ya) * 4.0f, it->m_color, 0x300000);
+			pView->DrawLine(it->m_pos - (pView->camera.ya + pView->camera.xa) * 4.0f, it->m_color, it->m_pos + (pView->camera.ya + pView->camera.xa) * 4.0f, it->m_color, 0x300000);
 			pView->DrawLine(it->m_pos - (pView->camera.xa - pView->camera.ya) * 4.0f, it->m_color, it->m_pos + (pView->camera.xa - pView->camera.ya) * 4.0f, it->m_color, 0x300000);
 		}
 
@@ -1113,19 +1113,16 @@ void CSceneManager::Render_RenderDropPosition(WView* pView) {
 			WVector cup = GetHoleCupPos();
 			CGolfBall& ball = GolfBall();
 
+			WVector d = ball.m_pos - cup;
+			d.y = 0.0f;
 			WTVertex fan[3];
 			WTVertex* polygon[4];
-			polygon[0] = &fan[0];
-			polygon[1] = &fan[1];
-			polygon[2] = &fan[2];
-			fan[0].diffuse = 0x66000000;
-			fan[1].diffuse = 0x66000000;
-			fan[2].diffuse = 0x66000000;
-			float dx = ball.m_pos.x - cup.x;
-			float dz = ball.m_pos.z - cup.z;
-
+			for (int n = 0; n < 3; n++) {
+				polygon[n] = &fan[n];
+				fan[n].diffuse = 0x66000000;
+			}
 			polygon[3] = 0;
-			float dist = sqrtf(dx * dx + dz * dz);
+			float dist = d.Magnitude();
 			fan[2].SetPosition(GetHoleCupPos());
 
 			vtr[0].diffuse = 0xFF000000;
@@ -1161,8 +1158,9 @@ void CSceneManager::DrawImposter(WView* pView, const TransparentElement& elem) {
 	for (int i = 0; i < 4; i++) {
 		float u = (float)(i >> 1);
 		float v = (float)(1 - (i & 1));
-		WVector pos = elem.m_pPuppet->GetBoundSphere().pos;
-		pos += pView->camera.xa * (elem.m_pPuppet->GetBoundSphere().radius * (u * 2.0f - 1.0f));
+		WVector pos;
+		pos = elem.m_pPuppet->GetBoundSphere().pos;
+		pos += elem.m_pPuppet->GetBoundSphere().radius * (u * 2.0f - 1.0f) * pView->camera.xa;
 		pos.y += elem.m_pPuppet->GetBoundSphere().radius * (1.0f - v * 2.0f);
 
 		vtr[i].SetPosition(pos);
@@ -1174,7 +1172,7 @@ void CSceneManager::DrawImposter(WView* pView, const TransparentElement& elem) {
 
 	pView->DrawPolygonFan(vtx, (elem.m_texture & 0x7FF) | 0x28400000, 0, false);
 
-	if ((m_debugDraw >> 3) & 1) {
+	if ((unsigned char)(m_debugDraw >> 3) & 1) {
 		pView->DrawPolygonFan(vtx, 0x4000000, 0, false);
 	}
 }
@@ -1186,7 +1184,7 @@ void CSceneManager::DrawPuppet(WView* pView, WPuppet* pPuppet, Waabb* pBox) {
 	if (m_debugDraw & 1) {
 		pView->DrawAABB(pPuppet->GetBoundBox(), 0xFFFF0000, false, 0);
 	}
-	if ((m_debugDraw >> 1) & 1) {
+	if ((unsigned char)(m_debugDraw >> 1) & 1) {
 		w_bound_box* box = pPuppet->m_bbList.Find("char0");
 		if (box) {
 			int index = 0;
@@ -1202,7 +1200,7 @@ void CSceneManager::DrawPuppet(WView* pView, WPuppet* pPuppet, Waabb* pBox) {
 			pView->DrawAABB(*pBox, 0xFF00FF00, false, 0);
 		}
 	}
-	if ((m_debugDraw >> 2) & 1) {
+	if ((unsigned char)(m_debugDraw >> 2) & 1) {
 		pView->DrawSphere(pPuppet->GetBoundSphere(), 0xFFFFFF00, 0x18, 0);
 	}
 }
@@ -1538,7 +1536,7 @@ void CSceneManager::SetLobbyWeather(bool weather) {
 // m_drawElementBoxes is set, the name of every nearby or off-screen element
 // at its projected bounding-box top.
 void CSceneManager::DrawDebugLine(WView* pView) {
-	if ((m_debugDraw >> 4) & 1) {
+	if ((unsigned char)(m_debugDraw >> 4) & 1) {
 		Waabb& box = GOLFDOC()->m_pPolySoup->FindModel(0)->m_aabb;
 		for (int j = 0; j < 4; j++) {
 			WVector v;
@@ -1552,7 +1550,7 @@ void CSceneManager::DrawDebugLine(WView* pView) {
 		pView->DrawPolygonFan(vtx, 0, 0, false);
 	}
 
-	if ((m_debugDraw >> 5) & 1) {
+	if ((unsigned char)(m_debugDraw >> 5) & 1) {
 		Waabb& box = GOLFDOC()->m_pPolySoup->FindModel(0)->m_aabb;
 		for (int j = 0; j < 4; j++) {
 			WVector v;
@@ -1576,13 +1574,12 @@ void CSceneManager::DrawDebugLine(WView* pView) {
 			top = (it->m_pPuppet->GetBoundBox().min + it->m_pPuppet->GetBoundBox().max) * 0.5f;
 			top.y = it->m_pPuppet->GetBoundBox().max.y;
 
-			WVector delta = top - pView->camera.pivot;
-			float dist = sqrtf(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
-			if (dist > 192.0f && pView->InFrustum(it->m_pPuppet->GetBoundBox())) {
+			if ((top - pView->camera.pivot).Magnitude() > 192.0f && pView->InFrustum(it->m_pPuppet->GetBoundBox())) {
 				continue;
 			}
 
-			WVector screen = pView->Projection(top);
+			WVector screen;
+			screen = pView->Projection(top);
 			if (0.0f < screen.z && screen.z < 1.0f) {
 				m_pFont->Print(pView, screen.x - m_pFont->GetTextWidth(pView, it->m_name) * 0.5f, screen.y, it->m_name, 0, 0xFFFFFFFF, 0);
 			}

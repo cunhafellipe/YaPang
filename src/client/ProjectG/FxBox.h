@@ -144,8 +144,8 @@ BEGIN_LAYOUT_CHECK(CFxBox)
 END_LAYOUT_CHECK
 
 // An object registered with CFxBox::AddFxKeeper: the box remembers itself in
-// it and the keeper unregisters on destruction. Its vtable (0x9ED7CC) has a
-// second slot (0x92E7DA, pure in this class) whose signature is not known yet.
+// it and the keeper unregisters on destruction. CFxBox calls EmptyFx (its
+// vtable 0x9ED7CC slot 1, pure here) through sFxKeeper::m_pfnCallBack.
 class CFxKeeper {
 	LAYOUT_CHECK_FRIEND;
 public:
@@ -158,6 +158,8 @@ public:
 			m_pFxManager->EraseFxKeeper(this);
 		}
 	}
+	// fxbox.h (pure: no line record; vtable 0x9ED7CC slot 1 = _purecall)
+	virtual void EmptyFx(void* pFx) = 0;
 
 	// fxbox.h:164
 	void SetFxManager(CFxBox* pFxManager) {

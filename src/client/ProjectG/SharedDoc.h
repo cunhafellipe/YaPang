@@ -150,7 +150,9 @@ struct sUserInfo {
 			__int64 m_pang;                 // 0x15A
 			PADDING(0x162, 0x1AC);
 			unsigned long m_ladderPoint;    // 0x1AC, the ladder channel's points (CHeadIcon::SetLevel shows ladder_<points/100>)
-			PADDING(0x1B0, 0x1FA);
+			PADDING(0x1B0, 0x1C0);
+			unsigned long m_statCombos;     // 0x1C0, statistics +0xB1 (sPangYaUserStatistics::combos); CHoleInfo::Display prints it by the "complete" overlay
+			PADDING(0x1C4, 0x1FA);
 		};
 		sPangYaUserStatistics m_statistics; // 0x10F, the same block as one struct
 	};
@@ -546,6 +548,7 @@ CHECK_FIELD(sUserInfo, m_value155, 0x155);
 CHECK_FIELD(sUserInfo, m_level, 0x159);
 CHECK_FIELD(sUserInfo, m_pang, 0x15A);
 CHECK_FIELD(sUserInfo, m_ladderPoint, 0x1AC);
+CHECK_FIELD(sUserInfo, m_statCombos, 0x1C0);
 CHECK_FIELD(sUserInfo, m_equipHead, 0x248);
 CHECK_FIELD(sUserInfo, m_equip, 0x248);
 CHECK_FIELD(sUserInfo, m_characterId, 0x24C);
@@ -734,6 +737,7 @@ class CSharedDoc : public WSingleton<CSharedDoc> {
 	friend class FrGiftDlg;       // GiftProgress filters through m_chatManager and keeps the last receiver
 	friend class FrScoreDlg;      // SetGuildPlayer lists the guild match pairings
 	friend class FrUniteResultDlg; // SetDataToRankListBox tests the protected user info's identity
+	friend class CHoleInfo;       // Display prints the local player's best score (m_myMapStatistics/2)
 protected:
 	void ClearGameMode(void);
 	void ClearStatistics(void);
@@ -921,6 +925,15 @@ public:
 
 	// shareddoc.h:565 (TaskManager's copy)
 	int GetSizeTradeItem(void) { return m_listTradeItem.size(); }
+
+	// shareddoc.h:563 (TaskManager's copy)
+	void ClearListTradeItem(void) { m_listTradeItem.clear(); }
+	// shareddoc.h:569 (TaskManager's copy)
+	void SetTradeTitle(std::string title) { m_tradeTitle = title; }
+	// shareddoc.h:584 (TaskManager's copy)
+	void ClearMaketList(void) { m_maketList.clear(); }
+	// shareddoc.h:585 (TaskManager's copy)
+	void AddMaketListItem(sSaleItem item) { m_maketList.push_back(item); }
 
 	unsigned long GetFriendGameSvrUID(void);        // shareddoc.h:1058
 	void SetForceNicknameChange(unsigned char force); // shareddoc.h:1074
@@ -1189,7 +1202,9 @@ public:
 			unsigned long m_myStatTeamHoles;         // 0x580, statistics +0x91 (name inferred from the statistics layout); CTask::OnPacketCommon 0xC4 decrements it while > 0
 			PADDING(0x584, 0x5A8);
 			unsigned long m_myStatNoMannerGames;     // 0x5A8, statistics +0xB9 (CheckNoMannerPercent's count)
-			PADDING(0x5AC, 0x5C6);
+			PADDING(0x5AC, 0x5BC);
+			unsigned long m_myStatCoins;             // 0x5BC, statistics +0xCD; CHoleInfo::Display draws count % 5 coins and a full row at 5
+			PADDING(0x5C0, 0x5C6);
 			unsigned long m_myStatHolesPlayed;       // 0x5C6, the local player's holes played (ValentineEventDlg)
 			unsigned long m_myStatRecordCount;       // 0x5CA, statistics +0xDB; CLobbyMain::OpenNewRecordForm opens the new record form when it differs from m_value4D88, then copies it there
 			PADDING(0x5CE, 0x5DA);
@@ -1484,11 +1499,10 @@ public:
 public:
 	sChannelInfo m_currentChannel;                   // 0x4AB8, its flags are read by FrMakeRoomDlg and FrReplayModeDlg
 
-	char m_serverName[0x0D];                         // 0x4B05, the connected game server's name (FrServerDlg::TurnOnChannels); length runs to the next member
-	sChannelInfo m_serverChannel;                    // 0x4B12, flags tested by _util::IsAvatarChatServer
+	sGameServerInfo m_curServer;                     // 0x4B05, the connected game server (FrServerDlg::ConnectToServer, packet 0xF7 copy it); m_flags2 tested by _util::IsAvatarChatServer
 
 protected:
-	PADDING(0x4B5F, 0x4B64);
+	PADDING(0x4B61, 0x4B64);
 	std::list<unsigned long> m_list4B64;             // 0x4B64 (only constructed so far)
 	std::map<int, GuildMemberInfo_t> m_guildMembers; // 0x4B70 (only constructed so far)
 
@@ -1820,6 +1834,7 @@ BEGIN_LAYOUT_CHECK(CSharedDoc)
 	CHECK_FIELD(CSharedDoc, m_myExp, 0x535);
 	CHECK_FIELD(CSharedDoc, m_myStatGamesPlayed, 0x57C);
 	CHECK_FIELD(CSharedDoc, m_myStatNoMannerGames, 0x5A8);
+	CHECK_FIELD(CSharedDoc, m_myStatCoins, 0x5BC);
 	CHECK_FIELD(CSharedDoc, m_myStatTeamHoles, 0x580);
 	CHECK_FIELD(CSharedDoc, m_myStatRecordCount, 0x5CA);
 	CHECK_FIELD(CSharedDoc, m_myTrophy, 0x5DA);
@@ -1931,9 +1946,8 @@ BEGIN_LAYOUT_CHECK(CSharedDoc)
 	CHECK_FIELD(CSharedDoc, m_teamResult, 0x4790);
 	CHECK_FIELD(CSharedDoc, m_teamPoint, 0x47B0);
 	CHECK_FIELD(CSharedDoc, m_myRoomOwnerUID, 0x47D4);
-	CHECK_FIELD(CSharedDoc, m_serverName, 0x4B05);
+	CHECK_FIELD(CSharedDoc, m_curServer, 0x4B05);
 	CHECK_FIELD(CSharedDoc, m_selectedChannel, 0x4B81);
-	CHECK_FIELD(CSharedDoc, m_serverChannel, 0x4B12);
 	CHECK_FIELD(CSharedDoc, m_noticeShown, 0x4B7D);
 	CHECK_FIELD(CSharedDoc, m_serverProperty, 0x4D78);
 	CHECK_FIELD(CSharedDoc, m_logoutPending, 0x4D7D);
@@ -2184,7 +2198,6 @@ int IsMassGame(unsigned char gameType);
 unsigned char MyIndex(void);
 bool IsMyTurn(bool);
 bool IsOthersTurn(bool);
-unsigned char GetHoles(void);
 unsigned char GetStartHole(void);
 unsigned char GetEndHole(void);
 void SetGameOver(bool gameOver);
@@ -2345,10 +2358,24 @@ SHAREDDOC_INLINE CItemManager *ItemManager(void) {
 // The courses in the order the lobby offers them (FirstMap takes the first
 // one that is not a special course, LastMap the last; 0x7F marks an unused
 // slot). A file-local table of the original (0xa1ce08, no symbol).
+#ifdef JP_PAKS
+// JP data (docs/JP_CLIENT.md): the JP exe's own order (the same 21-byte
+// header static, one copy per unit, at 0xD05E80, 0xD15FE8, 0xD4362C ...:
+// Abbot Mine and Mystic Ruins first, then Ice Inferno before Wiz City), with
+// the two courses of the JP Course.iff it leaves out, 0x11 (Chronicle 1
+// Chaos) and 0x40 (Grand Zodiac), put before the random slot so that every
+// course is offered.
+static const unsigned char s_courseOrder[] = {
+	0x14, 0x15, 0x12, 0x13, 0x10, 0x0F, 0x0E, 0x0D, 0x0B, 0x08, 0x0A, 0x00,
+	0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09, 0x11, 0x40, 0x7F,
+};
+#define JP_COURSE_ORDER_COUNT ((int)(sizeof(s_courseOrder) / sizeof(s_courseOrder[0])))
+#else
 static const unsigned char s_courseOrder[18] = {
 	0x13, 0x10, 0x0F, 0x0E, 0x0D, 0x0B, 0x08, 0x0A, 0x00,
 	0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09, 0x7F,
 };
+#endif
 
 // LobbyMain.cpp defines LOBBYMAIN_SHAREDDOC_INLINE empty before its first
 // include, so its object emits the out-of-line copies of FirstMap and
@@ -2360,7 +2387,11 @@ static const unsigned char s_courseOrder[18] = {
 // shareddoc.inl:59
 LOBBYMAIN_SHAREDDOC_INLINE unsigned char FirstMap(void) {
 	if (!(WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x800))
+#ifdef JP_PAKS
+		return s_courseOrder[0];   // JP data: the first of the JP order
+#else
 		return 0x13;
+#endif
 
 	if (IsLocalContent((localContentType_t)0x3A)) {
 		if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x800)
@@ -2368,7 +2399,11 @@ LOBBYMAIN_SHAREDDOC_INLINE unsigned char FirstMap(void) {
 	}
 
 	int i;
+#ifdef JP_PAKS
+	for (i = 0; i < JP_COURSE_ORDER_COUNT - 1; i++) {
+#else
 	for (i = 0; i < 18; i++) {
+#endif
 		IFF_STRUCT::sCourse *course = ItemManager()->FindCourse(0x28000000 | s_courseOrder[i]);
 
 		if ((course->courseFlags & 0x0F) < 3)
@@ -2386,10 +2421,19 @@ LOBBYMAIN_SHAREDDOC_INLINE void CSharedDoc::SetGoWithMode(int mode) {
 // shareddoc.inl:83
 LOBBYMAIN_SHAREDDOC_INLINE unsigned char LastMap(bool skipUnused) {
 	if (!(WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x800))
+#ifdef JP_PAKS
+		// JP data: the last course of the JP order, or its random slot
+		return skipUnused ? s_courseOrder[JP_COURSE_ORDER_COUNT - 2] : s_courseOrder[JP_COURSE_ORDER_COUNT - 1];
+#else
 		return skipUnused ? 0x09 : 0x7F;
+#endif
 
 	int i;
+#ifdef JP_PAKS
+	for (i = JP_COURSE_ORDER_COUNT - 1; i >= 0; i--) {
+#else
 	for (i = 17; i >= 0; i--) {
+#endif
 		if (skipUnused && s_courseOrder[i] == 0x7F)
 			continue;
 
@@ -2405,8 +2449,13 @@ LOBBYMAIN_SHAREDDOC_INLINE unsigned char LastMap(bool skipUnused) {
 // shareddoc.inl:7, the course before map in the selection order (map when
 // none is selectable).
 LOBBYMAIN_SHAREDDOC_INLINE unsigned char PrevMap(unsigned char map) {
+#ifdef JP_PAKS
+	int index = JP_COURSE_ORDER_COUNT - 1;
+	for (int i = 0; i < JP_COURSE_ORDER_COUNT; i++) {
+#else
 	int index = 17;
 	for (int i = 0; i < 18; i++) {
+#endif
 		if (s_courseOrder[i] == map) {
 			index = i;
 			break;
@@ -2427,14 +2476,22 @@ LOBBYMAIN_SHAREDDOC_INLINE unsigned char PrevMap(unsigned char map) {
 // none is selectable).
 LOBBYMAIN_SHAREDDOC_INLINE unsigned char NextMap(unsigned char map, bool) {
 	int index = 0;
+#ifdef JP_PAKS
+	for (int i = 0; i < JP_COURSE_ORDER_COUNT; i++) {
+#else
 	for (int i = 0; i < 18; i++) {
+#endif
 		if (s_courseOrder[i] == map) {
 			index = i;
 			break;
 		}
 	}
 
+#ifdef JP_PAKS
+	for (int next = index + 1; next < JP_COURSE_ORDER_COUNT; next++) {
+#else
 	for (int next = index + 1; next < 18; next++) {
+#endif
 		if (!IsLocalContent((localContentType_t)0x3A)
 			|| !(WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x800)
 			|| WSingleton<CSharedDoc>::Instance()->CanUseRookieChannelMap(s_courseOrder[next]))
@@ -2465,6 +2522,11 @@ SHAREDDOC_INLINE unsigned long MyUID(void) {
 #ifndef GOLFRULE_SHAREDDOC_INLINE
 #define GOLFRULE_SHAREDDOC_INLINE inline
 #endif
+
+// shareddoc.inl:224
+GOLFRULE_SHAREDDOC_INLINE unsigned char GetHoles(void) {
+	return WSingleton<CSharedDoc>::Instance()->m_holes;
+}
 
 // shareddoc.inl:254, the 1-based play order of a course hole, 19 when it is
 // not played.

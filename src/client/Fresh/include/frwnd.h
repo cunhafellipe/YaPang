@@ -164,7 +164,7 @@ public:
 	}
 	void EnableHover(bool bEnable, float time);
 	void SetWheelEvent(bool bEnable);
-	void HidePrivacy(bool bHide) { m_nFlags.Turn(0x1000, bHide); }   // frwnd.h:197
+	void HidePrivacy(bool bHide);
 	void SetFadeout(bool bFadeout);
 	void SetElementFadeOut(bool bFadeout);
 	void SetViewFocus(bool bFocus);
@@ -293,6 +293,11 @@ inline bool FrWnd::IsToolTipInstantiated(void) {
 // frwnd.h:180
 GOLFRULE_FRWND_INLINE void FrWnd::SetAlpha(float alpha) {
 	m_wndAlpha = alpha;
+}
+
+// frwnd.h:197
+GOLFRULE_FRWND_INLINE void FrWnd::HidePrivacy(bool bHide) {
+	m_nFlags.Turn(0x1000, bHide);
 }
 
 // frwnd.h:213

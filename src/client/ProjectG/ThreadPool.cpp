@@ -325,8 +325,8 @@ unsigned int IocpPool::OnThreadProc(void* param) {
 		if (key == 1)
 			break;
 
-		if (key == 0 && overlapped != NULL) {
-			InvokedWork* work = reinterpret_cast<InvokedWork*>(overlapped);
+		InvokedWork* work = reinterpret_cast<InvokedWork*>(overlapped);
+		if (key == 0 && work != NULL) {
 			ParallelWork* parallelWork = work->m_work;
 			if (parallelWork->IsWorkingFirst())
 				(parallelWork->*work->m_func)();

@@ -36,7 +36,7 @@ public:
 	void CloseInviteDelayDlg(void);
 	void SetRequestFriendData(const char* nick, unsigned long uid);
 	bool IsOpenAddFriendDlg(void) const {   // userlistdlg.h:34
-		return m_pAddFriendDlg != 0;
+		return m_pAddFriendDlg ? true : false;
 	}
 
 private:

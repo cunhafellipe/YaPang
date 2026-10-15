@@ -87,7 +87,7 @@ static __impCScreen s_impCScreen;
 
 // gui_control.cpp:54
 CScreen::CScreen(void)
-	: m_pWindPuppet(NULL), m_overlays(0x20, 0x20), m_pFont(NULL), m_drawFlags(0) {
+	: m_pWindPuppet(NULL), m_overlays(0x20, 0x20), m_pFont(NULL) {
 	m_pFontOverlay = NULL;
 	m_pBase = NULL;
 	m_pWindInfo = NULL;
@@ -462,7 +462,7 @@ void CScreen::OnInit(void) {
 
 	m_cammodeAlpha = 0;
 
-	m_drawFlags |= 2;
+	m_drawFlags.set(1);
 
 	unsigned long clubSetTypeId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_clubSet.typeId;
 	sClubSet* pClubSet = GolfClub().FindClubSet(clubSetTypeId);
@@ -736,7 +736,7 @@ void CScreen::OnProcess(float elapsed) {
 					if (m_pCalipers)
 						m_pCalipers->VisiblePowerBar(1);
 
-					if (g_input->GetButton(LEFT_BUTTON) == 1 && ((m_drawFlags >> 1) & 1) && IsMyTurn(false) && GOLFDOC()->m_clockHold == 0 && !GOLFDOC()->m_pause && !WSingleton<CChatMsg>::Instance()->IsActive() && GOLFDOC()->m_gameState >= 2 && GolfClub().BarIs(2)) {
+					if (g_input->GetButton(LEFT_BUTTON) == 1 && (m_drawFlags >> 1).test(0) && IsMyTurn(false) && GOLFDOC()->m_clockHold == 0 && !GOLFDOC()->m_pause && !WSingleton<CChatMsg>::Instance()->IsActive() && GOLFDOC()->m_gameState >= 2 && GolfClub().BarIs(2)) {
 						SendMsg(this, "GolfRule", 0x76, 0, 0, 0, 0);
 					}
 				}
@@ -952,7 +952,7 @@ void CScreen::OnDisplay(void) {
 		if (m_hudVisible && m_missionMarkShown[1])
 			DrawRemainTime();
 
-		if ((m_drawFlags & 1) && GOLFDOC()->m_gameState >= 2 && m_missionMarkShown[2] && (!GOLFDOC()->m_approachMode || IsMyTurn(true)))
+		if (m_drawFlags.test(0) && GOLFDOC()->m_gameState >= 2 && m_missionMarkShown[2] && (!GOLFDOC()->m_approachMode || IsMyTurn(true)))
 			DrawHitBarInfo();
 
 		if (!(GOLFDOC()->GameMode() & 0x10)) {
@@ -1158,10 +1158,10 @@ void CScreen::HandleMsg(const MsgObject& msg) {
 		}
 		break;
 	case 0x1A7:
-		m_drawFlags |= 1;
+		m_drawFlags.set(0);
 		break;
 	case 0x1A8:
-		m_drawFlags &= ~1;
+		m_drawFlags.reset(0);
 		break;
 	case 0x1A6:
 		m_fadeValue = 1.0f;
@@ -1237,10 +1237,10 @@ void CScreen::HandleMsg(const MsgObject& msg) {
 		}
 		break;
 	case 0x1AF:
-		m_drawFlags |= 2;
+		m_drawFlags.set(1);
 		break;
 	case 0x1B0:
-		m_drawFlags &= ~2;
+		m_drawFlags.reset(1);
 		break;
 	case 0x1B1:
 		m_cammodeAlpha = 0.0f;
@@ -1647,8 +1647,6 @@ void CMiniScore::Flicker(void) {
 
 // gui_control.cpp:2242
 void CMiniScore::Display(void) {
-	char text[32];
-
 	if (IsLocalContent((localContentType_t)0x4F) && WSingleton<CSharedDoc>::Instance()->m_playingMode == 2) {
 		GOLFDOC()->GetPlayer(0)->m_state = 0;
 		m_state = 0; m_stateTime = 1.0f; m_alpha = 255;
@@ -1662,6 +1660,7 @@ void CMiniScore::Display(void) {
 		return;
 
 	bool bScoreOpen = false;
+	WRect rc;
 	{
 		MsgObject msg(0, 0x139, (intptr_t)&bScoreOpen, 0, 0, 0, 0);
 		AfxGetTask()->GetActor("Score") << msg;
@@ -1672,16 +1671,16 @@ void CMiniScore::Display(void) {
 		for (unsigned char team = 0; team < 2; team++) {
 			WRect uv;
 			if (team) {
-				m_charRect.x = m_iconRect.x = m_posX; uv.x = 0.5f;
+				uv.x = 0.5f; m_iconRect.x = m_posX; m_charRect.x = m_posX;
 			} else {
-				m_iconRect.x = m_offsetY; m_charRect.x = m_offsetY + 120.0f - 46.0f; uv.x = 0.0f;
+				uv.x = 0.0f; m_iconRect.x = m_offsetY; m_charRect.x = m_offsetY + 120.0f - 46.0f;
 			}
 			m_charRect.y = m_iconRect.y + 14.0f;
 
 			uv.y = 0.0f; uv.w = m_iconUV.w;
 			uv.h = m_iconUV.h;
 
-			unsigned long color = (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute == team && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24;
+			unsigned long color = (team == PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24;
 
 			if (m_pOverlay04)
 				m_pOverlay04->Render(g_view, uv, m_iconRect, 0, color | 0xFFFFFF, 0.0f, 0);
@@ -1694,7 +1693,7 @@ void CMiniScore::Display(void) {
 				if (PLAYER(i)->m_attribute != team)
 					continue;
 
-				color = ((GOLFDOC()->m_myPlayerIndex == i && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24) | 0xFFFFFF;
+				color = ((i == GOLFDOC()->m_myPlayerIndex && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24) | 0xFFFFFF;
 
 				if (m_pCharBitmap[i]) {
 					m_charRect.w = (float)m_pCharBitmap[i]->Width();
@@ -1703,55 +1702,55 @@ void CMiniScore::Display(void) {
 					pDevice->DrawTexture(m_pCharBitmap[i], m_charRect, color, 0);
 				}
 
-				WPoint pos((team ? m_posX : m_offsetY) + 5.0f,
-					row++ * 112.0f + m_iconRect.y + 2.0f);
+				rc.x = (team ? m_posX : m_offsetY) + 5.0f;
+				rc.y = row++ * 112.0f + m_iconRect.y + 2.0f;
 				if (!WSingleton<CProjectG>::Instance()->HidePrivacy())
-					g_pFresh->GetManager()->PrintText(pos, 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_name, -1.0f, color);
+					g_pFresh->GetManager()->PrintText(rc.TopLeft(), 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_name, -1.0f, color);
 
-				if (m_pVsIcon && ((WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_identity >> 7) & 1)) {
+				if (m_pVsIcon && (bool)((WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_identity >> 7) & 1)) {
 					WRect rect(m_iconRect.x + 98.0f, (i % 2) * 116.0f + (m_iconRect.y - 2.0f),
 						(float)m_pVsIcon->Width(), (float)m_pVsIcon->Height());
 					pDevice->DrawTexture(m_pVsIcon, rect, color, 0);
 				}
 
 				if (WSingleton<CMouseCursor>::Instance()->GetArea() == i + 10) {
-					float x = team ? m_posX - 256.0f + 6.0f : m_offsetY + 120.0f - 6.0f;
-					float y = m_charRect.y;
+					char text[32];
+					rc.x = team ? m_posX - 256.0f + 6.0f : m_offsetY + 120.0f - 6.0f;
+					rc.y = m_charRect.y;
 
 					if (m_pBestRecord[team])
-						m_pBestRecord[team]->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(x, y, 256.0f, 128.0f), 0, color, 0.0f, 0);
+						m_pBestRecord[team]->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(rc.x, rc.y, 256.0f, 128.0f), 0, color, 0.0f, 0);
 
-					x += team ? 110.0f : 15.0f;
+					rc.x += team ? 110.0f : 15.0f;
 
-					m_pFont->Print(g_view, x, y + 20.0f, "\xC8\xB9\xB5\xE6\xC6\xCE :", 0, color & 0xFF000000, 0);
-					m_pFont->Print(g_view, x, y + 37.0f, "\xC3\xD6\xB4\xEB\xBA\xF1\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
-					m_pFont->Print(g_view, x, y + 54.0f, "\xC3\xD6\xB4\xEB\xC4\xA8\xC0\xCE\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
-					m_pFont->Print(g_view, x, y + 71.0f, "\xC3\xD6\xB4\xEB\xC6\xDB\xC6\xC3\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
+					m_pFont->Print(g_view, rc.x, rc.y + 20.0f, "\xC8\xB9\xB5\xE6\xC6\xCE :", 0, color & 0xFF000000, 0);
+					m_pFont->Print(g_view, rc.x, rc.y + 37.0f, "\xC3\xD6\xB4\xEB\xBA\xF1\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
+					m_pFont->Print(g_view, rc.x, rc.y + 54.0f, "\xC3\xD6\xB4\xEB\xC4\xA8\xC0\xCE\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
+					m_pFont->Print(g_view, rc.x, rc.y + 71.0f, "\xC3\xD6\xB4\xEB\xC6\xDB\xC6\xC3\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
 
-					x += 135.0f;
+					rc.x += 135.0f;
 					sprintf(text, "%dp", (int)PLAYER(i)->m_ghostAward);
-					float width = m_pFont->GetTextWidth(g_view, text);
-					m_pFont->Print(g_view, x - width, y + 20.0f, text, 0, color & 0xFF000000, 0);
+					rc.w = m_pFont->GetTextWidth(g_view, text);
+					m_pFont->Print(g_view, rc.x - rc.w, rc.y + 20.0f, text, 0, color & 0xFF000000, 0);
 
 					sprintf(text, "%.2fy", WSingleton<CSharedDoc>::Instance()->m_gameStatistics[i].bestDrive);
-					width = m_pFont->GetTextWidth(g_view, text);
-					m_pFont->Print(g_view, x - width, y + 37.0f, text, 0, color & 0xFF000000, 0);
+					rc.w = m_pFont->GetTextWidth(g_view, text);
+					m_pFont->Print(g_view, rc.x - rc.w, rc.y + 37.0f, text, 0, color & 0xFF000000, 0);
 
 					sprintf(text, "%.2fy", WSingleton<CSharedDoc>::Instance()->m_gameStatistics[i].longestChipIn);
-					width = m_pFont->GetTextWidth(g_view, text);
-					m_pFont->Print(g_view, x - width, y + 54.0f, text, 0, color & 0xFF000000, 0);
+					rc.w = m_pFont->GetTextWidth(g_view, text);
+					m_pFont->Print(g_view, rc.x - rc.w, rc.y + 54.0f, text, 0, color & 0xFF000000, 0);
 
 					sprintf(text, "%.2fy", WSingleton<CSharedDoc>::Instance()->m_gameStatistics[i].longestPutt);
-					width = m_pFont->GetTextWidth(g_view, text);
-					m_pFont->Print(g_view, x - width, y + 71.0f, text, 0, color & 0xFF000000, 0);
+					rc.w = m_pFont->GetTextWidth(g_view, text);
+					m_pFont->Print(g_view, rc.x - rc.w, rc.y + 71.0f, text, 0, color & 0xFF000000, 0);
 				}
 
 				m_charRect.y += 49.0f;
 			}
 
 			if (GOLFDOC()->GetTeam(team)->m_teamRate > 0.0f) {
-				WRect bar;
-				bar.y = m_iconRect.y + 61.0f; bar.h = 4.0f;
+				rc.y = m_iconRect.y + 61.0f; rc.h = 4.0f;
 
 				unsigned long barAlpha = (team == PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24;
 				unsigned char count = (unsigned char)(WSingleton<CSharedDoc>::Instance()->GetComboGaugeLimit(team) * 0.030303031f);
@@ -1762,34 +1761,35 @@ void CMiniScore::Display(void) {
 					if (fill <= 0)
 						break;
 
-					unsigned char slot = j;
+					unsigned char slot;
 					unsigned long rgb;
-					if (!(fill < 33.0f)) {
+					if (j >= 3) {
 						slot = j - 3 > 0 ? 0 : j - 3;
 						rgb = fill == 33.0f ? 0xFF : 0xC2FF;
 					} else {
+						slot = j;
 						rgb = fill == 33.0f ? 0xFF0000 : 0xFFC200;
 					}
 
-					bar.w = fill * 0.60606062f;
+					rc.w = fill * 0.60606062f;
 					unsigned long barColor = rgb | barAlpha;
 
 					if (team & 1)
-						bar.x = (slot * 21.0f + 1.0f) + (m_posX + 46.0f) + 5.0f;
+						rc.x = (slot * 21.0f + 1.0f) + (m_posX + 46.0f) + 5.0f;
 					else
-						bar.x = m_offsetY + 120.0f - 46.0f - 5.0f - bar.w - (slot * 21.0f + 1.0f);
+						rc.x = m_offsetY + 120.0f - 46.0f - 5.0f - rc.w - (slot * 21.0f + 1.0f);
 
 					if (m_pOverlay1C)
-						m_pOverlay1C->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), bar, 0, barColor, 0.0f, 0);
+						m_pOverlay1C->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), rc, 0, barColor, 0.0f, 0);
 				}
 			}
 
 			color = ((team == PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24) | 0xFFFFFF;
-			float countX = (team ? m_posX + 46.0f : m_offsetY) + 56.0f;
+			rc.x = (team ? m_posX + 46.0f : m_offsetY) + 56.0f;
 			if (m_pShotCountInfo) {
 
 				m_pShotCountInfo->SetColor(color);
-				m_pShotCountInfo->Display(countX, m_iconRect.y + 69.0f, team);
+				m_pShotCountInfo->Display(rc.x, m_iconRect.y + 69.0f, team);
 			}
 
 			m_pFont->Flush(g_view);
@@ -1802,7 +1802,7 @@ void CMiniScore::Display(void) {
 
 				m_pSimpleUI->SetColor((alpha << 24) | 0xFFFFFF); if (GOLFDOC()->GetTeam(team)->m_state == 1) {
 
-					if (GOLFDOC()->GetTeam(team)->m_holes[GOLFDOC()->m_currentHole - 1] > (unsigned char)(GOLFDOC()->GetHoleData().m_par + 4))
+					if ((unsigned char)GOLFDOC()->GetTeam(team)->m_holes[GOLFDOC()->m_currentHole - 1] > (unsigned char)(GOLFDOC()->GetHoleData().m_par + 4))
 						m_pSimpleUI->Render("GiveUp", stateX, 80.0f, 1.0f, 0x22);
 					else if (PLAYER(team)->m_holes[GOLFDOC()->m_currentHole - 1] > (unsigned char)0)
 						m_pSimpleUI->Render("HoleOut", stateX, 80.0f, 1.0f, 0x22);
@@ -1847,21 +1847,20 @@ void CMiniScore::Display(void) {
 				pDevice->DrawTexture(m_pCharBitmap[i], m_charRect, color, 0);
 			}
 
-			WPoint pos(((i & 2) ? m_posX : m_offsetY) + 25.0f,
-				m_iconRect.y + 2.0f);
+			rc.x = ((i & 2) ? m_posX : m_offsetY) + 25.0f;
+			rc.y = m_iconRect.y + 2.0f;
 
 			if (!WSingleton<CProjectG>::Instance()->HidePrivacy())
-				g_pFresh->GetManager()->PrintText(pos, 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_name, 84.0f, color);
+				g_pFresh->GetManager()->PrintText(rc.TopLeft(), 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_name, 84.0f, color);
 
-			if (m_pVsIcon && ((WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_identity >> 7) & 1)) {
+			if (m_pVsIcon && (bool)((WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_identity >> 7) & 1)) {
 				WRect rect(m_iconRect.x + 98.0f, m_iconRect.y - 2.0f,
 					(float)m_pVsIcon->Width(), (float)m_pVsIcon->Height());
 				pDevice->DrawTexture(m_pVsIcon, rect, color, 0);
 			}
 
-			WRect bar;
 			if (PLAYER(i)->m_comboGauge > 0.0f) {
-				bar.y = m_iconRect.y + 21.0f; bar.h = 4.0f;
+				rc.y = m_iconRect.y + 21.0f; rc.h = 4.0f;
 
 				unsigned long barAlpha = (i == GOLFDOC()->m_myPlayerIndex && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24;
 				unsigned char count = (unsigned char)(WSingleton<CSharedDoc>::Instance()->GetComboGaugeLimit(i) * 0.030303031f);
@@ -1872,25 +1871,26 @@ void CMiniScore::Display(void) {
 					if (fill <= 0)
 						break;
 
-					unsigned char slot = j;
+					unsigned char slot;
 					unsigned long rgb;
-					if (!(fill < 33.0f)) {
+					if (j >= 3) {
 						slot = j - 3 > 0 ? 0 : j - 3;
 						rgb = fill == 33.0f ? 0xFF : 0xC2FF;
 					} else {
+						slot = j;
 						rgb = fill == 33.0f ? 0xFF0000 : 0xFFC200;
 					}
 
-					bar.w = fill * 0.60606062f;
+					rc.w = fill * 0.60606062f;
 					unsigned long barColor = rgb | barAlpha;
 
 					if (i & 2)
-						bar.x = (slot * 21.0f + 1.0f) + (m_posX + 46.0f) + 5.0f;
+						rc.x = (slot * 21.0f + 1.0f) + (m_posX + 46.0f) + 5.0f;
 					else
-						bar.x = m_offsetY + 120.0f - 46.0f - 5.0f - bar.w - (slot * 21.0f + 1.0f);
+						rc.x = m_offsetY + 120.0f - 46.0f - 5.0f - rc.w - (slot * 21.0f + 1.0f);
 
 					if (m_pOverlay1C)
-						m_pOverlay1C->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), bar, 0, barColor, 0.0f, 0);
+						m_pOverlay1C->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), rc, 0, barColor, 0.0f, 0);
 				}
 			}
 
@@ -1899,18 +1899,18 @@ void CMiniScore::Display(void) {
 			uv.x = (i & 1) ? 0.5f : 0.0f;
 			uv.y = (i & 2) ? 0.25f : 0.0f;
 			uv.w = 0.5f; uv.h = 0.25f;
-			bar.x = ((i & 2) ? m_posX : m_offsetY) - 4.0f;
-			bar.y = m_iconRect.y - 3.0f; bar.w = 32.0f; bar.h = 16.0f;
+			rc.x = ((i & 2) ? m_posX : m_offsetY) - 4.0f;
+			rc.y = m_iconRect.y - 3.0f; rc.w = 32.0f; rc.h = 16.0f;
 
 			if (m_pOverlay20)
-				m_pOverlay20->Render(g_view, uv, bar, 0, color, 0.0f, 0);
+				m_pOverlay20->Render(g_view, uv, rc, 0, color, 0.0f, 0);
 
 			color = ((i == GOLFDOC()->m_myPlayerIndex && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24) | 0xFFFFFF;
-			bar.x = ((i & 2) ? m_posX + 46.0f : m_offsetY) + 56.0f;
+			rc.x = ((i & 2) ? m_posX + 46.0f : m_offsetY) + 56.0f;
 			if (m_pShotCountInfo) {
 
 				m_pShotCountInfo->SetColor(color);
-				m_pShotCountInfo->Display(bar.x, m_iconRect.y + 29.0f, i);
+				m_pShotCountInfo->Display(rc.x, m_iconRect.y + 29.0f, i);
 			}
 
 			m_pFont->Flush(g_view);
@@ -1967,21 +1967,20 @@ void CMiniScore::Display(void) {
 				pDevice->DrawTexture(m_pCharBitmap[i], m_charRect, color, 0);
 			}
 
-			WPoint pos(((i & 2) ? m_posX : m_offsetY) + 25.0f,
-				m_iconRect.y + 2.0f);
+			rc.x = ((i & 2) ? m_posX : m_offsetY) + 25.0f;
+			rc.y = m_iconRect.y + 2.0f;
 
 			if (!WSingleton<CProjectG>::Instance()->HidePrivacy())
-				g_pFresh->GetManager()->PrintText(pos, 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_name, 84.0f, color);
+				g_pFresh->GetManager()->PrintText(rc.TopLeft(), 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_name, 84.0f, color);
 
-			if (m_pVsIcon && ((WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_identity >> 7) & 1)) {
+			if (m_pVsIcon && (bool)((WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_identity >> 7) & 1)) {
 				WRect rect(m_iconRect.x + 98.0f, m_iconRect.y - 2.0f,
 					(float)m_pVsIcon->Width(), (float)m_pVsIcon->Height());
 				pDevice->DrawTexture(m_pVsIcon, rect, color, 0);
 			}
 
-			WRect bar;
 			if (PLAYER(i)->m_comboGauge > 0.0f) {
-				bar.y = m_iconRect.y + 21.0f; bar.h = 4.0f;
+				rc.y = m_iconRect.y + 21.0f; rc.h = 4.0f;
 
 				unsigned long barAlpha = (i == GOLFDOC()->m_myPlayerIndex && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24;
 				unsigned char count = (unsigned char)(WSingleton<CSharedDoc>::Instance()->GetComboGaugeLimit(i) * 0.030303031f);
@@ -1992,25 +1991,26 @@ void CMiniScore::Display(void) {
 					if (fill <= 0)
 						break;
 
-					unsigned char slot = j;
+					unsigned char slot;
 					unsigned long rgb;
-					if (!(fill < 33.0f)) {
+					if (j >= 3) {
 						slot = j - 3 > 0 ? 0 : j - 3;
 						rgb = fill == 33.0f ? 0xFF : 0xC2FF;
 					} else {
+						slot = j;
 						rgb = fill == 33.0f ? 0xFF0000 : 0xFFC200;
 					}
 
-					bar.w = fill * 0.60606062f;
+					rc.w = fill * 0.60606062f;
 					unsigned long barColor = rgb | barAlpha;
 
 					if (i & 2)
-						bar.x = (slot * 21.0f + 1.0f) + (m_posX + 46.0f) + 5.0f;
+						rc.x = (slot * 21.0f + 1.0f) + (m_posX + 46.0f) + 5.0f;
 					else
-						bar.x = m_offsetY + 120.0f - 46.0f - 5.0f - bar.w - (slot * 21.0f + 1.0f);
+						rc.x = m_offsetY + 120.0f - 46.0f - 5.0f - rc.w - (slot * 21.0f + 1.0f);
 
 					if (m_pOverlay1C)
-						m_pOverlay1C->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), bar, 0, barColor, 0.0f, 0);
+						m_pOverlay1C->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), rc, 0, barColor, 0.0f, 0);
 				}
 			}
 
@@ -2021,7 +2021,7 @@ void CMiniScore::Display(void) {
 				AfxGetTask()->GetActor("Player") << msg;
 
 				if (hasExtra) {
-					bar.y = m_iconRect.y + 21.0f; bar.h = 4.0f;
+					rc.y = m_iconRect.y + 21.0f; rc.h = 4.0f;
 
 					for (unsigned char j = 0; j < 3; j++) {
 						int fill = (int)(33.0f > extraGauge - j * 33.0f ? extraGauge - j * 33.0f : 33.0f);
@@ -2034,14 +2034,14 @@ void CMiniScore::Display(void) {
 						else
 							barColor = ((i == GOLFDOC()->m_myPlayerIndex && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24) | 0xFFC200;
 
-						bar.w = fill * 0.60606062f;
+						rc.w = fill * 0.60606062f;
 						if (i & 2)
-							bar.x = (j * 21.0f + 1.0f) + (m_posX + 46.0f) + 5.0f;
+							rc.x = (j * 21.0f + 1.0f) + (m_posX + 46.0f) + 5.0f;
 						else
-							bar.x = m_offsetY + 120.0f - 46.0f - 5.0f - bar.w - (j * 21.0f + 1.0f);
+							rc.x = m_offsetY + 120.0f - 46.0f - 5.0f - rc.w - (j * 21.0f + 1.0f);
 
 						if (m_pOverlay1C)
-							m_pOverlay1C->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), bar, 0, barColor, 0.0f, 0);
+							m_pOverlay1C->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), rc, 0, barColor, 0.0f, 0);
 					}
 				}
 			}
@@ -2051,18 +2051,18 @@ void CMiniScore::Display(void) {
 			uv.x = (i & 1) ? 0.5f : 0.0f;
 			uv.y = (i & 2) ? 0.25f : 0.0f;
 			uv.w = 0.5f; uv.h = 0.25f;
-			bar.x = ((i & 2) ? m_posX : m_offsetY) - 4.0f;
-			bar.y = m_iconRect.y - 3.0f; bar.w = 32.0f; bar.h = 16.0f;
+			rc.x = ((i & 2) ? m_posX : m_offsetY) - 4.0f;
+			rc.y = m_iconRect.y - 3.0f; rc.w = 32.0f; rc.h = 16.0f;
 
 			if (m_pOverlay20)
-				m_pOverlay20->Render(g_view, uv, bar, 0, color, 0.0f, 0);
+				m_pOverlay20->Render(g_view, uv, rc, 0, color, 0.0f, 0);
 
 			color = ((i == GOLFDOC()->m_myPlayerIndex && !bScoreOpen) ? m_alpha << 24 : (m_alpha / 2) << 24) | 0xFFFFFF;
-			bar.x = ((i & 2) ? m_posX + 46.0f : m_offsetY) + 56.0f;
+			rc.x = ((i & 2) ? m_posX + 46.0f : m_offsetY) + 56.0f;
 			if (m_pShotCountInfo) {
 
 				m_pShotCountInfo->SetColor(color);
-				m_pShotCountInfo->Display(bar.x, m_iconRect.y + 29.0f, i);
+				m_pShotCountInfo->Display(rc.x, m_iconRect.y + 29.0f, i);
 			}
 
 			if (WSingleton<CMouseCursor>::Instance()->GetArea() == i + 10) {
@@ -2070,35 +2070,35 @@ void CMiniScore::Display(void) {
 				if (IsLocalContent((localContentType_t)0x4F) && WSingleton<CSharedDoc>::Instance()->m_playingMode == 2)
 					break;
 
-				float x = (i & 2) ? m_posX - 256.0f + 6.0f : m_offsetY + 120.0f - 6.0f;
-				float y = m_iconRect.y;
+				char text[32];
+				rc.x = (i & 2) ? m_posX - 256.0f + 6.0f : m_offsetY + 120.0f - 6.0f;
+				rc.y = m_iconRect.y;
 
-				if (m_pBestRecord[(i >> 1) & 1])
-					m_pBestRecord[(i >> 1) & 1]->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(x, y, 256.0f, 128.0f), 0, color, 0.0f, 0);
+				m_pBestRecord[(i >> 1) & 1]->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(rc.x, rc.y, 256.0f, 128.0f), 0, color, 0.0f, 0);
 
-				x += (i & 2) ? 110.0f : 15.0f;
+				rc.x += (i & 2) ? 110.0f : 15.0f;
 
 				// "game pang :"
-				m_pFont->Print(g_view, x, y + 20.0f, "\xC8\xB9\xB5\xE6\xC6\xCE :", 0, color & 0xFF000000, 0);
+				m_pFont->Print(g_view, rc.x, rc.y + 20.0f, "\xC8\xB9\xB5\xE6\xC6\xCE :", 0, color & 0xFF000000, 0);
 				switch (WSingleton<CSharedDoc>::Instance()->m_roomType) {
 				case 4: case 5: case 6: case 9: case 10:
 					// "total distance :"
-					m_pFont->Print(g_view, x, y + 37.0f, "\xB4\xA9\xC0\xFB\xBA\xF1\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
+					m_pFont->Print(g_view, rc.x, rc.y + 37.0f, "\xB4\xA9\xC0\xFB\xBA\xF1\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
 					break;
 				default:
 					// "longest drive :"
-					m_pFont->Print(g_view, x, y + 37.0f, "\xC3\xD6\xB4\xEB\xBA\xF1\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
+					m_pFont->Print(g_view, rc.x, rc.y + 37.0f, "\xC3\xD6\xB4\xEB\xBA\xF1\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
 					break;
 				}
 				// "longest chip-in :"
-				m_pFont->Print(g_view, x, y + 54.0f, "\xC3\xD6\xB4\xEB\xC4\xA8\xC0\xCE\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
+				m_pFont->Print(g_view, rc.x, rc.y + 54.0f, "\xC3\xD6\xB4\xEB\xC4\xA8\xC0\xCE\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
 				// "longest putt :"
-				m_pFont->Print(g_view, x, y + 71.0f, "\xC3\xD6\xB4\xEB\xC6\xDB\xC6\xC3\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
+				m_pFont->Print(g_view, rc.x, rc.y + 71.0f, "\xC3\xD6\xB4\xEB\xC6\xDB\xC6\xC3\xB0\xC5\xB8\xAE :", 0, color & 0xFF000000, 0);
 
-				x += 135.0f;
+				rc.x += 135.0f;
 				sprintf(text, "%dp", (int)PLAYER(i)->m_ghostAward);
-				float width = m_pFont->GetTextWidth(g_view, text);
-				m_pFont->Print(g_view, x - width, y + 20.0f, text, 0, color & 0xFF000000, 0);
+				rc.w = m_pFont->GetTextWidth(g_view, text);
+				m_pFont->Print(g_view, rc.x - rc.w, rc.y + 20.0f, text, 0, color & 0xFF000000, 0);
 
 				switch (WSingleton<CSharedDoc>::Instance()->m_roomType) {
 				case 4: case 5: case 6: case 9: case 10:
@@ -2108,16 +2108,16 @@ void CMiniScore::Display(void) {
 					sprintf(text, "%.2fy", WSingleton<CSharedDoc>::Instance()->m_gameStatistics[i].bestDrive);
 					break;
 				}
-				width = m_pFont->GetTextWidth(g_view, text);
-				m_pFont->Print(g_view, x - width, y + 37.0f, text, 0, color & 0xFF000000, 0);
+				rc.w = m_pFont->GetTextWidth(g_view, text);
+				m_pFont->Print(g_view, rc.x - rc.w, rc.y + 37.0f, text, 0, color & 0xFF000000, 0);
 
 				sprintf(text, "%.2fy", WSingleton<CSharedDoc>::Instance()->m_gameStatistics[i].longestChipIn);
-				width = m_pFont->GetTextWidth(g_view, text);
-				m_pFont->Print(g_view, x - width, y + 54.0f, text, 0, color & 0xFF000000, 0);
+				rc.w = m_pFont->GetTextWidth(g_view, text);
+				m_pFont->Print(g_view, rc.x - rc.w, rc.y + 54.0f, text, 0, color & 0xFF000000, 0);
 
 				sprintf(text, "%.2fy", WSingleton<CSharedDoc>::Instance()->m_gameStatistics[i].longestPutt);
-				width = m_pFont->GetTextWidth(g_view, text);
-				m_pFont->Print(g_view, x - width, y + 71.0f, text, 0, color & 0xFF000000, 0);
+				rc.w = m_pFont->GetTextWidth(g_view, text);
+				m_pFont->Print(g_view, rc.x - rc.w, rc.y + 71.0f, text, 0, color & 0xFF000000, 0);
 			}
 
 			m_pFont->Flush(g_view);

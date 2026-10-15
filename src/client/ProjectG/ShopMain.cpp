@@ -2151,9 +2151,11 @@ void CShopMain::OnPartCartListOwnerDraw(int param) {
 	if (part == NULL)
 		return;
 
-	short status[5] = {0};
-	short slotStatus[5] = {0};
 	bool hasStatus = false;
+	short status[5];
+	short slotStatus[5];
+	memset(status, 0, sizeof(status));
+	memset(slotStatus, 0, sizeof(slotStatus));
 	int row;
 	switch (part->m_typeId >> 26) {
 	case 2:
@@ -2180,14 +2182,16 @@ void CShopMain::OnPartCartListOwnerDraw(int param) {
 		case 8:
 		case 9: {
 			int kind = (part->m_typeId >> 18) & 0xFF;
-			if (kind < 10) {
+			if (kind < 10)
 				row = ((part->m_typeId >> 13) & 0x1F) != data_aa7d28[kind] ? 2 : 1;
-				break;
-			}
-			row = 0;
+			else
+				row = 0;
 			break;
 		}
 		}
+		break;
+	case 15:
+		row = 0;
 		break;
 	case 9: {
 		int kind = (part->m_typeId >> 21) & 0x1F;
@@ -2198,9 +2202,6 @@ void CShopMain::OnPartCartListOwnerDraw(int param) {
 	}
 	case 14:
 		row = (part->m_typeId >> 22) & 0xF;
-		break;
-	case 15:
-		row = 0;
 		break;
 	default:
 		return;
@@ -2220,24 +2221,23 @@ void CShopMain::OnPartCartListOwnerDraw(int param) {
 	int col = row % 4;
 	int icon = row > 3 ? 4 : row;
 
-	float rowY = (float)col * rowH;
-	graphic->DrawTexture(m_itFa02, WRect(x, rowY + 129.0f, rowW, rowH), 0xFFFFFFFF, 0);
+	graphic->DrawTexture(m_itFa02, WRect(x, (float)col * rowH + 129.0f, rowW, rowH), 0xFFFFFFFF, 0);
 
 	if ((part->m_typeId & 0xFC000000) == 0x38000000)
-		graphic->DrawTexture(m_sicons[4], WRect(x + 4.0f, rowY + 134.0f, iconW, iconH), 0xFFFFFFFF, 0);
+		graphic->DrawTexture(m_sicons[4], WRect(x + 4.0f, (float)col * rowH + 134.0f, iconW, iconH), 0xFFFFFFFF, 0);
 	else
-		graphic->DrawTexture(m_sicons[icon], WRect(x + 4.0f, rowY + 134.0f, iconW, iconH), 0xFFFFFFFF, 0);
+		graphic->DrawTexture(m_sicons[icon], WRect(x + 4.0f, (float)col * rowH + 134.0f, iconW, iconH), 0xFFFFFFFF, 0);
 
 	graphic->SetTextColor(0xFFFFFFFF, 0xFF36779A);
 	graphic->SetTextStyle(4);
 	float textX = x + 8.0f;
-	graphic->Print11(WPoint(textX, rowY + 156.0f), 0, part->m_name);
+	graphic->Print11(WPoint(textX, (float)col * rowH + 156.0f), 0, part->m_name);
 	graphic->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 	graphic->SetTextStyle(0);
 	if (hasStatus)
-		DrawStatus3(graphic, textX, rowY + 170.0f, status, slotStatus);
+		DrawStatus3(graphic, textX, (float)col * rowH + 170.0f, status, slotStatus);
 
-	WRect cancelRect(x + 104.0f, rowY + 141.0f, cancelW, cancelH);
+	WRect cancelRect(x + 104.0f, (float)col * rowH + 141.0f, cancelW, cancelH);
 	if (cancelRect.IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 		graphic->DrawTexture(m_cancelBtnOver, cancelRect, 0xFFFFFFFF, 0);
 		if (g_input->GetButton(LEFT_BUTTON) == 2) {
@@ -2279,11 +2279,11 @@ void CShopMain::OnAuxPartCartListOwnerDraw(int param) {
 	if (part == NULL)
 		return;
 
+	bool hasStatus = false;
 	short status[5];
 	short slotStatus[5];
-	memset(slotStatus, 0, sizeof(slotStatus));
 	memset(status, 0, sizeof(status));
-	bool hasStatus = false;
+	memset(slotStatus, 0, sizeof(slotStatus));
 	for (int i = 0; i < 5; i++) {
 		if (part->m_baseStat[i] != 0 || part->m_slotStat[i] != 0) {
 			memcpy(status, part->m_baseStat, sizeof(status));
@@ -2316,11 +2316,12 @@ void CShopMain::OnAuxPartCartListOwnerDraw(int param) {
 		DrawStatus3(graphic, 258.0f, y + 41.0f, status, slotStatus);
 
 	WRect cancelRect(354.0f, rowY + 141.0f, cancelW, cancelH);
-	const WPoint &mousePos = g_pFresh->GetManager()->GetMousePos();
-	if (cancelRect.IsInRect(mousePos.x, mousePos.y)) {
+	if (cancelRect.IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 		graphic->DrawTexture(m_cancelBtnOver, cancelRect, 0xFFFFFFFF, 0);
-		if (g_input->GetButton(LEFT_BUTTON) == 2)
-			m_rbuttonPartTypeIds.push_back(part->m_typeId);
+		if (g_input->GetButton(LEFT_BUTTON) == 2) {
+			unsigned long typeId = part->m_typeId;
+			m_rbuttonPartTypeIds.push_back(typeId);
+		}
 	} else {
 		graphic->DrawTexture(m_cancelBtnNormal, cancelRect, 0xFFFFFFFF, 0);
 	}
@@ -2873,14 +2874,15 @@ void CShopMain::HandleMsg(const MsgObject &msg) {
 
 		if (info.hairColor != m_hairColor) {
 			info.hairColor = m_hairColor;
-		} else if (!changed) {
-			break;
+			changed = true;
 		}
 
-		WSendPacket packet(GCT_REQUEST_EQUIP_ITEM);
-		packet.Encode1(0);
-		packet.EncodeBuffer(&info, sizeof(info));
-		packet.Send(SEND_TO_DEFAULT);
+		if (changed) {
+			WSendPacket packet(GCT_REQUEST_EQUIP_ITEM);
+			packet.Encode1(0);
+			packet.EncodeBuffer(&info, sizeof(info));
+			packet.Send(SEND_TO_DEFAULT);
+		}
 		break;
 	}
 
@@ -3050,6 +3052,56 @@ void CShopMain::HandleMsg(const MsgObject &msg) {
 		break;
 	}
 
+	case 0xB9: {
+		sItemInfo item;
+		memset(&item, 0, sizeof(item));
+		item.m_serial = msg.m_param1;
+		item.m_typeId = msg.m_param2;
+		int period = msg.m_param3;
+		item.m_stateBits.kind = msg.m_param4;
+
+		item.m_remainHours = period;
+		item.m_count = ((const sBoughtItem *)msg.m_param5)->count;
+
+		ItemManager()->FindItem(item.m_typeId);
+
+		bool found = false;
+		if (item.m_stateBits.kind) {
+			switch (item.m_stateBits.kind) {
+			case 3:
+				break;
+			case 4:
+				period *= 24;
+				item.m_remainHours = period;
+				break;
+			case 5:
+				period *= 720;
+				item.m_remainHours = period;
+				break;
+			}
+		}
+
+		if (!item.m_stateBits.kind) {
+			for (std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
+				if (it->m_typeId == item.m_typeId) {
+					it->m_remainHours += period;
+					it->m_count = item.m_count;
+					found = true;
+				}
+			}
+		}
+
+		if (item.m_stateBits.kind && period > 0)
+			Net_StartPeriodItem(item.m_serial);
+
+		if (!found)
+			WSingleton<CSharedDoc>::Instance()->m_itemInfoList.push_back(item);
+	}
+	// fall through: 0xC5 is the tail of 0xB9
+	case 0xC5:
+		SetMyItemSlot();
+		break;
+
 	case 0xBA: {
 		sItemInfo item;
 		memset(&item, 0, sizeof(item));
@@ -3125,56 +3177,6 @@ void CShopMain::HandleMsg(const MsgObject &msg) {
 		m_hintWnd->AddLine((const char *)msg.m_param1, WSingleton<CChatMsg>::Instance()->ConvertToUIColor(msg.m_param2), false);
 		break;
 
-	case 0xB9: {
-		sItemInfo item;
-		memset(&item, 0, sizeof(item));
-		item.m_serial = msg.m_param1;
-		item.m_typeId = msg.m_param2;
-		int period = msg.m_param3;
-		item.m_stateBits.kind = msg.m_param4;
-
-		item.m_remainHours = period;
-		item.m_count = ((const sBoughtItem *)msg.m_param5)->count;
-
-		ItemManager()->FindItem(item.m_typeId);
-
-		bool found = false;
-		if (item.m_stateBits.kind) {
-			switch (item.m_stateBits.kind) {
-			case 3:
-				break;
-			case 4:
-				period *= 24;
-				item.m_remainHours = period;
-				break;
-			case 5:
-				period *= 720;
-				item.m_remainHours = period;
-				break;
-			}
-		}
-
-		if (!item.m_stateBits.kind) {
-			for (std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
-				if (it->m_typeId == item.m_typeId) {
-					it->m_remainHours += period;
-					it->m_count = item.m_count;
-					found = true;
-				}
-			}
-		}
-
-		if (item.m_stateBits.kind && period > 0)
-			Net_StartPeriodItem(item.m_serial);
-
-		if (!found)
-			WSingleton<CSharedDoc>::Instance()->m_itemInfoList.push_back(item);
-	}
-	// fall through: 0xC5 is the tail of 0xB9
-	case 0xC5:
-		SetMyItemSlot();
-		break;
-
 	case 0x241: {
 		FrWnd *notify = g_pFresh->GetManager()->GetDesktop()->FindChildForm("notify");
 		if (!notify)
@@ -3233,7 +3235,7 @@ void CShopMain::HandleMsg(const MsgObject &msg) {
 		}
 
 		if (!item.m_stateBits.kind) {
-			for (std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
+			for (std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.end(); ++it) {
 				if (it->m_typeId == item.m_typeId) {
 					it->m_remainHours += period;
 					it->m_count = item.m_count;
@@ -3246,7 +3248,7 @@ void CShopMain::HandleMsg(const MsgObject &msg) {
 			Net_StartPeriodItem(item.m_serial);
 
 		if (!found)
-			WSingleton<CSharedDoc>::Instance()->m_itemInfoList.push_back(item);
+			WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.push_back(item);
 		break;
 	}
 
@@ -3265,13 +3267,11 @@ void CShopMain::HandleMsg(const MsgObject &msg) {
 	}
 
 	case 0x218: {
-		unsigned long uid = msg.m_param1;
 		unsigned long typeId = msg.m_param2;
+		unsigned long uid = msg.m_param1;
 
 		const sBoughtItem *bought = (const sBoughtItem *)msg.m_param5;
-		unsigned short count = bought->count;
-		if (count == 0)
-			count = 1;
+		int count = bought->count > 0 ? bought->count : 1;
 
 		if (!ItemManager()->FindCard(typeId))
 			break;
@@ -4142,11 +4142,12 @@ void CShopMain::Checkout(void) {
 			for (std::list<sFurniture_List>::iterator fit = furnitures.begin(); fit != WSingleton<CSharedDoc>::Instance()->m_furnitureList.end(); ++fit) {
 				IFF_STRUCT::sFurniture *furniture = ItemManager()->FindFurniture(fit->m_typeId);
 
-				if (furniture) {
-					if (furniture->m_placeOnModel == 0 && fit->m_typeId == item->m_typeId) {
-						this << MsgObject(0, 0x23, (intptr_t)"\xC0\xCC\xB9\xCC \xB0\xA1\xC1\xF6\xB0\xED \xC0\xD6\xB4\xC2 \xB9\xB0\xB0\xC7\xC0\xBB \xB1\xB8\xC0\xD4\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
-						return;
-					}
+				if (!furniture)
+					break;
+
+				if (furniture->m_placeOnModel == 0 && fit->m_typeId == item->m_typeId) {
+					this << MsgObject(0, 0x23, (intptr_t)"\xC0\xCC\xB9\xCC \xB0\xA1\xC1\xF6\xB0\xED \xC0\xD6\xB4\xC2 \xB9\xB0\xB0\xC7\xC0\xBB \xB1\xB8\xC0\xD4\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+					return;
 				}
 			}
 		}
@@ -4185,7 +4186,8 @@ void CShopMain::Checkout(void) {
 		((FrCheckoutDlg *)m_buyDlg)->Cart().push_back(cartItem);
 	}
 
-	((FrCheckoutDlg *)m_buyDlg)->Checkout(WSingleton<CSharedDoc>::Instance()->m_myPang, WSingleton<CSharedDoc>::Instance()->m_myCash, m_shopTab == 0 && m_sideTabRental && m_sideTabRental->GetStatus() == 2);
+	bool bRental = m_shopTab == 0 && m_sideTabRental && m_sideTabRental->GetStatus() == 2;
+	((FrCheckoutDlg *)m_buyDlg)->Checkout(WSingleton<CSharedDoc>::Instance()->m_myPang, WSingleton<CSharedDoc>::Instance()->m_myCash, bRental);
 	m_buyDlg->Open((FRESH_RESULT_CALLBACK)&CShopMain::OnBuyDlgResult, 0x81);
 }
 
@@ -6110,9 +6112,9 @@ void CShopMain::DrawCaddieList(FrGraphicInterface *graphic, unsigned long typeId
 		int cols = count > 16 ? 4 : count > 4 ? 3 : (count > 1) + 1;
 		int rows = count / cols + (count % cols != 0);
 
-		float x = 18.0f;
 		float height = rows * 50.0f + (rows - 1);
 		float y = 419.0f - height;
+		float x = 18.0f;
 
 		graphic->DrawTexture(m_selectUp, WRect(13.0f, y - 5.0f, cols * 46.0f + (cols - 1) + 10.0f, height + 10.0f), 0xFFFFFFFF, 0);
 
@@ -6130,12 +6132,13 @@ void CShopMain::DrawCaddieList(FrGraphicInterface *graphic, unsigned long typeId
 
 					drawn++;
 					unsigned long color = 0xFFFFFFFF;
-					std::map<unsigned int, sCaddieInfo>::iterator mit;
-					for (mit = WSingleton<CSharedDoc>::Instance()->m_caddieMap.begin(); mit != WSingleton<CSharedDoc>::Instance()->m_caddieMap.end(); ++mit) {
+					std::map<unsigned int, sCaddieInfo>::iterator mit = WSingleton<CSharedDoc>::Instance()->m_caddieMap.begin();
+					std::map<unsigned int, sCaddieInfo>::iterator mend = WSingleton<CSharedDoc>::Instance()->m_caddieMap.end();
+					for (; mit != mend; ++mit) {
 						if (mit->second.typeId == caddieTypeId)
 							break;
 					}
-					if (mit == WSingleton<CSharedDoc>::Instance()->m_caddieMap.end())
+					if (mit == mend)
 						color = 0xFF808080;
 
 					graphic->DrawTexture(bitmap, rect, color, 0);

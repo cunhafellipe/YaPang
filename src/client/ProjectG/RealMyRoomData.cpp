@@ -1395,6 +1395,7 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup::sModel *pData) {
 	trace_s trace;
 	WVector move;
+	WVector dir;
 	WVector newPos;
 	WVector result = WVector::ZERO;
 
@@ -1406,7 +1407,7 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 
 		move.z = move.y; move.y = 0.0f;
 
-		WVector dir = move;
+		dir = move;
 
 		move.Normalize();
 
@@ -1437,7 +1438,7 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 		move.z = (roomMax.z - 0.5f)
 			- fabs(pModel->m_pModelData->m_aabb.max.z - pModel->m_pModelData->m_aabb.min.z);
 
-		WVector dir = move;
+		dir = move;
 
 		move.Normalize();
 
@@ -1584,8 +1585,8 @@ void CRealMyRoomData::SetModelPosition(void) {
 				if (pFurniture->m_modelType == 5) {
 					delta.z = 0.0f;
 					if (delta.x == 0.0f && delta.y == 0.0f) {
-						if (WDotProduct(trace.m_normal, move) < 0.99f) {
-							ClipVelocity(move, trace.m_normal, slide, 1.001f);
+						if (WDotProduct(trace.m_plane.normal, move) < 0.99f) {
+							ClipVelocity(move, trace.m_plane.normal, slide, 1.001f);
 
 							newPos = pModel->m_pModelData->m_basePos;
 
@@ -1602,8 +1603,8 @@ void CRealMyRoomData::SetModelPosition(void) {
 				else {
 					delta.y = 0.0f;
 					if (delta.x == 0.0f && delta.z == 0.0f) {
-						if (WDotProduct(trace.m_normal, move) < 0.99f) {
-							ClipVelocity(move, trace.m_normal, slide, 1.001f);
+						if (WDotProduct(trace.m_plane.normal, move) < 0.99f) {
+							ClipVelocity(move, trace.m_plane.normal, slide, 1.001f);
 
 							newPos = pModel->m_pModelData->m_basePos;
 

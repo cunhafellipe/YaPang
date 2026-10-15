@@ -8,6 +8,10 @@
 #include "quadtree.h"
 #include "client/Wangreal/include/wview.h"
 #include "client/Wangreal/include/wvideo.h"
+#ifdef PG_MATERIAL_HINTS
+// The port's renderer: the waves cast no sun shadow (port/compat).
+#include "pg_material_hints.h"
+#endif
 
 extern LightSet g_lightset;
 
@@ -156,6 +160,13 @@ void CSea::Render(void)
 			layer.m_vertices[j].tv = layer.m_uv[j].y;
 		}
 
+		#ifdef PG_MATERIAL_HINTS
+		int pgHint = PgMaterialHintGet();
+		PgMaterialHint(pgHint | PG_HINT_NOCAST);
+		#endif
 		g_view->DrawPolygonFan(layer.m_fan, (layer.m_texture & 0x7FF) | 0x20800000, 0x400, false);
+		#ifdef PG_MATERIAL_HINTS
+		PgMaterialHint(pgHint);
+		#endif
 	}
 }

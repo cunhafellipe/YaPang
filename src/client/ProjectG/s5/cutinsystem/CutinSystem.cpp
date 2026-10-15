@@ -148,9 +148,9 @@ void CCutin::OnProcess(float elapsed) {
 			m_d8 = g_resrcmng->GetOverlay(m_1fc.c_str(), 0);
 			IFF_STRUCT::S5::sCutinInformation *pInfo = ItemManager()->FindCutinInformation(m_218);
 			if (pInfo != NULL) {
-				m_dc = g_resrcmng->GetOverlay(pInfo->m_images[1], 0);
-				m_e0 = g_resrcmng->GetOverlay(pInfo->m_images[2], 0);
-				m_e4 = g_resrcmng->GetOverlay(pInfo->m_images[3], 0);
+				m_dc = g_resrcmng->GetOverlay(pInfo->m_images[1].m_name, 0);
+				m_e0 = g_resrcmng->GetOverlay(pInfo->m_images[2].m_name, 0);
+				m_e4 = g_resrcmng->GetOverlay(pInfo->m_images[3].m_name, 0);
 			}
 		} else {
 			m_1c = 8;
@@ -326,13 +326,16 @@ void CCutin::SetOverlayInfo(WOverlay *pOverlay, eCUTINANISTLYE style, WRect &rc)
 
 		switch (m_inInfo.m_posType) {
 		case 0:
-		case 4:
 			rc.x = 0;
 			rc.y = 0;
 			break;
 		case 1:
 			rc.x = (g_view->GetWidth() - rc.w) * 0.5f;
 			rc.y = (g_view->GetHeight() - rc.h) * 0.5f;
+			break;
+		case 4:
+			rc.x = 0;
+			rc.y = 0;
 			break;
 		case 5:
 			rc.x = g_view->GetWidth() - rc.w;
@@ -378,13 +381,23 @@ bool CCutin::ProcessOverlay(float elapsed, WOverlay *pOverlay, eCUTINANISTLYE st
 		SAFE_SUBVALUE(m_134, 0.0f, elapsed);
 		return WisZero(m_134, 1e-5f) ? true : false;
 	case 1:
-		if (rc.x < -100.0f) {
-			speed = 3.0f;
-		} else {
-			speed = 0.08f;
-		}
-		if (SAFE_ADDVALUE(rc.x, 0.0f, speed * elapsed * rc.w) < 0.0f) {
-			return false;
+		{
+			// The end position is chosen by screen width, both branches give 0
+			// (the dead compare stays in the original).
+			float endX;
+			if (g_view->GetWidth() > 1024.0f) {
+				endX = 0.0f;
+			} else {
+				endX = 0.0f;
+			}
+			if (rc.x < -100.0f) {
+				speed = 3.0f;
+			} else {
+				speed = 0.08f;
+			}
+			if (SAFE_ADDVALUE(rc.x, endX, speed * elapsed * rc.w) < 0.0f) {
+				return false;
+			}
 		}
 		break;
 	case 2:
@@ -443,6 +456,8 @@ bool CCutin::ProcessOverlay_Out(float elapsed, WOverlay *pOverlay, eCUTINANISTLY
 				style = (eCUTINANISTLYE)1;
 			}
 		}
+	} else {
+		style = m_inInfo.m_style;
 	}
 
 	switch (style) {
@@ -634,13 +649,13 @@ std::string CCutin::TwAnimateTest(const tweaker_param &param) {
 
 	if (pInfo != NULL) {
 		if (g_resrcmng && m_d8) { g_resrcmng->Release(m_d8); m_d8 = 0; }
-		m_d8 = g_resrcmng->GetOverlay(pInfo->m_images[0], 0);
+		m_d8 = g_resrcmng->GetOverlay(pInfo->m_images[0].m_name, 0);
 		if (g_resrcmng && m_dc) { g_resrcmng->Release(m_dc); m_dc = 0; }
-		m_dc = g_resrcmng->GetOverlay(pInfo->m_images[1], 0);
+		m_dc = g_resrcmng->GetOverlay(pInfo->m_images[1].m_name, 0);
 		if (g_resrcmng && m_e0) { g_resrcmng->Release(m_e0); m_e0 = 0; }
-		m_e0 = g_resrcmng->GetOverlay(pInfo->m_images[2], 0);
+		m_e0 = g_resrcmng->GetOverlay(pInfo->m_images[2].m_name, 0);
 		if (g_resrcmng && m_e4) { g_resrcmng->Release(m_e4); m_e4 = 0; }
-		m_e4 = g_resrcmng->GetOverlay(pInfo->m_images[3], 0);
+		m_e4 = g_resrcmng->GetOverlay(pInfo->m_images[3].m_name, 0);
 
 		m_inInfo.m_posType = param[1].to_int();
 		m_inInfo.m_style0 = (eCUTINANISTLYE)param[2].to_int();

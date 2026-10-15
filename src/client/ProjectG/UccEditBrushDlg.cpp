@@ -153,6 +153,8 @@ void FrUccEditBrushDlg::InitNew(void) {
 // ucceditbrushdlg.cpp:158
 void FrUccEditBrushDlg::InitModify(void) {
 	unsigned char r, g, b;
+	int srcX, srcY;
+	int destX, destY;
 
 	Bitmap* pTexture = new Bitmap(240, 240, 32);
 	Bitmap* pBrush = UccBrushList(m_brushType)->GetBrush(m_brushIndex);
@@ -162,12 +164,12 @@ void FrUccEditBrushDlg::InitModify(void) {
 	}
 
 	// each pixel of the 24x24 brush becomes a 10x10 cell of the canvas
-	for (int y = 0, srcY = 0; y < 240; srcY++, y += 10) {
-		for (int x = 0, srcX = 0; x < 240; srcX++, x += 10) {
+	for (srcY = 0; srcY < 24; srcY++) {
+		for (srcX = 0; srcX < 24; srcX++) {
 			pBrush->GetPixel(srcX, srcY, r, g, b);
 
-			for (int destY = y; destY < y + 10; destY++) {
-				for (int destX = x; destX < x + 10; destX++) {
+			for (destY = srcY * 10; destY < srcY * 10 + 10; destY++) {
+				for (destX = srcX * 10; destX < srcX * 10 + 10; destX++) {
 					pTexture->SetPixel(destX, destY, r, g, b, 0xff);
 				}
 			}

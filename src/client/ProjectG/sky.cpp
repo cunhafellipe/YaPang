@@ -17,6 +17,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef PG_CLOUDS_FACE_CAMERA
+// The port's runtime switch (the dev console's "clouds"; port/compat).
+#include "pg_switches.h"
+#endif
+
 float Random(float min, float max, int seed);  // commonutil.cpp
 
 // The original's max: `a < b ? b : a`.
@@ -508,13 +513,12 @@ void CSky::GenerateStars(int count) {
 		}
 
 		Attacher attacher;
-		attacher.m_pOffset[0] = &g_view->camera.pivot;
-		attacher.m_pMatrix[0] = NULL;
-
 		pSpray->m_pAttacher = &attacher;
 		pSpray->m_fAttachLimitA = attacher.m_fLimitA;
 		pSpray->m_fAttachLimitB = attacher.m_fLimitB;
+		attacher.m_pMatrix[0] = NULL;
 		memcpy(pSpray->m_pMatrix, attacher.m_pMatrix, sizeof(pSpray->m_pMatrix));
+		attacher.m_pOffset[0] = &g_view->camera.pivot;
 		memcpy(pSpray->m_pOffset, attacher.m_pOffset, sizeof(pSpray->m_pOffset));
 		m_fxBox->AddSpray(pSpray);
 	} else if (stricmp(ext + 1, "seq") == 0) {
@@ -526,11 +530,11 @@ void CSky::GenerateStars(int count) {
 
 		Attacher attacher;
 		attacher.m_pOffset[0] = &g_view->camera.pivot;
-		attacher.m_pMatrix[0] = NULL;
 
 		pSequence->m_pAttacher = &attacher;
 		pSequence->m_fDistLimitA = attacher.m_fLimitA;
 		pSequence->m_fDistLimitB = attacher.m_fLimitB;
+		attacher.m_pMatrix[0] = NULL;
 		m_fxBox->AddSequence(pSequence);
 
 		m_fxBox->Process(m_fxBox->m_frameTime);
@@ -557,9 +561,8 @@ void CSky::GenerateMoons(void) {
 		m_pvsFxBox = 0;
 	}
 
-	WPolySoup* soup = GOLFDOC()->m_pPolySoup;
-	int count = soup->m_numPoints;
-	WPolySoup::sPoint* points = soup->m_pPoints;
+	int count = GOLFDOC()->m_pPolySoup->m_numPoints;
+	WPolySoup::sPoint* points = GOLFDOC()->m_pPolySoup->m_pPoints;
 
 	for (int i = 0; i < count; i++) {
 		WPolySoup::sPoint* point = &points[i];
@@ -589,14 +592,14 @@ void CSky::GenerateMoons(void) {
 
 			Attacher attacher;
 			attacher.m_pOffset[0] = &g_view->camera.pivot;
-			attacher.m_pMatrix[0] = NULL;
 
 			pSpray->m_pAttacher = &attacher;
 			pSpray->m_fAttachLimitA = attacher.m_fLimitA;
 			pSpray->m_fAttachLimitB = attacher.m_fLimitB;
 			pSpray->m_spawnDir = point->m_pos.Normalize() * 50.0f;
-			memcpy(pSpray->m_pMatrix, attacher.m_pMatrix, sizeof(pSpray->m_pMatrix));
-			memcpy(pSpray->m_pOffset, attacher.m_pOffset, sizeof(pSpray->m_pOffset));
+			attacher.m_pMatrix[0] = NULL;
+			memcpy(pSpray->m_pMatrix, attacher.m_pMatrix, sizeof(attacher.m_pMatrix));
+			memcpy(pSpray->m_pOffset, attacher.m_pOffset, sizeof(attacher.m_pOffset));
 			m_pvsFxBox->AddSpray(pSpray);
 		} else if (stricmp(ext + 1, "seq") == 0) {
 			// sky.cpp:854
@@ -606,12 +609,12 @@ void CSky::GenerateMoons(void) {
 			}
 
 			Attacher attacher;
-			attacher.m_pMatrix[0] = NULL;
 			attacher.m_pOffset[0] = &g_view->camera.pivot;
 
 			pSequence->m_pAttacher = &attacher;
 			pSequence->m_fDistLimitA = attacher.m_fLimitA;
 			pSequence->m_fDistLimitB = attacher.m_fLimitB;
+			attacher.m_pMatrix[0] = NULL;
 			m_pvsFxBox->AddSequence(pSequence);
 
 			m_pvsFxBox->Process(m_pvsFxBox->m_frameTime);
@@ -863,13 +866,37 @@ void CSky::RenderBillboardCloud(WView* view) {
 
 	for (int i = 0; i < m_cloudCount; i++) {
 		if (m_clouds[i].m_active) {
+#ifdef PG_CLOUDS_FACE_CAMERA
+			// The port (port/CMakeLists.txt): each cloud stands upright and
+			// turns about the vertical toward the camera's position, so it
+			// does not swing with the camera's orientation. The same side as
+			// the original's camera axes (no mirrored texture).
+			WVector toCamera(view->camera.pivot.x - m_clouds[i].m_pos.x, 0.0f, view->camera.pivot.z - m_clouds[i].m_pos.z);
+			WVector right = WCrossProduct(WVector::UNIT_POS_Y, toCamera);
+			if (right.x * right.x + right.z * right.z < 1e-6f) {
+				right = WVector(view->camera.xa.x, 0.0f, view->camera.xa.z);
+			}
+			right.Normalize();
+			if (right.x * view->camera.xa.x + right.z * view->camera.xa.z < 0.0f) {
+				right = right * -1.0f;
+			}
+			WVector up(0.0f, view->camera.ya.y < 0.0f ? -1.0f : 1.0f, 0.0f);
+#endif
 			for (int k = 0; k < 4; k++) {
 				float sx = (k & 1) ? 0.25f : -0.25f;
 				float sy = (k & 2) ? 0.5f : -0.5f;
 
+#ifdef PG_CLOUDS_FACE_CAMERA
+				if (!PgCloudsUpright()) {
+					right = view->camera.xa;
+					up = view->camera.ya;
+				}
+				WVector d(sy * right.x + sx * up.x, sy * right.y + sx * up.y, sy * right.z + sx * up.z);
+#else
 				WVector d(sy * view->camera.xa.x + sx * view->camera.ya.x + view->camera.za.x * 0.0f,
 				          sy * view->camera.xa.y + sx * view->camera.ya.y + view->camera.za.y * 0.0f,
 				          sy * view->camera.xa.z + sx * view->camera.ya.z + view->camera.za.z * 0.0f);
+#endif
 				WVector pos;
 				pos = d * m_clouds[i].m_size + m_clouds[i].m_pos;
 				verts[k].SetPosition(pos);

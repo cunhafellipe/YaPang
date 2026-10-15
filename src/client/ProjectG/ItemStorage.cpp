@@ -48,12 +48,12 @@ void FrItemCounter::SetType(unsigned long type) {
 
 	switch (type) {
 	case 0:
-		SetCaption("¾ÆÀÌÅÛ º¸°üÇÏ±â");
-		SetDesc("º¸°üÇÒ ¾ÆÀÌÅÛÀÇ ¼ö·®À» ÀÔ·ÂÇÏ¼¼¿ä.");
+		SetCaption("\xBE\xC6\xC0\xCC\xC5\xDB \xBA\xB8\xB0\xFC\xC7\xCF\xB1\xE2");
+		SetDesc("\xBA\xB8\xB0\xFC\xC7\xD2 \xBE\xC6\xC0\xCC\xC5\xDB\xC0\xC7 \xBC\xF6\xB7\xAE\xC0\xBB \xC0\xD4\xB7\xC2\xC7\xCF\xBC\xBC\xBF\xE4.");
 		break;
 	case 1:
-		SetCaption("¾ÆÀÌÅÛ °¡Á®¿À±â");
-		SetDesc("°¡Á®¿Ã ¾ÆÀÌÅÛÀÇ ¼ö·®À» ÀÔ·ÂÇÏ¼¼¿ä.");
+		SetCaption("\xBE\xC6\xC0\xCC\xC5\xDB \xB0\xA1\xC1\xAE\xBF\xC0\xB1\xE2");
+		SetDesc("\xB0\xA1\xC1\xAE\xBF\xC3 \xBE\xC6\xC0\xCC\xC5\xDB\xC0\xC7 \xBC\xF6\xB7\xAE\xC0\xBB \xC0\xD4\xB7\xC2\xC7\xCF\xBC\xBC\xBF\xE4.");
 		break;
 	}
 }
@@ -80,12 +80,12 @@ void FrItemConfirm::SetType(unsigned long type) {
 
 	switch (type) {
 	case 0:
-		SetCaption("¾ÆÀÌÅÛ º¸°üÇÏ±â");
-		SetDesc("¾ÆÀÌÅÛÀ» Ã¢°í¿¡ º¸°üÇÕ´Ï´Ù.");
+		SetCaption("\xBE\xC6\xC0\xCC\xC5\xDB \xBA\xB8\xB0\xFC\xC7\xCF\xB1\xE2");
+		SetDesc("\xBE\xC6\xC0\xCC\xC5\xDB\xC0\xBB \xC3\xA2\xB0\xED\xBF\xA1 \xBA\xB8\xB0\xFC\xC7\xD5\xB4\xCF\xB4\xD9.");
 		break;
 	case 1:
-		SetCaption("¾ÆÀÌÅÛ °¡Á®¿À±â");
-		SetDesc("¾ÆÀÌÅÛÀ» Ã¢°í¿¡¼­ °¡Á®¿É´Ï´Ù.");
+		SetCaption("\xBE\xC6\xC0\xCC\xC5\xDB \xB0\xA1\xC1\xAE\xBF\xC0\xB1\xE2");
+		SetDesc("\xBE\xC6\xC0\xCC\xC5\xDB\xC0\xBB \xC3\xA2\xB0\xED\xBF\xA1\xBC\xAD \xB0\xA1\xC1\xAE\xBF\xC9\xB4\xCF\xB4\xD9.");
 		break;
 	}
 }
@@ -1190,20 +1190,22 @@ void FrItemStoragePangBank::OnOwnerDrawDrawArea(intptr_t id) {
 
 			char myPangText[0x20] = "\0";
 			char storedPangText[0x20] = "\0";
+			__int64 myPang = m_myPang;
+			__int64 storedPang = m_storedPang;
 
 			if (m_type == TYPE_DEPOSIT) {
-				__int64 myPang = m_myPang - inputPang;
+				myPang -= inputPang;
 
 				if (myPang < 0) {
 					strcat(myPangText, "\xc6\xce \xba\xce\xc1\xb7");   // "not enough pang"
 					strcat(storedPangText, "\xb0\xe8\xbb\xea \xba\xd2\xb0\xa1");   // "cannot compute"
 				} else {
 					MakePriceStrA(myPangText, myPang);
-					MakePriceStrA(storedPangText, m_storedPang + inputPang);
+					MakePriceStrA(storedPangText, storedPang + inputPang);
 				}
 			} else if (m_type == TYPE_WITHDRAW) {
-				__int64 myPang = m_myPang + inputPang;
-				__int64 storedPang = m_storedPang - inputPang;
+				myPang += inputPang;
+				storedPang -= inputPang;
 
 				if (storedPang < 0) {
 					strcat(myPangText, "\xb0\xe8\xbb\xea \xba\xd2\xb0\xa1");   // "cannot compute"
@@ -1430,7 +1432,7 @@ void FrItemConfirm::OnInitConfirm(intptr_t param) {
 
 // itemstorage.cpp:1534
 void FrItemConfirm::OnLBDownConfirm(void) {
-	if (m_storedItemInfo.item.count > 0) {
+	if (m_storedItemInfo.GetCount() > 0) {
 		Close(FrOK, true);
 	}
 }

@@ -548,6 +548,19 @@ sFRESH_ENTRY FrTreasureCourse::_MsgEntries[] = {
 	{ "wizcity", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrTreasureCourse::OnBtnMap_Wizcity_Down },
 	// treasuredlg.cpp:532
 	{ "wizcity", FRCMD_OWNERDRAW, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrTreasureCourse::OnBtnMap_Wizcity_OwnerDraw },
+#ifdef JP_PAKS
+	// JP data: the JP form's buttons of Ice Inferno, Abbot Mine and Mystic
+	// Ruins (docs/JP_CLIENT.md)
+	{ "demon_land_map", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrTreasureCourse::OnBtnMap_ALL_Init },
+	{ "demon_land_map", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrTreasureCourse::OnBtnMap_IceInferno_Down },
+	{ "demon_land_map", FRCMD_OWNERDRAW, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrTreasureCourse::OnBtnMap_IceInferno_OwnerDraw },
+	{ "abbot_mine", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrTreasureCourse::OnBtnMap_ALL_Init },
+	{ "abbot_mine", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrTreasureCourse::OnBtnMap_AbbotMine_Down },
+	{ "abbot_mine", FRCMD_OWNERDRAW, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrTreasureCourse::OnBtnMap_AbbotMine_OwnerDraw },
+	{ "luna", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrTreasureCourse::OnBtnMap_ALL_Init },
+	{ "luna", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrTreasureCourse::OnBtnMap_Luna_Down },
+	{ "luna", FRCMD_OWNERDRAW, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrTreasureCourse::OnBtnMap_Luna_OwnerDraw },
+#endif
 	// treasuredlg.cpp:535
 	{ "random", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrTreasureCourse::OnBtnMap_Random_Init },
 	// treasuredlg.cpp:536
@@ -579,11 +592,20 @@ sFRESH_ENTRY FrTreasureCourse::_MsgEntries[] = {
 // treasuredlg.cpp:561
 FrTreasureCourse::FrTreasureCourse(void) {
 	FrButton* pNullBtn = 0;
+#ifdef JP_PAKS
+	// JP data: a slot per course index up to Mystic Ruins (TreasureDlg.h)
+	m_mapBtns.reserve(CMapTypeAdapter::MAP_INDEX_COUNT_JP);
+
+	m_mapBtns.insert(m_mapBtns.begin(), CMapTypeAdapter::MAP_INDEX_COUNT_JP, pNullBtn);
+
+	for (int i = 0; i < CMapTypeAdapter::MAP_INDEX_COUNT_JP; i++) {
+#else
 	m_mapBtns.reserve(20);
 
 	m_mapBtns.insert(m_mapBtns.begin(), 20, pNullBtn);
 
 	for (int i = 0; i < 20; i++) {
+#endif
 		m_mapBitmaps[i] = 0;
 		m_mapGauges[i] = 0;
 	}
@@ -632,9 +654,19 @@ bool FrTreasureCourse::OnInit(void) {
 	m_gaugePos[15] = WPoint(406.0f, 351.0f);
 	m_gaugePos[16] = WPoint(339.0f, 329.0f);
 	m_gaugePos[19] = WPoint(257.0f, 224.0f);
+#ifdef JP_PAKS
+	// JP data: the JP exe's positions of the later courses' gauges
+	m_gaugePos[18] = WPoint(378.0f, 163.0f);
+	m_gaugePos[20] = WPoint(461.0f, 189.0f);
+	m_gaugePos[21] = WPoint(490.0f, 362.0f);
+#endif
 
 	float x = m_rect.x, y = m_rect.y;
+#ifdef JP_PAKS
+	for (int i = 0; i < CMapTypeAdapter::MAP_INDEX_COUNT_JP; i++) {
+#else
 	for (int i = 0; i < 20; i++) {
+#endif
 		if (i == 12 ||
 			i == 17) {
 			continue;
@@ -655,7 +687,11 @@ bool FrTreasureCourse::OnInit(void) {
 
 	WSingleton<CTHunter>::Instance()->DecideTMark();
 
+#ifdef JP_PAKS
+	for (int j = 0; j < CMapTypeAdapter::MAP_INDEX_COUNT_JP; j++) { unsigned long gauge = WSingleton<CTHunter>::Instance()->GetTHunterGauge((eMapType)j); if (gauge != 9999) m_mapGauges[j] = gauge; }
+#else
 	for (int j = 0; j < 20; j++) { unsigned long gauge = WSingleton<CTHunter>::Instance()->GetTHunterGauge((eMapType)j); if (gauge != 9999) m_mapGauges[j] = gauge; }
+#endif
 	InitCloud();
 
 	if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x800) {
@@ -667,6 +703,12 @@ bool FrTreasureCourse::OnInit(void) {
 			if (k == 0x12) {
 				continue;
 			}
+#ifdef JP_PAKS
+			// JP data: course slots the JP form has no button for
+			if (m_mapBtns[k] == NULL) {
+				continue;
+			}
+#endif
 			IFF_STRUCT::sCourse* pCourse = ItemManager()->FindCourse(0x28000000 | ((k > 0x7F && k != 0xFD) ? k - 0x80 : k));
 			if (pCourse == NULL) {
 				continue;
@@ -815,6 +857,36 @@ void FrTreasureCourse::OnAreaSelectMapInit(int param) {
 // treasuredlg.cpp:975
 void FrTreasureCourse::OnBtnMap_ALL_Init(int param) {
 	FrButton* pBtn = DYNAMIC_CAST(FrButton, param);
+#ifdef JP_PAKS
+	// JP data: the JP form puts Ice Inferno's button between Eastern Valley's
+	// and Wiz City's and adds Abbot Mine's and Mystic Ruins': each button
+	// takes the slot of its course by name, not by the order of the calls.
+	if (pBtn) {
+		static const struct { const char* name; int slot; } kButtons[] = {
+			{ "bluelagoon", MAP_BLUE_LAGOON }, { "bluewater", MAP_BLUE_WATER },
+			{ "sepiawind", MAP_SEPIA_WIND }, { "windhill", MAP_WIND_HILL },
+			{ "wizwiz", MAP_WIZ_WIZ }, { "westwiz", MAP_WEST_WIZ },
+			{ "bluemoon", MAP_BLUE_MOON }, { "silvia", MAP_SILVIA_CANNON },
+			{ "icecannon", MAP_ICE_CANNON }, { "whitewiz", MAP_WHITE_WIZ },
+			{ "shining", MAP_SHINING_SAND }, { "pinkwind", MAP_PINK_WIND },
+			{ "inferno", MAP_DEEP_INFERNO }, { "icespa", MAP_ICE_SPA },
+			{ "seaway", MAP_LOST_SEAWAY }, { "panda", MAP_EASTERN_VALLEY },
+			{ "demon_land_map", MAP_ICE_INFERNO }, { "wizcity", MAP_WIZ_CITY },
+			{ "abbot_mine", MAP_ABBOT_MINE }, { "luna", MAP_MYSTIC_RUINS },
+		};
+		std::string name;
+		pBtn->GetWindowName(name);
+		std::string::size_type dot = name.rfind('.');
+		if (dot != std::string::npos)
+			name = name.substr(dot + 1);
+		for (unsigned int i = 0; i < sizeof(kButtons) / sizeof(kButtons[0]); i++) {
+			if (stricmp(name.c_str(), kButtons[i].name) == 0 && kButtons[i].slot < (int)m_mapBtns.size()) {
+				m_mapBtns[kButtons[i].slot] = pBtn;
+				break;
+			}
+		}
+	}
+#else
 	if (pBtn) {
 		if (m_mapBtnInitIdx == 12 || m_mapBtnInitIdx == 17) {
 			m_mapBtnInitIdx++;
@@ -830,6 +902,7 @@ void FrTreasureCourse::OnBtnMap_ALL_Init(int param) {
 			m_mapBtnInitIdx = 0;
 		}
 	}
+#endif
 }
 
 // treasuredlg.cpp:1000
@@ -1019,6 +1092,36 @@ void FrTreasureCourse::OnBtnMap_Wizcity_OwnerDraw(int) {
 	DrawMapBtn(MAP_WIZ_CITY);
 }
 
+#ifdef JP_PAKS
+// JP data: the buttons of the JP form's later courses, as the KR ones
+void FrTreasureCourse::OnBtnMap_IceInferno_Down(void) {
+	SelectMapBtn(MAP_ICE_INFERNO);
+	Close(true);
+}
+
+void FrTreasureCourse::OnBtnMap_IceInferno_OwnerDraw(int) {
+	DrawMapBtn(MAP_ICE_INFERNO);
+}
+
+void FrTreasureCourse::OnBtnMap_AbbotMine_Down(void) {
+	SelectMapBtn(MAP_ABBOT_MINE);
+	Close(true);
+}
+
+void FrTreasureCourse::OnBtnMap_AbbotMine_OwnerDraw(int) {
+	DrawMapBtn(MAP_ABBOT_MINE);
+}
+
+void FrTreasureCourse::OnBtnMap_Luna_Down(void) {
+	SelectMapBtn(MAP_MYSTIC_RUINS);
+	Close(true);
+}
+
+void FrTreasureCourse::OnBtnMap_Luna_OwnerDraw(int) {
+	DrawMapBtn(MAP_MYSTIC_RUINS);
+}
+#endif
+
 // treasuredlg.cpp:1175
 void FrTreasureCourse::OnBtnMap_Random_Init(int param) {
 	m_randomBtn = DYNAMIC_CAST(FrButton, param);
@@ -1074,7 +1177,11 @@ void FrTreasureCourse::OnGauge_SmallBar_OwnerDraw(int param) {
 	if (pBackSkin == 0 || pBarSkin == 0)
 		return;
 
+#ifdef JP_PAKS
+	for (int i = 0; i < CMapTypeAdapter::MAP_INDEX_COUNT_JP; ++i) {
+#else
 	for (int i = 0; i < 20; ++i) {
+#endif
 		if (i == 12)
 			continue;
 		if (i == 17)
@@ -1185,7 +1292,11 @@ void FrTreasureCourse::DrawCurrentMap(FrGraphicInterface* pGI, int mapIdx) {
 
 // treasuredlg.cpp:1372
 void FrTreasureCourse::SetMapGauge(void) {
+#ifdef JP_PAKS
+	for (int i = 0; i < CMapTypeAdapter::MAP_INDEX_COUNT_JP; ++i) {
+#else
 	for (int i = 0; i < 20; ++i) {
+#endif
 		unsigned long gauge = WSingleton<CTHunter>::Instance()->GetTHunterGauge((eMapType)i);
 		if (gauge != 9999) {
 			m_mapGauges[i] = gauge;
@@ -1264,6 +1375,13 @@ void FrTreasureCourse::SelectMapBtn(unsigned char mapIdx) {
 // treasuredlg.cpp:1503
 void FrTreasureCourse::SetSelectMap(unsigned char mapType) {
 	m_curMapIdx = CMapTypeAdapter::GetMapIndex((eMapType)mapType);
+#ifdef JP_PAKS
+	// JP data: a course without a slot (Grand Zodiac) stays the selection
+	// when the form closes with no button pressed: the make-room and room
+	// info dialogs take m_curMapIdx for a course id (the KR code gave 0xFF).
+	if (m_curMapIdx == (unsigned char)CMapTypeAdapter::MAP_INDEX_NONE)
+		m_curMapIdx = mapType;
+#endif
 	OpenCurrentMap(mapType);
 }
 

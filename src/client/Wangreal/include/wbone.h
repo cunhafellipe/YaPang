@@ -152,8 +152,17 @@ struct w_mesh {
 	int pgPaletteNum;
 	int pgPalette[256];
 #endif
+#ifdef PG_MATERIAL_HINTS
+	// The macOS port's material hints (port/compat/pg_material_hints.h): the
+	// PG_HINT_* bits set when the course loads (water, the shadow rules of
+	// the model), read by each draw. Zeroed and copied with the mesh (memset,
+	// memcpy).
+	int pgHint;
+#endif
 };
+#if !defined(PG_7XX) && !defined(PG_MATERIAL_HINTS) // both append members past the original layout
 CHECK_SIZE(w_mesh, 0x110);
+#endif
 CHECK_FIELD(w_mesh, vtxNum, 0x0);
 CHECK_FIELD(w_mesh, rigidNum, 0x4);
 CHECK_FIELD(w_mesh, blendedRigidNum, 0x8);

@@ -2918,7 +2918,7 @@ void FrTradeEditDlg::OnTradeItemListOwnerDraw(int param) {
 
 	pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 
-	pGDI->DrawTexture(m_delBtnN.pBitmap, WRect(m_delBtnN.rect.x + pListItem->pos.x, m_delBtnN.rect.y + pListItem->pos.y, m_delBtnN.rect.w, m_delBtnN.rect.h), 0xFFFFFFFF, 0);
+	pGDI->DrawTexture(m_delBtnN.pBitmap, m_delBtnN.rect + pListItem->pos, 0xFFFFFFFF, 0);
 }
 
 // tradedlg.cpp:3342
@@ -3936,8 +3936,8 @@ void FrTradeEditDlg::DrawItem(WPoint pt, sTradeItem* pItem, unsigned char flag) 
 		return;
 	}
 
-	int count = pItem->count;
 	unsigned long typeId = pItem->typeId;
+	int count = pItem->count;
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGI == 0) {
@@ -3961,8 +3961,7 @@ void FrTradeEditDlg::DrawItem(WPoint pt, sTradeItem* pItem, unsigned char flag) 
 		pIcon = GetUccItemIcon(pItem->guid);
 	}
 
-	unsigned long kind = typeId >> 26;
-	if (kind == 2) {
+	if ((typeId >> 26) == 2) {
 		offX = -12.0f;
 		offY = -20.0f;
 	}
@@ -3996,7 +3995,7 @@ void FrTradeEditDlg::DrawItem(WPoint pt, sTradeItem* pItem, unsigned char flag) 
 		}
 	}
 
-	switch (kind) {
+	switch (typeId >> 26) {
 	case 2:
 	case 4:
 	case 7:

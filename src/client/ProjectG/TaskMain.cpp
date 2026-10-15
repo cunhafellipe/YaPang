@@ -142,15 +142,9 @@ bool FrUserInfoForm::IsOpenAddFriendDlg(void) const {
 
 // onelineboard.h:14: COneLineBoard::SetRect, inline in onelineboard.h (TASKMAIN_ONELINEBOARD_INLINE).
 
-// onelineboard.h:15
-void COneLineBoard::SetMessage(const char *message) {
-	m_message = message;
-}
+// onelineboard.h:15: COneLineBoard::SetMessage, inline in onelineboard.h (TASKMAIN_ONELINEBOARD_INLINE).
 
-// onelineboard.h:16
-std::string &COneLineBoard::GetMessageA(void) {
-	return m_message;
-}
+// onelineboard.h:16: COneLineBoard::GetMessageA, inline in onelineboard.h (TASKMAIN_ONELINEBOARD_INLINE).
 
 // onelineboard.h:17
 void COneLineBoard::SetWaitMsgNum(int num) {
@@ -1433,7 +1427,7 @@ void CTaskMain::OnUnderBar_RankingInit(intptr_t param) {
 void CTaskMain::OnUnderBar_RankingUp(void) {
 	if (CSharedDoc::Instance()->IsControlServerService(0x10000)) {
 		// the ranking service is closed by the server
-		HandleMsg(MsgObject(this, 0x23, (intptr_t)"·©Å· °ü·Ã ºÎºÏ Á¡°ÊÁßÀÔ´Ï´Ù.", 0, 0, 0, 0));
+		HandleMsg(MsgObject(this, 0x23, (intptr_t)"\xB7\xA9\xC5\xB7 \xB0\xFC\xB7\xC3 \xBA\xCE\xBA\xD0 \xC1\xA1\xB0\xCB\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
 		return;
 	}
 
@@ -1738,7 +1732,7 @@ void CTaskMain::OnOverBar_Frame1Init(int param) {
 		if (m_screenWidth < 800.0f)
 			m_overBarFrame[0]->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_overBarFrame[0]->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_overBarFrame[0]->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -1750,7 +1744,7 @@ void CTaskMain::OnOverBar_Frame2Init(int param) {
 		if (m_screenWidth < 800.0f)
 			m_overBarFrame[1]->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_overBarFrame[1]->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_overBarFrame[1]->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -1762,7 +1756,7 @@ void CTaskMain::OnOverBar_Frame3Init(int param) {
 		if (m_screenWidth < 800.0f)
 			m_overBarFrame[2]->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_overBarFrame[2]->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_overBarFrame[2]->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -1774,7 +1768,7 @@ void CTaskMain::OnOverBar_TabInit(int param) {
 		if (m_screenWidth < 800.0f)
 			m_overBarTab->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_overBarTab->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_overBarTab->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -1790,7 +1784,7 @@ void CTaskMain::OnOverBar_CharInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_charViewer->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_charViewer->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_charViewer->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 
 		m_charViewer->Enable(!g_pFresh->IsCurrentLayout("GAMEROOM_EXTRES"));
 	}
@@ -1881,7 +1875,7 @@ void CTaskMain::OnOverBar_CaddieInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_caddieViewer->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_caddieViewer->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_caddieViewer->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 
 		m_caddieViewer->Enable(!g_pFresh->IsCurrentLayout("GAMEROOM_EXTRES"));
 	}
@@ -1950,7 +1944,7 @@ void CTaskMain::OnOverBar_ClubInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_clubViewer->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_clubViewer->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_clubViewer->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 
 		m_clubViewer->Enable(!g_pFresh->IsCurrentLayout("GAMEROOM_EXTRES"));
 	}
@@ -2004,7 +1998,7 @@ void CTaskMain::OnOverBar_AztecInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_aztecViewer->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_aztecViewer->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_aztecViewer->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 
 		m_aztecViewer->Enable(!g_pFresh->IsCurrentLayout("GAMEROOM_EXTRES"));
 	}
@@ -2110,7 +2104,7 @@ void CTaskMain::OnOverBar_MascotInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_mascotViewer->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_mascotViewer->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_mascotViewer->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 
 		m_mascotViewer->Enable(!g_pFresh->IsCurrentLayout("GAMEROOM_EXTRES"));
 	}
@@ -2166,7 +2160,7 @@ void CTaskMain::OnOverBar_CharSelInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_subSelectionWnd[0]->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_subSelectionWnd[0]->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_subSelectionWnd[0]->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -2249,7 +2243,7 @@ void CTaskMain::OnOverBar_CaddieSelInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_subSelectionWnd[1]->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_subSelectionWnd[1]->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_subSelectionWnd[1]->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -2274,7 +2268,7 @@ void CTaskMain::OnOverBar_CaddieSelOwnerDraw(int) {
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
 	if (bitmap) {
 		w = 8.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
@@ -2282,14 +2276,14 @@ void CTaskMain::OnOverBar_CaddieSelOwnerDraw(int) {
 	bitmap = g_pFresh->GetBitmap("select_bar_02");
 	if (bitmap) {
 		w = (count - 1) * 3.0f + count * 24.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
 	if (bitmap) {
 		w = 8.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	y += 7.0f;
@@ -2310,17 +2304,12 @@ void CTaskMain::OnOverBar_CaddieSelOwnerDraw(int) {
 		// a caddie on contract whose days ran out: crossed out in red
 		IFF_STRUCT::sCaddie *caddie = ItemManager()->FindCaddie(it->second.typeId);
 		if (caddie && (it->second.flags & 2) && it->second.days <= 0 && it->second.cadItemTypeId == 0 && caddie->fee != 0) {
-			_WPOINT a, b;
-			a.x = rect.x; a.y = rect.y + rect.h * 0.5f - 1.0f; b.x = rect.x + rect.w - 1.0f; b.y = a.y;
-			g_view->DrawLine2D(a, b, 0xFFFF0000, 0xFFFF0000, 0);
-			a.x = rect.x; a.y = rect.y + rect.h * 0.5f; b.x = rect.x + rect.w - 1.0f; b.y = a.y;
-			g_view->DrawLine2D(a, b, 0xFFFF0000, 0xFFFF0000, 0);
-			a.x = rect.x; a.y = rect.y + rect.h * 0.5f + 1.0f; b.x = rect.x + rect.w - 1.0f; b.y = a.y;
-			g_view->DrawLine2D(a, b, 0xFFFF0000, 0xFFFF0000, 0);
+			g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f - 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+			g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f), 0xFFFF0000, 0xFFFF0000, 0);
+			g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f + 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
 		}
 
-		WVector mouse = g_input->GetMousePoint();
-		WPoint pt(mouse.x, mouse.y);
+		WPoint pt(g_input->GetMousePoint().x, g_input->GetMousePoint().y);
 		if (rect.IsInRect(pt)) {
 			bitmap = g_pFresh->GetBitmap("select_frame");
 			if (bitmap)
@@ -2341,8 +2330,7 @@ void CTaskMain::OnOverBar_CaddieSelOwnerDraw(int) {
 		if (bitmap)
 			gdi->DrawTexture(bitmap, rect, 0xFFFFFFFF, 0);
 
-		WVector mouse = g_input->GetMousePoint();
-		WPoint pt(mouse.x, mouse.y);
+		WPoint pt(g_input->GetMousePoint().x, g_input->GetMousePoint().y);
 		if (rect.IsInRect(pt)) {
 			bitmap = g_pFresh->GetBitmap("select_frame");
 			if (bitmap)
@@ -2364,7 +2352,7 @@ void CTaskMain::OnOverBar_ClubSelInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_subSelectionWnd[3]->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_subSelectionWnd[3]->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_subSelectionWnd[3]->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -2460,7 +2448,7 @@ void CTaskMain::OnOverBar_AztecSelInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_subSelectionWnd[2]->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_subSelectionWnd[2]->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_subSelectionWnd[2]->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -2484,7 +2472,7 @@ void CTaskMain::OnOverBar_AztecSelOwnerDraw(int) {
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
 	if (bitmap) {
 		w = 8.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
@@ -2492,14 +2480,14 @@ void CTaskMain::OnOverBar_AztecSelOwnerDraw(int) {
 	bitmap = g_pFresh->GetBitmap("select_bar_02");
 	if (bitmap) {
 		w = (count - 1) * 3.0f + count * 24.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
 	if (bitmap) {
 		w = 8.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	y += 7.0f;
@@ -2517,8 +2505,7 @@ void CTaskMain::OnOverBar_AztecSelOwnerDraw(int) {
 		if (bitmap)
 			gdi->DrawTexture(bitmap, WRect(itemX, y, 24.0f, 26.0f), 0xFFFFFFFF, 0);
 
-		WVector mouse = g_input->GetMousePoint();
-		WPoint pt(mouse.x, mouse.y);
+		WPoint pt(g_input->GetMousePoint().x, g_input->GetMousePoint().y);
 		if (rect.IsInRect(pt)) {
 			bitmap = g_pFresh->GetBitmap("select_frame");
 			if (bitmap)
@@ -2544,7 +2531,7 @@ void CTaskMain::OnOverBar_MascotSelInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_subSelectionWnd[4]->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_subSelectionWnd[4]->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_subSelectionWnd[4]->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -2901,9 +2888,8 @@ void CTaskMain::OnOverBar_SiteInit(intptr_t param) {
 	if (m_siteWnd) {
 		UpdateSiteInfo();
 
-		WRect rect = m_siteWnd->GetRect();
-		rect.x += m_uiOffsetX;
-		m_siteWnd->SetRect(rect);
+		const WRect &cur = m_siteWnd->GetRect();
+		m_siteWnd->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -2915,7 +2901,7 @@ void CTaskMain::OnOverBar_OneLineReqBtnInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_oneLineReqBtn->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_oneLineReqBtn->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_oneLineReqBtn->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 	}
 }
 
@@ -2964,7 +2950,7 @@ void CTaskMain::OnOverBar_OneLineViewInit(intptr_t param) {
 		if (m_screenWidth < 800.0f)
 			m_oneLineView->SetRect(WRect(cur.x - 140.0f, cur.y, cur.w, cur.h));
 		else
-			m_oneLineView->SetRect(WRect(cur.x + m_uiOffsetX, cur.y, cur.w, cur.h));
+			m_oneLineView->SetRect(WRect(cur.TopLeft().x + m_uiOffsetX, cur.y, cur.w, cur.h));
 
 		COneLineBoard::Instance()->SetRect(m_oneLineView->GetRect());
 	}
@@ -3001,11 +2987,9 @@ void CTaskMain::OnOverBar_MyInfoUp(void) {
 void CTaskMain::OnOverBar_PangCookieInit(intptr_t param) {
 	m_pangCookieWnd = DYNAMIC_CAST(FrArea, param);
 	if (m_pangCookieWnd) {
-		WRect rect = m_pangCookieWnd->GetRect();
-		rect.x = m_screenWidth - (800.0f - rect.x);
-		m_pangCookieWnd->SetRect(rect);
+		SetLeftOffset(m_pangCookieWnd, m_screenWidth);
 
-		m_treeCashBitmap = m_treeFrameBitmap = NULL;
+		memset(&m_treeCashBitmap, 0, sizeof(m_treeCashBitmap) * 2);
 		m_treeCashBitmap = g_pFresh->GetBitmap("pang_bar_treecash");
 		m_treeFrameBitmap = g_pFresh->GetBitmap("pang_bar_frame_tree");
 		m_hanCoinBitmap = g_pFresh->GetBitmap("pang_bar_hancoin");
@@ -3111,9 +3095,7 @@ void CTaskMain::OnOverBar_SpecialCardInit(intptr_t param) {
 		m_barButton[10]->EnableHover(true, 0.0f);
 		m_barButton[10]->EnableBlink(CCardManager::Instance()->ShowSPCardAlarm());
 
-		WRect rect = m_barButton[10]->GetRect();
-		rect.x = m_screenWidth - (800.0f - rect.x);
-		m_barButton[10]->SetRect(rect);
+		SetLeftOffset(m_barButton[10], m_screenWidth);
 	}
 }
 
@@ -3164,9 +3146,7 @@ void CTaskMain::OnOverBar_MessengerInit(intptr_t param) {
 		if (!WSingleton<CSharedDoc>::Instance()->m_value4DBE)
 			m_barButton[11]->EnableBlink(false);
 
-		WRect rect = m_barButton[11]->GetRect();
-		rect.x = m_screenWidth - (800.0f - rect.x);
-		m_barButton[11]->SetRect(rect);
+		SetLeftOffset(m_barButton[11], m_screenWidth);
 	}
 }
 
@@ -3198,9 +3178,7 @@ void CTaskMain::OnTreasureAlarmUp(void) {
 // taskmain.cpp:3858
 void CTaskMain::OnMessengerBubbleInit(intptr_t param) {
 	m_messengerBubble = DYNAMIC_CAST(FrArea, param);
-	WRect rect = m_messengerBubble->GetRect();
-	rect.x = m_screenWidth - (800.0f - rect.x);
-	m_messengerBubble->SetRect(rect);
+	SetLeftOffset(m_messengerBubble, m_screenWidth);
 	for (int i = 0; i < 3; i++)
 		m_bubbleBitmap[i] = g_pFresh->GetBitmap(MakeStr("login_%02d", i));
 }
@@ -3217,15 +3195,14 @@ void CTaskMain::OnMessengerBubbleOwnerDraw(int) {
 	if (gdi == NULL)
 		return;
 
-	FrEdit *edit = static_cast<FrEdit *>(m_messengerBubbleEdit);
-	if (edit->GetLineNum() == 0)
+	if (((FrEdit *)m_messengerBubbleEdit)->GetLineNum() == 0)
 		return;
 
-	const WRect &rect = m_messengerBubbleEdit->GetRect();
+	WRect rect = m_messengerBubbleEdit->GetRect();
 
 	float x = rect.x - 2.0f;
 	float y = rect.y - 8.0f;
-	float height = edit->GetLineNum() * 14.0f;
+	float height = ((FrEdit *)m_messengerBubbleEdit)->GetLineNum() * 14.0f;
 
 	if (m_bubbleBitmap[0]) {
 		gdi->DrawTexture(m_bubbleBitmap[0], WRect(x, y, (float)m_bubbleBitmap[0]->Width(), (float)m_bubbleBitmap[0]->Height()), 0xFFFFFFFF, 0);
@@ -3252,9 +3229,7 @@ void CTaskMain::OnMessengerBubbleEditInit(intptr_t param) {
 // taskmain.cpp:3919
 void CTaskMain::OnMessengerAlarmBtnInit(intptr_t param) {
 	m_messengerAlarmBtn = DYNAMIC_CAST(FrButton, param);
-	WRect rect = m_messengerAlarmBtn->GetRect();
-	rect.x = m_screenWidth - (800.0f - rect.x);
-	m_messengerAlarmBtn->SetRect(rect);
+	SetLeftOffset(m_messengerAlarmBtn, m_screenWidth);
 	if (m_messengerAlarmBtn && !WSingleton<CSharedDoc>::Instance()->m_value4DBD)
 		m_messengerAlarmBtn->SetVisible(false);
 }
@@ -3442,11 +3417,11 @@ const char *CTaskMain::MakeStatusString3(int current, int total, int penalty) {
 const char *CTaskMain::MakeCardStatusString(int slot, int value) {
 	// power, control, accuracy, spin and curve slot (CP949)
 	const char *slotNames[5] = {
-		"ÆÄ¿ö½½·Ô",
-		"ÄÁÆ®·Ñ½½·Ô",
-		"Á¤È®µµ½½·Ô",
-		"½ºÇÉ½½·Ô",
-		"Ä¿ºê½½·Ô",
+		"\xC6\xC4\xBF\xF6\xBD\xBD\xB7\xD4",
+		"\xC4\xC1\xC6\xAE\xB7\xD1\xBD\xBD\xB7\xD4",
+		"\xC1\xA4\xC8\xAE\xB5\xB5\xBD\xBD\xB7\xD4",
+		"\xBD\xBA\xC7\xC9\xBD\xBD\xB7\xD4",
+		"\xC4\xBF\xBA\xEA\xBD\xBD\xB7\xD4",
 	};
 
 	if (value)
@@ -3586,7 +3561,7 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 		// param1: the message, param2: the item's type id, or a pang amount
 		// when no item has that id.
 		unsigned long typeId = (unsigned long)msg.m_param2;
-		IFF_ITEM_COMMON *item = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(typeId);
+		IFF_ITEM_COMMON *item = ItemManager()->FindCommonItem(typeId);
 		FrForm *notify = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify_item", 0);
 		if (notify == NULL)
 			break;
@@ -3654,7 +3629,8 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 	}
 	// fall through: the caddie info dialog ends its contract too
 	case 0x5C: {
-		FrCaddieInfoDlg *dlg = FrStaticCast<FrCaddieInfoDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("caddie_info"));
+		FrWnd *wnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("caddie_info");
+		FrCaddieInfoDlg *dlg = (FrCaddieInfoDlg *)(wnd != 0 ? (void *)wnd : (__rtti_obj = (void *)wnd));
 		if (dlg == NULL)
 			break;
 
@@ -3675,17 +3651,16 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 
 				WPoint pt = *(WPoint *)msg.m_param3;
 				m_messengerBubbleEdit->MoveWindow(pt);
-				break;
+			} else {
+				WPoint pt;
+				pt.x = MESSENGER()->m_rcAlarmBtn.x - 86.0f;
+				pt.y = m_messengerBubbleEdit->GetRect().y;
+				m_messengerBubbleEdit->MoveWindow(pt);
+
+				((FrEdit *)m_messengerBubbleEdit)->ClearLine();
+				((FrEdit *)m_messengerBubbleEdit)->AddText(text, false, true);
+				m_messengerBubbleEdit->SetVisible(true);
 			}
-
-			WPoint pt;
-			pt.x = MESSENGER()->m_rcAlarmBtn.x - 86.0f;
-			pt.y = m_messengerBubbleEdit->GetRect().y;
-			m_messengerBubbleEdit->MoveWindow(pt);
-
-			((FrEdit *)m_messengerBubbleEdit)->ClearLine();
-			((FrEdit *)m_messengerBubbleEdit)->AddText(text, false, true);
-			m_messengerBubbleEdit->SetVisible(true);
 			break;
 		}
 
@@ -3736,7 +3711,11 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 		if (m_treasureAlarm == NULL)
 			break;
 
-		m_treasureAlarm->SetVisible(msg.m_param1 == 1);
+		if (msg.m_param1 == 1)
+			m_treasureAlarm->SetVisible(true);
+		else
+			m_treasureAlarm->SetVisible(false);
+
 		if (msg.m_param1 == 1) {
 			m_treasureAlarm->Enable(true);
 			m_treasureAlarm->SetVisible(true);
@@ -3749,18 +3728,16 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 	case 0x1FA: {
 		// Mark the equipped skins (type class 0x38000000) as kind 2 in the
 		// skin list.
-		CSharedDoc *doc = WSingleton<CSharedDoc>::Instance();
 		for (int i = 0; i < 6; i++) {
-			unsigned long typeId = doc->m_equipSkin[i];
+			unsigned long typeId = WSingleton<CSharedDoc>::Instance()->m_equipSkin[i];
 			if ((typeId & 0xFC000000) == 0x38000000) {
-				for (std::list<sItemInfo>::iterator it = doc->m_mySkinList.begin(); it != doc->m_mySkinList.end(); ++it) {
+				for (std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_mySkinList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_mySkinList.end(); ++it) {
 					if (it->m_typeId == typeId) {
 						it->m_stateBits.kind = 2;
 						break;
 					}
 				}
 			}
-			doc = WSingleton<CSharedDoc>::Instance();
 		}
 		break;
 	}
@@ -3784,10 +3761,10 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 
 		if (it != doc->m_itemInfoList.end()) {
 			if (it->m_stateBits.kind != 0) {
-				if (doc->m_itemManager.GetCouponKind(it->m_typeId) == 3) {
+				if (ItemManager()->GetCouponKind(it->m_typeId) == 3) {
 					if (--it->m_count <= 0)
 						WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
-				} else if (WSingleton<CSharedDoc>::Instance()->m_itemManager.GetCouponKind(it->m_typeId) != 0) {
+				} else if (ItemManager()->GetCouponKind(it->m_typeId) != 0) {
 					WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
 				} else if ((int)it->m_remainHours <= 0) {
 					WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
@@ -3799,7 +3776,7 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 		}
 
 		if (IsLocalContent((localContentType_t)1) && typeId
-			&& WSingleton<CSharedDoc>::Instance()->m_itemManager.GetCouponKind(typeId) == 2) {
+			&& ItemManager()->GetCouponKind(typeId) == 2) {
 			FrBongdariShopDlg *shop = FrStaticCast<FrBongdariShopDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop"));
 			if (shop) {
 				shop->InitCouponBongdariShop();
@@ -3909,9 +3886,9 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 		server.name[0] = '\0';
 		server.m_address[0] = '\0';
 
+		unsigned long serverId = 0xFFFFFFFF;
 		unsigned char serverIndex = 0xFF;
 		unsigned short room = 0xFFFF;
-		unsigned long serverId = 0xFFFFFFFF;
 		WSingleton<CSharedDoc>::Instance()->GetDirectMoveRoomInfo(&serverIndex, &room, &serverId);
 
 		CSharedDoc *doc = WSingleton<CSharedDoc>::Instance();
@@ -3942,8 +3919,7 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 
 		WSingleton<WNetworkSystem>::Instance()->SendMessage(WNetworkSystem::NET_UNIT_DEFAULT, NetworkUnit::EVENT_NEXT);
 
-		// m_serverName opens the connected server's whole sGameServerInfo record.
-		memcpy(WSingleton<CSharedDoc>::Instance()->m_serverName, &server, sizeof(sGameServerInfo));
+		memcpy(&WSingleton<CSharedDoc>::Instance()->m_curServer, &server, sizeof(sGameServerInfo));
 		WSingleton<CSharedDoc>::Instance()->SetDirectMoveRoomInfo(serverIndex, room, serverId);
 		break;
 	}
@@ -4071,7 +4047,11 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 		// the frame, param3 the button.
 		if (IsLocalContent((localContentType_t)0x56)) {
 			unsigned char frame = (unsigned char)msg.m_param2;
-			*(int *)msg.m_param1 = GetBtnState(frame, (eBarButton)msg.m_param3);
+			eBarButton button = (eBarButton)msg.m_param3;
+
+			bool state = GetBtnState(frame, button);
+
+			*(int *)msg.m_param1 = state;
 		} else {
 			*(bool *)msg.m_param3 = false;
 		}
@@ -4094,7 +4074,8 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 			if (m_completedMissionDlgs[i] == NULL)
 				continue;
 
-			((FrBirthdayEventMissionDlg *)m_completedMissionDlgs[i])->SetCompletedMissionInfo(*(const unsigned long *)msg.m_param1);
+			const unsigned long *missionId = (const unsigned long *)msg.m_param1;
+			((FrBirthdayEventMissionDlg *)m_completedMissionDlgs[i])->SetCompletedMissionInfo(*missionId);
 			for (int j = 0; j <= i; j++) {
 				if (m_completedMissionDlgs[j])
 					((FrBirthdayEventMissionDlg *)m_completedMissionDlgs[j])->CalculatePos(j, i + 1);
@@ -4163,9 +4144,9 @@ void CTaskMain::UpdateSiteInfo(void) {
 		if (OfflinePlay()) {
 			m_siteWnd->SetCaption("OFFLINE PLAY");
 		} else if (strlen(WSingleton<CSharedDoc>::Instance()->m_currentChannel.name)) {
-			m_siteWnd->SetCaption(MakeStr("%s > %s", WSingleton<CSharedDoc>::Instance()->m_serverName, WSingleton<CSharedDoc>::Instance()->m_currentChannel.name));
+			m_siteWnd->SetCaption(MakeStr("%s > %s", WSingleton<CSharedDoc>::Instance()->m_curServer.name, WSingleton<CSharedDoc>::Instance()->m_currentChannel.name));
 		} else {
-			m_siteWnd->SetCaption(WSingleton<CSharedDoc>::Instance()->m_serverName);
+			m_siteWnd->SetCaption(WSingleton<CSharedDoc>::Instance()->m_curServer.name);
 		}
 	}
 }

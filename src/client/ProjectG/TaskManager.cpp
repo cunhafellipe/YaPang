@@ -1018,7 +1018,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:1433
 			if (it != pDoc->m_caddieMap.end()) {
 				// taskmanager.cpp:1435
-				IFF_STRUCT::sCaddie *pCaddie = pDoc->m_itemManager.FindCaddie(it->second.typeId);
+				IFF_STRUCT::sCaddie *pCaddie = ItemManager()->FindCaddie(it->second.typeId);
 				// taskmanager.cpp:1437
 				if ((it->second.flags & 2) && it->second.days == 0 && pCaddie && pCaddie->fee > 0)
 					// taskmanager.cpp:1438
@@ -1178,7 +1178,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:1590
 					partTidList.SetTids(&CSharedDoc::Instance()->m_roomPlayers[i].m_characterInfo, userInfo.m_level);
 					// taskmanager.cpp:1592
-					IFF_STRUCT::sCaddie *pCaddie = CSharedDoc::Instance()->m_itemManager.FindCaddie(CSharedDoc::Instance()->m_roomPlayers[i].m_caddieInfo.typeId);
+					IFF_STRUCT::sCaddie *pCaddie = ItemManager()->FindCaddie(CSharedDoc::Instance()->m_roomPlayers[i].m_caddieInfo.typeId);
 					// taskmanager.cpp:1594
 					if ((pCaddie && CSharedDoc::Instance()->m_roomPlayers[i].m_level < (pCaddie->m_level & 0x7F))
 						|| ((CSharedDoc::Instance()->m_roomPlayers[i].m_caddieInfo.flags & 2) && CSharedDoc::Instance()->m_roomPlayers[i].m_caddieInfo.days == 0 && pCaddie->fee > 0)) {
@@ -1186,7 +1186,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						CSharedDoc::Instance()->m_roomPlayers[i].m_caddieInfo.typeId = 0;
 					}
 					// taskmanager.cpp:1599
-					IFF_STRUCT::sClubSet *pClubSet = CSharedDoc::Instance()->m_itemManager.FindClubSet(CSharedDoc::Instance()->m_roomPlayers[i].m_clubSet.typeId);
+					IFF_STRUCT::sClubSet *pClubSet = ItemManager()->FindClubSet(CSharedDoc::Instance()->m_roomPlayers[i].m_clubSet.typeId);
 					// taskmanager.cpp:1601
 					if (pClubSet
 						&& ((CSharedDoc::Instance()->m_roomPlayers[i].m_level < (pClubSet->m_level & 0x7F) && !(pClubSet->m_level & 0x80))
@@ -1400,7 +1400,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		case 2:
 			// taskmanager.cpp:1799
 			// "Notice : <nick> has left."
-			text = "\xbe\xcb\xb8\xb2 : " + nickName + " \xb4\xd4\xc0\xcc \xc5\xf0\xc0\xe5\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.";
+			text = "\xbe\xcb\xb8\xb2 : " + nickName + " \xb4\xd4\xc0\xcc \xc5\xf0\xc0\xe5\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.";
 			color = 0xFFFF7878;
 			// taskmanager.cpp:1803
 			WSingleton<CSharedDoc>::Instance()->SetGoStopMode(true);
@@ -1830,8 +1830,63 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0x43:
-		// taskmanager.cpp:2340
-		PG_BOOT_TODO("taskmanager.cpp:2340 case 0x43: 595 bytes; calls MyGuid, CSharedDoc::FindUserInfoTimeGUID"); // TODO(boot)
+		{
+			// taskmanager.cpp:2340
+			unsigned short oldLevel = CSharedDoc::Instance()->m_myLevel;
+			// taskmanager.cpp:2341
+			unsigned long oldExp = CSharedDoc::Instance()->m_myExp;
+			// taskmanager.cpp:2344
+			packet.DecodeBuffer(&CSharedDoc::Instance()->m_myStatistics, sizeof(sPangYaUserStatistics));
+			// taskmanager.cpp:2345
+			packet.DecodeBuffer(&CSharedDoc::Instance()->m_myTrophy, sizeof(sTrophyStatistics));
+			// taskmanager.cpp:2347
+			unsigned char course = packet.Decode1();
+			// taskmanager.cpp:2349
+			if (course != 0xFF) {
+				// taskmanager.cpp:2350
+				packet.DecodeBuffer(&CSharedDoc::Instance()->m_myMapStatistics[course], sizeof(sMapStatistics));
+			}
+			// taskmanager.cpp:2352
+			course = packet.Decode1();
+			// taskmanager.cpp:2353
+			if (course != 0xFF) {
+				// taskmanager.cpp:2354
+				packet.DecodeBuffer(&CSharedDoc::Instance()->m_myMapStatistics2[course], sizeof(sMapStatistics));
+			}
+			// taskmanager.cpp:2357
+			std::map<unsigned long, sUserInfoTime>::iterator it;
+			if (CSharedDoc::Instance()->FindUserInfoTimeGUID(MyGuid(false), it)) {
+				// taskmanager.cpp:2360
+				it->second.m_userInfo.m_statistics = CSharedDoc::Instance()->m_myStatistics;
+				// taskmanager.cpp:2361
+				it->second.m_userInfo.m_trophy = CSharedDoc::Instance()->m_myTrophy;
+			}
+			// taskmanager.cpp:2367
+			// The experience gained: the new total minus the old one.
+			int gain = (CSharedDoc::Instance()->m_myLevel ? CSharedDoc::Instance()->m_levelExp[CSharedDoc::Instance()->m_myLevel - 1].m_totalExp : 0) + CSharedDoc::Instance()->m_myExp
+				- ((oldLevel ? CSharedDoc::Instance()->m_levelExp[oldLevel - 1].m_totalExp : 0) + oldExp);
+			// taskmanager.cpp:2369
+			if (gain > 0) {
+				// taskmanager.cpp:2371
+				std::map<unsigned int, sCaddieInfo>::iterator cit = CSharedDoc::Instance()->m_caddieMap.find(CSharedDoc::Instance()->m_myCaddieId);
+				// taskmanager.cpp:2372
+				if (cit != CSharedDoc::Instance()->m_caddieMap.end()) {
+					// taskmanager.cpp:2374
+					sCaddieInfo &caddie = cit->second;
+					// taskmanager.cpp:2376
+					caddie.experience += gain;
+					// taskmanager.cpp:2380
+					for (int i = 0; i < 3; i++) {
+						if (caddie.level == i && caddie.experience >= CSharedDoc::Instance()->m_caddieLevelExp[i].m_exp) {
+							// taskmanager.cpp:2382
+							caddie.level++;
+							// taskmanager.cpp:2383
+							caddie.experience -= CSharedDoc::Instance()->m_caddieLevelExp[i].m_exp;
+						}
+					}
+				}
+			}
+		}
 		break;
 	case 0x49:
 		// taskmanager.cpp:2394
@@ -3818,7 +3873,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:4638
 			if (it == CSharedDoc::Instance()->m_channelList.end()) {
 				// taskmanager.cpp:4639
-				sprintf(text, "%s\xb4\xd4\xc0\xba [%s]\xbf\xa1\xbc\xad \xc3\xa3\xc0\xbb \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", nick.c_str(), CSharedDoc::Instance()->m_serverName);
+				sprintf(text, "%s\xb4\xd4\xc0\xba [%s]\xbf\xa1\xbc\xad \xc3\xa3\xc0\xbb \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", nick.c_str(), CSharedDoc::Instance()->m_curServer.name);
 			} else {
 				// taskmanager.cpp:4641
 				sprintf(text, "%s\xb4\xd4\xc0\xba [%s]\xbf\xa1 \xc1\xa2\xbc\xd3\xc7\xd8 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", nick.c_str(), it->name);
@@ -4073,7 +4128,203 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		break;
 	case 0xa5:
 		// taskmanager.cpp:4910
-		PG_BOOT_TODO("taskmanager.cpp:4910 case 0xa5: 1827 bytes; calls YIPAVIActor::6"); // TODO(boot)
+		{
+			unsigned char itemCount = packet.Decode1();
+			std::list<sItemInfo>::iterator it;
+			std::map<unsigned int, sCharacterInfo>::iterator ch;
+			std::map<unsigned int, sItemInfo>::iterator itemIt;
+			// taskmanager.cpp:4915
+			for (unsigned char i = 0; i < itemCount; i++) {
+				// taskmanager.cpp:4917
+				unsigned long typeId = packet.Decode4();
+				// taskmanager.cpp:4918
+				unsigned long serial = packet.Decode4();
+				// taskmanager.cpp:4919
+				unsigned short count = packet.Decode2();
+				// taskmanager.cpp:4921
+				switch (typeId >> 26) {
+				case 6:
+					{
+						// Running out of one of these does not remove it from the list.
+						unsigned long keptTypeIds[8];
+						// taskmanager.cpp:4935
+						keptTypeIds[0] = 0x1A000020;
+						// taskmanager.cpp:4936
+						keptTypeIds[1] = 0x1A000021;
+						// taskmanager.cpp:4937
+						keptTypeIds[2] = 0x1A000022;
+						// taskmanager.cpp:4938
+						keptTypeIds[3] = 0x1A000023;
+						// taskmanager.cpp:4939
+						keptTypeIds[4] = 0x1A000024;
+						// taskmanager.cpp:4940
+						keptTypeIds[5] = 0x1A000025;
+						// taskmanager.cpp:4941
+						keptTypeIds[6] = 0x1A000026;
+						// taskmanager.cpp:4943
+						keptTypeIds[7] = 0x1A000027;
+						// taskmanager.cpp:4948
+						bool removable = true;
+						// taskmanager.cpp:4950
+						for (int k = 0; k < 8; k++) {
+							// taskmanager.cpp:4951
+							if (keptTypeIds[k] == typeId) {
+								// taskmanager.cpp:4952
+								removable = false;
+								break;
+							}
+						}
+						// taskmanager.cpp:4957
+						for (it = CSharedDoc::Instance()->m_itemInfoList.begin(); it != CSharedDoc::Instance()->m_itemInfoList.end(); ++it) {
+							// taskmanager.cpp:4990
+							if (it->m_serial == serial) {
+								// taskmanager.cpp:4992
+								it->m_count = count;
+								// taskmanager.cpp:4993
+								if (count < 1 && removable) {
+									// taskmanager.cpp:4994
+									CSharedDoc::Instance()->m_itemInfoList.erase(it);
+								}
+								// taskmanager.cpp:5000
+								break;
+							}
+						}
+					}
+					break;
+				case 5:
+					// taskmanager.cpp:5004
+					{
+						for (it = CSharedDoc::Instance()->m_myGearList.begin(); it != CSharedDoc::Instance()->m_myGearList.end(); ++it) {
+							// taskmanager.cpp:5006
+							if (it->m_serial == serial) {
+								// taskmanager.cpp:5008
+								it->m_count = count;
+								// taskmanager.cpp:5009
+								if (count < 1) {
+									// taskmanager.cpp:5011
+									CSharedDoc::Instance()->m_myGearList.erase(it);
+									// taskmanager.cpp:5012
+									CSharedDoc::Instance()->m_myBallId = 0x14000000;
+								}
+								// taskmanager.cpp:5019
+								break;
+							}
+						}
+					}
+					break;
+				case 29:
+					// taskmanager.cpp:5023
+					{
+						for (it = CSharedDoc::Instance()->m_myExtraItemList4.begin(); it != CSharedDoc::Instance()->m_myExtraItemList4.end(); ++it) {
+							// taskmanager.cpp:5026
+							if (it->m_serial == serial) {
+								// taskmanager.cpp:5028
+								it->m_count = count;
+								break;
+							}
+						}
+					}
+					// taskmanager.cpp:5033
+					if (count == 0 && ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false)) {
+						// taskmanager.cpp:5034
+						AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x67, 0, 0, 0, 0, 0);
+					}
+					// taskmanager.cpp:5036
+					break;
+				case 28:
+					// taskmanager.cpp:5042
+					{
+						for (it = CSharedDoc::Instance()->m_myExtraItemList3.begin(); it != CSharedDoc::Instance()->m_myExtraItemList3.end(); ++it) {
+							// taskmanager.cpp:5044
+							if (it->m_serial == serial) {
+								// taskmanager.cpp:5046
+								it->m_count = count;
+								// taskmanager.cpp:5049
+								if (count < 1) {
+									// taskmanager.cpp:5053
+									for (ch = CSharedDoc::Instance()->m_characterMap.begin(); ch != CSharedDoc::Instance()->m_characterMap.end(); ++ch) {
+										// taskmanager.cpp:5056
+										if (((typeId >> 21) & 0x1F) < 5 && ch->second.auxParts.tids[(typeId >> 21) & 0x1F] == typeId) {
+											// taskmanager.cpp:5058
+											ch->second.auxParts.tids[(typeId >> 21) & 0x1F] = 0;
+										}
+									}
+									// taskmanager.cpp:5061
+									CSharedDoc::Instance()->m_myExtraItemList3.erase(it);
+								}
+								// taskmanager.cpp:5067
+								break;
+							}
+						}
+					}
+					break;
+				case 2:
+					// taskmanager.cpp:5071
+					{
+						for (it = CSharedDoc::Instance()->m_myPartsList.begin(); it != CSharedDoc::Instance()->m_myPartsList.end(); ++it) {
+							// taskmanager.cpp:5073
+							if (it->m_serial == serial) {
+								// taskmanager.cpp:5084
+								CSharedDoc::Instance()->m_myPartsList.erase(it);
+								// taskmanager.cpp:5089
+								break;
+							}
+						}
+					}
+					break;
+				case 7:
+					// taskmanager.cpp:5094
+					{
+						std::map<unsigned int, sCaddieInfo>::iterator it = CSharedDoc::Instance()->m_caddieMap.find(serial);
+						// taskmanager.cpp:5095
+						if (it != CSharedDoc::Instance()->m_caddieMap.end()) {
+							// taskmanager.cpp:5097
+							CSharedDoc::Instance()->m_caddieMap.erase(it);
+						}
+					}
+					// taskmanager.cpp:5100
+					break;
+				case 4:
+					// taskmanager.cpp:5128
+					{
+						for (itemIt = CSharedDoc::Instance()->m_myItemMap.begin(); itemIt != CSharedDoc::Instance()->m_myItemMap.end(); ++itemIt) {
+							// taskmanager.cpp:5130
+							if (itemIt->second.m_serial == serial && itemIt->second.m_typeId == typeId) {
+								// taskmanager.cpp:5132
+								CSharedDoc::Instance()->m_myItemMap.erase(itemIt);
+								// taskmanager.cpp:5137
+								break;
+							}
+						}
+					}
+					break;
+				case 31:
+					// taskmanager.cpp:5141
+					{
+						std::list<sCards>::iterator cardIt = CSharedDoc::Instance()->m_myCardList.begin();
+						// taskmanager.cpp:5143
+						for (; cardIt != CSharedDoc::Instance()->m_myCardList.end(); ++cardIt) {
+							// taskmanager.cpp:5145
+							if (cardIt->m_guid == serial && cardIt->m_typeId == typeId) {
+								// taskmanager.cpp:5147
+								if (count < 1) {
+									// taskmanager.cpp:5149
+									CSharedDoc::Instance()->m_myCardList.erase(cardIt);
+								} else {
+									// taskmanager.cpp:5153
+									cardIt->m_count = count;
+								}
+								// taskmanager.cpp:5151
+								break;
+							}
+						}
+					}
+					break;
+				}
+			}
+			// taskmanager.cpp:5165
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0xDD, 0, 0, 0, 0, 0));
+		}
 		break;
 	case 0xa7:
 		// taskmanager.cpp:5173
@@ -4911,7 +5162,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				}
 			}
 			// taskmanager.cpp:6475
-			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("%s ���� ��忡 �����Ͽ����ϴ�.", member.nick), 0, 0, 0, 0));
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("%s \xB4\xD4\xC0\xCC \xB1\xE6\xB5\xE5\xBF\xA1 \xB0\xA1\xC0\xD4\xC7\xCF\xBF\xB4\xBD\xC0\xB4\xCF\xB4\xD9.", member.nick), 0, 0, 0, 0));
 		}
 		break;
 	case 0x3a:
@@ -4928,7 +5179,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:6494
 				strcpy(userInfo.guildMark, "guildmark");
 				// taskmanager.cpp:6495
-				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("%s ���� ��带 Ż���Ͽ����ϴ�.", userInfo.nick), 0, 0, 0, 0));
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("%s \xB4\xD4\xC0\xCC \xB1\xE6\xB5\xE5\xB8\xA6 \xC5\xBB\xC5\xF0\xC7\xCF\xBF\xB4\xBD\xC0\xB4\xCF\xB4\xD9.", userInfo.nick), 0, 0, 0, 0));
 			}
 		}
 		break;
@@ -5001,7 +5252,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			const char *chatLine;
 			GetActor("Lobby") << MsgObject(0, 0x3F, (intptr_t)&chatLine, 0, 0, 0, 0);
 			// taskmanager.cpp:6576
-			msg = "���:" + nick + "> ";
+			msg = "\xB1\xE6\xB5\xE5:" + nick + "> ";
 			// taskmanager.cpp:6579
 			CSharedDoc::Instance()->m_chatManager.FilteringHack(text.c_str(), false);
 			// taskmanager.cpp:6584
@@ -6450,8 +6701,58 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		break;
 	case 0x165:
 	case 0x166:
-		// taskmanager.cpp:8698
-		PG_BOOT_TODO("taskmanager.cpp:8698 case 0x165/0x166: 391 bytes; calls CTaskMain::CreateMaketDlg, FrWnd::FindChildByName, CSharedDoc::ClearMaketList, CSharedDoc::AddMaketListItem, COfflineTradeDlg::SetListItem, COfflineTradeDlg::SetPageData"); // TODO(boot)
+		{
+			// taskmanager.cpp:8698
+			int maxPage = packet.Decode2();
+			// taskmanager.cpp:8699
+			int count = packet.Decode2();
+			// taskmanager.cpp:8705
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			// taskmanager.cpp:8707
+			if (count != 0) {
+				// taskmanager.cpp:8709
+				CTask *task = AfxGetTask();
+				// taskmanager.cpp:8710
+				((CTaskMain *)task->m_mainActor)->CreateMaketDlg();
+				// taskmanager.cpp:8712
+				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetraderanking");
+				// taskmanager.cpp:8714
+				CSharedDoc::Instance()->ClearMaketList();
+				// taskmanager.cpp:8716
+				for (int i = 0; i < count; i++) {
+					// One sale entry, decoded into a static buffer.
+					static sSaleItem s_saleItem;
+					// taskmanager.cpp:8719
+					packet.DecodeBuffer(&s_saleItem, sizeof(sSaleItem));
+					// taskmanager.cpp:8722
+					CSharedDoc::Instance()->AddMaketListItem(s_saleItem);
+				}
+				// taskmanager.cpp:8727
+				COfflineTradeDlg *pDlg = FrStaticCast<COfflineTradeDlg>(pWnd);
+				if (pDlg) {
+					// taskmanager.cpp:8745
+					pDlg->SetListItem();
+					// taskmanager.cpp:8746
+					pDlg->SetPageData(-1, maxPage);
+				}
+			} else {
+				// taskmanager.cpp:8753
+				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetraderanking");
+				// taskmanager.cpp:8755
+				CSharedDoc::Instance()->ClearMaketList();
+				// taskmanager.cpp:8756
+				COfflineTradeDlg *pDlg = FrStaticCast<COfflineTradeDlg>(pWnd);
+				if (pDlg) {
+					// taskmanager.cpp:8762
+					pDlg->SetListItem();
+					// taskmanager.cpp:8763
+					pDlg->SetPageData(1, 1);
+				}
+				// taskmanager.cpp:8767
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xb8\xb6\xc4\xcf\xbf\xa1\xbc\xad \xb0\xcb\xbb\xf6\xb5\xc8 \xbb\xf3\xc7\xb0\xc0\xcc \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
+			}
+		}
+		// taskmanager.cpp:8775
 		break;
 	case 0x162:
 	case 0x163:
@@ -6831,8 +7132,81 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0xe4:
-		// taskmanager.cpp:9191
-		PG_BOOT_TODO("taskmanager.cpp:9191 case 0xe4: 642 bytes; calls CSharedDoc::InitTradeData, CSharedDoc::SetStateTrade, CSharedDoc::SetTradeUID, CSharedDoc::SetTradeTitle, CSharedDoc::AddListTradeItem"); // TODO(boot)
+		{
+			// taskmanager.cpp:9191
+			eTypeSalesTrade saleType = (eTypeSalesTrade)0;
+			// taskmanager.cpp:9194
+			int result = packet.Decode4();
+			// taskmanager.cpp:9196
+			if (result == 1) {
+				// taskmanager.cpp:9199
+				CSharedDoc::Instance()->InitTradeData();
+				// taskmanager.cpp:9200
+				CSharedDoc::Instance()->SetStateTrade((eStateTrade)4);
+				// taskmanager.cpp:9204
+				saleType = (eTypeSalesTrade)packet.Decode4();
+				// taskmanager.cpp:9207
+				std::string title("");
+				// taskmanager.cpp:9209
+				char nick[0x16] = {0};
+				// taskmanager.cpp:9210
+				packet.DecodeBuffer(nick, sizeof(nick));
+				// taskmanager.cpp:9211
+				packet.DecodeStr(title);
+				// taskmanager.cpp:9213
+				unsigned long uid = packet.Decode4();
+				// taskmanager.cpp:9214
+				CSharedDoc::Instance()->SetTradeUID(uid);
+				// taskmanager.cpp:9215
+				CSharedDoc::Instance()->SetTradeTitle(title);
+				// taskmanager.cpp:9219
+				sTradeItem item;
+				// taskmanager.cpp:9220
+				int count = packet.Decode4();
+				// taskmanager.cpp:9222
+				for (int i = 0; i < count; i++) {
+					// taskmanager.cpp:9224
+					packet.DecodeBuffer(&item, sizeof(sTradeItem));
+					// taskmanager.cpp:9226
+					if (!CSharedDoc::Instance()->AddListTradeItem(item)) {
+						// taskmanager.cpp:9229
+						result = 0;
+						break;
+					}
+				}
+			}
+			// taskmanager.cpp:9235
+			SetTradeResultCode(result, 0xE4, 0);
+			// taskmanager.cpp:9237
+			FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+			// taskmanager.cpp:9240
+			if (!pDlg) {
+				// taskmanager.cpp:9246
+				pDlg = CreateForm<FrTradeDlg>(g_pFresh->GetManager(), this, "tradedlg", 0);
+				// taskmanager.cpp:9248
+				if (!pDlg)
+					break;
+				// taskmanager.cpp:9250
+				pDlg->Open((FRESH_RESULT_CALLBACK)0, 0xC0);
+				// taskmanager.cpp:9251
+				pDlg->SetFadeout(false);
+			}
+			// taskmanager.cpp:9255
+			if (pDlg) {
+				// taskmanager.cpp:9257
+				if (result == 1) {
+					// taskmanager.cpp:9260
+					pDlg->SetPackageSale(saleType);
+					// taskmanager.cpp:9262
+					pDlg->OpenTradeShop(CSharedDoc::Instance()->m_tradeUID);
+					// taskmanager.cpp:9263
+					pDlg->SetListTradeItem(false);
+				} else {
+					// taskmanager.cpp:9267
+					pDlg->Close(true);
+				}
+			}
+		}
 		break;
 	case 0xe5:
 		// taskmanager.cpp:9275
@@ -6848,8 +7222,61 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0xe6:
-		// taskmanager.cpp:9288
-		PG_BOOT_TODO("taskmanager.cpp:9288 case 0xe6: 530 bytes; calls AfxGetPreservedTask, MyUID, CSharedDoc::SetTradeTitle"); // TODO(boot)
+		{
+			// taskmanager.cpp:9288
+			int result = packet.Decode4();
+			// taskmanager.cpp:9289
+			std::string title;
+			// taskmanager.cpp:9291
+			if (result == 1) {
+				// taskmanager.cpp:9293
+				packet.DecodeStr(title);
+				// taskmanager.cpp:9294
+				unsigned long uid = packet.Decode4();
+				// taskmanager.cpp:9296
+				std::string nick;
+				// taskmanager.cpp:9298
+				packet.DecodeStr(nick);
+				// taskmanager.cpp:9301
+				CTask *pTask = ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false) ? AfxGetTask() : AfxGetPreservedTask();
+				// taskmanager.cpp:9303
+				if (pTask) {
+					// taskmanager.cpp:9305
+					pTask->GetActor("AvatarChat") << MsgObject(0, 0xe9, (intptr_t)nick.c_str(), (intptr_t)title.c_str(), 0, 0, 0);
+				}
+				// taskmanager.cpp:9308
+				if (CSharedDoc::Instance()->m_stateTrade != STATE_TRADE_NONE) {
+					// taskmanager.cpp:9310
+					if (uid == CSharedDoc::Instance()->m_tradeUID || uid == MyUID()) {
+						// taskmanager.cpp:9312
+						CSharedDoc::Instance()->SetTradeTitle(title);
+						// taskmanager.cpp:9314
+						FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+						// taskmanager.cpp:9317
+						if (pDlg) {
+							// taskmanager.cpp:9321
+							pDlg->UpdateTradeTitle();
+						}
+						// taskmanager.cpp:9324
+						FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+						// taskmanager.cpp:9326
+						if (pEditDlg) {
+							// taskmanager.cpp:9330
+							pEditDlg->UpdateTradeTitle();
+							// taskmanager.cpp:9331
+							pEditDlg->UpdateTradeTitleEdit();
+						}
+					}
+				}
+				// taskmanager.cpp:9335
+			} else {
+				// taskmanager.cpp:9338
+				CSharedDoc::Instance()->SetTradeTitle(title);
+			}
+			// taskmanager.cpp:9341
+			SetTradeResultCode(result, 0xE6, 0);
+			// taskmanager.cpp:9342
+		}
 		break;
 	case 0xe7:
 		// taskmanager.cpp:9347
@@ -6887,8 +7314,75 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0xe9:
-		// taskmanager.cpp:9388
-		PG_BOOT_TODO("taskmanager.cpp:9388 case 0xe9: 599 bytes; calls CSharedDoc::SetStateTrade, CSharedDoc::ClearListTradeItem, CSharedDoc::SetTradeUID, CSharedDoc::AddListTradeItem"); // TODO(boot)
+		{
+			// taskmanager.cpp:9388
+			eTypeSalesTrade saleType = (eTypeSalesTrade)0;
+			int result = packet.Decode4();
+			// taskmanager.cpp:9390
+			if (result == 1) {
+				// taskmanager.cpp:9392
+				CSharedDoc::Instance()->SetStateTrade((eStateTrade)result);
+				// taskmanager.cpp:9393
+				CSharedDoc::Instance()->ClearListTradeItem();
+				// taskmanager.cpp:9397
+				saleType = (eTypeSalesTrade)packet.Decode4();
+				// taskmanager.cpp:9400
+				char title[0x16] = {0};
+				// taskmanager.cpp:9401
+				packet.DecodeBuffer(title, sizeof(title));
+				// taskmanager.cpp:9402
+				unsigned long uid = packet.Decode4();
+				// taskmanager.cpp:9403
+				CSharedDoc::Instance()->SetTradeUID(uid);
+				// taskmanager.cpp:9405
+				GetActor("AvatarChat") << MsgObject(0, 0xe8, (intptr_t)title, 1, 0, 0, 0);
+				// taskmanager.cpp:9409
+				sTradeItem item;
+				// taskmanager.cpp:9410
+				int count = packet.Decode4();
+				// taskmanager.cpp:9412
+				for (int i = 0; i < count; i++) {
+					// taskmanager.cpp:9414
+					packet.DecodeBuffer(&item, sizeof(sTradeItem));
+					// taskmanager.cpp:9416
+					if (!CSharedDoc::Instance()->AddListTradeItem(item)) {
+						// taskmanager.cpp:9419
+						result = 0;
+						break;
+					}
+				}
+			}
+			// taskmanager.cpp:9425
+			SetTradeResultCode(result, 0xE9, 0);
+			// taskmanager.cpp:9427
+			if (result != 1)
+				break;
+			// taskmanager.cpp:9429
+			FrWnd *pEditDlg = FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+			// taskmanager.cpp:9431
+			if (pEditDlg) {
+				// taskmanager.cpp:9435
+				pEditDlg->Close(true);
+			}
+			// taskmanager.cpp:9438
+			FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+			// taskmanager.cpp:9440
+			if (pDlg)
+				break;
+			// taskmanager.cpp:9442
+			pDlg = CreateForm<FrTradeDlg>(g_pFresh->GetManager(), this, "tradedlg", 0);
+			// taskmanager.cpp:9444
+			if (!pDlg)
+				break;
+			// taskmanager.cpp:9446
+			pDlg->Open((FRESH_RESULT_CALLBACK)0, 0xC0);
+			// taskmanager.cpp:9447
+			pDlg->SetFadeout(false);
+			// taskmanager.cpp:9450
+			pDlg->SetPackageSale(saleType);
+			// taskmanager.cpp:9453
+			pDlg->OpenTradeShop(MyUID());
+		}
 		break;
 	case 0x1d7:
 		// taskmanager.cpp:9463
@@ -7699,8 +8193,86 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0xef:
-		// taskmanager.cpp:10342
-		PG_BOOT_TODO("taskmanager.cpp:10342 case 0xef: 895 bytes; calls IsLocalContent, CSharedDoc::GetDirectMoveRoomInfo"); // TODO(boot)
+		{
+			// taskmanager.cpp:10342
+			CProjectG::Instance()->m_loginDlgFlag = true;
+			// taskmanager.cpp:10344
+			CSharedDoc::Instance()->m_list4B64.clear();
+			// taskmanager.cpp:10345
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x68, 0, 0, 0, 0, 0));
+			// taskmanager.cpp:10347
+			if (((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CShopTask::m_RTTI) : false) == true) {
+				// taskmanager.cpp:10349
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0xC5, 0, 0, 0, 0, 0));
+			}
+			// taskmanager.cpp:10352
+			unsigned short buffer[0x200] = {0};
+			// taskmanager.cpp:10399
+			if (!IsLocalContent((localContentType_t)0x53) && !IsLocalContent((localContentType_t)0x5A))
+				break;
+			// taskmanager.cpp:10404
+			unsigned char server = 0xFF;
+			unsigned short room = 0xFFFF;
+			unsigned long uid = 0xFFFFFFFF;
+			if (CSharedDoc::Instance()->GetDirectMoveRoomInfo(&server, &room, &uid) == true) {
+				// taskmanager.cpp:10406
+				if (room == 0xFFFF && IsLocalContent((localContentType_t)0x5A)) {
+					// taskmanager.cpp:10408
+					std::list<sChannelInfo>::iterator it = std::find(CSharedDoc::Instance()->m_channelList.begin(), CSharedDoc::Instance()->m_channelList.end(), server);
+					// taskmanager.cpp:10409
+					sChannelInfo channel = *it;
+					// taskmanager.cpp:10411
+					CSharedDoc::Instance()->m_selectedChannel = channel;
+					// taskmanager.cpp:10414
+					WSendPacket send(GCT_ENTER_CHANNEL);
+					// taskmanager.cpp:10415
+					send.Encode1(channel.id);
+					// taskmanager.cpp:10416
+					send.Send(SEND_TO_DEFAULT);
+					// taskmanager.cpp:10418
+					AfxGetTask()->SendMsgToMainActor(MsgObject(0, 1, 0, 0, 0, 0, 0));
+					// taskmanager.cpp:10420
+					if (WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)
+						&& CMessengerInfo::Instance()->m_serverListRequest == 4) {
+						// taskmanager.cpp:10423
+						const sChannelInfo *pSelected = &CSharedDoc::Instance()->m_selectedChannel;
+						// taskmanager.cpp:10425
+						CSharedDoc::Instance()->m_roomInfo.m_roomNumber = 0xFFFF;
+						// taskmanager.cpp:10426
+						CSharedDoc::Instance()->m_roomInfo.m_gameType = 0xFF;
+						// taskmanager.cpp:10428
+						sUserPosition position;
+						// taskmanager.cpp:10429
+						position.m_userValue = CSharedDoc::Instance()->m_gameServerUID;
+						// taskmanager.cpp:10430
+						position.m_channelId = pSelected->id;
+						// taskmanager.cpp:10431
+						wsprintfA(position.m_channelName, pSelected->name);
+						position.m_roomNumber = 0xFFFF;
+						position.m_value2 = 0xFFFFFFFF;
+						// taskmanager.cpp:10443
+						WSendPacket msnPacket(GCR_NOW_POSITION);
+						// taskmanager.cpp:10447
+						msnPacket.EncodeBuffer(&position, sizeof(sUserPosition));
+						// taskmanager.cpp:10448
+						msnPacket.Send(SEND_TO_MSN);
+					}
+				} else {
+					// taskmanager.cpp:10456
+					WSendPacket send((enumClientPacket)0xAC);
+					// taskmanager.cpp:10457
+					send.Encode1(server);
+					// taskmanager.cpp:10458
+					send.Encode2(room);
+					// taskmanager.cpp:10459
+					send.Send(SEND_TO_DEFAULT);
+				}
+			}
+			// taskmanager.cpp:10463
+			CSharedDoc::Instance()->ClearDirectMoveRoomInfo();
+			// taskmanager.cpp:10464
+			CSharedDoc::Instance()->SetGoWithModeEnd();
+		}
 		break;
 	case 0xf6:
 		// taskmanager.cpp:10471
@@ -8099,8 +8671,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0xf7:
-		// taskmanager.cpp:10850
-		PG_BOOT_TODO("taskmanager.cpp:10850 case 0xf7: 65 bytes"); // TODO(boot)
+		{
+			// taskmanager.cpp:10850
+			sGameServerInfo server;
+			packet.DecodeBuffer(&server, sizeof(server));
+			// taskmanager.cpp:10851
+			CSharedDoc::Instance()->m_curServer = server;
+		}
 		break;
 	case 0xce:
 		// taskmanager.cpp:10859
@@ -8131,8 +8708,74 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0xc3:
-		// taskmanager.cpp:10892
-		PG_BOOT_TODO("taskmanager.cpp:10892 case 0xc3: 726 bytes; calls ItemManager, CItemManager::FindCommonItem, MakeStr"); // TODO(boot)
+		{
+			// taskmanager.cpp:10892
+			unsigned char success = packet.Decode1();
+			// taskmanager.cpp:10893
+			unsigned long typeId = packet.Decode4();
+			// taskmanager.cpp:10894
+			int count = packet.Decode4();
+			// taskmanager.cpp:10897
+			IFF_ITEM_COMMON *pItem = ItemManager()->FindCommonItem(typeId);
+			// taskmanager.cpp:10898
+			if (!success) {
+				// taskmanager.cpp:10900
+				// "Could not delete the %s item.."
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("%s \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xbb\xe8\xc1\xa6\xc7\xcf\xc1\xf6 \xb8\xf8\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9..", pItem ? pItem->m_name : NULL), 0, 0, 0, 0));
+				// taskmanager.cpp:10901
+				break;
+			}
+			// taskmanager.cpp:10904
+			switch (typeId >> 26) {
+			case 6:
+				{
+					// taskmanager.cpp:10908
+					packet.Decode4();
+					// taskmanager.cpp:10911
+					std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_itemInfoList.begin();
+					while (it != CSharedDoc::Instance()->m_itemInfoList.end()) {
+						// taskmanager.cpp:10913
+						if (it->m_typeId == typeId) {
+							// taskmanager.cpp:10915
+							it->m_count -= count;
+							// taskmanager.cpp:10916
+							if (it->m_count < 1) {
+								// taskmanager.cpp:10917
+								CSharedDoc::Instance()->m_itemInfoList.erase(it);
+							}
+							break;
+						}
+						// taskmanager.cpp:10922
+						++it;
+					}
+					// taskmanager.cpp:10927
+					// "%d %s items were used up."
+					AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("%d\xb0\xb3\xc0\xc7 %s \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xcc \xbc\xd2\xb8\xf0\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.", count, pItem ? pItem->m_name : NULL), 0, 0, 0, 0));
+				}
+				break;
+			case 0xE:
+				// taskmanager.cpp:10944
+				for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_mySkinList.begin(); it != CSharedDoc::Instance()->m_mySkinList.end(); ++it) {
+					// taskmanager.cpp:10946
+					if (it->m_typeId == typeId) {
+						// taskmanager.cpp:10948
+						CSharedDoc::Instance()->m_mySkinList.erase(it);
+						break;
+					}
+				}
+				// taskmanager.cpp:10953
+				// "The %s item was deleted."
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("%s \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xcc \xbb\xe8\xc1\xa6\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.", pItem ? pItem->m_name : NULL), 0, 0, 0, 0));
+				break;
+			}
+			// taskmanager.cpp:10958
+			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
+				// taskmanager.cpp:10960
+				GetActor("RealMyRoom") << MsgObject(0, 0xDD, typeId, count, 0, 0, 0);
+			}
+			// taskmanager.cpp:10962
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+		}
 		break;
 	case 0x15e:
 		// taskmanager.cpp:10968

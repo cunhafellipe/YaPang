@@ -4,6 +4,30 @@
 
 #include "wd3d.h"
 
+#ifdef PG_MATERIAL_HINTS
+// Port only (port/compat/pg_material_hints.h): each buffered polygon keeps the
+// material hint it was drawn with and sets it again when it is flushed. Side
+// tables by the polygon's index in m_bufPolySw / m_bufPolyHw (the layout
+// stays the original's).
+#include <vector>
+#include "pg_material_hints.h"
+
+static std::vector<unsigned char> s_pgHintSw, s_pgHintHw;
+
+static void PgHintKeep(std::vector<unsigned char>& hints, size_t index, size_t capacity) {
+	if (hints.size() < capacity) {
+		hints.resize(capacity, 0);
+	}
+	if (index < hints.size()) {
+		hints[index] = (unsigned char)PgMaterialHintGet();
+	}
+}
+
+static int PgHintOf(const std::vector<unsigned char>& hints, size_t index) {
+	return index < hints.size() ? hints[index] : 0;
+}
+#endif
+
 // wd3d.cpp:39
 WDirect3D::WDirect3D() {
 	m_mainThreadId = 0;
@@ -610,14 +634,28 @@ void WDirect3D::DrawIndexedTriangles(WTVertex* p, int pnum, unsigned short* flis
 void WDirect3D::DrawBuffered(const w_poly_buffer_sw& bufSw) {
 	ApplyCustomRenderState(bufSw.customRenderState);
 
+#ifdef PG_MATERIAL_HINTS
+	int pgHint = PgMaterialHintGet();
+	PgMaterialHint(PgHintOf(s_pgHintSw, (size_t)(&bufSw - &m_bufPolySw[0])));
+#endif
 	DrawPrimitive(bufSw.type, bufSw.num, bufSw.dwVertexTypeDesc, bufSw.lpvVertices, bufSw.dptPrimitiveType, bufSw.type2);
+#ifdef PG_MATERIAL_HINTS
+	PgMaterialHint(pgHint);
+#endif
 }
 
 // wd3d.cpp:1131
 void WDirect3D::DrawBuffered(const w_poly_buffer_hw& bufHw) {
 	ApplyCustomRenderState(bufHw.customRenderState);
 
+#ifdef PG_MATERIAL_HINTS
+	int pgHint = PgMaterialHintGet();
+	PgMaterialHint(PgHintOf(s_pgHintHw, (size_t)(&bufHw - &m_bufPolyHw[0])));
+#endif
 	xDrawIndexedPrimitive(bufHw.VState, bufHw.BState);
+#ifdef PG_MATERIAL_HINTS
+	PgMaterialHint(pgHint);
+#endif
 }
 
 // wd3d.cpp:1138
@@ -888,6 +926,9 @@ void WDirect3D::Buffering(int type, int type2, int num, unsigned long dwVertexTy
 	buf->lpvVertices = p;
 	buf->dptPrimitiveType = dptPrimitiveType;
 	buf->customRenderState = SnapShotCustomRenderState();
+#ifdef PG_MATERIAL_HINTS
+	PgHintKeep(s_pgHintSw, (size_t)(buf - &m_bufPolySw[0]), m_bufPolySw.size());
+#endif
 
 	if ((type & 0x300000) != 0x300000 && (type & 0x300000) != 0x100000) {
 		buf->depth = depth;
@@ -906,6 +947,9 @@ void WDirect3D::Buffering(const WxViewState& VState, const WxBatchState& BState)
 	memcpy(&buf->VState, &VState, sizeof(WxViewState));
 	memcpy(&buf->BState, &BState, sizeof(WxBatchState));
 	buf->customRenderState = SnapShotCustomRenderState();
+#ifdef PG_MATERIAL_HINTS
+	PgHintKeep(s_pgHintHw, (size_t)(buf - &m_bufPolyHw[0]), m_bufPolyHw.size());
+#endif
 
 	if ((BState.xiFlag0 & 0x300000) != 0x300000 && (BState.xiFlag0 & 0x300000) != 0x100000) {
 		buf->depth = BState.xfDepth;

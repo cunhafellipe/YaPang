@@ -64,8 +64,10 @@ extern "C" const sSwingTable data_a804a8;
 extern "C" {
 	static char data_af30a8[0x40];
 	static char data_af3068[0x40];
-	static char data_af2c68[0x400];
-	static char data_af2b68[0x100];
+	static struct {
+		char motion[0x100];      // 0x000, the "*playif(" motion
+		char conditions[0x400];  // 0x100, the "*playif(" pet conditions
+	} data_af2b68;
 }
 // The camera matrix (camerawork.cpp).
 extern WMatrix g_camera;
@@ -2037,20 +2039,20 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 	unsigned long value;
 
 	do {
-		const char *cmd = strchr(cur, '*');
+		cur = strchr(cur, '*');
 
-		if (cmd == NULL) {
+		if (cur == NULL) {
 			break;
 		}
 
 		int len = 0;
 
-		while (cmd[len] != '\0') {
+		while (cur[len] != '\0') {
 			len++;
-			if (cmd[len] == ' ') {
+			if (cur[len] == ' ') {
 				break;
 			}
-			if (cmd[len] == '(') {
+			if (cur[len] == '(') {
 				len++;
 				break;
 			}
@@ -2060,9 +2062,9 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 			break;
 		}
 
-		strncpy(data_af30a8, cmd, len);
+		strncpy(data_af30a8, cur, len);
 		data_af30a8[len] = '\0';
-		cur = cmd + len;
+		cur += len;
 
 		for (int i = 0; i < sizeof(data_a804a8.m_commands) / sizeof(data_a804a8.m_commands[0]); i++) {
 			if (strcmpi(data_af30a8, data_a804a8.m_commands[i]) != 0) {
@@ -2077,7 +2079,8 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 					break;
 				}
 
-				WVector pos = m_position - g_camera.pivot;
+				WVector pos;
+				pos = m_position - g_camera.pivot;
 				g_audio->PlaySfx(data_af3068, &pos, 5, 0, 0, 0.5f, 200.0f);
 				break;
 			}
@@ -2132,7 +2135,7 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 					break;
 				}
 
-				char fxName[0x80];
+				char fxName[0x40];
 				fxName[0] = '\0';
 				cur = GetStrConst(cur, fxName);
 
@@ -2140,7 +2143,7 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 					break;
 				}
 
-				char bbName[0x100];
+				char bbName[0x40];
 
 				if (fxName[0] == '@') {
 					if (m_pPetInfos[player].m_pMotion == NULL || strcmp(fxName + 1, m_pPetInfos[player].m_pMotion->name) != 0) {
@@ -2169,8 +2172,8 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 					break;
 				}
 
-				sClubSet *pClubSet = GolfClub().FindClubSet(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[player].m_clubSet.typeId);
 				bool found = false;
+				sClubSet *pClubSet = GolfClub().FindClubSet(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[player].m_clubSet.typeId);
 
 				if (token[0] == '&') {
 					while (token[0] == '&') {
@@ -2319,12 +2322,12 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 			case 11: {
 				int offset = 0;
 
-				data_af2b68[0] = '\0';
-				data_af2c68[0] = '\0';
-				cur = GetStrConst(cur, data_af2c68);
-				cur = GetStrConst(cur, data_af2b68);
+				data_af2b68.motion[0] = '\0';
+				data_af2b68.conditions[0] = '\0';
+				cur = GetStrConst(cur, data_af2b68.conditions);
+				cur = GetStrConst(cur, data_af2b68.motion);
 
-				if (data_af2c68[0] == '\0' || data_af2b68[0] == '\0') {
+				if (data_af2b68.conditions[0] == '\0' || data_af2b68.motion[0] == '\0') {
 					break;
 				}
 
@@ -2333,12 +2336,12 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 				}
 
 				while (true) {
-					char *pCond = data_af2c68 + offset;
+					char *pCond = data_af2b68.conditions + offset;
 					char *pSemi = strchr(pCond, ';');
 					int n;
 
 					if (pSemi) {
-						n = pSemi - (data_af2c68 + offset);
+						n = pSemi - (data_af2b68.conditions + offset);
 					} else {
 						n = strlen(pCond);
 
@@ -2353,7 +2356,7 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 					strcat(petName, ".mpet");
 
 					if (m_pPetFrames[player].HasMPet(petName)) {
-						SetMotion(data_af2b68, 0.0f, player);
+						SetMotion(data_af2b68.motion, 0.0f, player);
 						m_pPetInfos[player].m_nextMotion[0] = '\0';
 						break;
 					}
@@ -2367,7 +2370,7 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 				break;
 			}
 			case 12: {
-				char name[0x80];
+				char name[0x40];
 				char args[0x40];
 
 				name[0] = '\0';
@@ -2476,12 +2479,9 @@ void CGolfPlayer::PlayShotSfx(int player) {
 		return;
 	}
 
-	int score;
-	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
-		score = TEAM(GOLFDOC()->GetPlayer(player)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1];
-	} else {
-		score = GOLFDOC()->GetPlayer(player)->m_holes[GOLFDOC()->m_currentHole - 1];
-	}
+	int score = WSingleton<CSharedDoc>::Instance()->m_roomType == 1
+		? TEAM(GOLFDOC()->GetPlayer(player)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1]
+		: GOLFDOC()->GetPlayer(player)->m_holes[GOLFDOC()->m_currentHole - 1];
 
 	if (GolfClub().PowerShotType()) {
 		g_audio->PlaySfx("swing_powershot_effect", 0, 0, 0, 0, 0.5f, 200.0f);

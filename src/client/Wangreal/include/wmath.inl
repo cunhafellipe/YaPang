@@ -467,7 +467,7 @@ inline WVector4::WVector4(float x, float y, float z, float w)
 }
 
 // wmath.inl:714
-inline float operator*(const WPlane& p, const WVector& v) {
+GOLFRULE_WMATH_INLINE float operator*(const WPlane& p, const WVector& v) {
 	return p.normal * v + p.dis;
 }
 

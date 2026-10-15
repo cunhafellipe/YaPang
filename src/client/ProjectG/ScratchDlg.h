@@ -54,6 +54,7 @@ public:
 	bool OnConfirmResult(int result, FrForm* pForm);
 	void ProcessResultText(float dt);
 	void SetBmpResultText(int result);
+	void SetEnableRequestScratchItem(bool bEnable) { m_bEnableRequestScratchItem = bEnable; }   // scratchdlg.h:134
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];

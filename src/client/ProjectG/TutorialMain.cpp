@@ -530,30 +530,13 @@ void CTutorialMain::OnInit(void) {
 
 	int parents = 0;
 	for (int category = 0; category < 3; category++) {
-		unsigned char end = 0;
-		switch ((unsigned char)category) {
-		case 0: end = 8; break;
-		case 1: end = 14; break;
-		case 2: end = 0; break;
-		}
-		unsigned char start = 0;
-		switch ((unsigned char)category) {
-		case 0: start = 0; break;
-		case 1: start = 8; break;
-		case 2: start = 0; break;
-		}
-		for (int i = start; i < end; i++) {
+		int end = GetAccumulateLimit(category);
+		for (int i = GetGradeBegin_Grade(category); i < end; i++) {
 			int next = m_ChildTable[i].m_first;
 			for (int j = 0; j < m_ChildTable[i].m_count; j++)
 				m_questInfo[i].m_items.push_back(next++);
 
-			unsigned char first = 0;
-			switch ((unsigned char)category) {
-			case 0: first = 0; break;
-			case 1: first = 8; break;
-			case 2: first = 0; break;
-			}
-			for (int k = first; k < end; k++) {
+			for (int k = GetGradeBegin_Grade(category); k < end; k++) {
 				if (i == k)
 					continue;
 				if (m_Tutorials[i].m_level - m_Tutorials[k].m_level < -1)
@@ -592,19 +575,8 @@ void CTutorialMain::EnableAllBtn(void) {
 void CTutorialMain::SetCompleteStates(void) {
 	for (int category = 0; category < m_categoryCount; category++) {
 		CSharedDoc *doc = WSingleton<CSharedDoc>::Instance();
-		unsigned char end = 0;
-		switch ((unsigned char)category) {
-		case 0: end = 8; break;
-		case 1: end = 14; break;
-		case 2: end = 0; break;
-		}
-		unsigned char start = 0;
-		switch ((unsigned char)category) {
-		case 0: start = 0; break;
-		case 1: start = 8; break;
-		case 2: start = 0; break;
-		}
-		for (int i = start; i < end; i++) {
+		int end = GetAccumulateLimit(category);
+		for (int i = GetGradeBegin_Grade(category); i < end; i++) {
 			m_Tutorials[i].m_status = 0;
 			switch (category) {
 			case 0:
@@ -654,29 +626,11 @@ void CTutorialMain::CheckNodeStates(void) {
 			return;
 		}
 
-		unsigned char end = 0;
-		switch ((unsigned char)category) {
-		case 0: end = 8; break;
-		case 1: end = 14; break;
-		case 2: end = 0; break;
-		}
-
-		unsigned char start = 0;
-		switch ((unsigned char)category) {
-		case 0: start = 0; break;
-		case 1: start = 8; break;
-		case 2: start = 0; break;
-		}
-		for (int i = start; i < end; i++)
+		int end = GetAccumulateLimit(category);
+		for (int i = GetGradeBegin_Grade(category); i < end; i++)
 			m_questInfo[i].m_parentsCleared = 0;
 
-		start = 0;
-		switch ((unsigned char)category) {
-		case 0: start = 0; break;
-		case 1: start = 8; break;
-		case 2: start = 0; break;
-		}
-		for (int i = start; i < end; i++) {
+		for (int i = GetGradeBegin_Grade(category); i < end; i++) {
 			for (unsigned int j = 0; j < m_questInfo[i].m_items.size(); j++) {
 				int child = m_questInfo[i].m_items[j];
 				if (m_Tutorials[i].m_status != 1) {
@@ -694,13 +648,7 @@ void CTutorialMain::CheckNodeStates(void) {
 				}
 
 				if (m_questInfo[child].m_parentCount >= 2 && m_Tutorials[child].m_status != 1) {
-					unsigned char first = 0;
-					switch ((unsigned char)category) {
-					case 0: first = 0; break;
-					case 1: first = 8; break;
-					case 2: first = 0; break;
-					}
-					for (int k = first; k < end; k++) {
+					for (int k = GetGradeBegin_Grade(category); k < end; k++) {
 						if (m_Tutorials[child].m_level == m_Tutorials[k].m_level)
 							sameLevel++;
 					}
@@ -1023,7 +971,8 @@ void CTutorialMain::OnTutorialListInit(int param) {
 		m_tutorialListBox->AddItem(&m_CompleteItems[i]);
 	}
 
-	memset(m_categoryClear, 0, sizeof(m_categoryClear));
+	for (int c = 0; c < 3; c++)
+		m_categoryClear[c] = false;
 }
 
 // tutorialmain.cpp:1062
@@ -1285,10 +1234,11 @@ void CTutorialMain::OnTutorialListLBtnDown(void) {
 		rowY[2] = 314.0f;
 	}
 
-	float x = g_input->GetMousePoint().x - item->pos.x;
-	float y = g_input->GetMousePoint().y - rowY[item->idx];
+	WPoint pt;
+	pt.x = g_input->GetMousePoint().x - item->pos.x;
+	pt.y = g_input->GetMousePoint().y - rowY[item->idx];
 
-	int btn = IsInArea(item->idx, WPoint(x, y));
+	int btn = IsInArea(item->idx, pt);
 	if (btn == -1)
 		return;
 
@@ -1563,7 +1513,6 @@ CTutorialMain::sTutorialInfo *CTutorialMain::FindTutorialList(int &id) {
 
 // tutorialmain.cpp:1752
 void CTutorialMain::CheckEnable(int index) {
-	int count;
 	int unlock = m_TutoCondition[index].m_unlock;
 	if (unlock == 0) {
 		for (int i = 0; i < m_TutoCondition[index].m_count; i++) {
@@ -1576,7 +1525,7 @@ void CTutorialMain::CheckEnable(int index) {
 		}
 	} else {
 		int cleared = 0;
-		count = m_TutoCondition[index].m_count;
+		int count = m_TutoCondition[index].m_count;
 		for (int i = 0; i < count; i++) {
 			int id = m_TutoCondition[index].m_start + i;
 			sTutorialInfo *info = FindTutorialList(id);

@@ -621,7 +621,7 @@ void CQuadTree::MakeObjStructure(short objIndex, int option, bool bRebuild) {
 		}
 
 		int randRange;
-		if (pModel->m_pPuppet->GetAnimationLength() > 0.0f)
+		if (pModel->m_pPuppet->GetAnimationLength() > 0.0)
 			randRange = (int)(pModel->m_pPuppet->GetAnimationLength() * 50.0f);
 		else
 			randRange = 50;
@@ -1870,9 +1870,14 @@ float CQuadTree::IntersectObj(const WVector &pos, const WVector &dir, WPlane *pP
 	float t = 1.0f;
 	short hitObj = -1;
 	int index = -1;
-	WVector radius = WVector::ONE * GolfBall().GetRadius(); WVector ext = radius + WVector(Abs(dir.x), Abs(dir.y), Abs(dir.z));
+	WVector radius = WVector::ONE * GolfBall().GetRadius(); WVector absDir(Abs(dir.x), Abs(dir.y), Abs(dir.z));
 
-	GetObjList(Waabb(pos - ext, pos + ext));
+	WVector ext = radius + absDir;
+
+	Waabb box;
+	box.min = pos - ext;
+	box.max = pos + ext;
+	GetObjList(box);
 
 	unsigned int i;
 	for (i = 0; i < m_objNum; i++) {
@@ -2314,13 +2319,12 @@ void CQuadTree::BallProcess(float elapsed) {
 	m_lowestGroundMode = false;
 
 	if (ball.m_state != 2) {
-		int last = ball.m_preDataCount - 1;
-		int prev = ball.m_preDataCount - 2;
-		WVector moved = ball.PreData(prev <= 0 ? 0 : prev)->m_pos - ball.PreData(last <= 0 ? 0 : last)->m_pos;
+		WVector moved = ball.PreData(Max(0, ball.m_preDataCount - 2))->m_pos - ball.PreData(Max(0, ball.m_preDataCount - 1))->m_pos;
 		if (WisEqual(moved, WVector::ZERO, 1e-5f)) {
 			ball.m_shotStage++;
 		} else {
-			WVector d = ball.m_pos - GetHoleCupPos();
+			WVector d;
+			d = ball.m_pos - GetHoleCupPos();
 			if ((float)sqrt(d.x * d.x + d.z * d.z) < m_holeCupRadius) {
 				ball.m_shotStage++;
 				if (ball.m_shotStage == 100) {
@@ -2366,7 +2370,7 @@ void CQuadTree::BallProcess(float elapsed) {
 		}
 	}
 
-	WVector step(elapsed * ball.m_velocity.x, elapsed * ball.m_velocity.y, elapsed * ball.m_velocity.z);
+	WVector step = ball.m_velocity * elapsed;
 	float depth = GolfBall().m_radius * 6.0f;
 	WVector cup = GetHoleCupPos();
 	m_cupApproach = DistanceBetweenRayNSegment(WVector(cup.x, cup.y - depth, cup.z), WVector::UNIT_POS_Y, ball.m_pos, step);
@@ -2384,12 +2388,12 @@ void CQuadTree::BallProcess(float elapsed) {
 		return;
 	}
 
-	WVector next(ball.m_pos.x + elapsed * ball.m_velocity.x, ball.m_pos.y + elapsed * ball.m_velocity.y, ball.m_pos.z + elapsed * ball.m_velocity.z);
+	WVector next = ball.m_pos + ball.m_velocity * elapsed;
 	d = next - GetHoleCupPos();
 
 	int index;
-	if (ball.m_radius + m_holeCupRadius > m_cupApproach.z) {
-		if (ball.m_state == 3 && (float)sqrt(ball.m_velocity.x * ball.m_velocity.x + ball.m_velocity.y * ball.m_velocity.y + ball.m_velocity.z * ball.m_velocity.z) > 12.0f
+	if (m_holeCupRadius + ball.GetRadius() > m_cupApproach.z) {
+		if (ball.m_state == 3 && ball.m_velocity.Magnitude() > 12.0f
 				&& Abs(CalcDeltaAngle(WVector(d.x, 0.0f, d.z) * -1.0f, ball.m_velocity)) < 1.0471976f) {
 			ball.m_curve = ball.m_spin = 0.0f;
 			ball.m_velocity.y = Min(ball.m_velocity.Magnitude() * 0.5f, 5.0f);
@@ -2405,10 +2409,7 @@ void CQuadTree::BallProcess(float elapsed) {
 			return;
 		}
 
-		GetMeshList(next);
-		WVector ground = ColTest(next, false, &index, true);
-		if (ground.y < m_pBaseModel->m_aabb.min.y)
-			ground.y = m_pBaseModel->m_aabb.min.y;
+		WVector probe = next; GetMeshList(next); probe = ColTest(probe, false, &index, true); if (probe.y < m_pBaseModel->m_aabb.min.y) probe.y = m_pBaseModel->m_aabb.min.y; WVector ground = probe;
 		if (ground.y + ball.m_radius + 0.01f < next.y) {
 			ball.m_groundArea = -1;
 			ball.m_state = 1;
@@ -2421,18 +2422,11 @@ void CQuadTree::BallProcess(float elapsed) {
 		m_cupRollCount = 0;
 
 		if (ball.m_state == 4) {
-			GetMeshList(next);
-			WVector ground = ColTest(next, false, &index, true);
-			if (ground.y < m_pBaseModel->m_aabb.min.y)
-				ground.y = m_pBaseModel->m_aabb.min.y;
+			WVector probe = next; GetMeshList(next); probe = ColTest(probe, false, &index, true); if (probe.y < m_pBaseModel->m_aabb.min.y) probe.y = m_pBaseModel->m_aabb.min.y; WVector ground = probe;
 			if (ground.y + ball.m_radius + 0.01f < next.y) {
 				ball.m_state = 1;
 			} else {
-				next = ball.m_pos;
-				GetMeshList(ball.m_pos);
-				ground = ColTest(next, false, &index, true);
-				if (ground.y < m_pBaseModel->m_aabb.min.y)
-					ground.y = m_pBaseModel->m_aabb.min.y;
+				probe = ball.m_pos; GetMeshList(ball.m_pos); probe = ColTest(probe, false, &index, true); if (probe.y < m_pBaseModel->m_aabb.min.y) probe.y = m_pBaseModel->m_aabb.min.y; ground = probe;
 				ball.m_pos.y = ground.y + ball.m_radius;
 				ball.m_state = 3;
 			}
@@ -2950,17 +2944,18 @@ WVector CQuadTree::GetFriction(void) {
 	float clamped = cosAngle < -1.0f ? -1.0f : (cosAngle > 1.0f ? 1.0f : cosAngle);
 
 	// The slope pulls the ball down along the ground.
-	normal = WVector::UNIT_NEG_Y + normal * cosAngle;
-	normal.Normalize();
-	WVector friction = normal * ((float)sin(acos(clamped)) * m_slopeFactor * GolfBall().m_mass * GetGravity());
+	WVector slope = WVector::UNIT_NEG_Y + normal * cosAngle;
+	slope.Normalize();
+	WVector friction = slope * ((float)sin(acos(clamped)) * m_slopeFactor * GolfBall().GetMass() * m_gravity * 34.295296f);
 
 	// The rolling friction works against the ball's velocity.
 	WVector roll = GolfBall().m_velocity * -1.0f;
 	roll.Normalize();
-	roll *= GetWeatherRollCoeff(GolfBall().m_lastEventPreDataIndex) * m_rollFactor * GolfBall().m_mass * GetGravity() * GetRollCoeff(GolfBall().m_lastEventPreDataIndex) * cosAngle;
+	float rollCoeff = GetRollCoeff(GolfBall().m_lastEventPreDataIndex);
+	roll *= GetWeatherRollCoeff(GolfBall().m_lastEventPreDataIndex) * m_rollFactor * GolfBall().GetMass() * GetGravity() * rollCoeff * cosAngle;
 	friction += roll;
 
-	if ((float)sqrt(GolfBall().m_velocity.SquareMagnitude()) < roll.Magnitude() / GolfBall().m_mass * 0.02f)
+	if (GolfBall().m_velocity.Magnitude() < roll.Magnitude() / GolfBall().GetMass() * 0.02f)
 		GolfBall().m_state = 0;
 
 	return friction;
@@ -3039,6 +3034,8 @@ void CQuadTree::RollingBallGroundResponse(CGolfBall &ball, float t, const WVecto
 		ReflectVector(normal, ball.m_velocity);
 		float coeff = GetBounceCoeff(ball.m_lastEventPreDataIndex) * GetWeatherBounceCoeff(ball.m_lastEventPreDataIndex);
 		ball.m_velocity *= coeff;
+		ball.PreDataToWrite(ball.m_preDataCount)->m_contactVector = normal;
+		return;
 	} else {
 		ball.m_spin = 0.0f;
 		ball.m_curve = 0.0f;
@@ -4530,10 +4527,10 @@ void CQuadTree::DrawDecal(int texture, const WVector &pos, const WVector &normal
 void CQuadTree::TraceAABB(const WVector &start, const WVector &end, const Waabb &box, trace_s *pTrace) {
 	WPlane plane;
 	WPlane hitPlane;
-	memset(pTrace, 0, sizeof(trace_s));
 	Waabb startBox;
 	Waabb endBox;
 	Waabb sweep;
+	memset(pTrace, 0, sizeof(trace_s));
 
 	if (WisEqual(start, end, 0.00001f)) {
 		pTrace->m_endPos = end;
@@ -4547,7 +4544,8 @@ void CQuadTree::TraceAABB(const WVector &start, const WVector &end, const Waabb 
 	sweep.min -= WVector::ONE;
 	sweep.max += WVector::ONE;
 
-	WVector delta = end - start;
+	WVector delta;
+	delta = end - start;
 
 	float fraction = 1.0f;
 	GetObjList(sweep);
@@ -4572,7 +4570,8 @@ void CQuadTree::TraceAABB(const WVector &start, const WVector &end, const Waabb 
 					plane = hitPlane;
 				}
 
-				pBox = pModel->m_pPuppet->m_bbList.Find(MakeStr("char%d", count));
+				char *name = MakeStr("char%d", count);
+				pBox = pModel->m_pPuppet->m_bbList.Find(name);
 			}
 		} else {
 			float t = AabbIntersect(startBox, delta, pModel->m_sceneAabb, &hitPlane);
@@ -4590,8 +4589,7 @@ void CQuadTree::TraceAABB(const WVector &start, const WVector &end, const Waabb 
 	}
 
 	pTrace->m_fraction = fraction;
-	pTrace->m_normal = plane.normal;
-	pTrace->m_planeDist = plane.dis;
+	pTrace->m_plane = plane;
 	pTrace->m_flag = false;
 }
 
@@ -4658,8 +4656,8 @@ void CQuadTree::TraceOBB(const WVector &start, const WVector &end, const Waabb &
 		}
 
 		pTrace->m_fraction = fraction;
-		pTrace->m_normal = plane.normal;
-		pTrace->m_planeDist = plane.dis;
+		pTrace->m_plane.normal = plane.normal;
+		pTrace->m_plane.dis = plane.dis;
 		pTrace->m_flag = false;
 	}
 }
@@ -5139,13 +5137,13 @@ void CQuadTree::GravityModifier(float gravity) {
 // keeps the trace at start.
 void CQuadTree::TraceOBB_New(const WVector &start, const WVector &end, const Waabb &box, trace_s *pTrace) {
 	if (IsLocalContent((localContentType_t)0x56)) {
-		WVector pos = end;
-		memset(pTrace, 0, sizeof(trace_s));
 		Waabb startBox;
 		Waabb endBox;
 		Waabb sweep;
 		Waabb objBox;
+		WVector pos = end;
 		bool bHit = false;
+		memset(pTrace, 0, sizeof(trace_s));
 
 		if (WisEqual(start, end, 0.00001f)) {
 			pTrace->m_endPos = end;
@@ -5177,7 +5175,8 @@ void CQuadTree::TraceOBB_New(const WVector &start, const WVector &end, const Waa
 				while (pBox) {
 					Wobb obb;
 					obb = pBox->bone->GetMatrix();
-					WVector half = (pBox->info->aabb.max - pBox->info->aabb.min) * 0.5f + WVector::ONE;
+					WVector half = (pBox->info->aabb.max - pBox->info->aabb.min) * 0.5f;
+					half += WVector::ONE;
 					obb *= half;
 					obb.center = pBox->info->spherePivot * pBox->bone->GetMatrix();
 
@@ -5695,17 +5694,17 @@ void CQuadTree::OBBToAABB(Wobb obb, Waabb &aabb, WVector &center) {
 
 	box.max.y = 0.0f;
 	WVector corner[8];
-	WVector nx = ext0 * -1.0f;
 	WVector ny = ext1 * -1.0f;
 	WVector nz = ext2 * -1.0f;
-	corner[0] = c + (nx + (ext1 + nz));
-	corner[1] = c + (nx + (ny + nz));
-	corner[2] = c + (ext0 + (ny + nz));
-	corner[3] = c + (ext0 + (ext1 + nz));
-	corner[4] = c + (nx + (ext1 + ext2));
-	corner[5] = c + (nx + (ny + ext2));
-	corner[6] = c + (ext0 + (ny + ext2));
-	corner[7] = c + (ext0 + (ext1 + ext2));
+	WVector nx = ext0 * -1.0f;
+	corner[0] = c + nx + ext1 + nz;
+	corner[1] = c + nx + ny + nz;
+	corner[2] = c + ext0 + ny + nz;
+	corner[3] = c + ext0 + ext1 + nz;
+	corner[4] = c + nx + ext1 + ext2;
+	corner[5] = c + nx + ny + ext2;
+	corner[6] = c + ext0 + ny + ext2;
+	corner[7] = c + ext0 + ext1 + ext2;
 
 	WVector *pCorner = corner;
 	for (int count = 8; count != 0; count--, pCorner++) {
@@ -5736,19 +5735,19 @@ float CQuadTree::GetObbPos(Wobb &obb, bool bAll, int option) {
 	WVector ay = obb.extend[1];
 	WVector az = obb.extend[2];
 
-	WVector nx = ax * -1.0f;
 	WVector ny = ay * -1.0f;
 	WVector nz = az * -1.0f;
+	WVector nx = ax * -1.0f;
 
 	WVector corners[8];
-	corners[0] = center + (nx + (ay + nz));
-	corners[1] = center + (nx + (ny + nz));
-	corners[2] = center + (ax + (ny + nz));
-	corners[3] = center + (ax + (ay + nz));
-	corners[4] = center + (nx + (ay + az));
-	corners[5] = center + (nx + (ny + az));
-	corners[6] = center + (ax + (ny + az));
-	corners[7] = center + (ax + (ay + az));
+	corners[0] = center + nx + ay + nz;
+	corners[1] = center + nx + ny + nz;
+	corners[2] = center + ax + ny + nz;
+	corners[3] = center + ax + ay + nz;
+	corners[4] = center + nx + ay + az;
+	corners[5] = center + nx + ny + az;
+	corners[6] = center + ax + ny + az;
+	corners[7] = center + ax + ay + az;
 
 	int i;
 	if (bAll) {

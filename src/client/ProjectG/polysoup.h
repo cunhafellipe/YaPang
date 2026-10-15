@@ -382,6 +382,9 @@ private:
 	unsigned char OverlapCamera(int index);
 	void ReloadBasePet(void);
 	bool LoadShadowmapInfo(void);
+#ifdef PG_7XX
+	bool PgLoadShadowmapBone(cFile *pFile, WBone *pBone);   // a later client's .sbin, one bone (Polysoup.cpp)
+#endif
 	void smLoadSmapMeshes(SmCase *pCases, cFile *pFile, w_mesh **ppMeshes, WVector *pVtx, float (*pUV)[2]);
 	w_mesh *smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, int index, w_mesh **ppMeshes, WVector *pVtx, float (*pUV)[2]);
 	void smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, WVector *pVtx, SmCase *pCases);

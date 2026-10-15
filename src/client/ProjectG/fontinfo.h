@@ -229,8 +229,7 @@ private:
 	};
 
 	sItem m_items[4];       // 0x18, [3] is the pang count (base = screen width, 110; cur = left edge, 5)
-	float m_fAlpha;         // 0x88
-	float m_fTargetAlpha;   // 0x8c
+	float m_fAlpha[2];      // 0x88, [0] the panel's alpha, [1] the start overlays' (target) alpha
 	float m_fTime;          // 0x90, the state's elapsed time (0..1 while sliding)
 	int m_nFlickerTime;     // 0x94
 	int m_nState;           // 0x98, 4 = flickering

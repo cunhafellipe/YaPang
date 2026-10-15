@@ -682,7 +682,7 @@ void COfflineTradeDlg::OnMaketListOwnerDraw(int param) {
 		pGDI->Print(WPoint(pos.x + 470.0f, pos.y + 1.0f), 2, "\xBA\xF1\xB0\xF8\xB0\xB3");
 	}
 
-	IFF_ITEM_COMMON* pCommon = CSharedDoc::Instance()->m_itemManager.FindCommonItem(pSaleItem->m_typeId);
+	IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(pSaleItem->m_typeId);
 
 	if (pCommon) {
 		pGDI->Print(WPoint(pos.x + 160.0f, pos.y + 1.0f), 2, "%s", pCommon->m_name);

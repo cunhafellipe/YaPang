@@ -114,7 +114,7 @@ struct sGameServerInfo {
 	unsigned long flags;                 // 0x4A
 	int m_badgeCount;                    // 0x4E (ServerDlg draws it as a number when > 0)
 	unsigned long m_flags2;              // 0x52 (ServerListCompare tests bit 0x40 of its low byte)
-	UNKNOWN(0x56, 0x5A);
+	unsigned long eventCourseMask;       // 0x56, bit per course with a pang event (CLobbyMain room list draw)
 	unsigned short m_iconKey;            // 0x5A (key of FrServerDlg::m_textMap: the name of the server's icon)
 };
 #pragma pack(pop)
@@ -128,6 +128,7 @@ CHECK_FIELD(sGameServerInfo, m_address, 0x34);
 CHECK_FIELD(sGameServerInfo, m_port, 0x46);
 CHECK_FIELD(sGameServerInfo, m_badgeCount, 0x4E);
 CHECK_FIELD(sGameServerInfo, m_flags2, 0x52);
+CHECK_FIELD(sGameServerInfo, eventCourseMask, 0x56);
 CHECK_FIELD(sGameServerInfo, m_iconKey, 0x5A);
 
 // An item of the player's inventory (0xA8 bytes; constructor
@@ -232,7 +233,7 @@ struct sCaddieInfo {
 	unsigned char flags;        // 0x11 (bit 2: on vacation)
 	unsigned short days;        // 0x12 (contract days left; EndContract sets 30)
 	unsigned short hours;       // 0x14 (the caddie item's time left, in hours)
-	UNKNOWN(0x16, 0x17);
+	unsigned char reserved;     // 0x16 (no transcribed function reads it; a scalar, not a char[1], or /GS guards every local copy)
 	unsigned char contract;     // 0x17 (1: the sign-up button is disabled)
 	unsigned char checkEquip;   // 0x18, nonzero: CTask::OnPacketCommon 0x6F re-checks the equipped caddie
 };
@@ -246,6 +247,7 @@ CHECK_FIELD(sCaddieInfo, level, 0xC);
 CHECK_FIELD(sCaddieInfo, experience, 0xD);
 CHECK_FIELD(sCaddieInfo, flags, 0x11);
 CHECK_FIELD(sCaddieInfo, days, 0x12);
+CHECK_FIELD(sCaddieInfo, reserved, 0x16);
 CHECK_FIELD(sCaddieInfo, contract, 0x17);
 CHECK_FIELD(sCaddieInfo, checkEquip, 0x18);
 
@@ -965,7 +967,7 @@ struct sPangYaUserInfo {
 	char guildMark[0xC];          // 0x41
 	unsigned long schoolNo;       // 0x4D, the player's school (FrOptionDlg::SetGameColtrols, CSharedDoc::LoadSchoolName)
 	union {
-		int identity;             // 0x51, flags (2: gallery, 4: administrator)
+		unsigned long identity;   // 0x51, flags (2: gallery, 4: administrator)
 		struct {
 			unsigned long : 1;
 			unsigned long gallery : 1;        // bit 1 (CClock::HandleMsg)
@@ -1030,6 +1032,13 @@ enum eMapType {
 	MAP_EASTERN_VALLEY = 16,
 	MAP_ICE_INFERNO = 18,
 	MAP_WIZ_CITY = 19,
+#ifdef JP_PAKS
+	// JP data: the JP Course.iff's later courses (docs/JP_CLIENT.md)
+	MAP_CHRONICLE_1_CHAOS = 17,
+	MAP_ABBOT_MINE = 20,
+	MAP_MYSTIC_RUINS = 21,
+	MAP_GRAND_ZODIAC = 0x40,
+#endif
 	MAP_RANDOM = 0x7F            // the room's "random course" id
 };
 
@@ -1057,6 +1066,17 @@ public:
 		MAP_INDEX_LOST_SEAWAY = 15,
 		MAP_INDEX_EASTERN_VALLEY = 16,
 		MAP_INDEX_WIZ_CITY = 19,
+#ifdef JP_PAKS
+		// JP data: slots for the JP courses with a button in the JP
+		// "treasuremap" form (Ice Inferno, Abbot Mine, Mystic Ruins) and
+		// for Chronicle 1 Chaos; the per-course tables they index have
+		// MAP_INDEX_COUNT_JP rows in this build. Grand Zodiac (0x40) has none.
+		MAP_INDEX_CHRONICLE_1_CHAOS = 17,
+		MAP_INDEX_ICE_INFERNO = 18,
+		MAP_INDEX_ABBOT_MINE = 20,
+		MAP_INDEX_MYSTIC_RUINS = 21,
+		MAP_INDEX_COUNT_JP = 22,
+#endif
 		MAP_INDEX_RANDOM = 0x7F
 	};
 
@@ -1212,6 +1232,16 @@ public:
 			return MAP_INDEX_EASTERN_VALLEY;
 		case MAP_WIZ_CITY:
 			return MAP_INDEX_WIZ_CITY;
+#ifdef JP_PAKS
+		case MAP_CHRONICLE_1_CHAOS:
+			return MAP_INDEX_CHRONICLE_1_CHAOS;
+		case MAP_ICE_INFERNO:
+			return MAP_INDEX_ICE_INFERNO;
+		case MAP_ABBOT_MINE:
+			return MAP_INDEX_ABBOT_MINE;
+		case MAP_MYSTIC_RUINS:
+			return MAP_INDEX_MYSTIC_RUINS;
+#endif
 		case MAP_RANDOM:
 			return MAP_INDEX_RANDOM;
 		default:
@@ -1219,6 +1249,16 @@ public:
 		}
 	}
 };
+
+#ifdef JP_PAKS
+// JP data (docs/JP_CLIENT.md): the row of a course in the 2011 code's
+// per-course tables of 20 rows indexed by the course id (clear bonus,
+// hole-in pangs): a later JP course (Abbot Mine, Mystic Ruins, Grand Zodiac)
+// takes Wiz City's instead of reading past the table.
+inline unsigned char JpCourseRow(unsigned char course) {
+	return course < 20 ? course : (unsigned char)MAP_WIZ_CITY;
+}
+#endif
 
 // A prize of a pouch opened in My Room (0x14 bytes: CRealMyRoomTask::OnPacket
 // 0x121 decodes each with DecodeBuffer(0x14) into a std::list<sPouchPrize>).

@@ -222,30 +222,27 @@ void FrRankForm::OnProc(const float dt) {
 	// scoreboard.cpp:184
 	switch (m_captionType) {
 	case 0: {
-		const char* text;
-		CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
-		if (pDoc->m_roomType == 5) {
+		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 5) {
 			// scoreboard.cpp:190
-			text = MakeStr("RED %d\xC1\xA1/%I64d\xC6\xCE  vs  BLUE %d\xC1\xA1/%I64d\xC6\xCE",
-				pDoc->m_teamResult[0].m_score, pDoc->m_teamResult[0].m_pang, pDoc->m_teamResult[1].m_score, pDoc->m_teamResult[1].m_pang);
+			m_pBoard->SetCaption(MakeStr("RED %d\xC1\xA1/%I64d\xC6\xCE  vs  BLUE %d\xC1\xA1/%I64d\xC6\xCE",
+				WSingleton<CSharedDoc>::Instance()->m_teamResult[0].m_score, WSingleton<CSharedDoc>::Instance()->m_teamResult[0].m_pang, WSingleton<CSharedDoc>::Instance()->m_teamResult[1].m_score, WSingleton<CSharedDoc>::Instance()->m_teamResult[1].m_pang));
 		} else if (m_rankIndex != -1) {
 			// scoreboard.cpp:196
-			if (pDoc->m_roomType == 10) {
-				text = MakeStr("\xC7\xF6\xC0\xE7 1\xC0\xA7 %s\xB4\xD4, \xB3\xB2\xC0\xBA\xB0\xC5\xB8\xAE : %d.%d y",
-					pDoc->m_gameResultList[pDoc->GetIndex(m_rankIndex)].m_nickname,
-					pDoc->m_gameResultList[pDoc->GetIndex(m_rankIndex)].m_approachDistance / 10,
-					pDoc->m_gameResultList[pDoc->GetIndex(m_rankIndex)].m_approachDistance % 10);
+			if (WSingleton<CSharedDoc>::Instance()->m_roomType == 10) {
+				m_pBoard->SetCaption(MakeStr("\xC7\xF6\xC0\xE7 1\xC0\xA7 %s\xB4\xD4, \xB3\xB2\xC0\xBA\xB0\xC5\xB8\xAE : %d.%d y",
+					WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_rankIndex)].m_nickname,
+					WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_rankIndex)].m_approachDistance / 10,
+					WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_rankIndex)].m_approachDistance % 10));
 			} else {
 				// scoreboard.cpp:202
-				text = MakeStr("\xC7\xF6\xC0\xE7 1\xC0\xA7 %s\xB4\xD4, \xBD\xBA\xC4\xDA\xBE\xEE %d",
-					pDoc->m_gameResultList[pDoc->GetIndex(m_rankIndex)].m_nickname,
-					pDoc->m_gameResultList[pDoc->GetIndex(m_rankIndex)].m_score);
+				m_pBoard->SetCaption(MakeStr("\xC7\xF6\xC0\xE7 1\xC0\xA7 %s\xB4\xD4, \xBD\xBA\xC4\xDA\xBE\xEE %d",
+					WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_rankIndex)].m_nickname,
+					WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_rankIndex)].m_score));
 			}
 		} else {
 			// scoreboard.cpp:206
-			text = MakeStr("\xC7\xF6\xC0\xE7 \xB0\xD4\xC0\xD3\xC1\xDF\xC0\xCE \xC0\xCE\xBF\xF8\xC0\xBA %d\xB8\xED\xC0\xD4\xB4\xCF\xB4\xD9.", m_rankCount);
+			m_pBoard->SetCaption(MakeStr("\xC7\xF6\xC0\xE7 \xB0\xD4\xC0\xD3\xC1\xDF\xC0\xCE \xC0\xCE\xBF\xF8\xC0\xBA %d\xB8\xED\xC0\xD4\xB4\xCF\xB4\xD9.", m_rankCount));
 		}
-		m_pBoard->SetCaption(text);
 
 		// scoreboard.cpp:209
 		m_boardMessage = 4;
@@ -2053,9 +2050,9 @@ void FrRankFormEx::ResetStage(void) {
 static void __stdcall SortAwardSlots(int* slots) {
 	unsigned char roomType = WSingleton<CSharedDoc>::Instance()->m_roomType;
 	if (roomType == 1) {
-		if (GOLFDOC()->GetTeam(0)->m_resetCount > GOLFDOC()->GetTeam(1)->m_resetCount
-			|| (GOLFDOC()->GetTeam(0)->m_resetCount == GOLFDOC()->GetTeam(1)->m_resetCount
-				&& GOLFDOC()->GetTeam(0)->m_teamValue >= (int)GOLFDOC()->GetTeam(1)->m_teamValue)) {
+		if (TEAM(0)->m_resetCount > TEAM(1)->m_resetCount
+			|| (TEAM(0)->m_resetCount == TEAM(1)->m_resetCount
+				&& TEAM(0)->m_teamValue >= (int)TEAM(1)->m_teamValue)) {
 			slots[0] = 0;
 			slots[1] = 1;
 		} else {
@@ -2066,8 +2063,10 @@ static void __stdcall SortAwardSlots(int* slots) {
 		if (GOLFDOC()->GetPlayer(0)->m_state == 3) {
 			slots[0] = 1;
 			slots[1] = 0;
-		} else if (PLAYER(1)->m_state == 3
-			|| GOLFDOC()->GetPlayer(0)->m_ghostResult > GOLFDOC()->GetPlayer(1)->m_ghostResult
+		} else if (PLAYER(1)->m_state == 3) {
+			slots[0] = 0;
+			slots[1] = 1;
+		} else if ((int)PLAYER(0)->m_ghostResult > (int)PLAYER(1)->m_ghostResult
 			|| (PLAYER(0)->m_ghostResult == PLAYER(1)->m_ghostResult
 				&& PLAYER(0)->m_ghostAward >= (int)PLAYER(1)->m_ghostAward)) {
 			slots[0] = 0;
@@ -2099,7 +2098,7 @@ static void __stdcall SortAwardSlots(int* slots) {
 				&& (WSingleton<CSharedDoc>::Instance()->m_gameMode == 1 || WSingleton<CSharedDoc>::Instance()->m_gameMode == 5)) {
 				continue;
 			}
-			slots[GOLFDOC()->GetPlayer(i)->m_turnOrder - 1] = i;
+			slots[PLAYER(i)->m_turnOrder - 1] = i;
 		}
 	}
 }
@@ -3246,21 +3245,19 @@ void cAquireItem::DisplayPrizeList(int player) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI && m_pBubble[0]) {
-		float y = pos.y + 65.0f;
-		pGDI->DrawTexture(m_pBubble[0], WRect(pos.x, y, (float)m_pBubble[0]->Width(), (float)m_pBubble[0]->Height()), color, 0);
+		pGDI->DrawTexture(m_pBubble[0], WRect(pos.x, pos.y + 65.0f, (float)m_pBubble[0]->Width(), (float)m_pBubble[0]->Height()), color, 0);
 
 		float left = (float)m_pBubble[0]->Width();
-		float half = (float)(count >> 1);
-		WRect middle(pos.x + left, y, (float)m_pBubble[1]->Width() * half, (float)m_pBubble[1]->Height());
+		WRect middle(pos.x + left, pos.y + 65.0f, (float)m_pBubble[1]->Width() * (float)(count >> 1), (float)m_pBubble[1]->Height());
 		pGDI->DrawTexture(m_pBubble[1], WRect(0.0f, 0.0f, (float)m_pBubble[1]->Width(), (float)m_pBubble[1]->Height()), middle, color, 0);
 
-		pGDI->DrawTexture(m_pBubble[2], WRect((float)m_pBubble[1]->Width() * half + left + pos.x, y,
+		pGDI->DrawTexture(m_pBubble[2], WRect((float)m_pBubble[1]->Width() * (float)(count >> 1) + left + pos.x, pos.y + 65.0f,
 			(float)m_pBubble[2]->Width(), (float)m_pBubble[2]->Height()), color, 0);
 	}
 
 	float offset = 5.0f;
 	for (std::map<unsigned long, int>::const_iterator it = m_prizeSlots[player].m_counts.begin(); it != m_prizeSlots[player].m_counts.end(); ++it) {
-		unsigned long typeId = it->first;
+		unsigned int typeId = it->first;
 		WOverlay* pOverlay = 0;
 
 		std::map<unsigned long, WOverlay*>::iterator found = m_overlays[player].find(typeId);
@@ -3288,12 +3285,11 @@ void cAquireItem::DisplayPrizeList(int player) {
 		}
 
 		if (pOverlay) {
-			float y = pos.y + 82.0f;
 			pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f),
-				WRect(pos.x + offset, y, (float)pOverlay->GetWidth() * 0.65f, (float)pOverlay->GetHeight() * 0.65f), 0, color, 0.0f, 0);
+				WRect(pos.x + offset, pos.y + 82.0f, (float)pOverlay->GetWidth() * 0.65f, (float)pOverlay->GetHeight() * 0.65f), 0, color, 0.0f, 0);
 
 			if (it->second > 1) {
-				m_pTitleFont->Print(g_view, pos.x + offset + 17.0f, y + 12.0f, MakeStr("%d", it->second), 0, color, 0);
+				m_pTitleFont->Print(g_view, pos.x + offset + 17.0f, pos.y + 82.0f + 12.0f, MakeStr("%d", it->second), 0, color, 0);
 			}
 
 			offset += 40.0f;
@@ -3866,23 +3862,16 @@ void FrScoreForm::OnHoleListOwnerDraw(intptr_t param) {
 
 	float width = m_pHoleList->GetItemWidth();
 	float height = m_pHoleList->GetItemHeight();
-	unsigned char holes = WSingleton<CSharedDoc>::Instance()->m_holes;
 
 	WPoint pt;
 	pt.x = width * (1.0f / 18.0f) + pItem->pos.x;
 	pt.y = height * 0.5f + pItem->pos.y - 7.0f;
 	int start = m_bFront9 ? 0 : 9;
-	int end = start + 9;
-	if (end >= holes) {
-		end = holes;
-	}
+	int end = min(start + 9, GetHoles());
 
-	if (start < end) {
-		float step = width * (1.0f / 9.0f);
-		for (int i = start; i < end; i++) {
-			DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
-			pt.x = (float)(int)(step + pt.x);
-		}
+	for (int i = start; i < end; i++) {
+		DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+		pt.x = (float)(int)(width * (1.0f / 9.0f) + pt.x);
 	}
 }
 
@@ -3923,7 +3912,7 @@ void FrScoreForm::OnParListOwnerDraw(intptr_t param) {
 	pt.x = offset + pItem->pos.x;
 	pt.y = height * 0.5f + pItem->pos.y - 7.0f;
 	int start = m_bFront9 ? 0 : 9;
-	int end = start + 9 < WSingleton<CSharedDoc>::Instance()->m_holes ? start + 9 : WSingleton<CSharedDoc>::Instance()->m_holes;
+	int end = min(start + 9, GetHoles());
 
 	int total = 0;
 	for (int i = start; i < end; i++) {
@@ -4362,12 +4351,12 @@ void FrScoreForm::OnTotalListOwnerDraw(int param) {
 		}
 
 		if (index == GOLFDOC()->GetPlayer(myIndex)->m_attribute) {
-			_WRECT rect = { pItem->pos.x, pItem->pos.y, (float)m_pScoreList[2]->GetItemWidth() * 0.5f, (float)m_pScoreList[2]->GetItemHeight() };
+			WRect rect(pItem->pos, (float)m_pScoreList[2]->GetItemWidth() * 0.5f, (float)m_pScoreList[2]->GetItemHeight());
 			pGDI->Box(rect, 0x809B9DFF, 0, 0.0f);
 		}
 	} else if (OnlinePlay()) {
 		unsigned long color = 0;
-		if (MyGuid(true) == GOLFDOC()->GetPlayer(index)->m_uid) {
+		if (GOLFDOC()->GetPlayer(index)->m_uid == MyGuid(true)) {
 			color = 0x809B9DFF;
 		} else if (GOLFDOC()->GetPlayer(index)->m_state == 3) {
 			color = 0x80808080;
@@ -4613,30 +4602,30 @@ void FrScoreForm::DrawShot(FrListItem* pItem) {
 	float height = pList->GetItemHeight();
 	int index = (int)pItem->pData;
 	int start = m_bFront9 ? 0 : 9;
-	int count = 1 - (int)(m_typeTime * -20.0f);
-	unsigned char holes = WSingleton<CSharedDoc>::Instance()->m_holes;
-	int end = (count < 9 ? count : 9) + start < holes ? (count < 9 ? count : 9) + start : holes;
-	float x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
-	float y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
+	// the windef.h min macro, which evaluates its arguments twice
+	int end = min(min(1 - (int)(m_typeTime * -20.0f), 9) + start, GetHoles());
+	WPoint pos;
+	pos.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
+	pos.y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
 		// the trophy players' shots, from the game's results
 		for (int i = start; i < end; i++) {
-			if (WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[(unsigned char)index])].m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+			if (GUILDMATCHUP(index)->m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 
 			if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1
-				&& WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[(unsigned char)index])].m_state != 1
+				&& GUILDMATCHUP(index)->m_state != 1
 				&& (!(GOLFDOC()->GameMode() & 0x22000) || GOLFDOC()->IsNetGameEnd())) {
-				DrawDigit(pGDI, "?", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
-			} else if (WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[(unsigned char)index])].m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
-				|| (WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[(unsigned char)index])].m_uid != MyGuid(false)
+				DrawDigit(pGDI, "?", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			} else if (GUILDMATCHUP(index)->m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+				|| (GUILDMATCHUP(index)->m_uid != MyGuid(false)
 					&& i > GetHoleIndex(GOLFDOC()->m_currentHole) - 1)) {
-				DrawDigit(pGDI, "?", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+				DrawDigit(pGDI, "?", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 			} else {
 				int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-				int shots = WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[(unsigned char)index])].m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
+				int shots = GUILDMATCHUP(index)->m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
 				int score = shots - par;
 				score = score < -3 ? -3 : (score > 3 ? 3 : score);
 
@@ -4661,25 +4650,25 @@ void FrScoreForm::DrawShot(FrListItem* pItem) {
 					break;
 				}
 
-				DrawDigit(pGDI, MakeStr("%d", shots), WPoint(x, y), color, FrGDI::ALIGN_CENTER, false);
+				DrawDigit(pGDI, MakeStr("%d", shots), pos, color, FrGDI::ALIGN_CENTER, false);
 			}
 
-			x = (float)(int)(width * (1.0f / 9.0f) + x);
+			pos.x = (float)(int)(width * (1.0f / 9.0f) + pos.x);
 		}
 	} else {
 		for (int i = start; i < end; i++) {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
+			if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 
-			if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GetPlayer(index)->m_state != 1
+			if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && PLAYER(index)->m_state != 1
 				&& (!(GOLFDOC()->GameMode() & 0x22000) || GOLFDOC()->IsNetGameEnd())) {
-				DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
-			} else if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0) {
-				DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+				DrawDigit(pGDI, "-", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			} else if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0) {
+				DrawDigit(pGDI, "-", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 			} else {
 				int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-				int shots = GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
+				int shots = PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
 				int score = shots - par;
 				score = score < -3 ? -3 : (score > 3 ? 3 : score);
 
@@ -4704,10 +4693,10 @@ void FrScoreForm::DrawShot(FrListItem* pItem) {
 					break;
 				}
 
-				DrawDigit(pGDI, MakeStr("%d", shots), WPoint(x, y), color, FrGDI::ALIGN_CENTER, false);
+				DrawDigit(pGDI, MakeStr("%d", shots), pos, color, FrGDI::ALIGN_CENTER, false);
 			}
 
-			x = (float)(int)(width * (1.0f / 9.0f) + x);
+			pos.x = (float)(int)(width * (1.0f / 9.0f) + pos.x);
 		}
 	}
 }
@@ -4724,31 +4713,31 @@ void FrScoreForm::DrawVersus(FrListItem* pItem) {
 	float height = pList->GetItemHeight();
 	int index = (int)pItem->pData;
 	int start = m_bFront9 ? 0 : 9;
-	int count = 1 - (int)(m_typeTime * -20.0f);
-	int end = (count < 9 ? count : 9) + start < WSingleton<CSharedDoc>::Instance()->m_holes
-		? (count < 9 ? count : 9) + start : WSingleton<CSharedDoc>::Instance()->m_holes;
-	WPoint pt;
-	pt.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
-	pt.y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
+	// the windef.h min macro, which evaluates its arguments twice
+	int end = min(min(1 - (int)(m_typeTime * -20.0f), 9) + start, GetHoles());
+	WPoint pos;
+	pos.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
+	pos.y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
 
 	for (int i = start; i < end; i++) {
 		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
-			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
+			if (TEAM(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 		} else if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
-			if (WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[(unsigned char)index])].m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
+			if (GUILDMATCHUP(index)->m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 		} else {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
+			if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 		}
 
 		if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && (GOLFDOC()->GameMode() & ~0x22000)) {
-			DrawDigit(pGDI, "?", pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			DrawDigit(pGDI, "?", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 		} else {
+			WRect rect;
 			const Bitmap* pBmp = 0;
 			switch (GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_mapState) {
 			case 0:
@@ -4764,16 +4753,15 @@ void FrScoreForm::DrawVersus(FrListItem* pItem) {
 			}
 
 			if (pBmp) {
-				WRect rect;
-				rect.x = (float)(int)(pt.x - (float)pBmp->Width() * 0.5f);
-				rect.y = pt.y;
+				rect.x = (float)(int)(pos.x - (float)pBmp->Width() * 0.5f);
+				rect.y = pos.y;
 				rect.w = (float)pBmp->Width();
 				rect.h = (float)pBmp->Height();
 				pGDI->DrawTexture(pBmp, rect, 0xFFFFFFFF, 0);
 			}
 		}
 
-		pt.x = (float)(int)(width * (1.0f / 9.0f) + pt.x);
+		pos.x = (float)(int)(width * (1.0f / 9.0f) + pos.x);
 	}
 }
 
@@ -4791,9 +4779,8 @@ void FrScoreForm::DrawGraph(FrListItem* pItem) {
 	float y = height * 0.5f + pItem->pos.y;
 	float step = (height - 5.0f) * (1.0f / 6.0f);
 	int start = m_bFront9 ? 0 : 9;
-	int count = 1 - (int)(m_typeTime * -20.0f);
-	int end = (count < 9 ? count : 9) + start < WSingleton<CSharedDoc>::Instance()->m_holes
-		? (count < 9 ? count : 9) + start : WSingleton<CSharedDoc>::Instance()->m_holes;
+	// the windef.h min macro, which evaluates its arguments twice
+	int end = min(min(1 - (int)(m_typeTime * -20.0f), 9) + start, GetHoles());
 
 	// the par line
 	WPoint p1, p2;
@@ -4807,23 +4794,23 @@ void FrScoreForm::DrawGraph(FrListItem* pItem) {
 	int i = start;
 	int diff;
 	int score;
-	if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] > (unsigned char)0
-		&& (GOLFDOC()->GetPlayer(index)->m_state != 0 || i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1 || GOLFDOC()->GameMode() == 0x2000)) {
+	if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] > (unsigned char)0
+		&& (PLAYER(index)->m_state != 0 || i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1 || GOLFDOC()->GameMode() == 0x2000)) {
 		int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-		diff = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
+		diff = (int)PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
 		score = diff < -3 ? -3 : (diff > 3 ? 3 : diff);
 		unsigned long color = GetScoreColor(score);
 		p1.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
 		p1.y = (float)(int)((float)score * step + y);
 
 		for (i++; i < end; i++) {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
+			if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
 				break;
-			if (GOLFDOC()->GetPlayer(index)->m_state == 0 && i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GameMode() != 0x2000)
+			if (PLAYER(index)->m_state == 0 && i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GameMode() != 0x2000)
 				break;
 
 			int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-			diff = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
+			diff = (int)PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
 			score = diff < -3 ? -3 : (diff > 3 ? 3 : diff);
 			unsigned long nextColor = GetScoreColor(score);
 
@@ -4845,13 +4832,13 @@ void FrScoreForm::DrawGraph(FrListItem* pItem) {
 		rect.h = 4.0f;
 
 		for (i = start; i < end; i++) {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
+			if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
 				break;
-			if (GOLFDOC()->GetPlayer(index)->m_state == 0 && i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GameMode() != 0x2000)
+			if (PLAYER(index)->m_state == 0 && i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GameMode() != 0x2000)
 				break;
 
 			int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
-			diff = (int)GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
+			diff = (int)PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] - par;
 			score = diff < -3 ? -3 : (diff > 3 ? 3 : diff);
 
 			rect.y = (float)(int)((float)score * step + y - 2.0f);
@@ -4873,29 +4860,29 @@ void FrScoreForm::DrawPutt(FrListItem* pItem) {
 	float height = pList->GetItemHeight();
 	int index = (int)pItem->pData;
 	int start = m_bFront9 ? 0 : 9;
-	int count = 1 - (int)(m_typeTime * -20.0f);
-	int end = (count < 9 ? count : 9) + start < WSingleton<CSharedDoc>::Instance()->m_holes
-		? (count < 9 ? count : 9) + start : WSingleton<CSharedDoc>::Instance()->m_holes;
-	float x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
-	float y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
+	// the windef.h min macro, which evaluates its arguments twice
+	int end = min(min(1 - (int)(m_typeTime * -20.0f), 9) + start, GetHoles());
+	WPoint pos;
+	pos.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
+	pos.y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
 
 	for (int i = start; i < end; i++) {
-		if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
+		if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 			&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 			break;
 
-		int putts = GOLFDOC()->GetPlayer(index)->m_holeIn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
+		int putts = PLAYER(index)->m_holeIn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
 
-		if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && GOLFDOC()->GetPlayer(index)->m_state != 1
+		if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && PLAYER(index)->m_state != 1
 			&& (!(GOLFDOC()->GameMode() & 0x22000) || GOLFDOC()->IsNetGameEnd())) {
-			DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
-		} else if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0) {
-			DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			DrawDigit(pGDI, "-", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+		} else if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0) {
+			DrawDigit(pGDI, "-", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 		} else {
-			DrawDigit(pGDI, MakeStr("%d", putts), WPoint(x, y), 0xFF40C967, FrGDI::ALIGN_CENTER, false);
+			DrawDigit(pGDI, MakeStr("%d", putts), pos, 0xFF40C967, FrGDI::ALIGN_CENTER, false);
 		}
 
-		x = (float)(int)(width * (1.0f / 9.0f) + x);
+		pos.x = (float)(int)(width * (1.0f / 9.0f) + pos.x);
 	}
 }
 
@@ -4911,16 +4898,16 @@ void FrScoreForm::DrawPang(FrListItem* pItem) {
 	float height = pList->GetItemHeight();
 	int index = (int)pItem->pData;
 	int start = m_bFront9 ? 0 : 9;
-	int count = 1 - (int)(m_typeTime * -20.0f);
-	int end = (count < 9 ? count : 9) + start < WSingleton<CSharedDoc>::Instance()->m_holes
-		? (count < 9 ? count : 9) + start : WSingleton<CSharedDoc>::Instance()->m_holes;
-	float x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
-	float y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
+	// the windef.h min macro, which evaluates its arguments twice
+	int end = min(min(1 - (int)(m_typeTime * -20.0f), 9) + start, GetHoles());
+	WPoint pos;
+	pos.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
+	pos.y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
 		// a team game: the team's record
 		for (int i = start; i < end; i++) {
-			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
+			if (TEAM(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 
@@ -4928,14 +4915,14 @@ void FrScoreForm::DrawPang(FrListItem* pItem) {
 			if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && index == PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)
 				pang = m_holePang;
 			else
-				pang = (int)GOLFDOC()->GetTeam(index)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
+				pang = (int)TEAM(index)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
 
-			if (GOLFDOC()->GetTeam(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
-				DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			if (TEAM(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
+				DrawDigit(pGDI, "-", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 			else
-				DrawDigit(pGDI, MakeStr("%I64d", pang), WPoint(x, y), 0xFFE98919, FrGDI::ALIGN_CENTER, true);
+				DrawDigit(pGDI, MakeStr("%I64d", pang), pos, 0xFFE98919, FrGDI::ALIGN_CENTER, true);
 
-			x = (float)(int)(width * (1.0f / 9.0f) + x);
+			pos.x = (float)(int)(width * (1.0f / 9.0f) + pos.x);
 		}
 	} else if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
 		// the trophy players, from the game's results
@@ -4953,15 +4940,15 @@ void FrScoreForm::DrawPang(FrListItem* pItem) {
 			if (WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[(unsigned char)index])].m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == 0
 				|| (WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[(unsigned char)index])].m_uid != MyGuid(false)
 					&& i > GetHoleIndex(GOLFDOC()->m_currentHole) - 1))
-				DrawDigit(pGDI, "?", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+				DrawDigit(pGDI, "?", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 			else
-				DrawDigit(pGDI, MakeStr("%d", pang), WPoint(x, y), 0xFFE98919, FrGDI::ALIGN_CENTER, true);
+				DrawDigit(pGDI, MakeStr("%d", pang), pos, 0xFFE98919, FrGDI::ALIGN_CENTER, true);
 
-			x = (float)(int)(width * (1.0f / 9.0f) + x);
+			pos.x = (float)(int)(width * (1.0f / 9.0f) + pos.x);
 		}
 	} else {
 		for (int i = start; i < end; i++) {
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
+			if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 				&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 				break;
 
@@ -4969,14 +4956,14 @@ void FrScoreForm::DrawPang(FrListItem* pItem) {
 			if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1 && index == GOLFDOC()->m_myPlayerIndex)
 				pang = m_holePang;
 			else
-				pang = (int)GOLFDOC()->GetPlayer(index)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
+				pang = (int)PLAYER(index)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
 
-			if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
-				DrawDigit(pGDI, "-", WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
+				DrawDigit(pGDI, "-", pos, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 			else
-				DrawDigit(pGDI, MakeStr("%d", pang), WPoint(x, y), 0xFFE98919, FrGDI::ALIGN_CENTER, true);
+				DrawDigit(pGDI, MakeStr("%d", pang), pos, 0xFFE98919, FrGDI::ALIGN_CENTER, true);
 
-			x = (float)(int)(width * (1.0f / 9.0f) + x);
+			pos.x = (float)(int)(width * (1.0f / 9.0f) + pos.x);
 		}
 	}
 }
@@ -4993,9 +4980,8 @@ void FrScoreForm::DrawSkins(FrListItem* pItem) {
 	float height = pList->GetItemHeight();
 	int index = (int)pItem->pData;
 	int start = m_bFront9 ? 0 : 9;
-	int count = 1 - (int)(m_typeTime * -20.0f);
-	int end = (count < 9 ? count : 9) + start < WSingleton<CSharedDoc>::Instance()->m_holes
-		? (count < 9 ? count : 9) + start : WSingleton<CSharedDoc>::Instance()->m_holes;
+	// the windef.h min macro, which evaluates its arguments twice
+	int end = min(min(1 - (int)(m_typeTime * -20.0f), 9) + start, GetHoles());
 	WPoint pos;
 	pos.x = (float)(int)(width * (1.0f / 18.0f) + pItem->pos.x);
 	pos.y = (float)(int)(height * 0.5f + pItem->pos.y - 6.0f);
@@ -5004,14 +4990,14 @@ void FrScoreForm::DrawSkins(FrListItem* pItem) {
 		return;
 
 	for (int i = start; i < end; i++) {
-		if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
+		if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0
 			&& i != GetHoleIndex(GOLFDOC()->m_currentHole) - 1)
 			break;
 
 		bool bDash = false;
 		if (i == GetHoleIndex(GOLFDOC()->m_currentHole) - 1) {
-			if (GOLFDOC()->GetPlayer(index)->m_state == 3) {
-				if (GOLFDOC()->GetPlayer(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
+			if (PLAYER(index)->m_state == 3) {
+				if (PLAYER(index)->m_holes[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] == (unsigned char)0)
 					bDash = true;
 			} else if (!GOLFDOC()->m_approachMode && m_state != 3) {
 				bDash = true;
@@ -5019,10 +5005,10 @@ void FrScoreForm::DrawSkins(FrListItem* pItem) {
 		}
 
 		if (!bDash) {
-			int skins = GOLFDOC()->GetPlayer(index)->m_holeRecord2[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
+			int skins = PLAYER(index)->m_holeRecord2[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
 
 			unsigned long color;
-			if (GOLFDOC()->GetPlayer(index)->m_state == 3) {
+			if (PLAYER(index)->m_state == 3) {
 				color = 0xFF282828;
 			} else if (GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_redPang && skins > 0) {
 				color = 0xFFFF0000;
@@ -5035,7 +5021,8 @@ void FrScoreForm::DrawSkins(FrListItem* pItem) {
 
 			if (skins == -1) {
 				WRect rect;
-				rect.x = pos.x - (float)m_pArrow->Width() * 0.5f;
+				float arrowWidth = (float)m_pArrow->Width();
+				rect.x = pos.x - arrowWidth * 0.5f;
 				rect.y = pos.y;
 				rect.w = (float)m_pArrow->Width();
 				rect.h = (float)m_pArrow->Height();
@@ -5332,12 +5319,13 @@ void FrScoreForm::SetDesc(void) {
 			sprintf(text, "\xC7\xF6\xC0\xE7 \xC7\xC3\xB7\xB9\xC0\xCC\xBE\xEE\xB5\xE9\xC0\xC7 \xBD\xBA\xC4\xDA\xBE\xEE\xB8\xA6 \xBA\xB8\xBF\xA9\xC1\xD6\xB4\xC2 \xC4\xAB\xB5\xE5\xC0\xD4\xB4\xCF\xB4\xD9.");
 		break;
 
-	case 3:
-		if ((int)GOLFDOC()->GetPlayer(1)->m_ghostResult < (int)GOLFDOC()->GetPlayer(0)->m_ghostResult) {
+	case 3: {
+		sPlayerData *player0 = GOLFDOC()->GetPlayer(0);
+		if ((int)GOLFDOC()->GetPlayer(1)->m_ghostResult < (int)player0->m_ghostResult) {
 			sprintf(text, "\xC7\xF6\xC0\xE7 %s\xB4\xD4\xC0\xCC \xBD\xBA\xC4\xDA\xBE\xEE %d vs %d",
 				WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_name, GOLFDOC()->GetPlayer(0)->m_ghostResult, GOLFDOC()->GetPlayer(1)->m_ghostResult);
 			ConditionalStrCat(text, "\xB7\xCE \xBC\xB1\xB5\xCE\xC0\xD4\xB4\xCF\xB4\xD9.");
-		} else if ((int)GOLFDOC()->GetPlayer(1)->m_ghostResult > (int)GOLFDOC()->GetPlayer(0)->m_ghostResult) {
+		} else if (player0 = GOLFDOC()->GetPlayer(0), (int)GOLFDOC()->GetPlayer(1)->m_ghostResult > (int)player0->m_ghostResult) {
 			sprintf(text, "\xC7\xF6\xC0\xE7 %s\xB4\xD4\xC0\xCC \xBD\xBA\xC4\xDA\xBE\xEE %d vs %d",
 				WSingleton<CSharedDoc>::Instance()->m_roomPlayers[1].m_name, PLAYER(1)->m_ghostResult, PLAYER(0)->m_ghostResult);
 			ConditionalStrCat(text, "\xB7\xCE \xBC\xB1\xB5\xCE\xC0\xD4\xB4\xCF\xB4\xD9.");
@@ -5368,6 +5356,7 @@ void FrScoreForm::SetDesc(void) {
 			}
 		}
 		break;
+	}
 
 	case 4:
 	case 5:
@@ -6116,6 +6105,14 @@ void CScore::CheckOpenedDlg(void) {
 void CScore::HandleMsg(const MsgObject& msg) {
 	// scoreboard.cpp:8098
 	switch (msg.m_msg) {
+	case 0x1A0:
+		// The same body as case 0x132; written first, the compiler keeps
+		// one copy at 0x132's place in the case layout, as the original.
+		if (m_pScoreForm) {
+			m_pScoreForm->UpdatePang();
+		}
+		break;
+
 	case 0x12D: {
 		// scoreboard.cpp:8102
 		FrLevelupItemForm* pForm = CreateForm<FrLevelupItemForm>(g_pFresh->GetManager(), this, "levelupitem", 0);
@@ -6304,10 +6301,27 @@ void CScore::HandleMsg(const MsgObject& msg) {
 		break;
 
 	case 0x132:
-	case 0x1A0:
 		// scoreboard.cpp:8436
 		if (m_pScoreForm) {
 			m_pScoreForm->UpdatePang();
+		}
+		break;
+
+	case 0x2A:
+		// scoreboard.cpp:8442
+		if (IsMassGame()) {
+			if (m_pRankForm) {
+				m_pRankForm->SortRank();
+				if (msg.m_param1) {
+					m_pRankForm->Align();
+				}
+			}
+			if (m_pRankForm2) {
+				m_pRankForm2->SortRank();
+			}
+			if (m_pRankFormEx) {
+				m_pRankFormEx->SortRank();
+			}
 		}
 		break;
 
@@ -6398,11 +6412,10 @@ void CScore::HandleMsg(const MsgObject& msg) {
 		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 4 && m_pRankForm) {
 			// scoreboard.cpp:8557
 			if (m_pRankForm->m_boardMessage > 3) {
-				CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
-				if ((unsigned long)m_pRankForm->m_rankPage == ((pDoc->GetPangyaUserInfo().identity & 2) ? pDoc->GetPangyaUserInfo().galleryGuid : pDoc->GetPangyaUserInfo().guid)) {
+				if ((unsigned long)m_pRankForm->m_rankPage == ((bool)((WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity >> 1) & 1) ? WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().galleryGuid : WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid)) {
 					// scoreboard.cpp:8561
 					m_pRankForm->m_pBoard->SetCaption(MakeStr("%s\xB4\xD4 \xB2\xC3\xC2\xEE\xBF\xB9\xBF\xE4. \xC8\xFB\xB3\xBB\xBC\xBC\xBF\xE4.",
-						pDoc->m_gameResultList[pDoc->GetIndex((pDoc->GetPangyaUserInfo().identity & 2) ? pDoc->GetPangyaUserInfo().galleryGuid : pDoc->GetPangyaUserInfo().guid)].m_nickname));
+						WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex((bool)((WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity >> 1) & 1) ? WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().galleryGuid : WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid)].m_nickname));
 					m_pRankForm->m_boardMessage = 3;
 					m_pRankForm->SetCaptionType(1);
 				}
@@ -6420,103 +6433,6 @@ void CScore::HandleMsg(const MsgObject& msg) {
 		} else {
 			// scoreboard.cpp:8574
 			*(bool*)msg.m_param1 = true;
-		}
-		break;
-
-	case 0x139: {
-		// scoreboard.cpp:8638
-		bool* pResult = (bool*)msg.m_param1;
-		*pResult = m_bOpen != 0;
-
-		if (m_pRankForm) {
-			WRect rect;
-			m_pRankForm->GetClientRect(rect);
-			if (rect.IsInRect(WPoint(g_input->GetMousePoint().x, g_input->GetMousePoint().y))) {
-				*pResult = true;
-			}
-		}
-
-		// scoreboard.cpp:8648
-		if (m_pRankForm3) {
-			WRect rect;
-			m_pRankForm3->GetClientRect(rect);
-			if (rect.IsInRect(WPoint(g_input->GetMousePoint().x, g_input->GetMousePoint().y))) {
-				*pResult = true;
-			}
-		}
-		break;
-	}
-
-	case 0x13A: {
-		// scoreboard.cpp:8663
-		CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
-		unsigned char par3 = 0;
-		unsigned char par4 = 0;
-		unsigned char par5 = 0;
-		for (int i = pDoc->m_holeOrder[0]; i <= pDoc->m_holeOrder[pDoc->m_holes - 1]; i++) {
-			switch (GOLFDOC()->GetHoleData((unsigned char)i).m_kind) {
-			case 2:
-				par3++;
-				break;
-			case 3:
-				par4++;
-				break;
-			case 4:
-				par5++;
-				break;
-			}
-		}
-
-		// scoreboard.cpp:8685
-		int difficulty = GetDifficulty() - 1;
-		*(int*)msg.m_param1 = data_9f1f48[difficulty][par5][5] + data_9f1f48[difficulty][par4][2] + data_9f1f48[difficulty][par3][0];
-		break;
-	}
-
-	case 0x13B:
-		// scoreboard.cpp:8705
-		if (m_pRankForm2) {
-			switch (msg.m_param1) {
-			case -1:
-				m_pRankForm2->SetVisible(!m_pRankForm2->IsVisible());
-				break;
-
-			case 0:
-				m_pRankForm2->SetVisible(false);
-				break;
-
-			case 1:
-				m_pRankForm2->SetVisible(true);
-				break;
-			}
-		}
-		break;
-
-	case 0x13C:
-		// scoreboard.cpp:8729
-		UpdateRivals();
-		break;
-
-	case 0x57:
-		// scoreboard.cpp:8725
-		m_pRankForm3->SetScore(msg.m_param1, msg.m_param2);
-		break;
-
-	case 0x2A:
-		// scoreboard.cpp:8442
-		if (IsMassGame()) {
-			if (m_pRankForm) {
-				m_pRankForm->SortRank();
-				if (msg.m_param1) {
-					m_pRankForm->Align();
-				}
-			}
-			if (m_pRankForm2) {
-				m_pRankForm2->SortRank();
-			}
-			if (m_pRankFormEx) {
-				m_pRankFormEx->SortRank();
-			}
 		}
 		break;
 
@@ -6567,6 +6483,85 @@ void CScore::HandleMsg(const MsgObject& msg) {
 		}
 		break;
 	}
+
+	case 0x139: {
+		// scoreboard.cpp:8638
+		bool* pResult = (bool*)msg.m_param1;
+		*pResult = m_bOpen != 0;
+
+		if (m_pRankForm) {
+			WRect rect;
+			m_pRankForm->GetClientRect(rect);
+			if (rect.IsInRect(WPoint(g_input->GetMousePoint().x, g_input->GetMousePoint().y))) {
+				*pResult = true;
+			}
+		}
+
+		// scoreboard.cpp:8648
+		if (m_pRankForm3) {
+			WRect rect;
+			m_pRankForm3->GetClientRect(rect);
+			if (rect.IsInRect(WPoint(g_input->GetMousePoint().x, g_input->GetMousePoint().y))) {
+				*pResult = true;
+			}
+		}
+		break;
+	}
+
+	case 0x13A: {
+		// scoreboard.cpp:8663
+		CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
+		unsigned char par3 = 0;
+		unsigned char par4 = 0;
+		unsigned char par5 = 0;
+		for (unsigned char i = pDoc->m_holeOrder[0]; i <= pDoc->m_holeOrder[pDoc->m_holes - 1]; i++) {
+			switch (GOLFDOC()->GetHoleData(i).m_kind) {
+			case 2:
+				par3++;
+				break;
+			case 3:
+				par4++;
+				break;
+			case 4:
+				par5++;
+				break;
+			}
+		}
+
+		// scoreboard.cpp:8685
+		unsigned char difficulty = GetDifficulty() - 1;
+		*(int*)msg.m_param1 = data_9f1f48[difficulty][par5][5] + data_9f1f48[difficulty][par4][2] + data_9f1f48[difficulty][par3][0];
+		break;
+	}
+
+	case 0x13B:
+		// scoreboard.cpp:8705
+		if (m_pRankForm2) {
+			switch (msg.m_param1) {
+			case -1:
+				m_pRankForm2->SetVisible(!m_pRankForm2->IsVisible());
+				break;
+
+			case 0:
+				m_pRankForm2->SetVisible(false);
+				break;
+
+			case 1:
+				m_pRankForm2->SetVisible(true);
+				break;
+			}
+		}
+		break;
+
+	case 0x57:
+		// scoreboard.cpp:8725
+		m_pRankForm3->SetScore(msg.m_param1, msg.m_param2);
+		break;
+
+	case 0x13C:
+		// scoreboard.cpp:8729
+		UpdateRivals();
+		break;
 	}
 }
 

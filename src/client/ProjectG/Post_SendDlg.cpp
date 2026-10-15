@@ -1509,8 +1509,7 @@ void CPost_MyItemList::SetList(void) {
 						m_pSelectList->SetVisible(true);
 						m_pImgSelect->SetVisible(true);
 					}
-					if (pListItem)
-						pListItem->selected = true;
+					pListItem->selected = true;
 					break;
 				}
 			}

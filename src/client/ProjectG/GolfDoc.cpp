@@ -313,7 +313,7 @@ WMatrix CGolfDoc::MakeTopViewCameraMatrix(bool keepCamera) {
 	mat.xa = WCrossProduct(mat.ya, mat.za);
 
 	WVector toCup = CupPosOf(pDoc) - pDoc->GetPlayer(pDoc->m_myPlayerIndex)->m_ballPos;
-	float dist = (float)sqrt(toCup.x * toCup.x + toCup.z * toCup.z);
+	float dist = (float)sqrt(toCup.z * toCup.z + toCup.x * toCup.x);
 
 	if (g_input->Get("LCONTROL", true) || g_input->Get("RCONTROL", true)) {
 		// the whole hole: halfway between the tee and the cup, high enough to see both
@@ -370,7 +370,8 @@ void CGolfDoc::MakeDefaultCamera(bool setCamera) {
 		m_cameraData.m_height = 5.0f;
 	}
 
-	WVector dir = RotMat(m_cameraData.m_yaw, 1).za;
+	WVector dir;
+	dir = RotMat(m_cameraData.m_yaw, 1).za;
 
 	dir.y = 0.0f; dir.Normalize();
 
@@ -463,9 +464,9 @@ int __cdecl CompareRank(const void *a, const void *b) {
 
 	unsigned char hole = GOLFDOC()->m_currentHole;
 
-	if (player1->m_holes[hole - 1] < player2->m_holes[hole - 1])
+	if ((unsigned char)player1->m_holes[hole - 1] < (unsigned char)player2->m_holes[hole - 1])
 		return 0;
-	if (player2->m_holes[hole - 1] == player1->m_holes[hole - 1] && player1->m_state == 1 && player2->m_state != 1)
+	if (player1->m_holes[hole - 1] == player2->m_holes[hole - 1] && player1->m_state == 1 && player2->m_state != 1)
 		return 0;
 
 	return 1;
@@ -642,7 +643,7 @@ void CGolfDoc::ClearShotResultMsg(void) {
 
 // golfdoc.cpp:668
 void CGolfDoc::InitShotResultMsg(void) {
-	float radius = GolfBall().GetRadius(); WVector &tee = GetHoleData().m_teePos; WVector pos; pos.z = tee.z; pos.x = tee.x; pos.y = radius + tee.y;
+	float radius = GolfBall().GetRadius(); WVector pos = GetHoleData().m_teePos + WVector(0.0f, radius, 0.0f);
 
 	for (int i = 0; i < m_playerNum; i++) {
 		m_shotResultMsg[i].m_pos.x = pos.x;
@@ -669,8 +670,8 @@ void CWaveInfo::Load(const char *name) {
 	file->Read(buffer, length);
 	buffer[length] = 0;
 
-	char *line = buffer;
 	char *next = buffer;
+	char *line = buffer;
 	while (*line != 0) {
 		while (*next != 0 && *next != '\n')
 			next++;
@@ -711,8 +712,8 @@ void CRiverInfo::Load(const char *name) {
 	file->Read(buffer, length);
 	buffer[length] = 0;
 
-	char *line = buffer;
 	char *next = buffer;
+	char *line = buffer;
 	while (*line != 0) {
 		while (*next != 0 && *next != '\n')
 			next++;

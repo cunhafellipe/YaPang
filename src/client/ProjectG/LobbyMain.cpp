@@ -3234,23 +3234,20 @@ void CLobbyMain::ProcessAutoStart(float dt) {
 	sRoomInfo& room = CSharedDoc::Instance()->m_roomInfo;
 
 	if (m_autoStartCountdown > 0.0f
-		&& stricmp(g_pFresh->GetManager()->GetLayoutID(), "GAMEROOM_EXT") == 0
+		&& strcmpi(g_pFresh->GetManager()->GetLayoutID(), "GAMEROOM_EXT") == 0
 		&& (m_roomOptionD || m_autoStartArmed)) {
-		// TODO: the dword at CSharedDoc 0x4B4F (bit 1: 5 players are enough)
-		// overlaps m_serverChannel's name in the current SharedDoc layout.
-		int minPlayers = (CSharedDoc::Instance()->m_serverChannel.name[0x3D] & 2) ? 5 : 10;
 		int needed = room.m_userLimit * 3 / 4;
+		int minPlayers = (CSharedDoc::Instance()->m_curServer.flags & 2) ? 5 : 10;
 		if (minPlayers >= needed)
 			needed = minPlayers;
 
-		if (room.m_userCount >= needed && room.m_gameType != 6 && room.m_option[1] == 0) {
+		if (room.m_userCount >= needed && CSharedDoc::Instance()->m_roomInfo.m_gameType != 6 && room.m_option[1] == 0) {
 			float left = m_autoStartCountdown - dt;
 			m_autoStartCountdown = left;
 
 			const char* text;
 			if (left < 6.0f && left + dt > 6.0f) {
-				// TODO: the text runs on past its first 32 bytes (77 in all).
-				text = "(\xBE\xCB\xB8\xB2)\xC2\xFC\xBF\xA9\xC0\xCE\xBF\xF8\xC0\xCC \xC0\xFC\xBF\xF8 \xC1\xD8\xBA\xF1\xBF\xCF\xB7\xE1\xB0\xA1";
+				text = "(\xBE\xCB\xB8\xB2)\xC2\xFC\xBF\xA9\xC0\xCE\xBF\xF8\xC0\xCC \xC0\xFC\xBF\xF8 \xC1\xD8\xBA\xF1\xBF\xCF\xB7\xE1\xB0\xA1 \xB5\xC7\xBE\xFA\xC0\xB8\xB9\xC7\xB7\xCE 5\xC3\xCA \xC8\xC4\xBF\xA1 \xB0\xD4\xC0\xD3\xC0\xBB \xC0\xDA\xB5\xBF \xBD\xC3\xC0\xDB\xC7\xD5\xB4\xCF\xB4\xD9.";
 			} else if (left < 5.0f && left + dt > 5.0f) {
 				text = "(\xBE\xCB\xB8\xB2)\xB0\xD4\xC0\xD3\xBD\xC3\xC0\xDB 5\xC3\xCA\xC0\xFC\xC0\xD4\xB4\xCF\xB4\xD9.";
 			} else if (left < 4.0f && left + dt > 4.0f) {
@@ -5422,14 +5419,17 @@ void CLobbyMain::OnToppage_PointEventInit(intptr_t param) {
 				rect.x = GetTopPageBtnRect();
 				m_toppagePointEventBtn->SetRect(rect);
 			} else if (!CLoginInfo::Instance()->IsPcBang()) {
+				const WRect& pcbangRect = m_toppagePcbangBtn->GetRect();
+				float x = pcbangRect.x;
+				float y = pcbangRect.y;
 				WRect rect = m_toppagePointEventBtn->GetRect();
-				rect.x = m_toppagePcbangBtn->GetRect().x;
-				rect.y = m_toppagePcbangBtn->GetRect().y - 2.0f;
+				rect.x = x;
+				rect.y = y - 2.0f;
 				m_toppagePointEventBtn->SetRect(rect);
 			} else {
 				WRect rect = m_toppagePointEventBtn->GetRect();
-				rect.x = 160.0f;
 				rect.y -= 2.0f;
+				rect.x = 160.0f;
 				m_toppagePointEventBtn->SetRect(rect);
 			}
 		} else {
@@ -6802,7 +6802,7 @@ void CLobbyMain::SetStartBtn(bool check) {
 	case 10:
 	case 14:
 		if (WSingleton<WNetworkSystem>::Instance()->GetConnectionType() == 0
-			&& players.size() < (unsigned int)((WSingleton<CSharedDoc>::Instance()->m_serverChannel.name[0x3D] & 2) ? 5 : WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[4].defaultPlayers)
+			&& players.size() < (unsigned int)((WSingleton<CSharedDoc>::Instance()->m_curServer.flags & 2) ? 5 : WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[4].defaultPlayers)
 			&& !AdminMode()) {
 			m_roomOptionD = true;
 			for (it = players.begin(); it != players.end(); ++it) {
@@ -6884,7 +6884,7 @@ void CLobbyMain::SetRoomControls(bool isMaster) {
 	bool lockedCourse = false;
 
 	if (doc->m_currentChannel.flags & 0x800) {
-		IFF_STRUCT::sCourse *pCourse = doc->m_itemManager.FindCourse((doc->m_roomInfo.m_course > 0x7F && doc->m_roomInfo.m_course != 0xFD) ? doc->m_roomInfo.m_course - 0x80 : (0x28000000 | doc->m_roomInfo.m_course));
+		IFF_STRUCT::sCourse *pCourse = ItemManager()->FindCourse((doc->m_roomInfo.m_course > 0x7F && doc->m_roomInfo.m_course != 0xFD) ? doc->m_roomInfo.m_course - 0x80 : (0x28000000 | doc->m_roomInfo.m_course));
 
 		if (pCourse && (pCourse->courseFlags & 0xF) >= 3)
 			lockedCourse = true;
@@ -7065,7 +7065,7 @@ void CLobbyMain::SetRoomCharControl(eBtnDir dir) {
 		else if (m_charControlWnd) {
 			m_charControlWnd->SetVisible(true);
 
-			IFF_STRUCT::sChar* pChar = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindChar(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_characterInfo.typeId);
+			IFF_STRUCT::sChar* pChar = ItemManager()->FindChar(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_characterInfo.typeId);
 
 			if (pChar)
 				static_cast<FrButton*>(m_charControlWnd)->SetButtonImg(pChar->m_icon, FrButton::NORMAL);
@@ -7504,7 +7504,7 @@ void CLobbyMain::SetLevelBar(void) {
 
 	if (g_pFresh->IsCurrentLayout("CREATE")) {
 		charTypeId = m_createCharType;
-		IFF_STRUCT::sChar* pChar = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindChar(charTypeId |= 0x4000000);
+		IFF_STRUCT::sChar* pChar = ItemManager()->FindChar(charTypeId |= 0x4000000);
 		levels = (const char*)pChar->m_baseLevels;
 		parts = NULL;
 		cards = NULL;
@@ -7558,11 +7558,11 @@ void CLobbyMain::SetLevelBar(void) {
 	}
 
 	for (int i = 0; i < 5; i++) {
-		status_t status = WSingleton<CSharedDoc>::Instance()->m_itemManager.GetLevelWithPenalty((eLvlType)i, charTypeId, levels, parts, cards, clubTypeId, clubLevels, caddieTypeId, level);
+		status_t status = ItemManager()->GetLevelWithPenalty((eLvlType)i, charTypeId, levels, parts, cards, clubTypeId, clubLevels, caddieTypeId, level);
 		int statLevel = status.m_level;
 		int penalty = status.m_penalty;
 
-		unsigned char capacity = WSingleton<CSharedDoc>::Instance()->m_itemManager.GetCapacity((eLvlType)i, charTypeId, levels, parts, clubTypeId, clubLevels, caddieTypeId, level);
+		unsigned char capacity = ItemManager()->GetCapacity((eLvlType)i, charTypeId, levels, parts, clubTypeId, clubLevels, caddieTypeId, level);
 
 		m_statBar[i]->SetDestPos(statLevel, false);
 		m_statBar[i]->SetExpand(capacity - statLevel);
@@ -7629,11 +7629,12 @@ void CLobbyMain::OpenCreateInfo(unsigned long id, const char* text) {
 		message = text;
 	}
 
-	if (g_pFresh->GetManager()->GetDesktop()->FindChildByName("information_large")) {
+	FrForm* pForm = FrStaticCast<FrForm>(g_pFresh->GetDesktop()->FindChildByName("information_large"));
+	if (pForm == NULL) {
+		pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "information_large", 0);
+	} else {
 		return;
 	}
-
-	FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "information_large", 0);
 
 	IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(id);
 
@@ -8658,8 +8659,8 @@ void CLobbyMain::OnRoomList_RoomListOwnerDraw(int param) {
 	if (pRoom->m_gameType == 13)
 		return;
 
-	if ((WSingleton<CSharedDoc>::Instance()->m_serverChannel.flags & 0x20)
-		&& (WSingleton<CSharedDoc>::Instance()->m_serverChannel.eventCourseMask & (1 << ((pRoom->m_course > 0x7F && pRoom->m_course != 0xFD) ? pRoom->m_course - 0x80 : pRoom->m_course)))) {
+	if ((WSingleton<CSharedDoc>::Instance()->m_curServer.m_flags2 & 0x20)
+		&& (WSingleton<CSharedDoc>::Instance()->m_curServer.eventCourseMask & (1 << ((pRoom->m_course > 0x7F && pRoom->m_course != 0xFD) ? pRoom->m_course - 0x80 : pRoom->m_course)))) {
 		const Bitmap* pIcon = g_pFresh->GetBitmap("icon_pangevent");
 		pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 492.0f, pItem->pos.y + 4.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
 	}
@@ -9210,8 +9211,7 @@ void CLobbyMain::OnRoomList_RoomSortCateVS_ListLUp(void) {
 		FrListItem* item = m_cateVSList->GetItem(i);
 		if (item) {
 			WRect rect(item->pos.x + 1.0f, item->pos.y + 1.0f, 54.0f, 21.0f);
-			const WPoint& mouse = g_pFresh->GetManager()->GetMousePos();
-			if (rect.IsInRect(mouse.x, mouse.y)) {
+			if (rect.IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 				m_roomListDirty = true;
 
 				RoomList_FilterRoomList(ROOMSORT_GAMETYPE, item->idx);
@@ -9274,8 +9274,7 @@ void CLobbyMain::OnRoomList_RoomSortCateMass_ListLUp(void) {
 		FrListItem* item = m_cateMassList->GetItem(i);
 		if (item) {
 			WRect rect(item->pos.x + 1.0f, item->pos.y + 1.0f, 54.0f, 21.0f);
-			const WPoint& mouse = g_pFresh->GetManager()->GetMousePos();
-			if (rect.IsInRect(mouse.x, mouse.y)) {
+			if (rect.IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 				m_roomListDirty = true;
 
 				RoomList_FilterRoomList(ROOMSORT_GAMETYPE, item->idx + 4);
@@ -9338,8 +9337,7 @@ void CLobbyMain::OnRoomList_RoomSortCateBattle_ListLUp(void) {
 		FrListItem* item = m_cateBattleList->GetItem(i);
 		if (item) {
 			WRect rect(item->pos.x + 1.0f, item->pos.y + 1.0f, 54.0f, 21.0f);
-			const WPoint& mouse = g_pFresh->GetManager()->GetMousePos();
-			if (rect.IsInRect(mouse.x, mouse.y)) {
+			if (rect.IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 				m_roomListDirty = true;
 
 				RoomList_FilterRoomList(ROOMSORT_GAMETYPE, item->idx != 0 ? 10 : 7);
@@ -9442,15 +9440,11 @@ void CLobbyMain::OnRoomList_UserListInit(intptr_t param) {
 
 		// An administrator sees everyone; others see an administrator only
 		// while its invisible bit is set.
-		if (!CSharedDoc::Instance()->m_userInfo.identityBits.administrator) {
-			if (sBriefUserInfo(*user).identityBits.administrator) {
-				if (!sBriefUserInfo(*user).invisible) {
-					continue;
-				}
-			}
+		if (CSharedDoc::Instance()->m_userInfo.identityBits.administrator
+			|| !sBriefUserInfo(*user).identityBits.administrator
+			|| sBriefUserInfo(*user).invisible) {
+			m_userListBox->AddItem((void*)user);
 		}
-
-		m_userListBox->AddItem((void*)user);
 	}
 }
 
@@ -10538,9 +10532,7 @@ void CLobbyMain::OnGameRoom_RoomUserOwnerDraw(int param) {
 		}
 
 		if (CSharedDoc::Instance()->m_userInfo.guid == m_roomMasterUid && !(pSlot->m_attribute & 0x18)) {
-			// TODO: the CSharedDoc byte at 0x4B4F overlaps m_serverChannel's
-			// name in the current SharedDoc layout (see ProcessAutoStart).
-			if (!(CSharedDoc::Instance()->m_serverChannel.name[0x3D] & 4))
+			if (!(CSharedDoc::Instance()->m_curServer.flags & 4))
 				pGDI->DrawTexture(m_roomUserSelImage, WRect(rect.x + rect.w - 8.0f - (float)m_roomUserSelImage->Width(), rect.y + 8.0f, (float)m_roomUserSelImage->Width(), (float)m_roomUserSelImage->Height()), 0xFFFFFFFF, 0);
 		}
 
@@ -10655,7 +10647,7 @@ void CLobbyMain::OnGameRoom_RoomUserOwnerDraw(int param) {
 		}
 
 		if (CSharedDoc::Instance()->m_userInfo.guid == m_roomMasterUid && !(pSlot->m_attribute & 0x18)) {
-			if (!(CSharedDoc::Instance()->m_serverChannel.name[0x3D] & 4))
+			if (!(CSharedDoc::Instance()->m_curServer.flags & 4))
 				pGDI->DrawTexture(m_roomUserSelImage, WRect(rect.x + rect.w - 8.0f - (float)m_roomUserSelImage->Width(), rect.y + 8.0f, (float)m_roomUserSelImage->Width(), (float)m_roomUserSelImage->Height()), 0xFFFFFFFF, 0);
 		}
 
@@ -10764,7 +10756,7 @@ void CLobbyMain::OnGameRoom_RoomUserLBtnUp(void) {
 
 				// lobbymain.cpp:13689, the kick button's rect in the row
 				WRect rect;
-				if (!(WSingleton<CSharedDoc>::Instance()->m_serverChannel.name[0x3D] & 4)) {
+				if (!(WSingleton<CSharedDoc>::Instance()->m_curServer.flags & 4)) {
 					if (strcmp(g_pFresh->GetManager()->GetLayoutID(), "GAMEROOM") == 0) {
 						rect = WRect((float)m_teamBmp[pSlot->m_attribute & 3]->Width() - 8.0f - (float)m_roomUserSelImage->Width(), 8.0f,
 							(float)m_roomUserSelImage->Width(), (float)m_roomUserSelImage->Height());
@@ -11068,7 +11060,7 @@ void CLobbyMain::OnGameRoom_CharOwnerDraw(int) {
 		}
 	} else {
 		std::map<unsigned int, sCharacterInfo>::iterator it = doc->m_characterMap.find(doc->m_myCharacterId);
-		IFF_ITEM_COMMON* pItem = doc->m_itemManager.FindCommonItem(it->second.typeId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
 
 		if (pItem) {
 			const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
@@ -11127,14 +11119,14 @@ void CLobbyMain::OnGameRoom_CaddieOwnerDraw(int) {
 	} else {
 		std::map<unsigned int, sCaddieInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_caddieMap.find(WSingleton<CSharedDoc>::Instance()->m_myCaddieId);
 
-		IFF_ITEM_COMMON* pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(it->second.typeId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
 		if (pItem) {
 			const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
 			if (pBmp)
 				pGDI->DrawTexture(pBmp, WRect(m_caddieViewer->GetRect().x, m_caddieViewer->GetRect().y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
 		}
 
-		IFF_STRUCT::sCaddie* pCaddie = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCaddie(it->second.typeId);
+		IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(it->second.typeId);
 		if (pCaddie) {
 			if ((it->second.flags & 2) && it->second.days <= 0 && it->second.cadItemTypeId == 0 && pCaddie->fee != 0) {
 				float right = rect.x + rect.w - 1.0f;
@@ -11194,7 +11186,7 @@ void CLobbyMain::OnGameRoom_ClubOwnerDraw(int) {
 		std::map<unsigned int, sItemInfo>::iterator it = doc->m_myItemMap.find(doc->m_myClubId);
 
 		if (it != doc->m_myItemMap.end()) {
-			IFF_ITEM_COMMON* pItem = doc->m_itemManager.FindCommonItem(it->second.m_typeId);
+			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.m_typeId);
 
 			if (pItem) {
 				const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
@@ -11248,7 +11240,7 @@ void CLobbyMain::OnGameRoom_AztecOwnerDraw(int) {
 		if (pBmp)
 			pGDI->DrawTexture(pBmp, m_aztecViewer->GetRect(), color, 0);
 	} else {
-		IFF_ITEM_COMMON* pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(WSingleton<CSharedDoc>::Instance()->m_myBallId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(WSingleton<CSharedDoc>::Instance()->m_myBallId);
 		if (pItem) {
 			int count = 0;
 
@@ -11265,7 +11257,7 @@ void CLobbyMain::OnGameRoom_AztecOwnerDraw(int) {
 
 				if (!pInfo) {
 					WSingleton<CSharedDoc>::Instance()->m_myBallId = 0x14000000;
-					pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(WSingleton<CSharedDoc>::Instance()->m_myBallId);
+					pItem = ItemManager()->FindCommonItem(WSingleton<CSharedDoc>::Instance()->m_myBallId);
 				}
 
 				const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
@@ -11338,7 +11330,7 @@ void CLobbyMain::OnGameRoom_MascotOwnerDraw(int) {
 			pGDI->DrawTexture(pBmp, WRect(m_mascotViewer->GetRect().x, m_mascotViewer->GetRect().y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
 	} else {
 		std::map<unsigned int, sMascotInfo>::iterator it = doc->m_myMascotMap.find(doc->m_myMascotId);
-		IFF_ITEM_COMMON* pItem = doc->m_itemManager.FindCommonItem(it->second.typeId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
 		if (pItem) {
 			const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
 			if (pBmp)
@@ -11473,7 +11465,8 @@ void CLobbyMain::OnGameRoom_CharSelOwnerDraw(int) {
 
 	pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "select_bar_03");
 	if (pBmp) {
-		pGDI->DrawTexture(pBmp, WRect(x, y, 4.0f, 54.0f), 0xFFFFFFFF, 0);
+		w = 4.0f;
+		pGDI->DrawTexture(pBmp, WRect(x, y, w, 54.0f), 0xFFFFFFFF, 0);
 	}
 
 	y += 4.0f;
@@ -11482,7 +11475,7 @@ void CLobbyMain::OnGameRoom_CharSelOwnerDraw(int) {
 
 	std::map<unsigned int, sCharacterInfo>::const_iterator it;
 	for (it = WSingleton<CSharedDoc>::Instance()->m_characterMap.begin(); it != WSingleton<CSharedDoc>::Instance()->m_characterMap.end(); ++it) {
-		IFF_ITEM_COMMON* pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(it->second.typeId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
 		if (pItem) {
 			WRect rect(itemX, y, 38.0f, 38.0f);
 
@@ -11559,7 +11552,8 @@ void CLobbyMain::OnGameRoom_CaddieSelOwnerDraw(int) {
 
 	pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "select_bar_03");
 	if (pBmp) {
-		pGDI->DrawTexture(pBmp, WRect(x, y, 4.0f, 54.0f), 0xFFFFFFFF, 0);
+		w = 4.0f;
+		pGDI->DrawTexture(pBmp, WRect(x, y, w, 54.0f), 0xFFFFFFFF, 0);
 	}
 
 	y += 4.0f;
@@ -11568,7 +11562,7 @@ void CLobbyMain::OnGameRoom_CaddieSelOwnerDraw(int) {
 
 	std::map<unsigned int, sCaddieInfo>::const_iterator it;
 	for (it = WSingleton<CSharedDoc>::Instance()->m_caddieMap.begin(); it != WSingleton<CSharedDoc>::Instance()->m_caddieMap.end(); ++it) {
-		IFF_ITEM_COMMON* pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(it->second.typeId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
 		if (pItem) {
 			WRect rect(itemX, y, 38.0f, 38.0f);
 
@@ -11576,7 +11570,7 @@ void CLobbyMain::OnGameRoom_CaddieSelOwnerDraw(int) {
 			if (pIcon)
 				pGDI->DrawTexture(pIcon, rect, 0xFFFFFFFF, 0);
 
-			IFF_STRUCT::sCaddie* pCaddie = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCaddie(it->second.typeId);
+			IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(it->second.typeId);
 			if (pCaddie) {
 				if ((it->second.flags & 2) && it->second.days <= 0 && it->second.cadItemTypeId == 0 && pCaddie->fee != 0) {
 					g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f - 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
@@ -11668,7 +11662,8 @@ void CLobbyMain::OnGameRoom_ClubSelOwnerDraw(int) {
 
 	pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "select_bar_03");
 	if (pBmp) {
-		pGDI->DrawTexture(pBmp, WRect(x, y, 4.0f, 54.0f), 0xFFFFFFFF, 0);
+		w = 4.0f;
+		pGDI->DrawTexture(pBmp, WRect(x, y, w, 54.0f), 0xFFFFFFFF, 0);
 	}
 
 	y += 4.0f;
@@ -11677,7 +11672,7 @@ void CLobbyMain::OnGameRoom_ClubSelOwnerDraw(int) {
 
 	std::map<unsigned int, sItemInfo>::const_iterator it;
 	for (it = WSingleton<CSharedDoc>::Instance()->m_myItemMap.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myItemMap.end(); ++it) {
-		IFF_ITEM_COMMON* pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(it->second.m_typeId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.m_typeId);
 
 		if (pItem) {
 			const Bitmap* pIcon = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
@@ -11686,11 +11681,9 @@ void CLobbyMain::OnGameRoom_ClubSelOwnerDraw(int) {
 
 			bool usable = WSingleton<CSharedDoc>::Instance()->CheckUnderLevelClubSet(it->second.m_typeId);
 			if (!usable) {
-				float right = itemX + 38.0f - 1.0f;
-				float middle = y + 19.0f;
-				g_view->DrawLine2D(WPoint(itemX, middle - 1.0f), WPoint(right, middle - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
-				g_view->DrawLine2D(WPoint(itemX, middle), WPoint(right, middle), 0xFFFF0000, 0xFFFF0000, 0);
-				g_view->DrawLine2D(WPoint(itemX, middle + 1.0f), WPoint(right, middle + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(itemX, y + 19.0f - 1.0f), WPoint(itemX + 38.0f - 1.0f, y + 19.0f - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(itemX, y + 19.0f), WPoint(itemX + 38.0f - 1.0f, y + 19.0f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(itemX, y + 19.0f + 1.0f), WPoint(itemX + 38.0f - 1.0f, y + 19.0f + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
 			}
 
 			if (WRect(itemX, y, 38.0f, 38.0f).IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {
@@ -11730,7 +11723,7 @@ void CLobbyMain::OnGameRoom_AztecSelOwnerDraw(int) {
 	if (!pGDI)
 		return;
 
-	IFF_ITEM_COMMON* pBall = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(WSingleton<CSharedDoc>::Instance()->m_myBallId);
+	IFF_ITEM_COMMON* pBall = ItemManager()->FindCommonItem(WSingleton<CSharedDoc>::Instance()->m_myBallId);
 	if (!pBall)
 		return;
 
@@ -11763,7 +11756,8 @@ void CLobbyMain::OnGameRoom_AztecSelOwnerDraw(int) {
 
 	pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "select_bar_03");
 	if (pBmp) {
-		pGDI->DrawTexture(pBmp, WRect(x, y, 4.0f, 54.0f), 0xFFFFFFFF, 0);
+		w = 4.0f;
+		pGDI->DrawTexture(pBmp, WRect(x, y, w, 54.0f), 0xFFFFFFFF, 0);
 	}
 
 	y += 4.0f;
@@ -11772,7 +11766,7 @@ void CLobbyMain::OnGameRoom_AztecSelOwnerDraw(int) {
 
 	std::list<sItemInfo>::iterator it;
 	for (it = WSingleton<CSharedDoc>::Instance()->m_myGearList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myGearList.end(); ++it) {
-		IFF_ITEM_COMMON* pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(it->m_typeId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->m_typeId);
 		if (pItem) {
 			WRect rect(itemX, y, 38.0f, 38.0f);
 
@@ -11855,7 +11849,8 @@ void CLobbyMain::OnGameRoom_MascotSelOwnerDraw(int) {
 
 	pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "select_bar_03");
 	if (pBmp) {
-		pGDI->DrawTexture(pBmp, WRect(x, y, 4.0f, 54.0f), 0xFFFFFFFF, 0);
+		w = 4.0f;
+		pGDI->DrawTexture(pBmp, WRect(x, y, w, 54.0f), 0xFFFFFFFF, 0);
 	}
 
 	y += 4.0f;
@@ -11864,7 +11859,7 @@ void CLobbyMain::OnGameRoom_MascotSelOwnerDraw(int) {
 
 	std::map<unsigned int, sMascotInfo>::const_iterator it;
 	for (it = WSingleton<CSharedDoc>::Instance()->m_myMascotMap.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myMascotMap.end(); ++it) {
-		IFF_ITEM_COMMON* pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCommonItem(it->second.typeId);
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
 		if (pItem) {
 			const Bitmap* pIcon = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
 			if (pIcon)
@@ -12538,8 +12533,9 @@ void CLobbyMain::OnGameRoomExt_RoomUserOwnerDraw(int param) {
 		}
 	}
 
-	rect = WRect(pItem->pos.x + 10.0f, pItem->pos.y + 5.0f, (float)m_situBmp[situ]->Width(), (float)m_situBmp[situ]->Height());
-	pGDI->DrawTexture(m_situBmp[situ], rect, 0xFFFFFFFF, 0);
+	const Bitmap* pSitu = m_situBmp[situ];
+	rect = WRect(pItem->pos.x + 10.0f, pItem->pos.y + 5.0f, (float)pSitu->Width(), (float)pSitu->Height());
+	pGDI->DrawTexture(pSitu, rect, 0xFFFFFFFF, 0);
 
 	const Bitmap* pGender;
 	if (pSlot->m_flags57.flag0)
@@ -12570,9 +12566,7 @@ void CLobbyMain::OnGameRoomExt_RoomUserOwnerDraw(int param) {
 
 	const Bitmap* pLevel = g_pFresh->GetBitmap(levelName);
 	if (pLevel) {
-		float y = pItem->pos.y + 13.0f - float2int(pLevel->Height() * 0.5f);
-		float x = pItem->pos.x + 80.0f - float2int(pLevel->Width() * 0.5f);
-		pGDI->DrawTexture(pLevel, WRect(x, y, (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
+		pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 80.0f - float2int(pLevel->Width() * 0.5f), pItem->pos.y + 13.0f - float2int(pLevel->Height() * 0.5f), (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
 	}
 
 	if (pSlot->m_guildUID && !(pSlot->m_identity & 0x14)) {
@@ -12582,7 +12576,7 @@ void CLobbyMain::OnGameRoomExt_RoomUserOwnerDraw(int param) {
 			pGDI->DrawTexture(pEmblem, WRect(pItem->pos.x + 115.0f, pItem->pos.y + 7.0f - 6.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
 	}
 
-	unsigned long color = (pSlot->m_identity & 0x14) ? 0x50FFFFFF : 0xFFFFFFFF;
+	unsigned long color = ((unsigned char)pSlot->m_identity & 0x14) ? 0x50FFFFFF : 0xFFFFFFFF;
 
 	if (pItem->underCursor) {
 		pGDI->SetTextColor(0xFFFFFFFF, 0xFF124371);

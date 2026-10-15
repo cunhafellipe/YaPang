@@ -373,7 +373,6 @@ int CHelpMsg::GetLine(int *start, int *end, unsigned long *color, char *text, bo
 	}
 
 	if (text[i] == '/') {
-		int type = 0;
 		switch (text[i + 1]) {
 		case 'c':
 			if (color) {
@@ -383,20 +382,15 @@ int CHelpMsg::GetLine(int *start, int *end, unsigned long *color, char *text, bo
 					*color |= (text[i] >= '0' && text[i] <= '9' ? text[i] - '0' : text[i] - '7') << shift;
 					i++;
 				}
+				i += 2; *end = i; *start = i; return 1;
 			} else {
 				i += 12;
+				i += 2; *end = i; *start = i; return 1;
 			}
-			type = 1;
-			break;
 		case 'v':
-			type = 2;
-			break;
+			i += 2; *end = i; *start = i; return 2;
 		case 'k':
-			type = 3;
-			break;
-		}
-		if (type != 0) {
-			i += 2; *end = i; *start = i; return type;
+			i += 2; *end = i; *start = i; return 3;
 		}
 	}
 

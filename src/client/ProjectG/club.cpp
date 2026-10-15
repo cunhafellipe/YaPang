@@ -887,7 +887,8 @@ float CClub::GetPower(void) {
 		if (m_powerPutter)
 			return strstr(m_pClub->m_name, "1PT") ? 42.0f : 36.0f;
 
-		return m_pClub->m_power;
+		power = m_pClub->m_power;
+		break;
 	}
 
 	return power;

@@ -47,17 +47,18 @@ bool cToken::GetToken(char *const pToken, const char *sep, int sepLen) {
 	bool bRet = false;
 	int i;
 	int j;
+	int k;
 	for (i = m_Pos; i < m_Len; i++) {
-		const char *pSep = sep;
-		for (j = 0; j < sepLen; j++, pSep++) {
-			if (GetBuf()[i] == *pSep) {
-				if (*pSep & 0x80) {
+		k = 0;
+		for (j = 0; j < sepLen; j++, k++) {
+			if (GetBuf()[i] == sep[k]) {
+				if (sep[k] & 0x80) {
 					bool bSame;
-					pSep++;
+					k++;
 					if (IsLocalCountry(30)) {
-						bSame = i + 1 < m_Len && GetBuf()[i + 1] == *pSep;
+						bSame = i + 1 < m_Len && GetBuf()[i + 1] == sep[k];
 					} else {
-						bSame = GetBuf()[i + 1] == *pSep;
+						bSame = GetBuf()[i + 1] == sep[k];
 					}
 					if (bSame) {
 						found = 2;
@@ -67,8 +68,8 @@ bool cToken::GetToken(char *const pToken, const char *sep, int sepLen) {
 					found = 1;
 					break;
 				}
-			} else if (*pSep & 0x80) {
-				pSep++;
+			} else if (sep[k] & 0x80) {
+				k++;
 			}
 		}
 		if (found) {

@@ -1650,7 +1650,7 @@ void FrUccDrawDlg::OnEtcOwnerDraw(int param) {
 	}
 
 	// "Front" / "back" and the zoom rate.
-	WPoint pos(GetRect().x + 191.0f, GetRect().y + 298.0f);
+	WPoint pos = GetRect().TopLeft() + WPoint(191.0f, 298.0f);
 
 	pGDI->SetTextStyle(1);
 
@@ -1664,7 +1664,7 @@ void FrUccDrawDlg::OnEtcOwnerDraw(int param) {
 	pGDI->PrintText11(WPoint(pos.x + width, pos.y), 0, text, 0);
 
 	// "Flip"
-	WPoint flipPos(GetRect().x + 26.0f, GetRect().y + 297.0f);
+	WPoint flipPos = GetRect().TopLeft() + WPoint(26.0f, 297.0f);
 
 	pGDI->PrintText11(flipPos, 0, "\xB5\xDA\xC1\xFD\xB1\xE2", 0);
 
@@ -1783,7 +1783,10 @@ void FrUccDrawDlg::ChangeTab(eUccTab tab) {
 
 		if (m_pPenList->GetSelected()) {
 			m_brushType = 1;
+		} else if (m_pBrushList->GetSelected()) {
+			m_brushType = 0;
 		} else {
+			// nothing selected in either list: the brush list's type too
 			m_brushType = 0;
 		}
 		break;

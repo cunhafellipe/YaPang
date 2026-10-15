@@ -1552,7 +1552,7 @@ void FrBongdariShopDlg::SetStartAnimationBongdari(void) {
 void FrBongdariShopDlg::InitRandomDataItemSilhouette(void) {
 	int i;
 	int index;
-	unsigned long count;
+	int count;
 
 	index = 0;
 	count = g_arrdwPercentNumCookieItem0[0][0];

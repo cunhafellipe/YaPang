@@ -96,9 +96,9 @@ void CPool::SetArea(const Waabb& area, const char* name)
 {
 	m_area = area;
 
-	WSliceStr slice(name);
-
 	m_type = 0;
+
+	WSliceStr slice(name);
 	slice.Get("*type", "%d", &m_type);
 
 	if (strstr(name, "*noripple")) {
@@ -238,16 +238,15 @@ void CPoolCaustic::AddLayer(float a, float b, float c, unsigned char d)
 
 	float inv = 1.0f / c;
 
-	unsigned long alpha = d << 24;
-
-	for (int i = 0; i < 4; i++) {
+	int i;
+	for (i = 0; i < 4; i++) {
 		layer.m_vertices[i].tu = (m_corners[i].x - m_box.min.x) * inv;
 		layer.m_vertices[i].tv = (m_corners[i].z - m_box.min.z) * inv;
-		layer.m_vertices[i].diffuse = alpha | g_lightset.ambient2;
+		layer.m_vertices[i].diffuse = (d << 24) | g_lightset.ambient2;
 		layer.m_polygon[i] = &layer.m_vertices[i];
 	}
 
-	layer.m_polygon[4] = NULL;
+	layer.m_polygon[i] = NULL;
 
 	m_numLayers++;
 }
@@ -553,9 +552,10 @@ void CPoolReflective::Wave(float elapsed)
 				m_grid[y][x].m_unknown18 -= d;
 				m_grid[y][x - 1].m_unknown18 += d;
 
-				// Self-assignments in the original.
-				m_grid[y][x].m_unknown18 = m_grid[y][x].m_unknown18;
-				m_grid[y - 1][x].m_unknown18 = m_grid[y - 1][x].m_unknown18;
+				// The (y - 1, x) neighbour exchanges nothing.
+				d = 0.0f;
+				m_grid[y][x].m_unknown18 -= d;
+				m_grid[y - 1][x].m_unknown18 += d;
 
 				d = m_grid[y][x].m_pos.y - m_grid[y][x + 1].m_pos.y;
 				m_grid[y][x].m_unknown18 -= d;
@@ -590,7 +590,7 @@ void CPoolReflective::Wave(float elapsed)
 		for (int x = 0; x < m_width; x++) {
 			if (m_grid[y][x].m_excluded) {
 				m_grid[y][x].m_height += elapsed * m_grid[y][x].m_unknown18;
-				m_grid[y][x].m_pos.y = Max(m_grid[y][x].m_pos.y + elapsed * m_grid[y][x].m_height, m_area.max.y - 2.0f);
+				m_grid[y][x].m_pos.y = Max(m_area.max.y - 2.0f, m_grid[y][x].m_pos.y + elapsed * m_grid[y][x].m_height);
 			}
 		}
 	}

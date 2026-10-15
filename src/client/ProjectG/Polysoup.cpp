@@ -32,11 +32,20 @@
 #include "wview.h"
 #include "wxpuppet.h"
 
+#ifdef PG_MATERIAL_HINTS
+// The port's renderer learns which meshes are water (port/compat).
+#include "pg_material_hints.h"
+#endif
+
 // ?g_lightset@@3ULightSet@@A; its header (wscene.h) does not declare it yet.
 extern LightSet g_lightset;
 
 // ?g_camera@@3VWMatrix@@A; no header declares it yet.
 extern WMatrix g_camera;
+
+// A nameless .rdata float of this object: the epsilon of the vertex merge
+// and of the base-mesh test.
+extern "C" const float data_a111e4;
 
 // ?CloseCFile@@YAXPAVcFile@@@Z; no header declares it yet.
 void __cdecl CloseCFile(cFile *file);
@@ -59,6 +68,107 @@ static bool IsSpecialAdditionModel(const char *name) {
 	}
 	return false;
 }
+
+#ifdef PG_MATERIAL_HINTS
+// Port only (port/compat/pg_material_hints.h): a placed model's hint bits,
+// decided once when it loads: water for a sea model, and its shadow rules
+// (port/metal/pg_shadow_rules.cpp). Written into each mesh (w_mesh::pgHint),
+// which every draw then reads.
+// A bone rule ("blue_house02_lamp.pet:Beam") covers the bone and its children.
+static void PgSetMeshHints(WBone *pBone, const char *name, int hint) {
+	for (; pBone != 0; pBone = pBone->GetNext()) {
+		int boneHint = hint | PgShadowRuleForBone(name, pBone->GetBoneName());
+		if (boneHint != 0) {
+			for (w_mesh *pMesh = pBone->GetMesh(); pMesh != 0; pMesh = pMesh->next) {
+				pMesh->pgHint |= boneHint;
+			}
+		}
+		PgSetMeshHints(pBone->GetChild(), name, boneHint);
+	}
+}
+
+// The port's lamps (port/compat/pg_material_hints.h): once a placed model
+// stands where it belongs (ApplyBones), the world centre of each of its meshes
+// tagged light, registered for the course (not the lighthouse's beam: no cast
+// and no receive). The port lights them whether or not they are drawn.
+static void PgRegisterLamps(WBone *pBone) {
+	for (; pBone != 0; pBone = pBone->GetNext()) {
+		for (w_mesh *pMesh = pBone->GetMesh(); pMesh != 0; pMesh = pMesh->next) {
+			if (!(pMesh->pgHint & PG_HINT_LIGHT) || (pMesh->pgHint & (PG_HINT_NOCAST | PG_HINT_NORECEIVE)) == (PG_HINT_NOCAST | PG_HINT_NORECEIVE)
+					|| pMesh->vtxNum <= 0 || pMesh->vecList == 0) {
+				continue;
+			}
+			// World positions as WBone's lighting computes them: a rigid
+			// vertex (below rigidNum) by its own bone (boneList: a tall lamp's
+			// head), the others by the mesh's bone.
+			WVector sum(0.0f, 0.0f, 0.0f);
+			for (int v = 0; v < pMesh->vtxNum; v++) {
+				if (v < pMesh->rigidNum && pMesh->boneList != 0 && pMesh->boneList[v] != 0) {
+					sum += pMesh->boneList[v]->Transform(pMesh->vecList[v]);
+				} else {
+					sum += pMesh->vecList[v] * pBone->GetMatrix();
+				}
+			}
+			sum = sum * (1.0f / (float)pMesh->vtxNum);
+			PgLampCourseAdd(sum.x, sum.y, sum.z);
+		}
+		PgRegisterLamps(pBone->GetChild());
+	}
+}
+
+// Whether text contains word, any case.
+static bool PgContainsNoCase(const char *text, const char *word) {
+	size_t len = strlen(word);
+	for (; *text; text++) {
+		if (_strnicmp(text, word, len) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// A placed model's lamps: each bound box attaching a light effect (its *fx
+// sequence or the box named lamp, light or glow: blue_lamp02.pet's "LHglow",
+// "*fx Blue_StreetLamp"), at the box's centre by its bone (as
+// WPuppet::UpdateBSphere); a model without one, its light-tagged meshes
+// (PgRegisterLamps). The glow meshes of a lamp can lie on the ground.
+static void PgRegisterModelLamps(WPuppet *pPuppet) {
+	int boxes = 0;
+	for (w_bound_box *pBox = pPuppet->m_bbList.Start(); pBox; pBox = pPuppet->m_bbList.Next()) {
+		if (pBox->bone == 0 || pBox->info == 0) {
+			continue;
+		}
+		const char *pOption = pBox->info->option;
+		const char *pFx = pOption ? strstr(pOption, "*fx") : 0;
+		bool light = PgContainsNoCase(pBox->info->name, "glow") || PgContainsNoCase(pBox->info->name, "lamp") || PgContainsNoCase(pBox->info->name, "light");
+		if (pFx != 0) {
+			char key[8] = "", fxName[0x20] = "";
+			sscanf(pFx, "%7s %31s", key, fxName);
+			light = light || PgContainsNoCase(fxName, "glow") || PgContainsNoCase(fxName, "lamp") || PgContainsNoCase(fxName, "light");
+		} else {
+			light = false;
+		}
+		if (!light) {
+			continue;
+		}
+		// The box's centre in the world, as WPuppet::UpdateBSphere places a box.
+		WVector pos = ((pBox->info->aabb.min + pBox->info->aabb.max) * 0.5f) * pBox->bone->GetMatrix();
+		PgLampCourseAdd(pos.x, pos.y, pos.z);
+		boxes++;
+	}
+	if (boxes == 0) {
+		PgRegisterLamps(pPuppet->GetRootBone());
+	}
+}
+
+static void PgSetModelHints(WPuppet *pPuppet, const char *name) {
+	if (pPuppet == 0) {
+		return;
+	}
+	int hint = PgShadowRuleForModel(name) | (IsSpecialAdditionModel(name) ? PG_HINT_WATER : 0);
+	PgSetMeshHints(pPuppet->GetRootBone(), name, hint);
+}
+#endif
 
 // polysoup.cpp:85
 WPolySoup::WPolySoup(CGolfDoc *pDoc)
@@ -129,7 +239,7 @@ void WPolySoup::Clear(void) {
 
 	BackupTextures();
 
-	std::vector<sModel*>().swap(m_models);
+	m_models.clear();
 
 	if (m_pCameras) {
 		delete[] m_pCameras;
@@ -144,11 +254,11 @@ void WPolySoup::Clear(void) {
 		m_pAreas = 0;
 	}
 
-	std::vector<CNodeContainer>().swap(m_boundAreas);
+	m_boundAreas.clear();
 	m_texIndexMap.clear();
 
 	m_lightSets.clear();
-	std::vector<unsigned long>().swap(m_ulongList);
+	m_ulongList.clear();
 	m_soundBoxes.clear();
 
 	memset(m_bgFx, 0, sizeof(m_bgFx));
@@ -200,6 +310,202 @@ void WPolySoup::ClearOldTextures(void) {
 	m_numOldTextures = 0;
 }
 
+#ifdef PG_7XX
+// PG_7XX: the .gbin version 0x72 of the later clients (the JP 983 exe's
+// readers, 0x9271C0 and the record readers it calls). Against 0x71: the
+// header has an eleventh word (the count of a section after the models,
+// which this client does not read), each camera 0x20 more bytes (a second
+// eye and target, two words), each point 0x14 (three floats, two words)
+// after its description, each area 0x20 (a second box, two words), each
+// model record 0x38 (twelve floats, two words). The file ends with the par
+// alone: the tees and the pins are the points named start point (½ÃÀÛÁ¡, and
+// ½ÃÀÛÁ¡2 for the course kind 2) and end point (³¡Á¡1_1..1_3, ³¡Á¡2_1..2_3,
+// ³¡Á¡ for any missing one), as the JP exe's sub_926F00 finds them.
+static const int kGbin72HeaderExtra = 4;
+static const int kGbin72CameraExtra = 0x20;
+static const int kGbin72PointExtra = 0x14;
+static const int kGbin72AreaExtra = 0x20;
+static const int kGbin72ModelExtra = 0x38;
+
+// The background model's vertex colours of a 0x72 .gbin, read after its
+// record (the JP exe's sub_948BF0): groups of a bone name and its meshes in
+// order, each mesh a count and one colour per vertex. 0x71 has one colour per
+// triangle corner instead, read in Load's triangle loop. Colours are applied
+// as that loop does (fog brightness, an alpha made opaque).
+static void ReadGbin72Colors(cFile *pFile, WPuppet *pPuppet, float fogBrightness) {
+	int numGroups = 0;
+	pFile->Read(&numGroups, 4);
+	for (int g = 0; g < numGroups; g++) {
+		int nameLength = 0;
+		pFile->Read(&nameLength, 4);
+		char name[0x101];
+		int stored = nameLength < 0x100 ? nameLength : 0x100;
+		pFile->Read(name, stored);
+		name[stored] = 0;
+		if (nameLength > stored) {
+			pFile->Seek(nameLength - stored, 1);
+		}
+
+		WBone *pBone = pPuppet ? pPuppet->FindBone(name) : 0;
+		w_mesh *pMesh = pBone ? pBone->GetMesh() : 0;
+
+		int numMeshes = 0;
+		pFile->Read(&numMeshes, 4);
+		for (int m = 0; m < numMeshes; m++) {
+			int numColors = 0;
+			pFile->Read(&numColors, 4);
+			for (int c = 0; c < numColors; c++) {
+				unsigned long color = 0;   // 4 bytes read: 8-byte long on LP64 (macOS)
+				pFile->Read(&color, 4);
+				if (pMesh && c < pMesh->vtxNum && pMesh->vtxColorList) {
+					pMesh->vtxColorList[c] = ModifyColor(color, fogBrightness);
+					if (color >> 24) {
+						pMesh->vtxColorList[c] |= 0xFF000000;
+					}
+				}
+			}
+			if (pMesh) {
+				pMesh = pMesh->next;
+			}
+		}
+	}
+}
+
+// The tee (slot 0) and pins (1..3) of the course kinds other than 2, and
+// those of kind 2 (4..7), from the points of a 0x72 .gbin; false when one is
+// missing. Leaves the file after the points.
+static bool ReadGbin72HolePoints(cFile *pFile, const int *header, WVector *slots) {
+	pFile->Seek(0x28 + kGbin72HeaderExtra + header[5] * (0x40 + kGbin72CameraExtra), 0);
+
+	bool found[8] = { false, false, false, false, false, false, false, false };
+	bool anyEnd = false;
+	WVector endPoint;
+	static const char *const kNames[8] = {
+		"\xBD\xC3\xC0\xDB\xC1\xA1",
+		"\xB3\xA1\xC1\xA1" "1_1", "\xB3\xA1\xC1\xA1" "1_2", "\xB3\xA1\xC1\xA1" "1_3",
+		"\xBD\xC3\xC0\xDB\xC1\xA1" "2",
+		"\xB3\xA1\xC1\xA1" "2_1", "\xB3\xA1\xC1\xA1" "2_2", "\xB3\xA1\xC1\xA1" "2_3",
+	};
+	for (int i = 0; i < header[6]; i++) {
+		unsigned char type;
+		char name[0x21];
+		WVector pos;
+		pFile->Read(&type, 1);
+		pFile->Read(name, 0x20);
+		name[0x20] = 0;
+		pFile->Read(&pos, 0xC);
+		pFile->Seek((type != 0 ? 0x40 : 0) + kGbin72PointExtra, 1);
+
+		if (strcmp(name, "\xB3\xA1\xC1\xA1") == 0) {
+			endPoint = pos;
+			anyEnd = true;
+			continue;
+		}
+		for (int s = 0; s < 8; s++) {
+			if (strcmp(name, kNames[s]) == 0) {
+				slots[s] = pos;
+				found[s] = true;
+				break;
+			}
+		}
+	}
+
+	if (found[0] && !found[4]) {
+		slots[4] = slots[0];
+		found[4] = true;
+	}
+	for (int s = 0; s < 8; s++) {
+		if (!found[s] && s != 0 && s != 4 && anyEnd) {
+			slots[s] = endPoint;
+			found[s] = true;
+		}
+		if (!found[s]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+// What LoadMapCheckData sets from a hole's check data (CGolfDoc's hole
+// array is WPolySoup's to write).
+struct sGbin72HoleCheck {
+	unsigned char m_par;
+	WVector m_teePos;
+	WVector m_cupPos;
+	unsigned long m_holeKey;
+};
+
+// LoadMapCheckData for a 0x72 .gbin (header already read): par, tee, cup,
+// key and the approach mode's "*extra" area, as the 0x71 path below sets them.
+static bool LoadMapCheckData72(cFile *pFile, const int *header, unsigned char hole, Waabb &extraBox, sGbin72HoleCheck &holeData) {
+
+	WVector slots[8];
+	if (!ReadGbin72HolePoints(pFile, header, slots)) {
+		return false;
+	}
+
+	// The areas follow the points: the approach mode's "*extra" box.
+	Waabb box;
+	int j = header[7];
+	if (GOLFDOC()->m_approachMode) {
+		for (j = 0; j < header[7]; j++) {
+			unsigned char type;
+			char name[0x41];
+			WVector v;
+			pFile->Read(&type, 1);
+			pFile->Read(name, 0x40);
+			name[0x40] = 0;
+			pFile->Read(&v, 0xC);
+			box.min = v;
+			pFile->Read(&v, 0xC);
+			box.max = v;
+			pFile->Seek(kGbin72AreaExtra, 1);
+			if (strstr(name, "*extra")) {
+				break;
+			}
+		}
+	}
+
+	pFile->Seek(-1, 2);
+	pFile->Read(&holeData.m_par, 1);
+
+	unsigned char index = GetHoleIndex(hole) - 1;
+	int set = WSingleton<CSharedDoc>::Instance()->m_pCurCourse != 0 && WSingleton<CSharedDoc>::Instance()->m_pCurCourse->courseFlags >> 4 == 2 ? 4 : 0;
+	int pin = WSingleton<CSharedDoc>::Instance()->m_holePin[index];
+	if (pin < 0 || pin > 2) {
+		pin = 0;
+	}
+	holeData.m_teePos.x = slots[set].x;
+	holeData.m_teePos.z = slots[set].z;
+	holeData.m_cupPos.x = slots[set + 1 + pin].x;
+	holeData.m_cupPos.z = slots[set + 1 + pin].z;
+
+	pFile->Seek(0, 0);
+	holeData.m_holeKey = 0;
+	int size = pFile->GetByte();
+	for (int n = 0; n < size; n++) {
+		unsigned char c;
+		pFile->Read(&c, 1);
+		holeData.m_holeKey += c;
+	}
+
+	if (GOLFDOC()->m_approachMode) {
+		if (j == header[7]) {
+			if (!WSingleton<WNetworkSystem>::Instance()->IsConnected((WNetworkSystem::eNetUnit)0)) {
+				MessageBoxA(0, MakeStr("%d\xC8\xA6\xBF\xA1 \xBE\xEE\xC7\xC1\xB7\xCE\xC4\xA1 \xBF\xB5\xBF\xAA\xC0\xCC \xBC\xB3\xC1\xA4\xB5\xC7\xBE\xEE \xC0\xD6\xC1\xF6 \xBE\xCA\xBD\xC0\xB4\xCF\xB4\xD9", hole), "Warning", 0);
+			}
+		} else {
+			if (GOLFDOC()->m_currentHole == hole) {
+				extraBox = box;
+			}
+			holeData.m_teePos.x = (float)(WSingleton<CSharedDoc>::Instance()->m_holeRandom[0] & 0x7F) * (box.max.x - box.min.x) / 128.0f + box.min.x;
+			holeData.m_teePos.z = (float)(WSingleton<CSharedDoc>::Instance()->m_holeRandom[1] & 0x7F) * (box.max.z - box.min.z) / 128.0f + box.min.z;
+		}
+	}
+	return true;
+}
+#endif
+
 // polysoup.cpp:257
 // Reads a hole's check data (<course>_<hole>.gbin): the hole's par, its tee
 // and cup positions (the cup of the hole's pin), a key summed over the file's
@@ -214,6 +520,24 @@ bool WPolySoup::LoadMapCheckData(unsigned char hole) {
 	int header[10];
 	pFile->Read(header, 0x28);
 
+#ifdef PG_7XX
+	if (header[1] == 0x72) {
+		sGbin72HoleCheck check;
+		bool loaded = LoadMapCheckData72(pFile, header, hole, m_extraBox, check);
+		CloseCFile(pFile);
+		if (loaded) {
+			sHoleData &holeData = GOLFDOC()->m_holeData[hole - 1];
+			holeData.m_par = check.m_par;
+			holeData.m_teePos.x = check.m_teePos.x;
+			holeData.m_teePos.z = check.m_teePos.z;
+			holeData.m_cupPos.x = check.m_cupPos.x;
+			holeData.m_cupPos.z = check.m_cupPos.z;
+			holeData.m_holeKey = check.m_holeKey;
+			WSingleton<CSharedDoc>::Instance()->m_courseHoleOn[hole - 1] = check.m_par;
+		}
+		return loaded;
+	}
+#endif
 	if (header[1] != 0x71) {
 		MessageBoxA(0, MakeStr("%d\xB9\xF8\xC8\xA6 \xB9\xE8\xB0\xE6 \xC6\xC4\xC0\xCF\xC0\xC7 \xB9\xF6\xC1\xAF\xC0\xCC \xB8\xC2\xC1\xF6 \xBE\xCA\xBD\xC0\xB4\xCF\xB4\xD9.", hole), "\xB9\xE8\xB0\xE6\xC6\xC4\xC0\xCF \xB9\xF6\xC1\xAF", 0);
 		return false;
@@ -371,7 +695,15 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 	pFile->Read(m_numOtherRecords, 0x28);
 
+#ifdef PG_7XX
+	bool gbin72 = m_numOtherRecords[1] == 0x72;
+	if (gbin72) {
+		pFile->Seek(kGbin72HeaderExtra, 1);
+	}
+	if (m_numOtherRecords[1] != 0x71 && !gbin72) {
+#else
 	if (m_numOtherRecords[1] != 0x71) {
+#endif
 		MessageBoxA(0, "\xB9\xE8\xB0\xE6 \xC6\xC4\xC0\xCF\xC0\xC7 \xB9\xF6\xC1\xAF\xC0\xCC \xB8\xC2\xC1\xF6 \xBE\xCA\xBD\xC0\xB4\xCF\xB4\xD9.", "\xB9\xE8\xB0\xE6\xC6\xC4\xC0\xCF \xB9\xF6\xC1\xAF", 0);
 		return false;
 	}
@@ -404,7 +736,6 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 	m_pBgModel = new sModel;
 
-	WVector vec;
 	for (int i = 0; i < m_numCameras; i++) {
 		sCamera *pCamera = &m_pCameras[i];
 
@@ -417,6 +748,11 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 		pFile->Read(&pCamera->m_fov, 4);
 		pFile->Read(&pCamera->m_param, 4);
+#ifdef PG_7XX
+		if (gbin72) {
+			pFile->Seek(kGbin72CameraExtra, 1);
+		}
+#endif
 	}
 
 	g_lightset.type = LightSet::W_LIGHT_DIRECTIONAL;
@@ -429,6 +765,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 		pFile->Read(&pPoint->m_type, 1);
 		pFile->Read(pPoint->m_name, 0x20);
+		WVector vec;
 		pFile->Read(&vec, 0xC);
 		pPoint->m_pos = vec;
 
@@ -437,6 +774,11 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 			pFile->Read(desc, 0x40);
 			pPoint->m_desc = desc;
 		}
+#ifdef PG_7XX
+		if (gbin72) {
+			pFile->Seek(kGbin72PointExtra, 1);
+		}
+#endif
 
 		switch (pPoint->m_type) {
 		case 1:
@@ -458,16 +800,22 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 		pFile->Read(&pArea->m_type, 1);
 		pFile->Read(pArea->m_name, 0x40);
+		WVector vec;
 		pFile->Read(&vec, 0xC);
 		pArea->m_aabb.min = vec;
 		pFile->Read(&vec, 0xC);
 		pArea->m_aabb.max = vec;
+#ifdef PG_7XX
+		if (gbin72) {
+			pFile->Seek(kGbin72AreaExtra, 1);
+		}
+#endif
 
 		if (pArea->m_type == 5) {
 			sSoundBox soundBox;
-			soundBox.m_elapsed = 0.0f;
-			soundBox.m_range = 60.0f;
 			soundBox.m_interval = -1.0f;
+			soundBox.m_range = 60.0f;
+			soundBox.m_elapsed = 0.0f;
 			sscanf(pArea->m_name, "%s %f %f", soundBox.m_name, &soundBox.m_range, &soundBox.m_interval);
 			soundBox.m_box = pArea->m_aabb;
 			m_soundBoxes.push_back(soundBox);
@@ -478,15 +826,14 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 		}
 	}
 
-	unsigned char curMap = GetCurMap() > 0x7F && GetCurMap() != 0xFD ? GetCurMap() - 0x80 : GetCurMap();
+	int curMap = GetCurMap() > 0x7F && GetCurMap() != 0xFD ? GetCurMap() - 0x80 : GetCurMap();
 	IFF_STRUCT::sCourse *pMapCourse = ItemManager()->FindCourse(curMap | 0x28000000);
 
-	CGolfDoc *pGolfDoc = GOLFDOC();
-	if (pGolfDoc->m_currentHole != 0x13) {
+	if (GOLFDOC()->m_currentHole != 0x13) {
 		if (pMapCourse && pMapCourse->m_propertyFile[0]) {
-			m_pGolfDoc->LoadXml(pMapCourse->m_propertyFile, pGolfDoc->m_currentHole - 1, false);
+			m_pGolfDoc->LoadXml(pMapCourse->m_propertyFile, GOLFDOC()->m_currentHole - 1, false);
 		} else {
-			m_pGolfDoc->LoadXml(MakeStr("%s_property.xml", pMapCourse ? pMapCourse->m_mapName : 0), pGolfDoc->m_currentHole - 1, false);
+			m_pGolfDoc->LoadXml(MakeStr("%s_property.xml", GetCurMapName()), GOLFDOC()->m_currentHole - 1, false);
 		}
 	}
 
@@ -534,6 +881,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 		}
 
 		for (int j = 0; j < areaRecord.m_numPoints; j++) {
+			WVector vec;
 			pFile->Read(&vec, 0xC);
 			WVector point = vec;
 			node.Add(point);
@@ -551,13 +899,18 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 	sModelRecord record;
 	record.m_flags = 0;
 	pFile->Read(&record, 0xAC);
+#ifdef PG_7XX
+	if (gbin72) {
+		pFile->Seek(kGbin72ModelExtra, 1);
+	}
+#endif
 
 	m_pBgModel->m_subOrder = record.m_flags & 7;
 	m_pBgModel->m_order = record.m_flags & 0xF8;
 	m_pBgModel->m_aabb = record.m_aabb;
 	m_pBgModel->m_matrix = record.m_matrix;
-	m_pBgModel->m_basePos = (m_pBgModel->m_aabb.min + m_pBgModel->m_aabb.max) * 0.5f;
-	m_pBgModel->m_center = (m_pBgModel->m_aabb.min + m_pBgModel->m_aabb.max) * 0.5f;
+	m_pBgModel->m_basePos = (m_pBgModel->m_aabb.max + m_pBgModel->m_aabb.min) * 0.5f;
+	m_pBgModel->m_center = (m_pBgModel->m_aabb.max + m_pBgModel->m_aabb.min) * 0.5f;
 	m_pBgModel->m_radius = (m_pBgModel->m_aabb.max - m_pBgModel->m_aabb.min).Magnitude() * 0.5f;
 	m_pBgModel->m_scale = sqrtf(record.m_matrix.xx * record.m_matrix.xx + record.m_matrix.zx * record.m_matrix.zx + record.m_matrix.yx * record.m_matrix.yx);
 	strncpy(m_pBgModel->m_name, record.m_name, 0x1F);
@@ -577,7 +930,10 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 	for (w_mesh *pMesh = pRoot->GetMesh(); pMesh; pMesh = pMesh->next) {
 		for (int i = 0; i < pMesh->indexNum; i += 3) {
 			for (int j = 0; j < 3; j++) {
-				unsigned short v = pMesh->indexList[i + j];
+				int v = pMesh->indexList[i + j];
+#ifdef PG_7XX
+				if (!gbin72) {   // 0x72: per-vertex colours after this loop
+#endif
 				unsigned long color;
 				pFile->Read(&color, 4);
 
@@ -585,16 +941,20 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 				if (color >> 24) {
 					pMesh->vtxColorList[v] |= 0xFF000000;
 				}
+#ifdef PG_7XX
+				}
+#endif
 				m_pBgModel->m_pTriangles[triIndex].m_vertex[j] = pMesh->vecList[v] * pRoot->GetMatrix();
 			}
 
-			sTriangle *pTri = &m_pBgModel->m_pTriangles[triIndex];
-			pTri->m_plane.normal = WCrossProduct(pTri->m_vertex[2] - pTri->m_vertex[1], pTri->m_vertex[0] - pTri->m_vertex[1]);
-			pTri->m_plane.normal.Normalize();
-			pTri->m_plane.dis = -pTri->m_plane.normal.z * pTri->m_vertex[0].z + -pTri->m_plane.normal.y * pTri->m_vertex[0].y + -pTri->m_plane.normal.x * pTri->m_vertex[0].x;
-			pTri->m_doubleSided = (pMesh->xiDrawFlag2 >> 10) & 1;
-			pTri->m_propIndex = m_pTextures[m_texIndexMap[pMesh->texHandle]].m_param;
-			pTri->m_texIndex = m_pTextures[m_texIndexMap[pMesh->texHandle]].m_handle;
+			WVector *pVertex = m_pBgModel->m_pTriangles[triIndex].m_vertex;
+
+			m_pBgModel->m_pTriangles[triIndex].m_plane.normal = WCrossProduct(pVertex[2] - pVertex[1], pVertex[0] - pVertex[1]);
+			m_pBgModel->m_pTriangles[triIndex].m_plane.normal.Normalize();
+			m_pBgModel->m_pTriangles[triIndex].m_plane.dis = m_pBgModel->m_pTriangles[triIndex].m_plane.normal.z * -1.0f * pVertex[0].z + m_pBgModel->m_pTriangles[triIndex].m_plane.normal.y * -1.0f * pVertex[0].y + m_pBgModel->m_pTriangles[triIndex].m_plane.normal.x * -1.0f * pVertex[0].x;
+			m_pBgModel->m_pTriangles[triIndex].m_doubleSided = (pMesh->xiDrawFlag2 & 0x400) != 0;
+			m_pBgModel->m_pTriangles[triIndex].m_propIndex = m_pTextures[m_texIndexMap[pMesh->texHandle]].m_param;
+			m_pBgModel->m_pTriangles[triIndex].m_texIndex = m_pTextures[m_texIndexMap[pMesh->texHandle]].m_handle;
 
 			CGimmickContainer *pGimmick = 0;
 			IContentsDataContainer *pContainer = WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0xA3);
@@ -602,24 +962,24 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 				pGimmick = (CGimmickContainer *)pContainer;
 			}
 
-			w_texlist *pTexList = g_resrcmng->FindTexture(pTri->m_texIndex);
+			w_texlist *pTexList = g_resrcmng->FindTexture(m_pBgModel->m_pTriangles[triIndex].m_texIndex);
 			if (pGimmick->NeedToMakeTriPtArray(pTexList->texname, 0)) {
 				std::map<int, std::vector<sTriangle *> >::iterator it = m_triArrays.find(pMesh->texHandle);
 				if (it == m_triArrays.end()) {
 					std::vector<sTriangle *> tris;
-					tris.push_back(pTri);
+					tris.push_back(&m_pBgModel->m_pTriangles[triIndex]);
 					m_triArrays[pMesh->texHandle] = tris;
 				} else {
-					it->second.push_back(pTri);
+					it->second.push_back(&m_pBgModel->m_pTriangles[triIndex]);
 				}
 			}
 
 			if (bBaseMeshTest) {
-				if (pTri->m_plane.normal.y < 0.0f) {
+				if (m_pBgModel->m_pTriangles[triIndex].m_plane.normal.y < 0.0f) {
 					*(unsigned short *)&pMesh->vtxColorList[pMesh->indexList[i]] = 0;
 					*(unsigned short *)&pMesh->vtxColorList[pMesh->indexList[i + 1]] = 0;
 					*(unsigned short *)&pMesh->vtxColorList[pMesh->indexList[i + 2]] = 0;
-				} else if (fabsf(pTri->m_plane.normal.y) < 0.00001f) {
+				} else if (WisZero(m_pBgModel->m_pTriangles[triIndex].m_plane.normal.y, data_a111e4)) {
 					pMesh->vtxColorList[pMesh->indexList[i]] &= 0xFF0000FF;
 					pMesh->vtxColorList[pMesh->indexList[i + 1]] &= 0xFF0000FF;
 					pMesh->vtxColorList[pMesh->indexList[i + 2]] &= 0xFF0000FF;
@@ -628,6 +988,12 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 			triIndex++;
 		}
 	}
+
+#ifdef PG_7XX
+	if (gbin72) {
+		ReadGbin72Colors(pFile, m_pBgModel->m_pPuppet, GOLFDOC()->m_fogBrightness);
+	}
+#endif
 
 	w_bound_box *pCenter = m_pBgModel->m_pPuppet->m_bbList.Find("center");
 	if (pCenter && pCenter->info->option) {
@@ -641,23 +1007,32 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 	WSingleton<CSceneManager>::Instance()->RegisterElement((eObjType)0, m_pBgModel->m_pPuppet, 0, m_pBgModel->m_name, 3, 0);
 
+#ifdef PG_MATERIAL_HINTS
+	// A new course: the last one's lamps go (PgRegisterLamps).
+	PgLampCourseReset();
+#endif
 	int numInstances = 0;
 	int numRecords = m_numOtherRecords[4] + m_numOtherRecords[3] + m_numOtherRecords[2];
-	sModel **ppNext = ppModels;
+	int modelIndex = 0;
 	for (int i = 0; i < numRecords; i++) {
 		pFile->Read(&record, 0xAC);
+#ifdef PG_7XX
+		if (gbin72) {
+			pFile->Seek(kGbin72ModelExtra, 1);
+		}
+#endif
 
-		if (record.m_kind == 1 ? courseKind == 2 : record.m_kind == 2 && courseKind == 1) {
+		if ((record.m_kind == 1 && courseKind == 2) || (record.m_kind == 2 && courseKind == 1)) {
 			continue;
 		}
 
-		sModel *pModel = *ppNext++;
+		sModel *pModel = ppModels[modelIndex++];
 		pModel->m_subOrder = record.m_flags & 7;
 		pModel->m_order = record.m_flags & 0xF8;
 		pModel->m_aabb = record.m_aabb;
 		pModel->m_sceneAabb = record.m_sceneAabb;
 		pModel->m_matrix = record.m_matrix;
-		pModel->m_basePos = (pModel->m_aabb.min + pModel->m_aabb.max) * 0.5f;
+		pModel->m_basePos = (pModel->m_aabb.max + pModel->m_aabb.min) * 0.5f;
 		pModel->m_center = (pModel->m_aabb.min + pModel->m_aabb.max) * 0.5f;
 		pModel->m_radius = (pModel->m_aabb.max - pModel->m_aabb.min).Magnitude() * 0.5f;
 		pModel->m_scale = sqrtf(record.m_matrix.xx * record.m_matrix.xx + record.m_matrix.zx * record.m_matrix.zx + record.m_matrix.yx * record.m_matrix.yx);
@@ -665,6 +1040,9 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 		strncpy(pModel->m_baseName, record.m_baseName, 0x1F);
 
 		pModel->m_pPuppet = g_resrcmng->GetPuppet(pModel->m_name, IsSpecialAdditionModel(pModel->m_name), pModel->m_subOrder != 0, false);
+#ifdef PG_MATERIAL_HINTS
+		PgSetModelHints(pModel->m_pPuppet, pModel->m_name);
+#endif
 		if (pModel->m_subOrder) {
 			numInstances++;
 		}
@@ -683,6 +1061,9 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 		pModel->m_pPuppet->UpdateLightSource(&g_lightset, false, 0);
 
 		ProcessPostLoadPet(pModel);
+#ifdef PG_MATERIAL_HINTS
+		PgRegisterModelLamps(pModel->m_pPuppet);
+#endif
 
 		unsigned long flags = 0;
 		if (pModel->m_subOrder) {
@@ -726,7 +1107,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 		if (bPlaceHoleCup) {
 			if (GetCurMap() == 4 || GetCurMap() == 5) {
-				if (_stricmp(fxName, "CL_Default.spr") == 0) {
+				if (stricmp(fxName, "CL_Default.spr") == 0) {
 					continue;
 				}
 			}
@@ -751,10 +1132,10 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 		}
 		pExt++;
 
-		if (_stricmp(pExt, "spr") == 0) {
+		if (stricmp(pExt, "spr") == 0) {
 			((CFxSpray *)pFx)->SetLight(g_lightset);
 			m_bgFx[m_numBgFx].m_pSpray = (CFxSpray *)pFx;
-		} else if (_stricmp(pExt, "seq") == 0) {
+		} else if (stricmp(pExt, "seq") == 0) {
 			((CFxSequence *)pFx)->SetLight(g_lightset);
 			m_bgFx[m_numBgFx].m_pSequence = (CFxSequence *)pFx;
 		} else {
@@ -1065,40 +1446,45 @@ void WPolySoup::ChangeObjectTexture(const char *oldName, const char *newName, in
 		return;
 	}
 
-	if (oldName != 0 && newName != 0) {
-		if (index == -1) {
-			int oldHandle = g_resrcmng->FindTexture(oldName)->texhandle;
-			int newHandle = g_resrcmng->LoadTexture(newName, 0, 0, 0);
-			w_mesh *pMesh = m_models[0]->m_pPuppet->GetRootBone()->GetMesh();
+	if (oldName == 0 || newName == 0)
+		return;
 
-			if (pMesh == 0) {
-				return;
-			}
-			pMesh = pMesh->next;
-			if (pMesh == 0) {
-				return;
-			}
-			m_models[0]->m_pPuppet->ChangeTextureByHandle(newHandle, oldHandle, m_models[0]->m_pPuppet);
-		} else {
-			int modelIndex = index;
+	int oldHandle;
+	int newHandle;
+	w_mesh *pMesh;
 
-			for (int i = 0; i < m_numObjects; i++) {
-				if (m_models[i]->m_objIndex == index) {
-					modelIndex = i;
-					break;
-				}
-			}
+	if (index == -1) {
+		oldHandle = g_resrcmng->FindTexture(oldName)->texhandle;
+		newHandle = g_resrcmng->LoadTexture(newName, 0, 0, 0);
+		pMesh = m_models[0]->m_pPuppet->GetRootBone()->GetMesh();
 
-			int oldHandle = g_resrcmng->FindTexture(oldName)->texhandle;
-			int newHandle = g_resrcmng->LoadTexture(newName, 0, 0, 0);
-			w_mesh *pMesh = m_models[modelIndex]->m_pPuppet->GetRootBone()->GetMesh();
-
-			if (pMesh == 0) {
-				return;
-			}
-			pMesh = pMesh->next;
-			m_models[modelIndex]->m_pPuppet->ChangeTextureByHandle(newHandle, oldHandle, m_models[modelIndex]->m_pPuppet);
+		if (pMesh == 0) {
+			return;
 		}
+		pMesh = pMesh->next;
+		if (pMesh == 0) {
+			return;
+		}
+		m_models[0]->m_pPuppet->ChangeTextureByHandle(newHandle, oldHandle, m_models[0]->m_pPuppet);
+	} else {
+		int modelIndex = index;
+
+		for (int i = 0; i < m_numObjects; i++) {
+			if (m_models[i]->m_objIndex == index) {
+				modelIndex = i;
+				break;
+			}
+		}
+
+		oldHandle = g_resrcmng->FindTexture(oldName)->texhandle;
+		newHandle = g_resrcmng->LoadTexture(newName, 0, 0, 0);
+		pMesh = m_models[modelIndex]->m_pPuppet->GetRootBone()->GetMesh();
+
+		if (pMesh == 0) {
+			return;
+		}
+		pMesh = pMesh->next;
+		m_models[modelIndex]->m_pPuppet->ChangeTextureByHandle(newHandle, oldHandle, m_models[modelIndex]->m_pPuppet);
 	}
 }
 
@@ -1485,6 +1871,9 @@ void WPolySoup::SetAdditionModel(const char *name, const WVector &pos) {
 	strncpy(pModel->m_baseName, m_models[4]->m_baseName, 0x1F);
 
 	pModel->m_pPuppet = g_resrcmng->GetPuppet(pModel->m_name, IsSpecialAdditionModel(pModel->m_name), pModel->m_subOrder != 0, false);
+#ifdef PG_MATERIAL_HINTS
+	PgSetModelHints(pModel->m_pPuppet, pModel->m_name);
+#endif
 
 	w_bound_box *pBox = pModel->m_pPuppet->m_bbList.Find("char0");
 	if (pBox) {
@@ -1505,6 +1894,9 @@ void WPolySoup::SetAdditionModel(const char *name, const WVector &pos) {
 	pModel->m_pPuppet->UpdateLightSource(&g_lightset, false, 0);
 
 	ProcessPostLoadPet(pModel);
+#ifdef PG_MATERIAL_HINTS
+	PgRegisterModelLamps(pModel->m_pPuppet);
+#endif
 
 	unsigned long flags = 0;
 	if (pModel->m_subOrder) {
@@ -1679,6 +2071,16 @@ static void GetBarycentricProjected(const WVector &a, const WVector &c, const WV
 	v = (cx * py - cy * px) / (by * cx - bx * cy);
 }
 
+#ifdef PG_7XX
+// PG_7XX: the bone whose meshes the shadow-map packs belong to while a
+// later client's .sbin is read (PgLoadShadowmapBone); 0: the root, as in the
+// 2011 client, where PG_SMAP_BONE() is the root bone itself.
+static WBone *s_pgSmapBone = 0;
+#define PG_SMAP_BONE() (s_pgSmapBone ? s_pgSmapBone : m_pBgModel->m_pPuppet->GetRootBone())
+#else
+#define PG_SMAP_BONE() m_pBgModel->m_pPuppet->GetRootBone()
+#endif
+
 // polysoup.cpp:2248
 // Loads the shadow map of the background (<map>.sbin): the file must match
 // the background's meshes (their count, vertex and index counts).
@@ -1696,6 +2098,46 @@ bool WPolySoup::LoadShadowmapInfo(void) {
 	if (pFile == 0) {
 		return false;
 	}
+
+#ifdef PG_7XX
+	// The later clients' .sbin (the JP 983 exe's reader, 0x9473D0): a tag
+	// 0xFFFE<major><minor>, from 1.0 on followed by groups of a bone name
+	// and that bone's shadow map in the 2011 layout (sub_946CD0, the body
+	// below with the bone in place of the root). Without the tag, the 2011
+	// file. A name no bone has ends the groups, keeping what was loaded.
+	unsigned int tag = 0;
+	pFile->Read(&tag, 4);
+	if ((tag & 0xFFFF0000) == 0xFFFE0000 && tag >= 0xFFFE0100) {
+		bool loaded = true;
+		int numGroups = 0;
+		pFile->Read(&numGroups, 4);
+		for (int group = 0; group < numGroups && loaded; group++) {
+			int nameLength = 0;
+			pFile->Read(&nameLength, 4);
+			char boneName[0x104];
+			int stored = nameLength < 0x103 ? nameLength : 0x103;
+			pFile->Read(boneName, stored);
+			boneName[stored] = 0;
+			if (nameLength > stored) {
+				pFile->Seek(nameLength - stored, 1);
+			}
+
+			WBone *pBone = m_pBgModel->m_pPuppet->FindBone(boneName);
+			if (pBone == 0 || pBone->GetMesh() == 0) {
+				break;
+			}
+			// m_pSmapMeshes and its draw flags keep the last group's packs.
+			if (group > 0) {
+				delete[] m_pSmapDrawFlags;
+				m_pSmapDrawFlags = 0;
+			}
+			loaded = PgLoadShadowmapBone(pFile, pBone);
+		}
+		CloseCFile(pFile);
+		return loaded;
+	}
+	pFile->Seek(-4, 1);
+#endif
 
 	w_mesh *pFirst = m_pBgModel->m_pPuppet->GetRootBone()->GetMesh();
 	w_mesh *pMesh;
@@ -1781,6 +2223,92 @@ bool WPolySoup::LoadShadowmapInfo(void) {
 	return true;
 }
 
+#ifdef PG_7XX
+// LoadShadowmapInfo's body for one bone of a later client's .sbin: that
+// bone's meshes must match, the packs join its mesh list. The file stays open.
+bool WPolySoup::PgLoadShadowmapBone(cFile *pFile, WBone *pBone) {
+	w_mesh *pFirst = pBone->GetMesh();
+	w_mesh *pMesh;
+	int numMeshes = 0;
+	for (pMesh = pFirst; pMesh; pMesh = pMesh->next) {
+		numMeshes++;
+	}
+
+	w_mesh **ppMeshes = new w_mesh*[numMeshes];
+
+	int i = 0;
+	for (pMesh = pFirst; pMesh; pMesh = pMesh->next, i++) {
+		ppMeshes[i] = pMesh;
+	}
+
+	pFile->Read(&i, 4);
+
+	if (i != numMeshes) {
+		delete[] ppMeshes;
+		return false;
+	}
+
+	if (numMeshes == 0) {
+		return true;
+	}
+
+	for (i = 0; i < numMeshes; i++) {
+		int vtxNum;
+		int indexNum;
+		pFile->Read(&vtxNum, 4);
+		pFile->Read(&indexNum, 4);
+
+		if (vtxNum != ppMeshes[i]->vtxNum || indexNum != ppMeshes[i]->indexNum) {
+			delete[] ppMeshes;
+			return false;
+		}
+	}
+
+	int numUV = 0;
+	int numVtx = 0;
+	pFile->Read(&numVtx, 4);
+	pFile->Read(&numUV, 4);
+
+	if (numVtx == 0 || numUV == 0) {
+		delete[] ppMeshes;
+		return false;
+	}
+
+	WVector *pVtx = new WVector[numVtx];
+	pFile->Read(pVtx, numVtx * sizeof(WVector));
+
+	float (*pUV)[2] = new float[numUV][2];
+	pFile->Read(pUV, numUV * sizeof(float[2]));
+
+	SmCase cases[2];
+
+	s_pgSmapBone = pBone;
+	smLoadSmapMeshes(cases, pFile, ppMeshes, pVtx, pUV);
+	smLoadOutFrags(pFile, numMeshes, ppMeshes, pVtx, cases);
+	s_pgSmapBone = 0;
+
+	if (pVtx) {
+		delete[] pVtx;
+	}
+	if (pUV) {
+		delete[] pUV;
+	}
+
+	delete[] ppMeshes;
+
+	int maxVtx = 0;
+	for (pMesh = pFirst; pMesh; pMesh = pMesh->next) {
+		if (maxVtx < pMesh->vtxNum) {
+			maxVtx = pMesh->vtxNum;
+		}
+	}
+
+	pBone->AllocVTX(maxVtx);
+
+	return true;
+}
+#endif
+
 // polysoup.cpp:2392
 // Reads the shadow-map packs of the two cases and appends their meshes to
 // the background's mesh list; the second case and the skipped blocks depend
@@ -1789,7 +2317,7 @@ void WPolySoup::smLoadSmapMeshes(SmCase *pCases, cFile *pFile, w_mesh **ppMeshes
 	int i;
 	int size;
 
-	w_mesh *pLast = m_pBgModel->m_pPuppet->GetRootBone()->GetMesh();
+	w_mesh *pLast = PG_SMAP_BONE()->GetMesh();
 
 	while (pLast && pLast->next) {
 		pLast = pLast->next;
@@ -1969,7 +2497,7 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 				unsigned long color = ((unsigned char)InterpolateTriangle((float)(pSrc->vtxColorList[i0] >> 24), (float)(pSrc->vtxColorList[i1] >> 24), (float)(pSrc->vtxColorList[i2] >> 24), u, v) << 24) | 0xFFFFFF;
 
 				for (k = 0; k < numVtx; k++) {
-					if (WisEqual(pVerts[k].x, pVtx[vtx].x, 0.00001f) && WisEqual(pVerts[k].y, pVtx[vtx].y, 0.00001f) && WisEqual(pVerts[k].z, pVtx[vtx].z, 0.00001f) && pColors[k] == color && WisEqual(pUVs[k][0], pUV[uv][0], 0.00001f) && WisEqual(pUVs[k][1], pUV[uv][1], 0.00001f)) {
+					if (WisEqual(pVerts[k].x, pVtx[vtx].x, data_a111e4) && WisEqual(pVerts[k].y, pVtx[vtx].y, data_a111e4) && WisEqual(pVerts[k].z, pVtx[vtx].z, data_a111e4) && pColors[k] == color && WisEqual(pUVs[k][0], pUV[uv][0], data_a111e4) && WisEqual(pUVs[k][1], pUV[uv][1], data_a111e4)) {
 						break;
 					}
 				}
@@ -1989,7 +2517,7 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 				vtx -= 0x8000;
 
 				for (k = 0; k < numVtx; k++) {
-					if (WisEqual(pVerts[k].x, pSrc->vecList[vtx].x, 0.00001f) && WisEqual(pVerts[k].y, pSrc->vecList[vtx].y, 0.00001f) && WisEqual(pVerts[k].z, pSrc->vecList[vtx].z, 0.00001f) && pColors[k] == (pSrc->vtxColorList[vtx] | 0xFFFFFF) && WisEqual(pUVs[k][0], pUV[uv][0], 0.00001f) && WisEqual(pUVs[k][1], pUV[uv][1], 0.00001f)) {
+					if (WisEqual(pVerts[k].x, pSrc->vecList[vtx].x, data_a111e4) && WisEqual(pVerts[k].y, pSrc->vecList[vtx].y, data_a111e4) && WisEqual(pVerts[k].z, pSrc->vecList[vtx].z, data_a111e4) && pColors[k] == (pSrc->vtxColorList[vtx] | 0xFFFFFF) && WisEqual(pUVs[k][0], pUV[uv][0], data_a111e4) && WisEqual(pUVs[k][1], pUV[uv][1], data_a111e4)) {
 						break;
 					}
 				}
@@ -2018,7 +2546,7 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 	pMesh->uvData = new float[numVtx][2];
 	memcpy(pMesh->uvData, pUVs, numVtx * sizeof(float[2]));
 
-	WBone::CalcMeshAABB(*m_pBgModel->m_pPuppet->GetRootBone(), *pMesh);
+	WBone::CalcMeshAABB(*PG_SMAP_BONE(), *pMesh);
 
 	delete[] pVerts;
 	delete[] pUVs;
@@ -2034,14 +2562,14 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 // sorted and built into the shadow-map meshes (smBuildOutFragMeshes).
 void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, WVector *pVtx, SmCase *pCases) {
 	int numInFrags = 0;
-	int c, i, j;
+	int c, i, j, k, r;
 
 	for (c = 0; c < 2; c++) {
-		SmInFragList *pLists = pCases[c].m_pLists;
-		if (pLists) {
-			for (i = 0; i < pCases[c].m_numLists; i++) {
-				for (j = 0; j < pLists[i].m_numFrags; j++) {
-					if (pLists[i].m_pFrags[j].m_triIndex != 0xFFFF) {
+		if (pCases[c].m_pLists) {
+			for (j = 0; j < pCases[c].m_numLists; j++) {
+				SmInFragList *pLists = pCases[c].m_pLists;
+				for (k = 0; k < pLists[j].m_numFrags; k++) {
+					if (pLists[j].m_pFrags[k].m_triIndex != 0xFFFF) {
 						numInFrags++;
 					}
 				}
@@ -2091,11 +2619,12 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 
 	for (c = 0; c < 2; c++) {
 		if (pCases[c].m_pLists) {
-			for (i = 0; i < pCases[c].m_numLists; i++) {
+			for (j = 0; j < pCases[c].m_numLists; j++) {
 				SmInFragList *pLists = pCases[c].m_pLists;
 				if (pLists) {
-					for (j = 0; j < pLists[i].m_numFrags; j++) {
-						if (pLists[i].m_pFrags[j].m_triIndex != 0xFFFF) pCounts[numMeshes * 3 + pLists[i].m_pFrags[j].m_meshIndex]++;
+					for (k = 0; k < pLists[j].m_numFrags; k++) {
+						SmInFrag *pFrag = &pLists[j].m_pFrags[k];
+						if (pFrag->m_triIndex != 0xFFFF) pCounts[numMeshes * 3 + pFrag->m_meshIndex]++;
 					}
 				}
 			}
@@ -2128,17 +2657,17 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 
 	for (c = 0; c < 2; c++) {
 		if (pCases[c].m_pLists) {
-			for (i = 0; i < pCases[c].m_numLists; i++) {
+			for (j = 0; j < pCases[c].m_numLists; j++) {
 				SmInFragList *pLists = pCases[c].m_pLists;
 				if (pLists) {
-					for (j = 0; j < pLists[i].m_numFrags; j++) {
-						SmInFrag *pFrag = &pLists[i].m_pFrags[j];
+					for (k = 0; k < pLists[j].m_numFrags; k++) {
+						SmInFrag *pFrag = &pLists[j].m_pFrags[k];
 						if (pFrag->m_triIndex != 0xFFFF) {
 							int mesh = pFrag->m_meshIndex;
 							int *pCount = &pCounts[numMeshes * 3 + mesh];
-							int dst = pCounts[numMeshes * 2 + mesh] + pCounts[numMeshes + mesh] + pCounts[mesh] + *pCount;
-							pOut[dst].m_triIndex = pFrag->m_triIndex;
-							memcpy(pOut[dst].m_vtx, pFrag->m_vtx, 6);
+							SmOutFrag *pDst = &pOut[pCounts[numMeshes * 2 + mesh] + pCounts[numMeshes + mesh] + pCounts[mesh] + *pCount];
+							pDst->m_triIndex = pFrag->m_triIndex;
+							memcpy(pDst->m_vtx, pFrag->m_vtx, 6);
 							(*pCount)++;
 						}
 					}
@@ -2159,13 +2688,11 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 	}
 
 	for (i = 0; i < numMeshes; i++) {
-		int count = pCounts[numMeshes + i];
-		if (count > 0) {
+		if (pCounts[numMeshes + i] > 0) {
 			// The fragments with no later duplicate.
 			int numUnique = 0;
-			int k, r;
-			for (j = 0; j < count - 1; j++) {
-				for (k = j + 1; k < count; k++) {
+			for (j = 0; j < pCounts[numMeshes + i] - 1; j++) {
+				for (k = j + 1; k < pCounts[numMeshes + i]; k++) {
 					for (r = 0; r < 3; r++) {
 						if (pOut[pCounts[i] + j].m_vtx[0] == pOut[pCounts[i] + k].m_vtx[r] && pOut[pCounts[i] + j].m_vtx[1] == pOut[pCounts[i] + k].m_vtx[(r + 1) % 3] && pOut[pCounts[i] + j].m_vtx[2] == pOut[pCounts[i] + k].m_vtx[(r + 2) % 3]) {
 							break;
@@ -2175,14 +2702,14 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 						break;
 					}
 				}
-				if (k == count) {
+				if (k == pCounts[numMeshes + i]) {
 					numUnique++;
 				}
 			}
 
-			if (numUnique + 1 != count) {
+			if (numUnique + 1 != pCounts[numMeshes + i]) {
 				SmOutFrag *pKept = new SmOutFrag[numUnique + 1];
-				int numKept = 0;
+				numUnique = 0;
 				for (j = 0; j < pCounts[numMeshes + i] - 1; j++) {
 					for (k = j + 1; k < pCounts[numMeshes + i]; k++) {
 						for (r = 0; r < 3; r++) {
@@ -2195,15 +2722,15 @@ void WPolySoup::smLoadOutFrags(cFile *pFile, int numMeshes, w_mesh **ppMeshes, W
 						}
 					}
 					if (k == pCounts[numMeshes + i]) {
-						pKept[numKept++] = pOut[pCounts[i] + j];
+						memcpy(&pKept[numUnique++], &pOut[pCounts[i] + j], sizeof(SmOutFrag));
 					}
 				}
-				pKept[numKept++] = pOut[pCounts[i] + j];
-				qsort(pKept, numKept, 8, smCompareOutFrag);
-				smBuildOutFragMeshes(ppMeshes[i], pKept, numKept, pVtx);
+				memcpy(&pKept[numUnique++], &pOut[pCounts[i] + j], sizeof(SmOutFrag));
+				qsort(pKept, numUnique, 8, smCompareOutFrag);
+				smBuildOutFragMeshes(ppMeshes[i], pKept, numUnique, pVtx);
 				delete[] pKept;
 			} else {
-				qsort(&pOut[pCounts[i]], count, 8, smCompareOutFrag);
+				qsort(&pOut[pCounts[i]], pCounts[numMeshes + i], 8, smCompareOutFrag);
 				smBuildOutFragMeshes(ppMeshes[i], &pOut[pCounts[i]], pCounts[numMeshes + i], pVtx);
 			}
 		}
@@ -2228,9 +2755,6 @@ int __cdecl WPolySoup::smCompareOutFrag(const void *a, const void *b) {
 	}
 	return 0;
 }
-
-// The epsilon of the vertex merge, a nameless .rdata float of this object.
-extern "C" const float data_a111e4;
 
 // polysoup.cpp:2982
 // Splits the triangles of pMesh named by the output fragments (sorted by
@@ -2398,6 +2922,22 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 }
 
 // polysoup.cpp:3204
+#ifdef PG_7XX
+// The shadow-map meshes (drawFlag 0x21100000) of every bone from pBone on:
+// a later client's .sbin puts packs on several bones, m_pSmapMeshes holds
+// only the last one's.
+static void PgSetSmapAlpha(WBone *pBone, float alpha) {
+	for (; pBone; pBone = pBone->GetNext()) {
+		for (w_mesh *pMesh = pBone->GetMesh(); pMesh; pMesh = pMesh->next) {
+			if ((pMesh->drawFlag & 0x21100000) == 0x21100000) {
+				pMesh->alpha = alpha;
+			}
+		}
+		PgSetSmapAlpha(pBone->GetChild(), alpha);
+	}
+}
+#endif
+
 void WPolySoup::EnableShadowmap(bool enable) {
 	w_mesh *pMesh;
 
@@ -2418,6 +2958,11 @@ void WPolySoup::EnableShadowmap(bool enable) {
 			}
 		}
 	}
+#ifdef PG_7XX
+	if (m_pSmapMeshes && m_pBgModel && m_pBgModel->m_pPuppet) {
+		PgSetSmapAlpha(m_pBgModel->m_pPuppet->GetRootBone(), enable ? 1.0f : 0.0f);
+	}
+#endif
 }
 
 // polysoup.cpp:3234
@@ -2455,8 +3000,22 @@ void WPolySoup::ReloadBasePet(void) {
 		offset += it->GetList().size() * 12 + 0x18;
 	}
 
+#ifdef PG_7XX
+	// 0x72: the longer header and records before the colours, which are
+	// grouped per bone and vertex (ReadGbin72Colors).
+	bool gbin72 = m_numOtherRecords[1] == 0x72;
+	if (gbin72) {
+		offset += kGbin72HeaderExtra + m_numCameras * kGbin72CameraExtra + m_numPoints * kGbin72PointExtra + m_numAreas * kGbin72AreaExtra;
+	}
+#endif
 	pFile->Seek(offset + 0xAC, 1);
 
+#ifdef PG_7XX
+	if (gbin72) {
+		pFile->Seek(kGbin72ModelExtra, 1);
+		ReadGbin72Colors(pFile, m_pBgModel->m_pPuppet, GOLFDOC()->m_fogBrightness);
+	} else
+#endif
 	for (w_mesh *pMesh = m_pBgModel->m_pPuppet->GetRootBone()->GetMesh(); pMesh; pMesh = pMesh->next) {
 		for (int i = 0; i < pMesh->indexNum; i += 3) {
 			for (int j = 0; j < 3; j++) {
@@ -2644,40 +3203,33 @@ void WPolySoup::GatherHolecupTris(std::vector<sHoleTri> &tris, std::vector<sCupV
 // Whether pos lies inside the triangle tri on the XZ plane: pos must be on
 // the same side of every edge as the triangle's own winding.
 bool WPolySoup::IsInTri(WVector &pos, WVector *tri[]) {
-	float x1 = tri[1]->x - tri[0]->x;
-	float z1 = tri[1]->z - tri[0]->z;
-	float len = 1.0f / sqrtf(z1 * z1 + x1 * x1);
-	x1 *= len;
-	z1 *= len;
-	float x2 = tri[2]->x - tri[0]->x;
-	float z2 = tri[2]->z - tri[0]->z;
+	WVector2D e1;
+	e1.x = tri[1]->x - tri[0]->x;
+	e1.y = tri[1]->z - tri[0]->z;
+	e1 /= e1.Magnitude();
+	WVector2D e2;
+	e2.x = tri[2]->x - tri[0]->x;
+	e2.y = tri[2]->z - tri[0]->z;
 
-	float px = pos.x;
-	float pz = pos.z;
-	len = 1.0f / sqrtf(z2 * z2 + x2 * x2);
-	x2 *= len;
-	z2 *= len;
+	WVector2D p(pos.x, pos.z);
+	e2 /= e2.Magnitude();
 
-	float winding = x1 * z2 - x2 * z1;
+	float winding = e1.x * e2.y - e2.x * e1.y;
 
 	if (Abs(winding) < 0.001f)
 		return false;
 
 	for (int i = 0; i < 3; i++) {
-		float ex = tri[(i + 1) % 3]->x - tri[i]->x;
-		float ez = tri[(i + 1) % 3]->z - tri[i]->z;
-		len = 1.0f / sqrtf(ez * ez + ex * ex);
-		ex *= len;
-		ez *= len;
-		float dx = px - tri[i]->x;
-		float dz = pz - tri[i]->z;
-		len = 1.0f / sqrtf(dz * dz + dx * dx);
-		dx *= len;
-		dz *= len;
+		WVector2D edge;
+		edge.x = tri[(i + 1) % 3]->x - tri[i]->x;
+		edge.y = tri[(i + 1) % 3]->z - tri[i]->z;
+		edge /= edge.Magnitude();
+		WVector2D toPos;
+		toPos.x = p.x - tri[i]->x;
+		toPos.y = p.y - tri[i]->z;
+		toPos /= toPos.Magnitude();
 
-		float side = ex * dz - dx * ez;
-
-		if (side * winding < 0.0f)
+		if ((edge.x * toPos.y - toPos.x * edge.y) * winding < 0.0f)
 			return false;
 	}
 
@@ -2694,19 +3246,25 @@ bool WPolySoup::IsInPoly(WVector &pos, std::vector<sCupVtx> &verts) {
 
 	WVector2D p(pos.x, pos.z);
 	WVector2D v0(verts[0].m_pos.x, verts[0].m_pos.z);
+	WVector2D v1(verts[1].m_pos.x, verts[1].m_pos.z);
 	WVector2D v2(verts[2].m_pos.x, verts[2].m_pos.z);
-	WVector2D e(verts[1].m_pos.x - v0.x, verts[1].m_pos.z - v0.y);
-	e /= sqrtf(e.y * e.y + e.x * e.x);
-	WVector2D d(v2.x - v0.x, v2.y - v0.y);
-	d /= sqrtf(d.y * d.y + d.x * d.x);
+	WVector2D e;
+	e = v1 - v0;
+	e /= e.Magnitude();
+	WVector2D d;
+	d = v2 - v0;
+	d /= d.Magnitude();
 	float winding = e.x * d.y - d.x * e.y;
 
 	for (int i = 0; i < (int)verts.size() - 1; i++) {
 		WVector2D c(verts[i].m_pos.x, verts[i].m_pos.z);
-		WVector2D edge(verts[i + 1].m_pos.x - c.x, verts[i + 1].m_pos.z - c.y);
-		edge /= sqrtf(edge.y * edge.y + edge.x * edge.x);
-		WVector2D toPos(p.x - c.x, p.y - c.y);
-		toPos /= sqrtf(toPos.y * toPos.y + toPos.x * toPos.x);
+		WVector2D n(verts[i + 1].m_pos.x, verts[i + 1].m_pos.z);
+		WVector2D edge;
+		edge = n - c;
+		edge /= edge.Magnitude();
+		WVector2D toPos;
+		toPos = p - c;
+		toPos /= toPos.Magnitude();
 
 		if ((edge.x * toPos.y - toPos.x * edge.y) * winding <= 0.0f)
 			return false;
@@ -2776,32 +3334,35 @@ void WPolySoup::GenHolecupTri(sHoleTri *pTri, w_mesh *pMesh, int index) {
 // line->x * x + line->y * z + line->z = 0, stored in out; true only when it
 // also lies strictly between c and d.
 bool WPolySoup::GetIntersection(WVector *out, WVector *a, WVector *b, WVector *c, WVector *d, WVector *line) {
-	float distA = a->x * line->x + a->z * line->y + line->z;
+	float dist[2];
+	dist[0] = a->x * line->x + a->z * line->y + line->z;
 
-	if (WAbsBySign(distA) < 0.001f)
+	if (WAbsBySign(dist[0]) < 0.001f)
 		return false;
 
-	float distB = b->x * line->x + b->z * line->y + line->z;
+	dist[1] = b->x * line->x + b->z * line->y + line->z;
 
-	if (WAbsBySign(distB) < 0.001f)
+	if (WAbsBySign(dist[1]) < 0.001f)
 		return false;
 
-	if (distB * distA > 0.0f)
+	if (dist[1] * dist[0] > 0.0f)
 		return false;
 
-	out->x = (b->x - a->x) * distA / (distA - distB) + a->x;
-	out->z = (b->z - a->z) * distA / (distA - distB) + a->z;
+	out->x = (b->x - a->x) * dist[0] / (dist[0] - dist[1]) + a->x;
+	out->z = (b->z - a->z) * dist[0] / (dist[0] - dist[1]) + a->z;
 
 	float dx = WAbsBySign(d->x - c->x);
 	float dz = WAbsBySign(d->z - c->z);
 
+	float side;
 	if (dx > dz) {
-		if ((out->x - c->x) * (d->x - out->x) > 0.0f)
-			return true;
-	} else if ((out->z - c->z) * (d->z - out->z) > 0.0f) {
-		return true;
+		side = (out->x - c->x) * (d->x - out->x);
+	} else {
+		side = (out->z - c->z) * (d->z - out->z);
 	}
 
+	if (side > 0.0f)
+		return true;
 	return false;
 }
 
@@ -2825,6 +3386,9 @@ void WPolySoup::CreateNewHolecupMeshes(std::vector<sHoleMesh> &meshes, std::vect
 // closing the polygon by repeating its first vertex. Returns the vertex count.
 int WPolySoup::ClipHolecup(std::vector<WVector> &clipped, sHoleTri &tri, std::vector<sCupVtx> &cupVtxs) {
 	std::vector<WVector> work;
+	WVector cross;
+	int prevSide;
+	int side;
 
 	clipped.clear();
 	int count = (int)cupVtxs.size();
@@ -2836,42 +3400,27 @@ int WPolySoup::ClipHolecup(std::vector<WVector> &clipped, sHoleTri &tri, std::ve
 	std::vector<WVector> *pOut = &clipped;
 
 	for (int edge = 0; edge < 3; edge++) {
-		WVector &line = tri.m_edge[edge];
-
-		WVector *prev = &(*pIn)[0];
-		float dist = line.x * prev->x + line.y * prev->z + line.z;
-		int prevSide;
-		if (dist > 0.001f) {
-			prevSide = 1;
-		} else {
-			prevSide = dist < -0.001f ? -1 : 0;
-			pOut->push_back(*prev);
-		}
+		float dist = tri.m_edge[edge].x * (*pIn)[0].x + tri.m_edge[edge].y * (*pIn)[0].z + tri.m_edge[edge].z;
+		prevSide = dist > 0.001f ? 1 : (dist < -0.001f ? -1 : 0);
+		if (prevSide <= 0)
+			pOut->push_back((*pIn)[0]);
 
 		for (int j = 1; j < count; j++) {
-			WVector *cur = &(*pIn)[j];
-			dist = line.x * cur->x + line.y * cur->z + line.z;
-			int side;
-			if (dist > 0.001f)
-				side = 1;
-			else if (dist < -0.001f)
-				side = -1;
-			else
-				side = 0;
+			dist = tri.m_edge[edge].x * (*pIn)[j].x + tri.m_edge[edge].y * (*pIn)[j].z + tri.m_edge[edge].z;
+			side = dist > 0.001f ? 1 : (dist < -0.001f ? -1 : 0);
 
 			if (prevSide == 0) {
 				if (side < 0)
-					pOut->push_back(*cur);
+					pOut->push_back((*pIn)[j]);
 			} else if (side == 0) {
-				pOut->push_back(*cur);
+				pOut->push_back((*pIn)[j]);
 			} else {
 				if (side * prevSide < 0) {
-					WVector cross;
-					GetIntersection(&cross, cur - 1, cur, tri.m_pVertex[edge], tri.m_pVertex[(edge + 1) % 3], &line);
+					GetIntersection(&cross, &(*pIn)[j - 1], &(*pIn)[j], tri.m_pVertex[edge], tri.m_pVertex[(edge + 1) % 3], &tri.m_edge[edge]);
 					pOut->push_back(cross);
 				}
 				if (side < 0)
-					pOut->push_back(*cur);
+					pOut->push_back((*pIn)[j]);
 			}
 			prevSide = side;
 		}
@@ -2881,7 +3430,7 @@ int WPolySoup::ClipHolecup(std::vector<WVector> &clipped, sHoleTri &tri, std::ve
 
 		WVector &first = pOut->front();
 		WVector &last = pOut->back();
-		if (!WisEqual(first.x, last.x, g_EPSILON) || !WisEqual(first.y, last.y, g_EPSILON) || !WisEqual(first.z, last.z, g_EPSILON))
+		if (!WisEqual(first.x, last.x, data_a111e4) || !WisEqual(first.y, last.y, data_a111e4) || !WisEqual(first.z, last.z, data_a111e4))
 			pOut->push_back(first);
 
 		std::vector<WVector> *tmp = pIn;
@@ -3419,8 +3968,8 @@ WPolySoup::CStaticPetGrp::~CStaticPetGrp() {
 void WPolySoup::CStaticPetGrp::Build(std::vector<sModel*> models, int option) {
 	Clear();
 
-	const char *prevName = "\0";
 	int numGroups = 0;
+	const char *prevName = "\0";
 	m_numGroups = 0;
 	for (int i = 0; i < option; i++) {
 		if (models[i]->m_pPuppet != 0 && models[i]->m_subOrder == 0 && strcmpi(models[i]->m_name, prevName) != 0) {
@@ -3441,11 +3990,10 @@ void WPolySoup::CStaticPetGrp::Build(std::vector<sModel*> models, int option) {
 	int index = 0;
 	while (group < numGroups) {
 		int count = 1;
-		sModel **ppModel = &models[index];
-		if ((*ppModel)->m_pPuppet != 0 && (*ppModel)->m_subOrder == 0 && strcmpi((*ppModel)->m_name, prevName) != 0) {
-			prevName = (*ppModel)->m_name;
+		if (models[index]->m_pPuppet != 0 && models[index]->m_subOrder == 0 && strcmpi(models[index]->m_name, prevName) != 0) {
+			prevName = models[index]->m_name;
 			for (int j = index + 1; j < option; j++) {
-				if ((*ppModel)->m_subOrder != 0 || strcmpi(models[j]->m_name, prevName) != 0) {
+				if (models[index]->m_subOrder != 0 || strcmpi(models[j]->m_name, prevName) != 0) {
 					break;
 				}
 				count++;
@@ -3453,10 +4001,10 @@ void WPolySoup::CStaticPetGrp::Build(std::vector<sModel*> models, int option) {
 
 			WPuppet **ppPuppets = new WPuppet*[count];
 			for (int k = 0; k < count; k++) {
-				ppPuppets[k] = ppModel[k]->m_pPuppet;
+				ppPuppets[k] = models[index + k]->m_pPuppet;
 			}
 
-			m_ppGroups[group] = g_resrcmng->xGetStaticPuppetGrp(count, (*ppModel)->m_name, ppPuppets);
+			m_ppGroups[group] = g_resrcmng->xGetStaticPuppetGrp(count, models[index]->m_name, ppPuppets);
 			index += count;
 			group++;
 			delete[] ppPuppets;
