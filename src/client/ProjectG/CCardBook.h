@@ -307,7 +307,7 @@ public:
 	bool BoundControl(T& rControl, T pControl) {    // ccardbook.h:313
 		rControl = pControl;
 
-		pControl->SetVisible(false);
+		rControl->SetVisible(false);
 
 		return rControl ? true : false;
 	}

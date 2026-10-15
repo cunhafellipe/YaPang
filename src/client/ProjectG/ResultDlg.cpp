@@ -378,7 +378,7 @@ void FrResultDlg::OnTrophyInit(int param) {
 
 	if (WSingleton<CSharedDoc>::Instance()->m_value456C) {
 
-		IFF_STRUCT::sMatch* pMatch = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindMatch(WSingleton<CSharedDoc>::Instance()->m_matchTypeId);
+		IFF_STRUCT::sMatch* pMatch = ItemManager()->FindMatch(WSingleton<CSharedDoc>::Instance()->m_matchTypeId);
 
 		if (pMatch && WSingleton<CSharedDoc>::Instance()->m_value456C >= 1 && WSingleton<CSharedDoc>::Instance()->m_value456C <= 3) {
 			pArea->SetBgImg(pMatch->m_trophyIcon[WSingleton<CSharedDoc>::Instance()->m_value456C - 1]);
@@ -443,7 +443,7 @@ void FrResultDlg::OnMatchInit(int param) {
 	} else {
 
 
-		IFF_STRUCT::sMatch* pMatch = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindMatch(WSingleton<CSharedDoc>::Instance()->m_matchTypeId);
+		IFF_STRUCT::sMatch* pMatch = ItemManager()->FindMatch(WSingleton<CSharedDoc>::Instance()->m_matchTypeId);
 
 		if (pMatch == 0)
 			return;
@@ -969,7 +969,7 @@ void FrResultTeamDlg::OnMatchInit(int param) {
 
 		pStatic->SetCaption(MakeStr("%d \xC1\xA1", WSingleton<CSharedDoc>::Instance()->m_matchGameCount));
 	} else {
-		IFF_STRUCT::sMatch* pMatch = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindMatch(WSingleton<CSharedDoc>::Instance()->m_matchTypeId);
+		IFF_STRUCT::sMatch* pMatch = ItemManager()->FindMatch(WSingleton<CSharedDoc>::Instance()->m_matchTypeId);
 
 		if (pStatic == 0 || pMatch == 0)
 			return;
@@ -2687,7 +2687,7 @@ bool FrUniteResultDlg::OnInit(void) {
 		case 10:
 		case 14:
 			if (gameType != 10) {
-				IFF_STRUCT::sMatch* pMatch = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindMatch(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_trophy);
+				IFF_STRUCT::sMatch* pMatch = ItemManager()->FindMatch(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_trophy);
 
 				if (pMatch) {
 					const char* p;
@@ -3231,7 +3231,7 @@ bool FrUniteResultDlg::SaveGMEvent(void) {
 
 	char buf[512] = { 0 };
 
-	sprintf(buf, "Room Info : %s > %s > %s(%d)\n", WSingleton<CSharedDoc>::Instance()->m_serverName, WSingleton<CSharedDoc>::Instance()->m_currentChannel.name, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_title, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber);
+	sprintf(buf, "Room Info : %s > %s > %s(%d)\n", WSingleton<CSharedDoc>::Instance()->m_curServer.name, WSingleton<CSharedDoc>::Instance()->m_currentChannel.name, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_title, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber);
 	fwrite(buf, strlen(buf), 1, fp);
 
 	sprintf(buf, "Rank : uid\tnick\t\thole\tscore\tgamepang\tbonuspang\n");

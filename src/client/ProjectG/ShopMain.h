@@ -50,7 +50,7 @@ struct sBoughtItem {
 	unsigned long id;          // 0x4
 	unsigned short hours;      // 0x8
 	unsigned char flag;        // 0xA
-	short count;               // 0xB, the stack size; 0 keeps the item's default quantity
+	unsigned short count;      // 0xB, the stack size; 0 keeps the item's default quantity
 	_SYSTEMTIME endTime;       // 0xD, the expiry (CShopMain::HandleMsg 0xBF copies it into sMascotInfo::endTime)
 	char uccKey[9];            // 0x1D, the self-design key of a UCC item
 };

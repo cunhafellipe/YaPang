@@ -104,9 +104,9 @@ FrScratchDlg::FrScratchDlg(void) {
 	m_pSerialNumberBn = 0;
 
 	info.filename = &data_a9bea0[1];
-	info.numPages = 1;
 	info.fontw = 16;
 	info.fonth = 16;
+	info.numPages = 1;
 	info.texw = 128;
 	info.texh = 64;
 	info.pCharSet = "1234567890ym%-.?/:";
@@ -531,12 +531,11 @@ void FrScratchDlg::ResponseScratchSerialNumber(int result, unsigned long serial)
 	switch (result) {
 	case 0:
 		{
-			sBonusBall item;
-			memset(&item, 0, sizeof(item));
-			item.m_index = 0;
+			sBonusBall item = { 0 };
 			item.m_typeId = 0x1A000030;
 			item.m_serial = serial;
 			item.m_count = 1;
+			item.m_index = 0;
 			item.m_kind = 0;
 			item.m_bUnitCount = 0;
 			item.m_unitCount = 0;
@@ -840,7 +839,8 @@ void FrScratchDlg::CheckScratchItemRect(const WPoint& pt) {
 
 	if (m_scratchItemCount < 2) {
 		for (int i = 0; i < 4; i++) {
-			if (m_checkScratchRect[2][i].IsInRect(pt)) {
+			const WRect& rect = m_checkScratchRect[2][i];
+			if (pt.x >= rect.x && pt.x <= rect.x + rect.w && pt.y >= rect.y && pt.y <= rect.y + rect.h) {
 				m_bCheckedScratchRect[0][i] = true;
 				break;
 			}
@@ -848,7 +848,8 @@ void FrScratchDlg::CheckScratchItemRect(const WPoint& pt) {
 	} else {
 		for (int index = 0; index < m_scratchItemCount; index++) {
 			for (int i = 0; i < 4; i++) {
-				if (m_checkScratchRect[index][i].IsInRect(pt)) {
+				const WRect& rect = m_checkScratchRect[index][i];
+				if (pt.x >= rect.x && pt.x <= rect.x + rect.w && pt.y >= rect.y && pt.y <= rect.y + rect.h) {
 					m_bCheckedScratchRect[index][i] = true;
 					break;
 				}
@@ -1035,7 +1036,7 @@ bool FrScratchDlg::OnConfirmResult(int result, FrForm* pForm) {
 			pDlg->ClearDataCheckScratchItem();
 			pDlg->ClearScratchItem();
 			pDlg->SetBmpColsedScratchCover();
-			pDlg->m_bEnableRequestScratchItem = true;
+			pDlg->SetEnableRequestScratchItem(true);
 		}
 	}
 

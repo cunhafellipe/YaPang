@@ -255,7 +255,7 @@ void FrMakeRoomDlg::OnMakeChaosInit(int param) {
 			m_pMakeBtn[4]->SetVisible(false);
 		}
 
-		if (CSharedDoc::Instance()->m_serverChannel.flags & 0x40) {
+		if (CSharedDoc::Instance()->m_curServer.m_flags2 & 0x40) {
 			m_pMakeBtn[4]->SetVisible(false);
 		}
 
@@ -1011,7 +1011,11 @@ void FrMakeRoomDlg::ChangeCourse(unsigned char course) {
 	// course 0x13 (Wiz City), FirstMap's answer outside a 0x800 channel, and
 	// the original then returns with no course picture. Fall back to the
 	// first course of the lobby order the table has.
+#ifdef JP_PAKS
+	for (int i = 0; pCourse == 0 && course < 0x7F && i < JP_COURSE_ORDER_COUNT && s_courseOrder[i] != 0x7F; i++) {
+#else
 	for (int i = 0; pCourse == 0 && course < 0x7F && i < 18 && s_courseOrder[i] != 0x7F; i++) {
+#endif
 		pCourse = ItemManager()->FindCourse(0x28000000 | s_courseOrder[i]);
 		if (pCourse)
 			course = s_courseOrder[i];

@@ -1159,14 +1159,16 @@ void CCameraWork::InitCtrlPoints(int type) {
 	case 0: {
 		m_bezierPoints[0] = m_baseMatrix.pivot;
 
-		WVector half = ball.PreData(0)->m_velocity * 0.5f;
+		WVector half;
+		half = ball.PreData(0)->m_velocity * 0.5f;
 		const CGolfBall::sExpected *pMid = ball.PreData(midIndex);
 		if (pMid)
 			m_bezierPoints[1] = half + pMid->m_pos;
 		else
 			m_bezierPoints[1] = WVector(half.x, half.y + 1.0f, half.z);
 
-		WVector side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), half).Normalize() * 30.0f;
+		WVector side;
+		side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), half).Normalize() * 30.0f;
 		const CGolfBall::sExpected *pSpin = ball.PreData(spinIndex);
 		if (pSpin)
 			m_bezierPoints[2] = pSpin->m_pos + WVector(0.0f, 25.0f, 0.0f) + side;
@@ -1736,7 +1738,9 @@ void CCameraWork::InterpolateBezier(WVector *out, float t, WVector *points, int 
 	if (count == 3) {
 		*out = s2 * points[0] + s * t * 2.0f * points[1] + t2 * points[2];
 	} else if (count == 4) {
-		*out = s2 * s * points[0] + s2 * t * 3.0f * points[1] + s * t2 * 3.0f * points[2] + t2 * t * points[3];
+		float t3 = t2 * t;
+		float s3 = s2 * s;
+		*out = s3 * points[0] + s2 * t * 3.0f * points[1] + s * t2 * 3.0f * points[2] + t3 * points[3];
 	}
 }
 
@@ -1748,8 +1752,8 @@ void CCameraWork::CheckDriveCameraBallVisibilityAndSetBallVisibilitySafeCamera(v
 	if (!driveTable[m_cameraType].m_checkBallVisibility)
 		return;
 
-	WPolySoup::sModel *pModel = GOLFDOC()->m_pPolySoup->FindModel(0);
-	WVector size = pModel->m_aabb.max - pModel->m_aabb.min;
+	Waabb& aabb = GOLFDOC()->m_pPolySoup->FindModel(0)->m_aabb;
+	WVector size = aabb.max - aabb.min;
 
 	WVector toBall = GolfBall().m_pos - m_sourceCamera;
 
@@ -2393,8 +2397,8 @@ void CCameraWork::PuttSecondBCamera(float elapsed, float time) {
 
 // camerawork.cpp:3024
 void CCameraWork::FromHoleCupCamera(float elapsed, float time) {
-	WVector cup = GOLFDOC()->GetHoleData().m_cupPos; m_sourceCamera = WVector(cup.x, cup.y - 2.0f, cup.z);
-	m_destCamera = WVector(m_sourceCamera.x, m_sourceCamera.y + 1.0f, m_sourceCamera.z + 0.2f);
+	WVector cup = GOLFDOC()->GetHoleData().m_cupPos; WVector& source = m_sourceCamera = WVector(cup.x, cup.y - 2.0f, cup.z);
+	m_destCamera = WVector(source.x, source.y + 1.0f, source.z + 0.2f);
 }
 
 // camerawork.cpp:3032

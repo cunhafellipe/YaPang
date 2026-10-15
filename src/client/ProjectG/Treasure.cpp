@@ -133,6 +133,13 @@ unsigned long CTHunter::GetTHunterGauge(eMapType type) {
 	if (index == -1) {
 		return 9999;
 	}
+#ifdef JP_PAKS
+	// JP data: the JP courses' slots (17, 18, 20, 21) may be past the
+	// list's 20 entries (ProjectG.cpp's Initialize(20)): no gauge.
+	if ((unsigned int)index >= m_TMapList.size()) {
+		return 9999;
+	}
+#endif
 
 	return m_TMapList[index]->GetGauge();
 }
@@ -143,6 +150,12 @@ unsigned char CTHunter::GetTHunterMark(eMapType type) {
 	if (index == -1) {
 		return 2;
 	}
+#ifdef JP_PAKS
+	// JP data: as GetTHunterGauge, no mark past the list.
+	if ((unsigned int)index >= m_TMapList.size()) {
+		return 2;
+	}
+#endif
 
 	return m_TMapList[index]->GetTMark();
 }

@@ -273,6 +273,7 @@ int GetLocalMacAddress(char* buffer, int size, char separator) {
 	IP_ADAPTER_INFO* pAdapterInfo = (IP_ADAPTER_INFO*)new char[sizeof(IP_ADAPTER_INFO)];
 	ULONG bufferLength = sizeof(IP_ADAPTER_INFO);
 	int count = 0;
+	int length = 0;
 
 	if (pAdapterInfo != NULL) {
 		DWORD result = GetAdaptersInfo(pAdapterInfo, &bufferLength);
@@ -284,9 +285,8 @@ int GetLocalMacAddress(char* buffer, int size, char separator) {
 		}
 
 		if (result == NO_ERROR) {
-			int length = 0;
-			buffer[0] = '\0';
 			IP_ADAPTER_INFO* pAdapter = pAdapterInfo;
+			buffer[0] = '\0';
 			while (pAdapter != NULL) {
 				char address[32];
 				sprintf(address, "%02x%c%02x%c%02x%c%02x%c%02x%c%02x",

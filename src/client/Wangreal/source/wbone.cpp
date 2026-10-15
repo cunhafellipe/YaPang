@@ -19,6 +19,29 @@
 #include "../include/westpak.h"
 #include "../include/wxtnlbuffer.h"
 
+#ifdef PG_MATERIAL_HINTS
+// The port's renderer learns which meshes reflect (port/compat).
+#include "pg_material_hints.h"
+#include "../include/wresrcmng.h"
+
+// A self-lit glow, decided once when the mesh is built (w_mesh::pgHint): a
+// blended ('+' prefix without alpha test: drawFlag 0x400000) and unlit
+// (xiDrawFlag2 0x10) texture whose name says "glow", like the Blue Moon
+// lighthouse's beam (+2#_blue_house02_01glow.dds). Other '+' textures
+// (foliage) keep casting.
+static int PgGlowHint(int flags, int flags2, const char *texName) {
+	if (!(flags & 0x400000) || !(flags2 & 0x10) || texName == 0) {
+		return 0;
+	}
+	for (const char *p = texName; *p; p++) {
+		if ((p[0] | 0x20) == 'g' && (p[1] | 0x20) == 'l' && (p[2] | 0x20) == 'o' && (p[3] | 0x20) == 'w') {
+			return PG_HINT_LIGHT;
+		}
+	}
+	return 0;
+}
+#endif
+
 WTVertex* WBone::m_vtxList = 0;
 WVector* WBone::m_vecList = 0;
 int WBone::m_vtx_len = 0;
@@ -1109,6 +1132,9 @@ w_mesh* WBone::GetIndexedmesh(w_pet_vertex* vtxList, w_pet_tri_point* triList, W
 	mesh->xiDrawFlag2 = texInfo[faceIndex[0]]->xulDrawFlag2;
 	mesh->bEnv = texInfo[faceIndex[0]]->mapType == 1 || texInfo[faceIndex[0]]->mapType == 2 ? true : false;
 	mesh->bSpec = texInfo[faceIndex[0]]->mapType == 3;
+#ifdef PG_MATERIAL_HINTS
+	mesh->pgHint |= PgGlowHint(mesh->flags, mesh->xiDrawFlag2, texInfo[faceIndex[0]]->filename);
+#endif
 	mesh->indexNum = l;
 	mesh->indexList = new unsigned short[l];
 
@@ -1309,6 +1335,12 @@ w_mesh* WBone::GetIndexedmesh(w_faces** faces, int count) {
 	mesh->xiDrawFlag2 = faces[0]->xiMapFlags2;
 	mesh->bEnv = faces[0]->mapType == 1 || faces[0]->mapType == 2 ? true : false;
 	mesh->bSpec = faces[0]->mapType == 3;
+#ifdef PG_MATERIAL_HINTS
+	{
+		w_texlist *pgTex = g_resrcmng ? g_resrcmng->FindTexture(mesh->texHandle) : 0;
+		mesh->pgHint |= PgGlowHint(mesh->flags, mesh->xiDrawFlag2, pgTex ? pgTex->texname : 0);
+	}
+#endif
 	mesh->indexNum = cornerNum;
 	mesh->indexList = new unsigned short[cornerNum];
 
@@ -2464,7 +2496,14 @@ void WBone::Render(WView* view, const LightSet& light) {
 				}
 			}
 
+#ifdef PG_MATERIAL_HINTS
+			int pgHint = PgMaterialHintGet();
+			PgMaterialHint(pgHint | f->pgHint | (f->bEnv ? PG_HINT_REFLECTIVE : 0));
+#endif
 			view->DrawIndexedTriangles(GetVtxBuff(), f->vtxNum, f->indexList, f->indexNum, f->drawFlag, f->xiDrawFlag2);
+#ifdef PG_MATERIAL_HINTS
+			PgMaterialHint(pgHint);
+#endif
 		}
 	}
 
@@ -3301,7 +3340,14 @@ void WBone::xRender(WView* pView, WxBatchState* pBState, bool bNeedTransfMat, in
 			} else {
 				pBState->xdwDiffuse = ((unsigned long)m_alpha << 24) | 0xffffff;
 			}
+#ifdef PG_MATERIAL_HINTS
+			int pgHint = PgMaterialHintGet();
+			PgMaterialHint(pgHint | mesh->pgHint | (mesh->bEnv ? PG_HINT_REFLECTIVE : 0));
+#endif
 			pView->xDrawIndexedTriangles(*pBState);
+#ifdef PG_MATERIAL_HINTS
+			PgMaterialHint(pgHint);
+#endif
 		}
 	}
 	if (m_next != 0) {

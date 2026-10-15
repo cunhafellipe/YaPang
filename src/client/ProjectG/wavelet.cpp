@@ -8,6 +8,10 @@
 #include "GolfDoc.h"
 #include <stdio.h>
 #include <string.h>
+#ifdef PG_MATERIAL_HINTS
+// The port's renderer: the waves cast no sun shadow (port/compat).
+#include "pg_material_hints.h"
+#endif
 
 WTVertex CWavelet::vtr[4];
 WTVertex* CWavelet::vtx[5] = { &vtr[0], &vtr[1], &vtr[3], &vtr[2], NULL };
@@ -172,7 +176,14 @@ void CWavelet::Render(void) {
 				}
 			}
 
+			#ifdef PG_MATERIAL_HINTS
+			int pgHint = PgMaterialHintGet();
+			PgMaterialHint(pgHint | PG_HINT_NOCAST);
+			#endif
 			g_view->DrawPolygonFan(vtx, (m_texture & 0x7FF) | 0x28C00000, 0x400, false);
+			#ifdef PG_MATERIAL_HINTS
+			PgMaterialHint(pgHint);
+			#endif
 		}
 	}
 }

@@ -341,6 +341,15 @@ protected:
 	void OnBtnMap_Panda_Down(void);
 	void OnBtnMap_Wizcity_Down(void);
 	void OnBtnMap_Random_Down(void);
+#ifdef JP_PAKS
+	// JP data: the JP form's buttons of the later courses (docs/JP_CLIENT.md)
+	void OnBtnMap_IceInferno_Down(void);
+	void OnBtnMap_AbbotMine_Down(void);
+	void OnBtnMap_Luna_Down(void);
+	void OnBtnMap_IceInferno_OwnerDraw(int);
+	void OnBtnMap_AbbotMine_OwnerDraw(int);
+	void OnBtnMap_Luna_OwnerDraw(int);
+#endif
 
 	void OnAreaSelectMapInit(int param);
 	void OnBtnMap_ALL_Init(int param);
@@ -395,7 +404,13 @@ private:
 	FrViewer* m_pViewerF2;               // 0x12c
 	FrGaugeBarImage* m_pImageBar;        // 0x130
 	FrGaugeBarImage* m_pSmallBar;        // 0x134
+#ifdef JP_PAKS
+	// JP data: one slot per course index up to Mystic Ruins (0x15), as the
+	// JP exe's FrTreasureCourse (its OnInit sets 22 gauge positions, code at 0x842336)
+	WPoint m_gaugePos[CMapTypeAdapter::MAP_INDEX_COUNT_JP];
+#else
 	WPoint m_gaugePos[20];               // 0x138, position of each course's small gauge (OnGauge_SmallBar_OwnerDraw)
+#endif
 	FrViewer* m_pCurMapViewer;           // 0x1d8
 	FrArea* m_pExplaneArea;              // 0x1dc
 	FrArea* m_pCloudArea;                // 0x1e0
@@ -409,7 +424,11 @@ private:
 	int m_openedMapIdx;                  // 0x1f4, course whose gauge is open, -1 at construction
 	int m_cloudCount;                    // 0x1f8, clouds in m_clouds
 	int m_mapBtnInitIdx;                 // 0x1fc, next m_mapBtns slot filled by OnBtnMap_ALL_Init
+#ifdef JP_PAKS
+	const Bitmap* m_mapBitmaps[CMapTypeAdapter::MAP_INDEX_COUNT_JP];
+#else
 	const Bitmap* m_mapBitmaps[20];      // 0x200, image of each course (DrawCurrentMap)
+#endif
 	const Bitmap* m_randomMapBitmap;     // 0x250, image drawn for the random course (index 0x7f)
 	int m_unknown254;                    // 0x254
 	const Bitmap* m_pCloudBitmap;        // 0x258, its size is a cloud's source rect (ReInitCloud)
@@ -420,12 +439,17 @@ private:
 	int m_unknown26c;                    // 0x26c
 	int m_unknown270;                    // 0x270
 	WRect m_initRect;                    // 0x274, the window rect when OnInit ran
+#ifdef JP_PAKS
+	unsigned long m_mapGauges[CMapTypeAdapter::MAP_INDEX_COUNT_JP];
+#else
 	unsigned long m_mapGauges[20];       // 0x284, treasure gauge of each course (SetMapGauge)
+#endif
 	WOverlay* m_pCloudOverlay;           // 0x2d4
 	std::vector<sCloud> m_clouds;        // 0x2d8
 };
 
 CHECK_SIZE(FrTreasureCourse::sCloud, 0x20);
+#ifndef JP_PAKS   // the JP build's per-course arrays are longer
 CHECK_SIZE(FrTreasureCourse, 0x2e8);
 
 BEGIN_LAYOUT_CHECK(FrTreasureCourse)
@@ -453,6 +477,7 @@ BEGIN_LAYOUT_CHECK(FrTreasureCourse)
 	CHECK_FIELD(FrTreasureCourse, m_mapIndexChanged, 0x1ea);
 	CHECK_FIELD(FrTreasureCourse, m_randomLocked, 0x1eb);
 END_LAYOUT_CHECK
+#endif
 
 // Score board of the treasure-hunter mode (size 0x128, the `new` of
 // FrTreasureScoreMakeInstance).

@@ -160,7 +160,7 @@ bool FindIf(const L& list, P pred) {
 // The absolute value of value.
 template <class T>
 T wAbs(T value) {
-	return value < 0 ? -value : value;
+	return value >= 0 ? value : -value;
 }
 
 // wtemplate.h:313

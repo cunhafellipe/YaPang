@@ -77,7 +77,11 @@ void FrMapSelectDlg::OnSelectInit(intptr_t param) {
 		if (IsLocalContent((localContentType_t)0x3A) && (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x800)) {
 
 
+#ifdef JP_PAKS
+			for (i = 0; i < JP_COURSE_ORDER_COUNT; i++) {   // JP data: the longer JP order
+#else
 			for (i = 0; i < 18; i++) {
+#endif
 
 				IFF_STRUCT::sCourse* pCourse = &courseMap[0x28000000 | s_courseOrder[i]];
 
@@ -94,7 +98,11 @@ void FrMapSelectDlg::OnSelectInit(intptr_t param) {
 					pSelItem = pItem;
 			}
 
+#ifdef JP_PAKS
+			for (i = 0; i < JP_COURSE_ORDER_COUNT; i++) {   // JP data: the longer JP order
+#else
 			for (i = 0; i < 18; i++) {
+#endif
 
 				IFF_STRUCT::sCourse* pCourse = &courseMap[0x28000000 | s_courseOrder[i]];
 
@@ -115,7 +123,11 @@ void FrMapSelectDlg::OnSelectInit(intptr_t param) {
 
 		} else {
 
+#ifdef JP_PAKS
+			for (i = 0; i < JP_COURSE_ORDER_COUNT; i++) {   // JP data: the longer JP order
+#else
 			for (i = 0; i < 18; i++) {
+#endif
 
 				IFF_STRUCT::sCourse* pCourse = &courseMap[0x28000000 | s_courseOrder[i]];
 

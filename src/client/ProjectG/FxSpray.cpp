@@ -17,6 +17,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef PG_MATERIAL_HINTS
+// Port only (port/compat/pg_material_hints.h): the glow of a lamp or a
+// lighthouse casts no sun shadow in the port's renderer. Told by the file
+// name of the spray or of the sequence that opened it (bg/blue's
+// blue_lighthouse_glow.seq, blue_streetlamp.seq); smoke keeps its shadow.
+#include <ctype.h>
+#include "pg_material_hints.h"
+
+static bool PgFxNamedLight(const char *name) {
+	static const char *s_words[] = { "glow", "lamp", "light", "beam" };
+	if (name == 0) {
+		return false;
+	}
+	char lower[0x104];
+	size_t n = 0;
+	for (; name[n] != 0 && n < sizeof(lower) - 1; n++) {
+		lower[n] = (char)tolower((unsigned char)name[n]);
+	}
+	lower[n] = 0;
+	for (size_t i = 0; i < sizeof(s_words) / sizeof(s_words[0]); i++) {
+		if (strstr(lower, s_words[i]) != 0) {
+			return true;
+		}
+	}
+	return false;
+}
+#endif
+
 // TODO: m_box.m_originalSprays / m_pResourceManager / m_pCamera once
 // FxBox.h befriends CFxSpray (FxBox.h is not this unit's header).
 // The original spells these as 32-bit member offsets (0x128/0x140); the
@@ -709,7 +737,8 @@ bool CFxSpray::Process(float fDelta) {
 		}
 	}
 
-	m_baseMatrix = m_baseMatrix * RotateNozzle(m_fTime, fScale);
+	WMatrix nozzle = RotateNozzle(m_fTime, fScale);
+	m_baseMatrix = m_baseMatrix * nozzle;
 
 	WMatrix rot = Rotate(m_fTime, fScale);
 	Revolute(m_fTime, fScale);
@@ -719,25 +748,28 @@ bool CFxSpray::Process(float fDelta) {
 	// amplitude-weighted average of the keys' directions.
 	m_outputPos.x = m_outputPos.y = m_outputPos.z = 0.0f;
 	bool bQuake = false;
+	std::list<sQuake>::iterator quake = m_param.m_quakes.begin();
 	WVector ampSum(0.0f, 0.0f, 0.0f);
-	for (std::list<sQuake>::iterator quake = m_param.m_quakes.begin(); quake != m_param.m_quakes.end(); ++quake) {
+	for (; quake != m_param.m_quakes.end(); ++quake) {
 		// m_keys[0]: the direction and t0, m_keys[1]: the amplitude at t0 and
 		// t1, m_keys[2]: the amplitude at t1 and the shake interval,
 		// m_fLastTime: the time of the last shake.
 		float t0 = (float)quake->m_keys[0].t;
-		float& lastTime = quake->m_fLastTime;
 		if (m_fTime < t0) {
-			lastTime = m_fTime;
+			quake->m_fLastTime = m_fTime;
 		}
 		else if ((float)quake->m_keys[1].t >= m_fTime) {
 			bQuake = true;
-			if ((float)quake->m_keys[2].t <= m_fTime - lastTime) {
-				lastTime = m_fTime;
+			if (m_fTime - quake->m_fLastTime >= (float)quake->m_keys[2].t) {
+				quake->m_fLastTime = m_fTime;
 
-				WVector start(quake->m_keys[1].p0, quake->m_keys[1].p1, quake->m_keys[1].p2);
-				WVector end(quake->m_keys[2].p0, quake->m_keys[2].p1, quake->m_keys[2].p2);
+				// TODO: fxspray.h's sQuake::sKey should hold a WVector (p) instead of
+				// p0..p2; the original reads the keys as WVector lvalues.
 				int dt = quake->m_keys[1].t - quake->m_keys[0].t;
-				WVector amp = dt > 0 ? (end - start) * (m_fTime - t0) / (float)dt + start : start;
+				WVector amp = dt > 0
+					? (*(const WVector*)&quake->m_keys[2].p0 - *(const WVector*)&quake->m_keys[1].p0) * (m_fTime - t0) / (float)dt
+						+ *(const WVector*)&quake->m_keys[1].p0
+					: *(const WVector*)&quake->m_keys[1].p0;
 
 				m_outputDir.x = m_outputDir.y = m_outputDir.z = 0.0f;
 				m_outputDir.x += (float)(rand() % 20001 - 10000) * amp.x * 0.00005f;
@@ -768,18 +800,21 @@ bool CFxSpray::Process(float fDelta) {
 	// Flash keys: m_v[0] start, m_v[1] full flash, m_v[2] end.
 	m_outputAlpha = 0;
 	for (std::list<sFlash>::iterator flash = m_param.m_flashes.begin(); flash != m_param.m_flashes.end(); ++flash) {
-		if (m_fTime >= (float)flash->m_v[0]) {
+		float t0 = (float)flash->m_v[0];
+		if (m_fTime >= t0) {
 			if ((float)flash->m_v[1] >= m_fTime) {
-				int dt = flash->m_v[1] - flash->m_v[0];
-				int alpha = dt > 0 ? (int)(m_fTime - (float)flash->m_v[0]) * 255 / dt : 0;
+				int alpha = flash->m_v[1] - flash->m_v[0] > 0
+					? (int)(m_fTime - t0) * 255 / (flash->m_v[1] - flash->m_v[0])
+					: 0;
 				alpha += m_outputAlpha;
 				if (alpha > 255)
 					alpha = 255;
 				m_outputAlpha = (unsigned char)alpha;
 			}
 			else if ((float)flash->m_v[2] >= m_fTime) {
-				int dt = flash->m_v[2] - flash->m_v[1];
-				int alpha = dt > 0 ? 255 - (int)(m_fTime - (float)flash->m_v[1]) * 255 / dt : 0;
+				int alpha = flash->m_v[2] - flash->m_v[1] > 0
+					? 255 - (int)(m_fTime - (float)flash->m_v[1]) * 255 / (flash->m_v[2] - flash->m_v[1])
+					: 0;
 				alpha += m_outputAlpha;
 				if (alpha > 255)
 					alpha = 255;
@@ -791,9 +826,9 @@ bool CFxSpray::Process(float fDelta) {
 	bool bGenerating = Generate(m_fTime);
 
 	Waabb area;
+	bool bRegenerated = false;
 	ScaleArea(area, m_param.m_area, m_param.m_bRoundArea, m_param.m_fAreaScaleXZ, m_param.m_fAreaScaleY);
 
-	bool bRegenerated = false;
 	std::list<CFxParticle*>::iterator it = m_particles.begin();
 	while (it != m_particles.end()) {
 		CFxParticle* particle = *it;
@@ -811,7 +846,8 @@ bool CFxSpray::Process(float fDelta) {
 			WVector wind = m_param.m_wind * particle->m_fWindScale;
 			pos += (particle->m_dir * GetBgRot(particle) + wind) * fScale;
 
-			WVector friction = WVector(particle->m_dir).Normalize() * fScale
+			WVector friction = particle->m_dir;
+			friction = friction.Normalize() * fScale
 				* (particle->m_bGrounded ? m_param.m_fGroundFriction : m_param.m_fFriction);
 
 			// A component the friction would carry past zero stops.
@@ -858,10 +894,10 @@ bool CFxSpray::Process(float fDelta) {
 
 					pos.y = oldPos.y < pos.y ? height - m_param.m_ground.z : height + m_param.m_ground.z;
 					particle->m_dir.y = m_param.m_ground.y * particle->m_dir.y * -0.01f;
-					float speedY = WAbsBySign(particle->m_dir.y);
+					float speedY = Abs(particle->m_dir.y);
 
 					if ((depth < 0.03f && speedY < depth) || speedY < 0.01f
-						|| WDotProduct(particle->m_dir + m_param.m_gravity, particle->m_dir) < 0.0f) {
+						|| WDotProduct(m_param.m_gravity + particle->m_dir, particle->m_dir) < 0.0f) {
 						particle->m_dir.y = 0.0f;
 						particle->m_bGrounded = true;
 					}
@@ -882,13 +918,12 @@ bool CFxSpray::Process(float fDelta) {
 
 		// Fade keys: the colour bytes interpolated over the age.
 		for (std::list<sFade>::iterator fade = m_param.m_fades.begin(); fade != m_param.m_fades.end(); ++fade) {
-			if (fAge >= fade->t0 && fAge <= fade->t1) {
+			const sFade& f = *fade;
+			if (fAge >= f.t0 && fAge <= f.t1) {
 				for (int k = 0; k < 4; k++) {
-					float range = fade->t1 - fade->t0;
-					if (range > 0.0f)
-						particle->m_color.bytes[3 - k] = (unsigned char)((float)(fade->end[k] - fade->start[k]) * (fAge - fade->t0) / range + fade->start[k]);
-					else
-						particle->m_color.bytes[3 - k] = fade->start[k];
+					particle->m_color.bytes[3 - k] = f.t1 - f.t0 > 0.0f
+						? (unsigned char)((float)(f.end[k] - f.start[k]) * (fAge - f.t0) / (f.t1 - f.t0) + f.start[k])
+						: f.start[k];
 				}
 			}
 		}
@@ -948,14 +983,13 @@ bool CFxSpray::Process(float fDelta) {
 				local = (pos - GetBgPos(particle)) * ~boneRot;
 
 				if (!m_param.m_bRoundArea) {
-					const Waabb& a = m_param.m_area;
-					WVector vmin(a.min.x - WMATH_EPSILON, a.min.y - WMATH_EPSILON, a.min.z - WMATH_EPSILON);
-					WVector vmax(a.max.x + WMATH_EPSILON, a.max.y + WMATH_EPSILON, a.max.z + WMATH_EPSILON);
+					WVector vmin(m_param.m_area.min.x - WMATH_EPSILON, m_param.m_area.min.y - WMATH_EPSILON, m_param.m_area.min.z - WMATH_EPSILON);
+					WVector vmax(m_param.m_area.max.x + WMATH_EPSILON, m_param.m_area.max.y + WMATH_EPSILON, m_param.m_area.max.z + WMATH_EPSILON);
 					Waabb box(vmin, vmax);
 					if (!box.IsInclude(local)) {
 						InitParticle(m_param.m_bRegenAtSamePos, particle, 100.0f, 0.0f, area, true);
-						++it;
 						bRegenerated = false;
+						++it;
 						continue;
 					}
 				}
@@ -964,8 +998,8 @@ bool CFxSpray::Process(float fDelta) {
 					float dist = sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
 					if (!(dist < m_param.m_area.max.y + 0.0001f)) {
 						InitParticle(m_param.m_bRegenAtSamePos, particle, 100.0f, 0.0f, area, true);
-						++it;
 						bRegenerated = false;
+						++it;
 						continue;
 					}
 				}
@@ -974,10 +1008,7 @@ bool CFxSpray::Process(float fDelta) {
 			}
 
 			if (particle->m_pPetBody) {
-				// TODO: the original reads CPetBody::m_pPet (0x4) directly, not through GetPet.
-				WPuppet* puppet = particle->m_pPetBody->GetPet();
-				if (puppet)
-					puppet->SetAlpha((unsigned char)(particle->m_color.bytes[3] * m_param.m_fAlphaScale * particle->m_fScale));
+				particle->m_pPetBody->SetAlpha((unsigned char)(particle->m_color.bytes[3] * particle->m_fScale * m_param.m_fAlphaScale));
 				particle->m_pPetBody->SetLight();
 				particle->m_pPetBody->SetPos(pos);
 				particle->m_pPetBody->SetRotate(particle->m_rotation);
@@ -989,13 +1020,14 @@ bool CFxSpray::Process(float fDelta) {
 
 		// Age and interval spawns.
 		for (std::list<sSpawn>::iterator spawn = m_param.m_spawns.begin(); spawn != m_param.m_spawns.end(); ++spawn) {
-			if (spawn->m_type == 1 && particle->m_spawnCount == 0 && fAge + 1.0f > spawn->m_fParam)
-				Spawn(*spawn, particle);
+			const sSpawn& key = *spawn;
+			if (key.m_type == 1 && particle->m_spawnCount == 0 && fAge + 1.0f > key.m_fParam)
+				Spawn(key, particle);
 
-			if (spawn->m_type == 0) {
-				if (m_fTime - particle->m_fSpawnTime > spawn->m_fParam && spawn->m_intervalCount > particle->m_spawnCount) {
+			if (key.m_type == 0) {
+				if (m_fTime - particle->m_fSpawnTime > key.m_fParam && key.m_intervalCount > particle->m_spawnCount) {
 					particle->m_fSpawnTime = m_fTime;
-					Spawn(*spawn, particle);
+					Spawn(key, particle);
 				}
 			}
 		}
@@ -1031,30 +1063,26 @@ bool CFxSpray::Process(float fDelta) {
 
 			for (std::list<sBubble>::iterator bubble = m_param.m_bubbles.begin(); bubble != m_param.m_bubbles.end(); ++bubble) {
 				if (phase == particle->m_points.end()) {
-					phase = particle->m_points.insert(phase, WVector((float)(rand() % 1001) * 0.0062831859f,
+					particle->m_points.insert(phase, WVector((float)(rand() % 1001) * 0.0062831859f,
 						(float)(rand() % 1001) * 0.0062831859f, (float)(rand() % 1001) * 0.0062831859f));
+					--phase;
 				}
 
-				const WVector& p = *phase;
-				++phase;
+				std::list<WVector>::iterator p = phase++;
 
-				wobble.x += cosf(bubble->m_max.x * m_fTime * 0.0062831859f + p.x) * bubble->m_min.x;
-				wobble.y += cosf(bubble->m_max.y * m_fTime * 0.0062831859f + p.y) * bubble->m_min.y;
-				wobble.z += cosf(bubble->m_max.z * m_fTime * 0.0062831859f + p.z) * bubble->m_min.z;
+				wobble.x += cosf(bubble->m_max.x * m_fTime * 0.0062831859f + p->x) * bubble->m_min.x;
+				wobble.y += cosf(bubble->m_max.y * m_fTime * 0.0062831859f + p->y) * bubble->m_min.y;
+				wobble.z += cosf(bubble->m_max.z * m_fTime * 0.0062831859f + p->z) * bubble->m_min.z;
 			}
 
 			WVector dir = particle->m_dir;
-			WVector side;
-			if (dir.x < WMATH_EPSILON && dir.x > -WMATH_EPSILON && dir.z < WMATH_EPSILON && dir.z > -WMATH_EPSILON)
-				side = WVector::UNIT_POS_Z;
-			else
-				side = WCrossProduct(WVector::UNIT_POS_Y, dir);
+			WVector side = particle->m_dir.x < WMATH_EPSILON && particle->m_dir.x > -WMATH_EPSILON
+					&& particle->m_dir.z < WMATH_EPSILON && particle->m_dir.z > -WMATH_EPSILON
+				? WVector::UNIT_POS_Z
+				: WCrossProduct(WVector::UNIT_POS_Y, particle->m_dir);
 			WVector up = WCrossProduct(dir, side);
 
-			WVector offset = side.Normalize() * wobble.z;
-			offset += up.Normalize() * wobble.y;
-			offset += dir.Normalize() * wobble.x;
-			particle->m_bubbleOffset += offset * fScale;
+			particle->m_bubbleOffset += (side.Normalize() * wobble.z + up.Normalize() * wobble.y + dir.Normalize() * wobble.x) * fScale;
 		}
 
 		// Sounds play once, at the particle (relative to the camera) when
@@ -1074,8 +1102,8 @@ bool CFxSpray::Process(float fDelta) {
 
 		particle->m_basePos = (pos - GetBgPos(particle)) * ~GetBgRot(particle);
 
-		++it;
 		bRegenerated = false;
+		++it;
 	}
 
 	m_fTime += fDelta;
@@ -1115,6 +1143,12 @@ void CFxSpray::Display(WView* pView) {
 			pView->DrawSphere(GetBgPos() + g->m_pos, 0.3f, 0xFFFFFF00, 10, 0);
 	}
 
+#ifdef PG_MATERIAL_HINTS
+	int pgHint = PgMaterialHintGet();
+	if (PgFxNamedLight(m_name) || (m_pParent != 0 && PgFxNamedLight(m_pParent->m_name.c_str()))) {
+		PgMaterialHint(pgHint | PG_HINT_LIGHT | PG_HINT_EFFECT);
+	}
+#endif
 	for (std::list<CFxParticle*>::iterator it = m_particles.begin(); it != m_particles.end(); ++it) {
 		m_displayedCount++;
 		CFxParticle* particle = *it;
@@ -1125,6 +1159,9 @@ void CFxSpray::Display(WView* pView) {
 		DrawTail(pView, particle, pos);
 		DrawBandana(pView, particle, pos);
 	}
+#ifdef PG_MATERIAL_HINTS
+	PgMaterialHint(pgHint);
+#endif
 
 	pView->ResetScreenCenter();
 	pView->UpdateCamera();

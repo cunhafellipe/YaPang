@@ -33,11 +33,13 @@ private:
 	bool m_xbNeedTnLBuf;          // 0x1c8
 	WxTnLBuffer* m_xpTnLBuf;      // 0x1cc
 };
+#ifndef PG_7XX // PG_7XX appends members to WPuppet
 CHECK_SIZE(WxPuppet, 0x1d0);
 BEGIN_LAYOUT_CHECK(WxPuppet)
 	CHECK_FIELD(WxPuppet, m_xbNeedTnLBuf, 0x1c8);
 	CHECK_FIELD(WxPuppet, m_xpTnLBuf, 0x1cc);
 END_LAYOUT_CHECK
+#endif
 
 // Static puppets sharing one T&L buffer (PDB layout, size 0x1c8).
 class WxStaticPuppetGrp : public WResource {

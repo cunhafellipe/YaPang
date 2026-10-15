@@ -94,7 +94,7 @@ void CBall::OnLoad(void) {
 	if (IsLocalCountry(30)) {
 		sFxKeeper keeper;
 		keeper.m_pKeeper = this;
-		keeper.m_pfnCallBack = static_cast<void (CFxKeeper::*)(void*)>(&CBall::EmptyFx);   // CFxKeeper::EmptyFx once FxBox.h declares slot 1
+		keeper.m_pfnCallBack = &CFxKeeper::EmptyFx;
 		WSingleton<CFx>::Instance()->AddFxKeeper(keeper);
 	}
 
@@ -190,7 +190,7 @@ void CBall::OnProcess(float elapsed) {
 			if (pDoc->m_replayPlayType == 2) {
 				if (pDoc->m_replayState == 0xB) {
 					if (pDoc->m_replayStartB > -1) {
-						pDoc->m_replayStartB -= 2;
+						WSingleton<CSharedDoc>::Instance()->m_replayStartB -= 2;
 
 						if (WSingleton<CSharedDoc>::Instance()->m_replayStartB == 0) {
 							WSingleton<CSharedDoc>::Instance()->m_replayState = 1;
@@ -245,7 +245,8 @@ void CBall::OnProcess(float elapsed) {
 	}
 
 	if (m_sinkFactor > 0.0f) {
-		m_matrix.ym -= ball.m_radius * GetDownDelta() * m_sinkFactor * 2.0f;
+		float radius = ball.m_radius;
+		m_matrix.ym -= m_sinkFactor * (radius * GetDownDelta()) * 2.0f;
 	}
 
 	if (m_lastPreDataIndex < GolfBall().m_eventPreDataIndex[0] && GolfBall().m_eventPreDataIndex[0] <= GolfBall().m_preDataIndex) {
@@ -293,7 +294,7 @@ void CBall::TransformBall(void) {
 		WVector bottom;
 		WVector top;
 		bottom = g_view->Projection(GolfBall().m_pos - g_camera.ya * GolfBall().m_radius);
-		top = g_view->Projection(GolfBall().m_pos + GolfBall().m_radius * g_camera.ya);
+		top = g_view->Projection(GolfBall().m_pos + g_camera.ya * GolfBall().m_radius);
 		scale = 1.5f / Between(0.1f, Abs(bottom.y - top.y), 1.5f);
 	}
 
@@ -353,13 +354,14 @@ void CBall::Display(void) {
 	WVector axisZ = WCrossProduct(normal, axisX);
 	axisX.Normalize();
 	axisZ.Normalize();
-	ground.y += 0.001f;
-	WVector pos = ground;
+	WVector center(ground.x, ground.y + 0.001f, ground.z);
 
 	for (int i = 0; i < 4; i++) {
+		WVector pos = center;
 		pos += axisX * (((i & 2) ? 1.0f : -1.0f) * size);
+		pos += axisZ * (((i & 1) ? 1.0f : -1.0f) * size);
 
-		m_shadowVertices[i].SetPosition(pos + axisZ * (((i & 1) ? 1.0f : -1.0f) * size));
+		m_shadowVertices[i].SetPosition(pos);
 	}
 
 	g_view->DrawPolygonFan(m_shadowPolygon, (m_hShadowTexture & 0x7FF) | 0x22300000, 0x400, false);
@@ -621,7 +623,7 @@ void CBall::DetachFx(int index) {
 
 	if (pBall->m_pSequence[slot]) {
 		if (slot == 0) {
-			WSingleton<CFx>::Instance()->CloseSequence(pBall->m_pSequence[0], true);
+			WSingleton<CFx>::Instance()->CloseSequence(pBall->m_pSequence[slot], true);
 		} else {
 			WSingleton<CFx>::Instance()->CloseSequence(pBall->m_pSequence[slot], false);
 		}

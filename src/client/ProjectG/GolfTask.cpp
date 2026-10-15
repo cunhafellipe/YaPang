@@ -1443,13 +1443,13 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		}
 
 		// drop the equipment the player's level does not allow
-		IFF_STRUCT::sCaddie *pCaddie = CSharedDoc::Instance()->m_itemManager.FindCaddie(CSharedDoc::Instance()->m_roomPlayers[0].m_caddieInfo.typeId);
+		IFF_STRUCT::sCaddie *pCaddie = ItemManager()->FindCaddie(CSharedDoc::Instance()->m_roomPlayers[0].m_caddieInfo.typeId);
 		if ((pCaddie && CSharedDoc::Instance()->m_roomPlayers[0].m_level < (pCaddie->m_level & 0x7F))
 			|| ((CSharedDoc::Instance()->m_roomPlayers[0].m_caddieInfo.flags & 2) && CSharedDoc::Instance()->m_roomPlayers[0].m_caddieInfo.days == 0 && pCaddie->fee > 0)) {
 			CSharedDoc::Instance()->m_roomPlayers[0].m_caddieInfo.typeId = 0;
 		}
 
-		IFF_STRUCT::sClubSet *pClubSet = CSharedDoc::Instance()->m_itemManager.FindClubSet(CSharedDoc::Instance()->m_roomPlayers[0].m_clubSet.typeId);
+		IFF_STRUCT::sClubSet *pClubSet = ItemManager()->FindClubSet(CSharedDoc::Instance()->m_roomPlayers[0].m_clubSet.typeId);
 
 		if (pClubSet) {
 			unsigned char clubLevel = pClubSet->m_level;
@@ -1786,7 +1786,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		std::list<sChannelInfo>::iterator it = std::find(pDoc->m_channelList.begin(), pDoc->m_channelList.end(), channelId);
 		char text[128];
 		if (it == pDoc->m_channelList.end()) {
-			sprintf(text, "%s\xb4\xd4\xc0\xba [%s]\xbf\xa1\xbc\xad \xc3\xa3\xc0\xbb \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", name.c_str(), pDoc->m_serverName);
+			sprintf(text, "%s\xb4\xd4\xc0\xba [%s]\xbf\xa1\xbc\xad \xc3\xa3\xc0\xbb \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", name.c_str(), pDoc->m_curServer.name);
 		} else {
 			sprintf(text, "%s\xb4\xd4\xc0\xba [%s]\xbf\xa1 \xc1\xa2\xbc\xd3\xc7\xd8 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", name.c_str(), it->name);
 		}
@@ -1940,12 +1940,12 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 			packet.DecodeBuffer(&aniInfo, sizeof(aniInfo));
 
 			if (COption::Instance()->gGetCutinFlag() == 1) {
-				IFF_STRUCT::sSkin* pSkin = CSharedDoc::Instance()->m_itemManager.FindSkin(skinId);
-				IFF_STRUCT::S5::sCutinInformation* pCutin = CSharedDoc::Instance()->m_itemManager.FindCutinInformation(pSkin->m_typeId);
+				IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(skinId);
+				IFF_STRUCT::S5::sCutinInformation* pCutin = ItemManager()->FindCutinInformation(pSkin->m_typeId);
 
 				if (pCutin) {
 					char text[64] = "";
-					imageName = pCutin->m_images[0];
+					imageName = pCutin->m_images[0].m_name;
 
 					GetActor("Cutin") << MsgObject(0, 0x78, 4, 0, 0, 0, 0);
 

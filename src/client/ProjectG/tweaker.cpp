@@ -86,7 +86,7 @@ void tweaker::_regist_command(const char* name, const char* cmd, tweaker_cmd_inf
 
 	if (m_commands.find(cmd) == m_commands.end()) {
 		output_trace("succeed regist tweaker command : &%s::%s", name, cmd);
-		m_commands.insert(command_map::value_type(std::string(cmd), info));
+		m_commands.insert(command_map::value_type(cmd, info));
 	}
 }
 
@@ -100,8 +100,7 @@ std::string tweaker::_run_command(std::string& cmd, tweaker_param& param) {
 	tweaker_cmd_func func = found->second.func;
 	alloc_set::iterator it = m_allocs.begin();
 	for (; it != m_allocs.end(); ++it) {
-		tweaker_cmd_target* target = *it;
-		result = (target->*func)(param);
+		result = ((*it)->*func)(param);
 	}
 	return result;
 }
@@ -141,9 +140,10 @@ void tweaker::get_command_list(std::vector<std::string>& list, bool withName) co
 			text += " ";
 		}
 		text += it->first;
-		if (!it->second.help.empty()) {
+		const tweaker_cmd_info& info = it->second;
+		if (!info.help.empty()) {
 			text += " (";
-			text += it->second.help;
+			text += info.help;
 			text += ")";
 		}
 		list.push_back(text);
@@ -299,7 +299,7 @@ tweaker* tweaker_database::_regist_tweaker(const char* name, tweaker_cmd_target*
 
 	tweaker* tw = new tweaker(name);
 	tw->_insert_alloc(target);
-	m_tweakers.insert(tweaker_map::value_type(std::string(name), tw));
+	m_tweakers.insert(tweaker_map::value_type(name, tw));
 	output_trace("succeed tweaker regist : 0x%p", target);
 	return tw;
 }

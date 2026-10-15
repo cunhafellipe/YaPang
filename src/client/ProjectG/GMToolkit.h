@@ -153,8 +153,8 @@ protected:
 	// (CommandFindItem), one "type id : name" line each.
 	template <class T, class M>
 	bool FindItem(const char *const keyword, M &table) {
-		char text[256] = "\0";
 		bool found = false;
+		char text[256] = "\0";
 		for (typename M::iterator it = table.begin(); it != table.end(); ++it) {
 			const T &record = it->second;
 			if (FindKeywordInString(record.m_name, keyword)) {

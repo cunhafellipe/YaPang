@@ -69,14 +69,14 @@ public:
 
 	// encrypttypes.h:61
 	void operator+=(T value) {
-		value = Get() + value;
-		Set(value);
+		T result = Get() + value;
+		Set(result);
 	}
 
 	// encrypttypes.h:66
 	void operator-=(T value) {
-		value = Get() - value;
-		Set(value);
+		T result = Get() - value;
+		Set(result);
 	}
 
 	// encrypttypes.h:81
@@ -115,20 +115,31 @@ private:
 
 	// encrypttypes.h:118
 	T Get(void) const {
-		if (sizeof(T) == 1) {
+		switch (sizeof(T)) {
+		case 1: {
 			unsigned char value = ~(*reinterpret_cast<const unsigned char*>(&m_value) ^ m_unk0E);
 			return *reinterpret_cast<T*>(&value);
 		}
-		unsigned long value = ~(*reinterpret_cast<const unsigned long*>(&m_value) ^ m_key);
-		return *reinterpret_cast<T*>(&value);
+		default: {
+			unsigned long value = ~(*reinterpret_cast<const unsigned long*>(&m_value) ^ m_key);
+			return *reinterpret_cast<T*>(&value);
+		}
+		}
 	}
 
 	// encrypttypes.h:149
 	void Set(T value) {
-		if (sizeof(T) == 1)
+		switch (sizeof(T)) {
+		case 1:
 			*reinterpret_cast<unsigned char*>(&m_value) = ~*reinterpret_cast<unsigned char*>(&value) ^ m_unk0E;
-		else
+			break;
+		case 4:
 			*reinterpret_cast<unsigned long*>(&m_value) = ~*reinterpret_cast<unsigned long*>(&value) ^ m_key;
+			break;
+		default:
+			m_value = value;
+			break;
+		}
 		MakeCheckSum();
 	}
 

@@ -1139,9 +1139,7 @@ void CRealMyRoomMain::Reinitialize(bool bForce) {
 		SetLevelBar();
 		m_selTab = (selTab_t)0;
 
-		for (int i = 0; i < 6; i++) {
-			m_displaySkin[i] = WSingleton<CSharedDoc>::Instance()->m_equipSkin[i];
-		}
+		memcpy(m_displaySkin, WSingleton<CSharedDoc>::Instance()->m_equipSkin, sizeof(m_displaySkin));
 
 		for (int i = 0; i < 6; i++) {
 			if (m_displaySkin[i] != 0) {
@@ -2002,7 +2000,7 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 	m_mainTab = tab;
 	m_pSubTab->ClearTab();
 
-	const char* imgs[3] = { NULL, NULL, NULL };
+	const char* imgs[3] = { NULL };
 
 	if (m_pEffectViewWnd)
 		m_pEffectViewWnd->SetVisible(true);
@@ -2018,9 +2016,9 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 		SetSubTabImg(imgs, 0x16);
 		m_pSubTab->AddTab(imgs, 0x15, NULL);
 
-		for (int i = 2; i < 6; i++) {
-			SetSubTabImg(imgs, i);
-			m_pSubTab->AddTab(imgs, i - 1, NULL);
+		for (int i = 1; i < 5; i++) {
+			SetSubTabImg(imgs, i + 1);
+			m_pSubTab->AddTab(imgs, i, NULL);
 		}
 
 		if (IsLocalContent((localContentType_t)0x57)) {
@@ -2047,9 +2045,9 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 			m_pSelectedName->SetVisible(false);
 		TurnOffItemSelect();
 
-		for (int i = 7; i < 11; i++) {
-			SetSubTabImg(imgs, i);
-			m_pSubTab->AddTab(imgs, i - 1, NULL);
+		for (int i = 6; i < 10; i++) {
+			SetSubTabImg(imgs, i + 1);
+			m_pSubTab->AddTab(imgs, i, NULL);
 		}
 
 		if (IsLocalContent((localContentType_t)0x51)) {
@@ -2071,9 +2069,9 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 		m_pTabTxt[0]->SetBgImg("mt_skin");
 		TurnOffItemSelect();
 
-		for (int i = 0xE; i < 0x12; i++) {
-			SetSubTabImg(imgs, i);
-			m_pSubTab->AddTab(imgs, i - 1, NULL);
+		for (int i = 0xD; i < 0x11; i++) {
+			SetSubTabImg(imgs, i + 1);
+			m_pSubTab->AddTab(imgs, i, NULL);
 		}
 
 		SetSubTabImg(imgs, 0x22);
@@ -2097,7 +2095,7 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 			TurnOffItemSelect();
 
 			// The first gift tab is left out where local content 0x60 is on.
-			int first = IsLocalContent((localContentType_t)0x60);
+			int first = IsLocalContent((localContentType_t)0x60) ? 1 : 0;
 			for (int i = first + 0x11; i <= 0x14; i++) {
 				SetSubTabImg(imgs, i + 1);
 				m_pSubTab->AddTab(imgs, i, NULL);
@@ -2117,7 +2115,7 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 			TurnOffItemSelect();
 
 			// The first gift tab is left out where local content 0x60 is on.
-			int first = IsLocalContent((localContentType_t)0x60);
+			int first = IsLocalContent((localContentType_t)0x60) ? 1 : 0;
 			for (int i = first + 0x11; i <= 0x14; i++) {
 				SetSubTabImg(imgs, i + 1);
 				m_pSubTab->AddTab(imgs, i, NULL);
@@ -2142,9 +2140,9 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 		SetSubTabImg(imgs, 0x16);
 		m_pSubTab->AddTab(imgs, 0x20, NULL);
 
-		for (int i = 0x1D; i < 0x21; i++) {
-			SetSubTabImg(imgs, i);
-			m_pSubTab->AddTab(imgs, i - 1, NULL);
+		for (int i = 0x1C; i < 0x20; i++) {
+			SetSubTabImg(imgs, i + 1);
+			m_pSubTab->AddTab(imgs, i, NULL);
 		}
 		break;
 	}
@@ -2459,8 +2457,9 @@ int CRealMyRoomMain::ChangeClubset(unsigned long serial) {
 	if (pClubSet) {
 		int level = pClubSet->m_level & 0x7f;
 
+		int myLevel = WSingleton<CSharedDoc>::Instance()->m_myLevel;
 		if (pClubSet->m_level & 0x80) {
-			if (level >= WSingleton<CSharedDoc>::Instance()->m_myLevel) {
+			if (level >= myLevel) {
 				WSingleton<CSharedDoc>::Instance()->m_myClubId = it->second.m_serial;
 				result = 1;
 			} else {
@@ -2476,7 +2475,7 @@ int CRealMyRoomMain::ChangeClubset(unsigned long serial) {
 				}
 				result = 2;
 			}
-		} else if (level <= WSingleton<CSharedDoc>::Instance()->m_myLevel) {
+		} else if (level <= myLevel) {
 			WSingleton<CSharedDoc>::Instance()->m_myClubId = it->second.m_serial;
 			result = 1;
 		}
@@ -2575,23 +2574,18 @@ const Bitmap* CRealMyRoomMain::GetItemIcon(unsigned long typeId) {
 
 // realmyroommainui.cpp:3304
 void CRealMyRoomMain::DrawCharacterList(FrGraphicInterface* pGI, unsigned long typeId) {
-	if (!m_selItemOn) {
-		return;
-	}
-
-	if (CSharedDoc::Instance()->m_characterMap.size() != 0) {
+	if (m_selItemOn && CSharedDoc::Instance()->m_characterMap.size() != 0) {
 		int count = CSharedDoc::Instance()->m_characterMap.size();
+		int index = 0;
 
 		int cols = count > 16 ? 4 : (count > 4 ? 3 : (count > 1 ? 2 : 1));
 
 		int rows = count / cols + (count % cols != 0 ? 1 : 0);
 
-		int index = 0;
-
 		float listH = (rows - 1) + rows * 50.0f;
-		WPoint pos(18.0f, 419.0f - listH);
-		WRect bgRect(13.0f, pos.y - 5.0f, (cols - 1) + cols * 46.0f + 10.0f, listH + 10.0f);
-		pGI->DrawTexture(m_pListBgBitmap[0], bgRect, 0xFFFFFFFF, 0);
+		float posY = 419.0f - listH;
+		float posX = 18.0f;
+		pGI->DrawTexture(m_pListBgBitmap[0], WRect(13.0f, posY - 5.0f, (cols - 1) + cols * 46.0f + 10.0f, listH + 10.0f), 0xFFFFFFFF, 0);
 
 		WRect selRect(0, 0, 0, 0);
 		WRect overRect(0, 0, 0, 0);
@@ -2603,13 +2597,13 @@ void CRealMyRoomMain::DrawCharacterList(FrGraphicInterface* pGI, unsigned long t
 			}
 
 			index++;
-			WRect rect(pos.x, pos.y, 46.0f, 50.0f);
+			WRect rect(posX, posY, 46.0f, 50.0f);
 			pGI->DrawTexture(pIcon, rect, 0xFFFFFFFF, 0);
 			if (index % cols != 0) {
-				pos.x += 47.0f;
+				posX += 47.0f;
 			} else {
-				pos.y += 51.0f;
-				pos.x = 18.0f;
+				posY += 51.0f;
+				posX = 18.0f;
 			}
 
 			if (m_charSerial == it->second.id) {
@@ -2638,8 +2632,8 @@ void CRealMyRoomMain::DrawCharacterList(FrGraphicInterface* pGI, unsigned long t
 	}
 
 	if (m_selItemOn && g_input->GetButton(LEFT_BUTTON) == 1) {
-		WRect rect = m_pItemSelectWnd->GetRect();
-		if (!rect.IsInRect(g_pFresh->GetManager()->GetMousePos())) {
+		WRect wndRect = m_pItemSelectWnd->GetRect();
+		if (!wndRect.IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 			m_selItemOn = false;
 		}
 	}
@@ -2647,23 +2641,18 @@ void CRealMyRoomMain::DrawCharacterList(FrGraphicInterface* pGI, unsigned long t
 
 // realmyroommainui.cpp:3391
 void CRealMyRoomMain::DrawCaddieList(FrGraphicInterface* pGI, unsigned long typeId) {
-	if (!m_selItemOn) {
-		return;
-	}
-
-	if (CSharedDoc::Instance()->m_caddieMap.size() != 0) {
+	if (m_selItemOn && CSharedDoc::Instance()->m_caddieMap.size() != 0) {
 		int count = CSharedDoc::Instance()->m_caddieMap.size();
+		int index = 0;
 
 		int cols = count > 16 ? 4 : (count > 4 ? 3 : (count > 1 ? 2 : 1));
 
 		int rows = count / cols + (count % cols != 0 ? 1 : 0);
 
-		int index = 0;
-
 		float listH = (rows - 1) + rows * 50.0f;
-		WPoint pos(18.0f, 419.0f - listH);
-		WRect bgRect(13.0f, pos.y - 5.0f, (cols - 1) + cols * 46.0f + 10.0f, listH + 10.0f);
-		pGI->DrawTexture(m_pListBgBitmap[0], bgRect, 0xFFFFFFFF, 0);
+		float posY = 419.0f - listH;
+		float posX = 18.0f;
+		pGI->DrawTexture(m_pListBgBitmap[0], WRect(13.0f, posY - 5.0f, (cols - 1) + cols * 46.0f + 10.0f, listH + 10.0f), 0xFFFFFFFF, 0);
 
 		WRect selRect(0, 0, 0, 0);
 		WRect overRect(0, 0, 0, 0);
@@ -2675,13 +2664,13 @@ void CRealMyRoomMain::DrawCaddieList(FrGraphicInterface* pGI, unsigned long type
 			}
 
 			index++;
-			WRect rect(pos.x, pos.y, 46.0f, 50.0f);
+			WRect rect(posX, posY, 46.0f, 50.0f);
 			pGI->DrawTexture(pIcon, rect, 0xFFFFFFFF, 0);
 			if (index % cols != 0) {
-				pos.x += 47.0f;
+				posX += 47.0f;
 			} else {
-				pos.y += 51.0f;
-				pos.x = 18.0f;
+				posY += 51.0f;
+				posX = 18.0f;
 			}
 
 			if (m_caddieValueA == it->second.id) {
@@ -2719,23 +2708,18 @@ void CRealMyRoomMain::DrawCaddieList(FrGraphicInterface* pGI, unsigned long type
 
 // realmyroommainui.cpp:3478
 void CRealMyRoomMain::DrawMascotList(FrGraphicInterface* pGI, unsigned long typeId) {
-	if (!m_selItemOn) {
-		return;
-	}
-
-	if (CSharedDoc::Instance()->m_myMascotMap.size() != 0) {
+	if (m_selItemOn && CSharedDoc::Instance()->m_myMascotMap.size() != 0) {
 		int count = CSharedDoc::Instance()->m_myMascotMap.size();
+		int index = 0;
 
 		int cols = count > 16 ? 4 : (count > 4 ? 3 : (count > 1 ? 2 : 1));
 
 		int rows = count / cols + (count % cols != 0 ? 1 : 0);
 
-		int index = 0;
-
 		float listH = (rows - 1) + rows * 50.0f;
-		WPoint pos(18.0f, 419.0f - listH);
-		WRect bgRect(13.0f, pos.y - 5.0f, (cols - 1) + cols * 46.0f + 10.0f, listH + 10.0f);
-		pGI->DrawTexture(m_pListBgBitmap[0], bgRect, 0xFFFFFFFF, 0);
+		float posY = 419.0f - listH;
+		float posX = 18.0f;
+		pGI->DrawTexture(m_pListBgBitmap[0], WRect(13.0f, posY - 5.0f, (cols - 1) + cols * 46.0f + 10.0f, listH + 10.0f), 0xFFFFFFFF, 0);
 
 		WRect selRect(0, 0, 0, 0);
 		WRect overRect(0, 0, 0, 0);
@@ -2747,13 +2731,13 @@ void CRealMyRoomMain::DrawMascotList(FrGraphicInterface* pGI, unsigned long type
 			}
 
 			index++;
-			WRect rect(pos.x, pos.y, 46.0f, 50.0f);
+			WRect rect(posX, posY, 46.0f, 50.0f);
 			pGI->DrawTexture(pIcon, rect, 0xFFFFFFFF, 0);
 			if (index % cols != 0) {
-				pos.x += 47.0f;
+				posX += 47.0f;
 			} else {
-				pos.y += 51.0f;
-				pos.x = 18.0f;
+				posY += 51.0f;
+				posX = 18.0f;
 			}
 
 			if (m_mascotSerial == it->second.id) {
@@ -3895,11 +3879,11 @@ void CRealMyRoomMain::OnTabMainInit(int param) {
 	m_pMainTab = (FrTabButton*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrTabButton::m_RTTI) ? (void*)param : 0) : 0);
 	if (m_pMainTab) {
 		// The normal, down and disabled images of each tab.
-		const char* names[3] = { NULL, NULL, NULL };
+		const char* names[3] = { NULL };
 
-		for (int i = 1; i <= 5; i++) {
-			names[0] = MakeStr("stab_%d_n", i); names[1] = MakeStr("stab_%d_d", i); names[2] = MakeStr("stab_%d_d", i);
-			m_pMainTab->AddTab(names, i - 1, NULL);
+		for (int i = 0; i < 5; i++) {
+			names[0] = MakeStr("stab_%d_n", i + 1); names[1] = MakeStr("stab_%d_d", i + 1); names[2] = MakeStr("stab_%d_d", i + 1);
+			m_pMainTab->AddTab(names, i, NULL);
 		}
 
 		names[0] = MakeStr("stab_%d_n", 7); names[1] = MakeStr("stab_%d_d", 7); names[2] = MakeStr("stab_%d_d", 7);
@@ -4215,16 +4199,15 @@ void CRealMyRoomMain::OnGiftPageLBDown(void) {
 
 		for (unsigned int i = 0; i < m_giftPageShownCount; i++) {
 			const WRect& rc = m_areaRects[i + 1];
-			if (mouse.x >= rc.x && rc.x + rc.w >= mouse.x && mouse.y >= rc.y && rc.y + rc.h >= mouse.y) {
+			if (mouse.x >= rc.x && rc.x + rc.w >= mouse.x && mouse.y >= rc.y && rc.h + rc.y >= mouse.y) {
 				if (m_giftPageCurrent != i + 1) {
-					m_giftPageCurrent = i + 1;
-					page = m_giftPageGroup * 5 + i + 1;
+					page = m_giftPageGroup * 5 + (m_giftPageCurrent = i + 1);
 				}
 			}
 			area++;
 		}
 
-		const WRect& next = m_areaRects[(unsigned short)area];
+		const WRect& next = m_areaRects[(unsigned short)area + 1];
 		if (mouse.x >= next.x && next.x + next.w >= mouse.x && mouse.y >= next.y && next.y + next.h >= mouse.y) {
 			if (m_giftPageGroup * 5 < m_giftPageCount) {
 				if (m_giftPageCount - m_giftPageGroup * 5 > 5) {
@@ -5549,14 +5532,17 @@ void CRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 	// realmyroommainui.cpp:6678
 	const WPoint &mousePos = g_pFresh->GetManager()->GetMousePos();
 	// realmyroommainui.cpp:6679
-	int mode = m_roomMode;
+	int roomMode = m_roomMode;
 	// realmyroommainui.cpp:6683
 	bool handled = false;
 	GetActor("ItemBuff") << MsgObject(0, 0x246, 0, (intptr_t)&handled, (intptr_t)pItem, (intptr_t)&mousePos, typeId);
+	int mode;
 	// realmyroommainui.cpp:6684
 	if (handled)
 		// realmyroommainui.cpp:6686
 		mode = 0x23;
+	else
+		mode = roomMode;
 
 	// realmyroommainui.cpp:6689
 	WPoint textPos(pItem->pos.x + 182.0f, pItem->pos.y + 23.0f);
@@ -7036,7 +7022,8 @@ void CRealMyRoomMain::GetCaddieStatus(unsigned char* const pStatus, unsigned cha
 
 // realmyroommainui.cpp:8483
 void CRealMyRoomMain::GetClubSetStatus(unsigned char* const status, unsigned char* const slotStatus) {
-	std::map<unsigned int, sItemInfo>::iterator it = CSharedDoc::Instance()->m_myItemMap.find(m_clubSerial);
+	unsigned int serial = m_clubSerial;
+	std::map<unsigned int, sItemInfo>::iterator it = CSharedDoc::Instance()->m_myItemMap.find(serial);
 	if (it != CSharedDoc::Instance()->m_myItemMap.end()) {
 		for (int i = 0; i < 5; i++) {
 			status[i] = (unsigned char)it->second.m_clubStatLevel[i];
@@ -8768,13 +8755,14 @@ void CRealMyRoomMain::Net_EquipSkin(void) {
 		return;
 	}
 
-	std::list<sItemInfo>& skins = WSingleton<CSharedDoc>::Instance()->m_mySkinList;
-	for (std::list<sItemInfo>::iterator it = skins.begin(); it != skins.end(); ++it) {
+	for (std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_mySkinList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_mySkinList.end(); ++it) {
 		eEquipSkin skin;
-		if (S5::UTIL::GetEquipSkinIndex(skin, it->m_typeId) && it->m_stateBits.kind == 1) {
-			if (it->m_typeId == WSingleton<CSharedDoc>::Instance()->m_equipSkin[skin]) {
-				it->m_stateBits.kind = 2;
-			}
+		if (!S5::UTIL::GetEquipSkinIndex(skin, it->m_typeId)) {
+			continue;
+		}
+
+		if (it->m_stateBits.kind == 1 && it->m_typeId == WSingleton<CSharedDoc>::Instance()->m_equipSkin[skin]) {
+			it->m_stateBits.kind = 2;
 		}
 	}
 
@@ -8817,16 +8805,17 @@ bool CRealMyRoomMain::OnPangGiftDlgResult(int result, FrForm* pForm) {
 
 // realmyroommainui.cpp:10634
 bool CRealMyRoomMain::OnReturnGiftDlgResult(int result, FrForm* pForm) {
-	if (result == 1) {
-		FrReturnGiftDlg* pDlg = DYNAMIC_CAST(FrReturnGiftDlg, pForm);
-		if (pDlg == NULL)
-			return true;
+	if (result != 1)
+		return true;
 
-		WSendPacket packet(GCT_REQUEST_DRAWBACK_GIFT);
-		packet.Encode4(pDlg->m_requestIds[0]);
-		packet.Encode4(pDlg->m_requestIds[1]);
-		packet.Send(SEND_TO_DEFAULT);
-	}
+	FrReturnGiftDlg* pDlg = DYNAMIC_CAST(FrReturnGiftDlg, pForm);
+	if (pDlg == NULL)
+		return true;
+
+	WSendPacket packet(GCT_REQUEST_DRAWBACK_GIFT);
+	packet.Encode4(pDlg->m_requestIds[0]);
+	packet.Encode4(pDlg->m_requestIds[1]);
+	packet.Send(SEND_TO_DEFAULT);
 
 	return true;
 }
@@ -8942,11 +8931,11 @@ bool CRealMyRoomMain::OnCaddieInfoDlgResult(int result, FrForm* pForm) {
 
 			if (pForm != NULL) {
 
-				sCaddieInfo info = ((FrCaddieInfoDlg*)pForm)->GetCaddieInfo();
+				unsigned long typeId = ((FrCaddieInfoDlg*)pForm)->GetCaddieInfo().typeId;
 
 				std::map<unsigned int, IFF_STRUCT::sCaddie>& caddies = ItemManager()->m_caddieMap;
 				for (std::map<unsigned int, IFF_STRUCT::sCaddie>::const_iterator it = caddies.begin(); it != caddies.end(); ++it) {
-					if (it->second.m_typeId == info.typeId) {
+					if (it->second.m_typeId == typeId) {
 						if ((it->second.m_level & 0x7F) > WSingleton<CSharedDoc>::Instance()->m_myLevel) {
 							m_pCaddieInfoWnd->Enable(false);
 						}
@@ -10167,7 +10156,7 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 		switch (typeId >> 26) {
 		case 6:
 			// realmyroommainui.cpp:12542
-			count = (unsigned short)((const sBoughtItem *)msg.m_param5)->count;
+			count = ((const sBoughtItem *)msg.m_param5)->count;
 			period = msg.m_param3;
 			kind = (unsigned char)msg.m_param4;
 			// realmyroommainui.cpp:12544
@@ -10177,7 +10166,7 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 
 		case 5:
 			// realmyroommainui.cpp:12553
-			count = (unsigned short)((const sBoughtItem *)msg.m_param5)->count;
+			count = ((const sBoughtItem *)msg.m_param5)->count;
 			period = msg.m_param3;
 			kind = (unsigned char)msg.m_param4;
 			// realmyroommainui.cpp:12555
@@ -10192,7 +10181,7 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 			if (ItemManager()->FindAuxPart(pBought->typeId) == NULL)
 				break;
 			// realmyroommainui.cpp:12567
-			count = (unsigned short)pBought->count;
+			count = pBought->count;
 			// realmyroommainui.cpp:12568
 			pList = &WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3;
 			// realmyroommainui.cpp:12570
@@ -11598,7 +11587,8 @@ void CRealMyRoomMain::OnFurniturePupInit(int param) {
 void CRealMyRoomMain::OnFurniturePupButtonUp(void) {
 	m_furniturePage--;
 
-	m_furniturePage = m_furniturePage < 0 ? 0 : (m_furniturePage > m_furniturePageCount - 1 ? m_furniturePageCount - 1 : m_furniturePage);
+	int lastPage = m_furniturePageCount - 1;
+	m_furniturePage = m_furniturePage < 0 ? 0 : (m_furniturePage > lastPage ? lastPage : m_furniturePage);
 
 	m_pFurnitureListNumWnd->ClearLine();
 	m_pFurniturePageCountWnd->ClearLine();
@@ -11620,7 +11610,8 @@ void CRealMyRoomMain::OnFurniturePdownInit(int param) {
 void CRealMyRoomMain::OnFurniturePdownButtonUp(void) {
 	m_furniturePage++;
 
-	m_furniturePage = m_furniturePage < 0 ? 0 : (m_furniturePage > m_furniturePageCount - 1 ? m_furniturePageCount - 1 : m_furniturePage);
+	int lastPage = m_furniturePageCount - 1;
+	m_furniturePage = m_furniturePage < 0 ? 0 : (m_furniturePage > lastPage ? lastPage : m_furniturePage);
 
 	m_pFurnitureListNumWnd->ClearLine();
 	m_pFurniturePageCountWnd->ClearLine();
@@ -12241,14 +12232,15 @@ void CRealMyRoomMain::SetListMenu(void) {
 		break;
 	}
 
-	std::list<sFurniture_List>::iterator it;
-	for (it = WSingleton<CSharedDoc>::Instance()->m_furnitureList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_furnitureList.end(); ++it) {
+	bool found = false;
+	for (std::list<sFurniture_List>::iterator it = WSingleton<CSharedDoc>::Instance()->m_furnitureList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_furnitureList.end(); ++it) {
 		if ((it->m_typeId & 0x3FF800) == 0x2800 && (it->m_flags & 1)) {
+			found = true;
 			break;
 		}
 	}
 
-	if (it == WSingleton<CSharedDoc>::Instance()->m_furnitureList.end()) {
+	if (!found) {
 		menu[count++] = 3;
 	}
 
@@ -12264,14 +12256,15 @@ void CRealMyRoomMain::SetListMenu(void) {
 				break;
 			}
 
-			int j;
-			for (j = 0; j < count; j++) {
+			bool listed = false;
+			for (int j = 0; j < count; j++) {
 				if (menu[j] == i) {
+					listed = true;
 					break;
 				}
 			}
 
-			if (j == count) {
+			if (!listed) {
 				m_pMenuList->AddItem((void*)(i + 1));
 			}
 		}
@@ -13302,11 +13295,12 @@ void CRealMyRoomMain::RMR_UpdateDB(void) {
 
 		cModel* pModel = WSingleton<CRealMyRoomData>::Instance()->GetModelData(it->m_id, it->m_typeId);
 
+		sFurniture_List furniture;
 		if (pModel != NULL && (pModel->m_pFurniture->m_typeId & 0xFC000000) == 0x48000000) {
 			pModel->m_pFurniture->m_flags |= 1;
 			it->m_flags |= 1;
 
-			sFurniture_List furniture = *pModel->m_pFurniture;
+			memcpy(&furniture, pModel->m_pFurniture, sizeof(furniture));
 			if (pModel->m_pModelData != NULL) {
 				furniture.m_pos.x = pModel->m_pModelData->m_basePos.x;
 				furniture.m_pos.y = pModel->m_pModelData->m_basePos.y;
@@ -13318,7 +13312,7 @@ void CRealMyRoomMain::RMR_UpdateDB(void) {
 				changedList.push_back(furniture);
 			}
 		} else if (WSingleton<CRealMyRoomData>::Instance()->IsModelData_SaveList(it->m_id, it->m_typeId)) {
-			sFurniture_List furniture = { 0 };
+			memset(&furniture, 0, sizeof(furniture));
 			furniture.m_typeId = it->m_typeId;
 			furniture.m_id = it->m_id;
 			furniture.m_pos.x = it->m_pos.x;
@@ -13377,6 +13371,7 @@ WOverlay* CRealMyRoomMain::GetCardImg(unsigned long typeId) {
 	std::map<unsigned int, WOverlay*>::iterator it = m_cardImgMap.find(typeId);
 	IFF_STRUCT::sCard* pCard = ItemManager()->FindCard(typeId);
 
+	WOverlay* overlay = NULL;
 	if (it == m_cardImgMap.end()) {
 
 		pCard = ItemManager()->FindCard(typeId);
@@ -13385,17 +13380,16 @@ WOverlay* CRealMyRoomMain::GetCardImg(unsigned long typeId) {
 
 			char path[64];
 			sprintf(path, "%s.png", pCard->m_model);
-			WOverlay* overlay = g_resrcmng->GetOverlay(path, 0);
+			overlay = g_resrcmng->GetOverlay(path, 0);
 			if (overlay) {
 				m_cardImgMap.insert(std::map<unsigned int, WOverlay*>::value_type(pCard->m_typeId, overlay));
 			}
-			return overlay;
 		}
 	} else {
-		return it->second;
+		overlay = it->second;
 	}
 
-	return NULL;
+	return overlay;
 }
 
 // realmyroommainui.cpp:17055
@@ -13966,13 +13960,13 @@ void CRealMyRoomMain::OnLBDownItemStorageList(void) {
 						sStoredItemDragDrop dragDrop;
 						memset(&dragDrop, 0, sizeof(dragDrop));
 
-						dragDrop.mode = sStoredItemDragDrop::MODE_NONE;
 						dragDrop.index = pItem->idx;
+						dragDrop.mode = sStoredItemDragDrop::MODE_NONE;
 
 						// 0x14 is an sStoredItemInfo in the original (its operator= is called).
 						dragDrop.slot = *pInfo;
 
-						if (pItemStorage != NULL) {
+						if (WSingleton<CItemStorage>::Instance() != NULL) {
 							pItemStorage->SetDragDropItem(dragDrop);
 						}
 					}

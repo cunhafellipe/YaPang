@@ -918,9 +918,9 @@ void CProjectG::CheckScreenShot(void) {
 		sprintf(timeText, "%d-%02d-%02d %02d:%02d:%02d", systemTime.wYear, systemTime.wMonth, systemTime.wDay, systemTime.wHour, systemTime.wMinute, systemTime.wSecond);
 
 		if (CSharedDoc::Instance()->m_loginConnectValue != 0) {
-			if (CSharedDoc::Instance()->m_serverName[0] != '\0') {
+			if (CSharedDoc::Instance()->m_curServer.name[0] != '\0') {
 				strcat(timeText, " (");
-				strcat(timeText, CSharedDoc::Instance()->m_serverName);
+				strcat(timeText, CSharedDoc::Instance()->m_curServer.name);
 				strcat(timeText, ")");
 			}
 		}
@@ -1389,8 +1389,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 			memset(&best, 0, sizeof(best));
 			bool found = false;
 			int minUsers = 2000;
-			// The connected server's record starts at m_serverName.
-			sGameServerInfo& current = *(sGameServerInfo*)doc->m_serverName;
+			sGameServerInfo& current = doc->m_curServer;
 			for (std::list<sGameServerInfo>::iterator it = doc->m_gameServerList.begin(); it != doc->m_gameServerList.end(); ++it) {
 				sGameServerInfo info = *it;
 				if (current.id != info.id) {
@@ -1427,7 +1426,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 			if (WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT))
 				WNetworkSystem::Instance()->ForceShutDown(WNetworkSystem::NET_UNIT_DEFAULT);
 			WNetworkSystem::Instance()->SendMessage(WNetworkSystem::NET_UNIT_DEFAULT, NetworkUnit::EVENT_NEXT);
-			*(sGameServerInfo*)CSharedDoc::Instance()->m_serverName = best;
+			CSharedDoc::Instance()->m_curServer = best;
 			CSharedDoc::Instance()->SetDirectMoveRoomInfo(CSharedDoc::Instance()->m_currentChannel.id, 0xFFFF, 0xFFFFFFFF);
 			CSharedDoc::Instance()->m_list4B64.push_back(best.id);
 		} else {
@@ -1831,9 +1830,7 @@ bool CProjectG::OnGameServerResult(int result, FrForm* pForm) {
 		WSingleton<CMouseCursor>::Instance()->SetActive(true);
 
 		if (WSingleton<CSharedDoc>::Instance()) {
-			// The connected server's id: CSharedDoc keeps a sGameServerInfo at
-			// 0x4B05 (m_serverName is its name), not yet declared as such.
-			unsigned long serverId = ((const sGameServerInfo*)WSingleton<CSharedDoc>::Instance()->m_serverName)->id;
+			unsigned long serverId = WSingleton<CSharedDoc>::Instance()->m_curServer.id;
 			std::list<sGameServerInfo>::iterator it = std::find_if(WSingleton<CSharedDoc>::Instance()->m_gameServerList.begin(), WSingleton<CSharedDoc>::Instance()->m_gameServerList.end(), _FindByGuid(serverId));
 
 			if (it != WSingleton<CSharedDoc>::Instance()->m_gameServerList.end())

@@ -834,10 +834,7 @@ private:
 	bool m_lookAtMoving;               // 0xce4, the look-at catches up with the avatar
 	UNKNOWN(0xCE5, 0xCE8);
 	int m_cameraDisplayType;           // 0xce8, the type SetCameraDisplayType stores
-	UNKNOWN(0xCEC, 0xD0C);
-	WMatrix m_savedCamera;             // 0xd0c, the camera SetCameraDisplayType(0) restores
-	float m_savedFov;                  // 0xd3c, the field of view restored with it
-	UNKNOWN(0xD40, 0xD44);
+	WPolySoup::sCamera m_savedCamera;  // 0xcec, the camera SetCameraDisplayType(0) restores
 	bool m_uiFlagA;                    // 0xd44, use not recovered; false after InitMyRoomControls
 	bool m_bHideMiddleUI;              // 0xd45, set by ControlUiHideMode
 	bool m_uiFlagB;                    // 0xd46, use not recovered; false after InitMyRoomControls
@@ -1035,8 +1032,7 @@ BEGIN_LAYOUT_CHECK(CRealMyRoomMain)
 	CHECK_FIELD(CRealMyRoomMain, m_pNamedCameras, 0xC48);
 	CHECK_FIELD(CRealMyRoomMain, m_pRoomPoint, 0xC6C);
 	CHECK_FIELD(CRealMyRoomMain, m_headingLookAtOffset, 0x24C);
-	CHECK_FIELD(CRealMyRoomMain, m_savedCamera, 0xD0C);
-	CHECK_FIELD(CRealMyRoomMain, m_savedFov, 0xD3C);
+	CHECK_FIELD(CRealMyRoomMain, m_savedCamera, 0xCEC);
 	CHECK_FIELD(CRealMyRoomMain, m_uiState, 0xD4C);
 	CHECK_FIELD(CRealMyRoomMain, m_flags, 0xD54);
 	CHECK_FIELD(CRealMyRoomMain, m_offlineShopEditState, 0xD5C);

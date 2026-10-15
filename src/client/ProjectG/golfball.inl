@@ -12,7 +12,7 @@ inline CGolfBall &GolfBall(void) {
 }
 
 // golfball.inl:8
-GOLFRULE_GOLFBALL_INLINE const CGolfBall::sExpected* CGolfBall::PreData(int index) const {
+inline const CGolfBall::sExpected* CGolfBall::PreData(int index) const {
 	if (index < 0 || index > m_preDataCount) {
 		return 0;
 	}

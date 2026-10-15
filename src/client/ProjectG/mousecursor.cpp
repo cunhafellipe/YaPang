@@ -370,9 +370,10 @@ float CMouseCursor::RayTrace4Ground(void) {
 	if (!(WAbsBySign(m_rayDir.y) < data_a08c54[1])) {
 		float t = g_camera.pivot.y / m_rayDir.y * -1.0f;
 		m_rayDist = t;
-		WVector hit = g_camera.pivot + m_rayDir * t;
+		float x = g_camera.pivot.x + t * m_rayDir.x;
+		float z = g_camera.pivot.z + t * m_rayDir.z;
 
-		if (hit.x > m_groundMinX && hit.x < m_groundMaxX && hit.z > m_groundMinZ && hit.z < m_groundMaxZ)
+		if (x > m_groundMinX && x < m_groundMaxX && z > m_groundMinZ && z < m_groundMaxZ)
 			return t;
 	}
 

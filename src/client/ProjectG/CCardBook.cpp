@@ -253,7 +253,7 @@ void CCardSlot::Draw(FrGraphicInterface* pGraphic) {
 		}
 
 		if (pSelect != NULL) {
-			pGraphic->DrawTexture(pSelect, WRect(m_rect.x, m_rect.y, (float)pSelect->Width(), (float)pSelect->Height()), 0xFFFFFFFF, 0);
+			pGraphic->DrawTexture(pSelect, WRect(m_rect.x, m_rect.y, pSelect->Width(), pSelect->Height()), 0xFFFFFFFF, 0);
 		}
 	}
 
@@ -285,11 +285,11 @@ void CCardSlot::Draw(FrGraphicInterface* pGraphic) {
 		const Bitmap* pHelp2 = g_pFresh->GetBitmap("help_2");
 
 		if (pHelp1 != NULL) {
-			pGraphic->DrawTexture(pHelp1, WRect(12.0f, 439.0f, (float)pHelp1->Width(), (float)pHelp1->Height()), 0xFFFFFFFF, 0);
+			pGraphic->DrawTexture(pHelp1, WRect(12.0f, 439.0f, pHelp1->Width(), pHelp1->Height()), 0xFFFFFFFF, 0);
 		}
 
 		if (pHelp2 != NULL) {
-			pGraphic->DrawTexture(pHelp2, WRect(268.0f, 439.0f, (float)pHelp2->Width(), (float)pHelp2->Height()), 0xFFFFFFFF, 0);
+			pGraphic->DrawTexture(pHelp2, WRect(268.0f, 439.0f, pHelp2->Width(), pHelp2->Height()), 0xFFFFFFFF, 0);
 		}
 
 		if (m_pCards != NULL) {
@@ -304,8 +304,7 @@ void CCardSlot::Draw(FrGraphicInterface* pGraphic) {
 			if (pDesc != NULL) {
 				char lines[3][128] = { "\0" };
 
-				char* pText = pDesc->m_text;
-				unsigned long length = strlen(pText);
+				unsigned long length = strlen(pDesc->m_text);
 
 				unsigned long col = 0;
 				unsigned long row = 0;
@@ -313,10 +312,10 @@ void CCardSlot::Draw(FrGraphicInterface* pGraphic) {
 				memset(pBuf, 0, length + 1);
 
 				if (pBuf != NULL) {
-					strcpy(pBuf, pText);
+					strcpy(pBuf, pDesc->m_text);
 
 					for (unsigned long i = 0; i < length; i++) {
-						lines[row][col] = pText[i];
+						lines[row][col] = pDesc->m_text[i];
 						col++;
 
 						if (pBuf[i] == '\n' || (col >= 41 && pBuf[i] == ' ')) {
@@ -1111,8 +1110,8 @@ void CCardBook::BuildCardPage(unsigned long page) {
 
 		m_curPage = (unsigned char)page;
 		if (pPage != NULL) {
-			int slot = 0;
 			pPage->SetCurPage((unsigned char)page);
+			int slot = 0;
 
 			for (int i = 0; i < 12; i++) {
 				pPage->SetCard(i, 0);

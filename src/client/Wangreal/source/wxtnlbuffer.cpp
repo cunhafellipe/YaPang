@@ -7,6 +7,11 @@
 
 #include <string.h>
 
+#ifdef PG_MATERIAL_HINTS
+// The port's renderer learns which meshes reflect (port/compat).
+#include "pg_material_hints.h"
+#endif
+
 #ifdef PG_7XX
 // The palette slot of a bone in its mesh's palette (w_mesh::pgPalette),
 // added on first use. The JP exe's lookup (0xB9F980) returns the position of
@@ -223,6 +228,10 @@ void WxBatchGrp::xRenderAtOnce(WView* pView, WxBatchState* pBState, bool bPerTra
 				nBatches = 1;
 			} else if (pFirst) {
 				if (pBatch->xpBone->GetAlpha() != pFirst->xpBone->GetAlpha() || pBatch->xpMesh->drawFlag != pFirst->xpMesh->drawFlag || pBatch->xpMesh->xiDrawFlag2 != pFirst->xpMesh->xiDrawFlag2 || stricmp(pBatch->xpMesh->mpetName, pFirst->xpMesh->mpetName) != 0
+#ifdef PG_MATERIAL_HINTS
+					// The port's hints go with each draw: meshes with other hints (a bone's shadow rule) are drawn apart.
+					|| pBatch->xpMesh->pgHint != pFirst->xpMesh->pgHint
+#endif
 #ifdef PG_7XX
 					// One draw has one palette: meshes with their own palettes are drawn apart.
 					|| ((pBatch->xpMesh->xiDrawFlag2 & 0x1000) && (pBatch->xpMesh->pgPaletteNum != pFirst->xpMesh->pgPaletteNum || memcmp(pBatch->xpMesh->pgPalette, pFirst->xpMesh->pgPalette, pBatch->xpMesh->pgPaletteNum * sizeof(int)) != 0))
@@ -273,7 +282,14 @@ void WxBatchGrp::xRenderSubset(WView* pView, WxBatchState* pBState, WxBatch* pBa
 	pBState->xnVtxs = nVtxs;
 	pBState->xnIdxs = nIdxs;
 
+#ifdef PG_MATERIAL_HINTS
+	int pgHint = PgMaterialHintGet();
+	PgMaterialHint(pgHint | (pBatch->xpMesh ? pBatch->xpMesh->pgHint | (pBatch->xpMesh->bEnv ? PG_HINT_REFLECTIVE : 0) : 0));
+#endif
 	xRender(pView, pBState, pBatch->xpBone, pBatch->xpMesh);
+#ifdef PG_MATERIAL_HINTS
+	PgMaterialHint(pgHint);
+#endif
 }
 
 // wxtnlbuffer.cpp:361

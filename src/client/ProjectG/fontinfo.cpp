@@ -29,6 +29,7 @@
 #include "TaskManager.h"
 #include "UccManager.h"
 #include "ShuffleBonus.h"
+#include "wtemplate.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -286,6 +287,7 @@ float CFontInfo::Print(float x, float y, const char *text, float space, int flag
 		pFont = &m_font;
 	}
 
+	const char *p = text;
 	char *charSet = pFont->m_pFontInfo->pCharSet;
 
 	float oldScale = pFont->m_pTitleFont->GetScale();
@@ -293,31 +295,32 @@ float CFontInfo::Print(float x, float y, const char *text, float space, int flag
 
 	float width = 0.0f;
 	switch (m_nFlag) {
-	case 1: {
-		const char *p = text;
+	case 1:
 		while (*p) {
-			char *pFound = strchr(charSet, *p++);
+			int c = *p++;
+			char *pFound = strchr(charSet, c);
 			width += pFont->m_pTitleFont->GetCharWidthA(g_view, pFound - charSet) + space * scale;
 		}
 		width = (width - space) * 0.5f;
 		break;
-	}
-	case 2: {
-		const char *p = text;
+	case 2:
 		while (*p) {
-			char *pFound = strchr(charSet, *p++);
+			int c = *p++;
+			char *pFound = strchr(charSet, c);
 			width += pFont->m_pTitleFont->GetCharWidthA(g_view, pFound - charSet) + space * scale;
 		}
 		width = width - space;
 		break;
 	}
-	}
 
 	x -= width;
-	while (*text) {
-		char *pFound = strchr(charSet, *text++);
-		float charWidth = pFont->m_pTitleFont->PutChar(g_view, x, y, pFound - charSet, flag, m_color);
-		x += charWidth + space;
+	p = text;
+	while (*p) {
+		int c = *p++;
+		char *pFound = strchr(charSet, c);
+		float w = pFont->m_pTitleFont->PutChar(g_view, x, y, pFound - charSet, flag, m_color);
+		w += space;
+		x += w;
 	}
 
 	pFont->m_pTitleFont->SetScale(oldScale);
@@ -411,21 +414,23 @@ void CDistToHoleInfo::Display(void) {
 		return;
 	}
 
-	WVector cup = GOLFDOC()->GetHoleData().m_cupPos;
-	WVector screen = g_view->Projection(cup);
+	WVector screen = g_view->Projection(WVector(GOLFDOC()->GetHoleData().m_cupPos));
 
 	if (screen.z <= 0.0f || data_9eb5b8[20].f <= screen.z) {
 		return;
 	}
 
 	float fInv = data_9eb5b8[20].f - m_fBlend;
-	m_fixPos = WVector((screen.x + m_fOffsetX) * m_fBlend + fInv * m_uiX,
-		fInv * m_uiY + m_curPos.y * m_fBlend,
-		fInv * m_fScale + m_curPos.z * m_fBlend);
+	float x = (screen.x + m_fOffsetX) * m_fBlend + fInv * m_uiX;
+	m_fixPos.x = x;
+	float y = fInv * m_uiY + m_curPos.y * m_fBlend;
+	m_fixPos.y = y;
+	float z = fInv * m_fScale + m_curPos.z * m_fBlend;
+	m_fixPos.z = z;
 
 	m_color = ((int)m_fAlpha << 24) | 0xFF0000;
 
-	Print(m_fixPos.x, GOLFDOC()->GameMode() == 0x200 ? screen.y : m_fixPos.y, m_pBuffer, m_fixPos.z * 6.0f, 0, m_fixPos.z, NULL);
+	Print(x, GOLFDOC()->GameMode() == 0x200 ? screen.y : y, m_pBuffer, z * 6.0f, 0, z, NULL);
 }
 
 // fontinfo.cpp:406
@@ -695,8 +700,8 @@ CFlyInfo::CFlyInfo(void) : m_pGroundUI(NULL), m_pGroundTextUI(NULL), m_pApproach
 
 	m_pGroundTextUI = new CSimpleUI("[ground_text.jpg");
 
-	m_pGroundTextUI->Add("ºñ°Å¸®", WRect(0.0f, 0.0f, 64.0f, 27.0f), false);
-	m_pGroundTextUI->Add("³²Àº°Å¸®", WRect(0.0f, 27.0f, 64.0f, 27.0f), false);
+	m_pGroundTextUI->Add("\xBA\xF1\xB0\xC5\xB8\xAE", WRect(0.0f, 0.0f, 64.0f, 27.0f), false);
+	m_pGroundTextUI->Add("\xB3\xB2\xC0\xBA\xB0\xC5\xB8\xAE", WRect(0.0f, 27.0f, 64.0f, 27.0f), false);
 
 	if (CSharedDoc::Instance()->m_roomType == 10) {
 		m_pApproachOutOverlay = g_resrcmng->GetOverlay("approach_out.png", 0);
@@ -798,6 +803,7 @@ void CFlyInfo::CalcDistance(void) {
 // fontinfo.cpp:878
 void CFlyInfo::Display(void) {
 	CGolfBall &ball = GolfBall();
+	int yards;   // whole yards of the distance shown
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 10) {
 		if (WSingleton<CSharedDoc>::Instance()->m_gameStartTime) {
@@ -814,26 +820,42 @@ void CFlyInfo::Display(void) {
 					unsigned int dist = pDoc->m_gameResultList[MyIndex()].m_approachDistance;
 					if (dist == 0xFFFFFFFF) {
 						if (m_pApproachOutOverlay) {
-							WRect rc(72.0f, 193.0f, 64.0f, 32.0f);
-							WRect uv(0.0f, 0.0f, 1.0f, 1.0f);
-							m_pApproachOutOverlay->Render(g_view, uv, rc, 0, 0xFFFF3434, 0.0f, 0);
+							WRect dst;
+							WRect src;
+							src.x = 72.0f;
+							src.y = 193.0f;
+							src.w = 64.0f;
+							src.h = 32.0f;
+							dst.x = 0.0f;
+							dst.y = 0.0f;
+							dst.w = 1.0f;
+							dst.h = 1.0f;
+							m_pApproachOutOverlay->Render(g_view, dst, src, 0, 0xFFFF3434, 0.0f, 0);
 						}
 					} else {
 						sprintf(m_pBuffer, "%d.%d", dist / 10, dist % 10);
 						Print(80.0f, 202.0f, m_pBuffer, 2.0f, 0, 0.64f, NULL);
 					}
 				} else {
-					int whole = float2int(m_fToPin);
-					sprintf(m_pBuffer, "%d.%d", whole, float2int((m_fToPin - whole) * 10.0f));
+					yards = float2int(m_fToPin);
+					sprintf(m_pBuffer, "%d.%d", yards, float2int((m_fToPin - yards) * 10.0f));
 					Print(80.0f, 202.0f, m_pBuffer, 2.0f, 0, 0.64f, NULL);
 				}
 			} else if (GOLFDOC()->GameMode() & 0x800) {
 				unsigned int dist = pDoc->m_gameResultList[MyIndex()].m_approachDistance;
 				if (dist == 0xFFFFFFFF) {
 					if (m_pApproachOutOverlay) {
-						WRect rc(72.0f, 193.0f, 64.0f, 32.0f);
-						WRect uv(0.0f, 0.0f, 1.0f, 1.0f);
-						m_pApproachOutOverlay->Render(g_view, uv, rc, 0, 0xFFFF3434, 0.0f, 0);
+						WRect dst;
+						WRect src;
+						src.x = 72.0f;
+						src.y = 193.0f;
+						src.w = 64.0f;
+						src.h = 32.0f;
+						dst.x = 0.0f;
+						dst.y = 0.0f;
+						dst.w = 1.0f;
+						dst.h = 1.0f;
+						m_pApproachOutOverlay->Render(g_view, dst, src, 0, 0xFFFF3434, 0.0f, 0);
 					}
 				} else {
 					sprintf(m_pBuffer, "%d.%d", dist / 10, dist % 10);
@@ -856,67 +878,55 @@ void CFlyInfo::Display(void) {
 	} else if (GOLFDOC()->GameMode() & 0x80) {
 		m_color = 0xFFFFFFFF;
 
-		int carry = float2int(m_fCarry);
-		int carryFrac = float2int((m_fCarry - carry) * 100.0f);
+		yards = float2int(m_fCarry);
+		int fraction = float2int((m_fCarry - yards) * 100.0f);
 		float barY = COption::Instance()->gGetBar_Y();
 
-		float left = g_view->GetWidth() * 0.5f - 20.0f;
-		float top = barY - 33.0f;
-		float right = g_view->GetWidth() * 0.5f + 35.0f;
-		float bottom = g_view->GetHeight() * 0.5f - 37.0f;
+		WPoint from(g_view->GetWidth() * 0.5f - 20.0f, barY - 33.0f);
+		WPoint to(g_view->GetWidth() * 0.5f + 35.0f, g_view->GetHeight() * 0.5f - 37.0f);
 
-		float dx = (right - left) * Between(0.0f, (m_fTime - 0.5f) * 2.0f, 1.0f);
-		float dy = (bottom - top) * Between(0.0f, (m_fTime - 0.5f) * 2.0f, 1.0f);
+		float dx = (to.x - from.x) * Between(0.0f, (m_fTime - 0.5f) * 2.0f, data_9eb5b8[20].f);
+		float dy = (to.y - from.y) * Between(0.0f, (m_fTime - 0.5f) * 2.0f, data_9eb5b8[20].f);
 
 		m_nFlag = 2;
-		sprintf(m_pBuffer, "%d", carry);
-		float y = top + dy;
-		Print(left - 5.0f + dx, y, m_pBuffer, 4.0f, 0, 0.64f, NULL);
+		sprintf(m_pBuffer, "%d", yards);
+		Print(from.x - 5.0f + dx, from.y + dy, m_pBuffer, 4.0f, 0, 0.64f, NULL);
 
-		float x = left + dx;
 		m_nFlag = 1;
-		Print(x, y, ".", 4.0f, 0, 0.64f, NULL);
+		Print(from.x + dx, from.y + dy, ".", 4.0f, 0, 0.64f, NULL);
 
 		m_nFlag = 0;
 		if (GOLFDOC()->m_approachMode) {
-			sprintf(m_pBuffer, "%dy", carryFrac / 10);
+			sprintf(m_pBuffer, "%dy", fraction / 10);
 		} else {
-			sprintf(m_pBuffer, "%02dy", carryFrac);
+			sprintf(m_pBuffer, "%02dy", fraction);
 		}
-		Print(x + 5.0f, y, m_pBuffer, 4.0f, 0, 0.64f, NULL);
+		Print(from.x + dx + 5.0f, from.y + dy, m_pBuffer, 4.0f, 0, 0.64f, NULL);
 
 		m_color = 0xFFFF3434;
-		carry = float2int(m_fToPin);
-		carryFrac = float2int((m_fToPin - carry) * 100.0f);
+		yards = float2int(m_fToPin);
+		fraction = float2int((m_fToPin - yards) * 100.0f);
 
-		left = g_view->GetWidth() * 0.5f - 20.0f;
-		top = barY - 12.0f;
-		right = g_view->GetWidth() * 0.5f + 35.0f;
-		bottom = g_view->GetHeight() * 0.5f - 7.0f;
+		WPoint from2(g_view->GetWidth() * 0.5f - 20.0f, barY - 12.0f);
+		WPoint to2(g_view->GetWidth() * 0.5f + 35.0f, g_view->GetHeight() * 0.5f - 7.0f);
 
-		dx = (right - left) * Between(0.0f, (m_fTime - 1.0f) * 2.0f, 1.0f);
-		dy = (bottom - top) * Between(0.0f, (m_fTime - 1.0f) * 2.0f, 1.0f);
+		dx = (to2.x - from2.x) * Between(0.0f, (m_fTime - data_9eb5b8[20].f) * 2.0f, data_9eb5b8[20].f);
+		dy = (to2.y - from2.y) * Between(0.0f, (m_fTime - data_9eb5b8[20].f) * 2.0f, data_9eb5b8[20].f);
 
 		m_nFlag = 2;
-		sprintf(m_pBuffer, "%d", carry);
-		y = top + dy;
-		Print(left - 5.0f + dx, y, m_pBuffer, 4.0f, 0, 0.64f, NULL);
+		sprintf(m_pBuffer, "%d", yards);
+		Print(from2.x - 5.0f + dx, from2.y + dy, m_pBuffer, 4.0f, 0, 0.64f, NULL);
 
-		x = left + dx;
 		m_nFlag = 1;
-		Print(x, y, ".", 4.0f, 0, 0.64f, NULL);
+		Print(from2.x + dx, from2.y + dy, ".", 4.0f, 0, 0.64f, NULL);
 
 		m_nFlag = 0;
 		if (GOLFDOC()->m_approachMode) {
-			if (ball.m_state == 0 && ball.IsHoleIn() == 1) {
-				sprintf(m_pBuffer, "%dy", 0);
-			} else {
-				sprintf(m_pBuffer, "%dy", carryFrac / 10);
-			}
+			sprintf(m_pBuffer, "%dy", ball.m_state == 0 && ball.IsHoleIn() ? 0 : fraction / 10);
 		} else {
-			sprintf(m_pBuffer, "%02dy", ball.m_state == 0 && ball.IsHoleIn() == 1 ? 0 : carryFrac);
+			sprintf(m_pBuffer, "%02dy", ball.m_state == 0 && ball.IsHoleIn() ? 0 : fraction);
 		}
-		Print(x + 5.0f, y, m_pBuffer, 4.0f, 0, 0.64f, NULL);
+		Print(from2.x + dx + 5.0f, from2.y + dy, m_pBuffer, 4.0f, 0, 0.64f, NULL);
 
 		if (ball.m_state == 0 && !ball.m_landed && ball.IsHoleIn() != 1 && ball.m_lie == 0) {
 			if (m_pGroundUI) {
@@ -952,37 +962,34 @@ void CWindInfo::Display(void) {
 		|| PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000020) {
 		m_color = 0xFF00FF00;
 		sprintf(m_pBuffer, "1m");
+	} else if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000016) {
+		m_color = 0xFF0000FF;
+		sprintf(m_pBuffer, "%.0fm", Wind().GetGlobalIntensity());
+	} else if (CSharedDoc::Instance()->m_roomType == 3
+		|| (GolfBall().m_preDataIndex >= 0 && Wind().IsInTurbulence(GolfBall().m_pos))
+		|| (GolfBall().m_preDataIndex < 0 && Wind().IsInTurbulence(g_camera.pivot))) {
+		m_color = 0xFFFFFFFF;
+		sprintf(m_pBuffer, "?");
 	} else {
-		if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000016) {
-			m_color = 0xFF0000FF;
-		} else if (CSharedDoc::Instance()->m_roomType == 3
-			|| (GolfBall().m_preDataIndex >= 0 && Wind().IsInTurbulence(GolfBall().m_pos))
-			|| (GolfBall().m_preDataIndex < 0 && Wind().IsInTurbulence(g_camera.pivot))) {
-			m_color = 0xFFFFFFFF;
-			sprintf(m_pBuffer, "?");
-			Print(g_view->GetWidth() - 21.0f, COption::Instance()->gGetBar_Y() + 26.0f, m_pBuffer, 1.0f, 0, 1.0f, NULL);
-			return;
-		} else {
-			m_color = 0xFFFFFFFF;
+		m_color = 0xFFFFFFFF;
 
-			switch (CSharedDoc::Instance()->m_roomType) {
-			case 0:
-			case 1:
-			case 7:
-				CCardManager::Instance()->SetPlayerIndex(GOLFDOC()->m_myPlayerIndex);
-				break;
-			case 4:
-			case 5:
-			case 6:
-			case 9:
-			case 10:
-				CCardManager::Instance()->SetPlayerIndex(0xFF);
-				break;
-			}
+		switch (CSharedDoc::Instance()->m_roomType) {
+		case 0:
+		case 1:
+		case 7:
+			CCardManager::Instance()->SetPlayerIndex(GOLFDOC()->m_myPlayerIndex);
+			break;
+		case 4:
+		case 5:
+		case 6:
+		case 9:
+		case 10:
+			CCardManager::Instance()->SetPlayerIndex(0xFF);
+			break;
+		}
 
-			if (CCardManager::Instance()->GetWindColor() == 1) {
-				m_color = 0xFF59D3FF;
-			}
+		if (CCardManager::Instance()->GetWindColor() == 1) {
+			m_color = 0xFF59D3FF;
 		}
 		sprintf(m_pBuffer, "%.0fm", Wind().GetGlobalIntensity());
 	}
@@ -1053,7 +1060,10 @@ void CBonusInfo::Process(float fDelta) {
 
 	m_awardPang = PLAYER(MyIndex())->m_ghostAward;
 	m_extraPang = PLAYER(MyIndex())->m_extraPang;
-	m_auxPartPang = (int)((float)(m_awardPang + m_extraPang) * CSharedDoc::Instance()->GetAuxPartProperty(MyIndex(), 3) * CSharedDoc::Instance()->m_pangPercent * CSharedDoc::Instance()->m_pangRate * 0.01f) - m_awardPang - m_extraPang;
+	// One source line (1186); the step-by-step product makes the original reload
+	// CSharedDoc::Instance() after GetAuxPartProperty. Residue: fmul st(1)/fstp
+	// st(0) against fmulp, and the load order of the m_totalPang sum.
+	float pang = (float)(m_awardPang + m_extraPang) * CSharedDoc::Instance()->GetAuxPartProperty(MyIndex(), 3); pang *= CSharedDoc::Instance()->m_pangPercent; pang *= CSharedDoc::Instance()->m_pangRate; m_auxPartPang = (int)(pang * 0.01f) - m_awardPang - m_extraPang;
 
 	m_itemPang = PLAYER(MyIndex())->m_itemPang;
 	m_totalPang = m_itemPang + m_extraPang + m_awardPang + m_auxPartPang;
@@ -1062,33 +1072,21 @@ void CBonusInfo::Process(float fDelta) {
 // fontinfo.cpp:1194
 void CBonusInfo::Display(void) {
 	if (m_pPangOverlay) {
-		WRect uv(0.0f, 0.0f, 1.0f, 1.0f);
-		WRect rc;
-		rc.x = g_view->GetWidth() * 0.5f - 256.0f;
 		if (CSharedDoc::Instance()->m_roomType == 7) {
-			rc.w = 256.0f;
-			rc.h = 256.0f;
-			rc.y = (g_view->GetHeight() - 256.0f - 128.0f + 60.0f) * 0.5f;
+			m_pPangOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 256.0f, (g_view->GetHeight() - 256.0f - 128.0f + 60.0f) * 0.5f, 256.0f, 256.0f), 0, 0xFFFFFFFF, 0.0f, 0);
 		} else {
-			rc.w = 256.0f;
-			rc.h = 128.0f;
-			rc.y = (g_view->GetHeight() - 128.0f) * 0.5f;
+			m_pPangOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 256.0f, (g_view->GetHeight() - 128.0f) * 0.5f, 256.0f, 128.0f), 0, 0xFFFFFFFF, 0.0f, 0);
 		}
-		m_pPangOverlay->Render(g_view, uv, rc, 0, 0xFFFFFFFF, 0.0f, 0);
 	}
 
 	// fontinfo.cpp:1203
 	if (CLoginInfo::Instance()->IsPcBang() && m_pPcBangOverlay) {
-		WRect uv(0.0f, 0.0f, 1.0f, 1.0f);
-		WRect rc(g_view->GetWidth() * 0.5f + 150.0f, (g_view->GetHeight() + 25.0f) * 0.5f, 70.0f, 50.0f);
-		m_pPcBangOverlay->Render(g_view, uv, rc, 0, 0xFFFFFFFF, 0.0f, 0);
+		m_pPcBangOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f + 150.0f, (g_view->GetHeight() + 25.0f) * 0.5f, 70.0f, 50.0f), 0, 0xFFFFFFFF, 0.0f, 0);
 	}
 
 	// fontinfo.cpp:1208
 	if (IsLocalContent((localContentType_t)0x17) && CSharedDoc::Instance()->IsWearHalloweenItem()) {
-		WRect uv(0.0f, 0.0f, 1.0f, 1.0f);
-		WRect rc(g_view->GetWidth() * 0.5f + 170.0f, g_view->GetHeight() * 0.5f - 52.0f, (float)m_pEventOverlay->GetWidth(), (float)m_pEventOverlay->GetHeight());
-		m_pEventOverlay->Render(g_view, uv, rc, 0, 0xFFFFFFFF, 0.0f, 0);
+		m_pEventOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f + 170.0f, g_view->GetHeight() * 0.5f - 52.0f, (float)m_pEventOverlay->GetWidth(), (float)m_pEventOverlay->GetHeight()), 0, 0xFFFFFFFF, 0.0f, 0);
 
 		m_nFlag = 2;
 		sprintf(m_pBuffer, "%%%d", 100);
@@ -1102,6 +1100,7 @@ void CBonusInfo::Display(void) {
 		sprintf(m_pBuffer, "%I64d", m_itemPang);
 		Print(g_view->GetWidth() * 0.5f + 105.0f, g_view->GetHeight() * 0.5f - 88.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
 
+		m_nFlag = 2;
 		sprintf(m_pBuffer, "%I64d", m_awardPang);
 		Print(g_view->GetWidth() * 0.5f + 100.0f, g_view->GetHeight() * 0.5f - 53.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
 
@@ -1132,7 +1131,7 @@ void CBonusInfo::Display(void) {
 
 	// fontinfo.cpp:1266
 	WOverlay::DrawBox(g_view, WRect((g_view->GetWidth() - 400.0f) * 0.5f, g_view->GetHeight() * 0.5f + data_9eb5b8[21].f, 400.0f, 3.0f), 0, 0xFF000000, 0.001f);
-	WOverlay::DrawBox(g_view, WRect((g_view->GetWidth() - 400.0f) * 0.5f + data_9eb5b8[20].f, g_view->GetHeight() * 0.5f + 16.0f, 399.0f, 1.0f), 0, 0xFFFFFFFF, 0.001f);
+	WOverlay::DrawBox(g_view, WRect((g_view->GetWidth() - 400.0f) * 0.5f + data_9eb5b8[20].f, g_view->GetHeight() * 0.5f + 16.0f, 398.0f, 1.0f), 0, 0xFFFFFFFF, 0.001f);
 
 	// fontinfo.cpp:1274
 	CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
@@ -1363,16 +1362,19 @@ void CShotCountInfo::Process(float fDelta) {
 // fontinfo.cpp:1537
 void CShotCountInfo::Display(float x, float y, unsigned char nPlayer) {
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
-		sprintf(m_pBuffer, "%d", (unsigned char)GOLFDOC()->GetTeam(nPlayer)->m_holes[GOLFDOC()->m_currentHole - 1]);
+		sTeamData *team = GOLFDOC()->GetTeam(nPlayer);
+		sprintf(m_pBuffer, "%d", (unsigned char)team->m_holes[GOLFDOC()->m_currentHole - 1]);
 	} else {
-		sprintf(m_pBuffer, "%d", (unsigned char)GOLFDOC()->GetPlayer(nPlayer)->m_holes[GOLFDOC()->m_currentHole]);
+		sPlayerData *player = GOLFDOC()->GetPlayer(nPlayer);
+		sprintf(m_pBuffer, "%d", (unsigned char)player->m_holes[GOLFDOC()->m_currentHole - 1]);
 	}
 
 	if (IsLocalContent((localContentType_t)0x4F) && WSingleton<CSharedDoc>::Instance()->m_playingMode == 2) {
-		// The original first stores CSharedDoc 0x5BD0 (protected in SharedDoc.h) into
-		// GetPlayer(nPlayer)->m_holes[GOLFDOC()->m_currentHole]: needs that member public.
+		sPlayerData *ghost = GOLFDOC()->GetPlayer(nPlayer);
+		ghost->m_holes[GOLFDOC()->m_currentHole - 1] = WSingleton<CSharedDoc>::Instance()->m_shotCountKey;
 		GOLFDOC()->GetPlayer(nPlayer)->m_ghostResult = 0;
-		sprintf(m_pBuffer, "%d", (unsigned char)GOLFDOC()->GetPlayer(nPlayer)->m_holes[GOLFDOC()->m_currentHole]);
+		ghost = GOLFDOC()->GetPlayer(nPlayer);
+		sprintf(m_pBuffer, "%d", (unsigned char)ghost->m_holes[GOLFDOC()->m_currentHole - 1]);
 	}
 	Print(x, y, m_pBuffer, 1.0f, 0, 1.0f, NULL);
 
@@ -1396,7 +1398,7 @@ void CShotCountInfo::Display(float x, float y, unsigned char nPlayer) {
 		char szPang[32] = "";
 
 		__int64 pang = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[nPlayer].m_pang;
-		MakePriceStrA(szPang, pang < 0 ? -pang : pang);
+		MakePriceStrA(szPang, wAbs(pang));
 		if (pang < 0) {
 			sprintf(m_pBuffer, "-%s", szPang);
 		} else {
@@ -1405,7 +1407,7 @@ void CShotCountInfo::Display(float x, float y, unsigned char nPlayer) {
 		Print(x - 22.0f + fOffset, y + 39.0f, m_pBuffer, 0.0f, 0, 1.0f, NULL);
 
 		__int64 reward = GOLFDOC()->GetPlayer(nPlayer)->m_rewardPang;
-		MakePriceStrA(szPang, reward < 0 ? -reward : reward);
+		MakePriceStrA(szPang, wAbs(reward));
 
 		float fX = ((nPlayer & 2) ? -108.0f : 0.0f) + x + 20.0f;
 		float fY = y + 29.0f;
@@ -1629,8 +1631,8 @@ CHoleInfo::CHoleInfo(void) : m_pCourseUI(NULL), m_pHoleUI(NULL), m_pStartPosiUI(
 	m_pBuffer = new char[0x20];
 
 	m_fTime = 0.0f;
-	m_fAlpha = 0.0f;
-	m_fTargetAlpha = 0.0f;
+	m_fAlpha[0] = 0.0f;
+	m_fAlpha[1] = 0.0f;
 
 	m_items[0].baseX = g_view->GetWidth() * 0.5f - 116.0f;
 	m_items[0].baseY = 97.0f;
@@ -1776,12 +1778,11 @@ void CHoleInfo::Process(float fDelta) {
 	case 0: {
 		m_fTime += fDelta;
 
-		m_fAlpha += fDelta * 255.0f;
-		if (m_fAlpha > 255.0f)
-			m_fAlpha = 255.0f;
-		m_fTargetAlpha += fDelta * 255.0f;
-		if (m_fTargetAlpha > 255.0f)
-			m_fTargetAlpha = 255.0f;
+		for (int i = 0; i < 2; i++) {
+			m_fAlpha[i] += fDelta * 255.0f;
+			if (m_fAlpha[i] > 255.0f)
+				m_fAlpha[i] = 255.0f;
+		}
 
 		float fWait;
 		CSharedDoc *pDoc = CSharedDoc::Instance();
@@ -1815,7 +1816,7 @@ void CHoleInfo::Process(float fDelta) {
 		}
 
 		if (CSharedDoc::Instance()->m_roomType == 10) {
-			float t = m_fTargetAlpha * (1.0f / 255.0f);
+			float t = m_fAlpha[1] * (1.0f / 255.0f);
 			m_items[3].fixY = m_items[3].baseY;
 			m_items[3].scale = 1.0f;
 			m_items[3].fixX = (1.0f - t) * m_items[3].baseX + t * m_items[3].curX;
@@ -1832,10 +1833,18 @@ void CHoleInfo::Process(float fDelta) {
 		}
 		break;
 	}
+	case 2:
+		m_fAlpha[0] -= fDelta * 128.0f;
+		if (m_fAlpha[0] < 178.5f) {
+			m_fAlpha[0] = 178.5f;
+			m_nState = 3;
+		}
+		break;
+
 	case 1:
-		m_fTargetAlpha -= fDelta * 510.0f;
-		if (m_fTargetAlpha < 0.0f)
-			m_fTargetAlpha = 0.0f;
+		m_fAlpha[1] -= fDelta * 510.0f;
+		if (m_fAlpha[1] < 0.0f)
+			m_fAlpha[1] = 0.0f;
 
 		m_fTime += fDelta * 1.5f;
 		if (m_fTime > 1.0f) {
@@ -1843,25 +1852,10 @@ void CHoleInfo::Process(float fDelta) {
 			m_fTime = 1.0f;
 		}
 
-		m_items[0].fixX = (1.0f - m_fTime) * m_items[0].baseX + m_items[0].curX * m_fTime;
-		m_items[0].fixY = (1.0f - m_fTime) * m_items[0].baseY + m_items[0].curY * m_fTime;
-		m_items[0].scale = (1.0f - m_fTime) + m_fTime * 0.5f;
-		m_items[1].fixX = (1.0f - m_fTime) * m_items[1].baseX + m_items[1].curX * m_fTime;
-		m_items[1].fixY = (1.0f - m_fTime) * m_items[1].baseY + m_items[1].curY * m_fTime;
-		m_items[1].scale = (1.0f - m_fTime) + m_fTime * 0.6f;
-		m_items[2].fixX = (1.0f - m_fTime) * m_items[2].baseX + m_items[2].curX * m_fTime;
-		m_items[2].fixY = (1.0f - m_fTime) * m_items[2].baseY + m_items[2].curY * m_fTime;
-		m_items[2].scale = (1.0f - m_fTime) + m_fTime * 0.6f;
-		m_items[3].fixX = (1.0f - m_fTime) * m_items[3].baseX + m_items[3].curX * m_fTime;
-		m_items[3].fixY = (1.0f - m_fTime) * m_items[3].baseY + m_items[3].curY * m_fTime;
-		m_items[3].scale = (1.0f - m_fTime) + m_fTime * 0.6f;
-		break;
-
-	case 2:
-		m_fAlpha -= fDelta * 128.0f;
-		if (m_fAlpha < 178.5f) {
-			m_fAlpha = 178.5f;
-			m_nState = 3;
+		for (int i = 0; i < 4; i++) {
+			m_items[i].fixX = (1.0f - m_fTime) * m_items[i].baseX + m_items[i].curX * m_fTime;
+			m_items[i].fixY = (1.0f - m_fTime) * m_items[i].baseY + m_items[i].curY * m_fTime;
+			m_items[i].scale = (1.0f - m_fTime) + m_fTime * (i == 0 ? 0.5f : 0.6f);
 		}
 		break;
 
@@ -1869,8 +1863,8 @@ void CHoleInfo::Process(float fDelta) {
 		m_fTime += fDelta;
 		if (m_fTime > 0.25f) {
 			m_fTime -= 0.25f;
-			m_fAlpha = 255.0f - m_fAlpha;
-			if (m_fAlpha > 0.0f) {
+			m_fAlpha[0] = 255.0f - m_fAlpha[0];
+			if (m_fAlpha[0] > 0.0f) {
 				m_nFlickerTime++;
 				if (m_nFlickerTime == 3)
 					m_nState = 3;
@@ -1890,8 +1884,8 @@ void CHoleInfo::Flicker(void) {
 void CHoleInfo::Reset(void) {
 	m_fTime = 0.0f;
 	m_nState = 0;
-	m_fAlpha = 0.0f;
-	m_fTargetAlpha = 0.0f;
+	m_fAlpha[0] = 0.0f;
+	m_fAlpha[1] = 0.0f;
 
 	m_items[0].fixX = m_items[0].baseX;
 	m_items[0].fixY = m_items[0].baseY;
@@ -1920,8 +1914,8 @@ void CHoleInfo::Reset(void) {
 
 // fontinfo.cpp:2178
 void CHoleInfo::Fix(void) {
-	m_fAlpha = 255.0f;
-	m_fTargetAlpha = 255.0f;
+	m_fAlpha[0] = 255.0f;
+	m_fAlpha[1] = 255.0f;
 	m_items[0].fixY = m_items[0].curY;
 	m_items[0].fixX = m_items[0].curX;
 	m_items[1].fixY = m_items[1].curY;
@@ -1937,29 +1931,29 @@ void CHoleInfo::Fix(void) {
 
 // fontinfo.cpp:2199
 void CHoleInfo::Display(void) {
-	if (m_fAlpha > 0.0f) {
+	if (m_fAlpha[0] > 0.0f) {
 		if (GOLFDOC()->m_approachMode) {
 			if (CSharedDoc::Instance()->m_roomType == 10 || (m_nState != 1 && m_nState != 0)) {
 				IFF_STRUCT::sCourse *pCourse = CSharedDoc::Instance()->m_pCurCourse;
 
 				if (CSharedDoc::Instance()->m_roomType == 10) {
 					if (m_pCourseUI) {
-						m_pCourseUI->SetColor(((int)m_fAlpha << 24) | 0xFFFFFF);
+						m_pCourseUI->SetColor(((int)m_fAlpha[0] << 24) | 0xFFFFFF);
 						m_pCourseUI->Render(pCourse->m_name, m_items[0].curX, m_items[0].curY, 0.5f, 0);
 					}
 
 					if (m_pHoleUI) {
-						m_pHoleUI->SetColor(((int)m_fAlpha << 24) | 0xFFFFFF);
+						m_pHoleUI->SetColor(((int)m_fAlpha[0] << 24) | 0xFFFFFF);
 						m_pHoleUI->Render("Hole", m_items[1].curX, m_items[1].curY, 0.6f, 0);
 					}
 
-					SetColor(((int)m_fAlpha << 24) | 0xFFFFFF);
+					SetColor(((int)m_fAlpha[0] << 24) | 0xFFFFFF);
 
 					sprintf(m_pBuffer, "%d/%d", GetHoleIndex(GOLFDOC()->m_currentHole), CSharedDoc::Instance()->m_holes);
 					Print(m_items[1].curX + 39.0f, m_items[1].curY + 2.4f, m_pBuffer, 2.0f, 0, 0.6f, NULL);
 				} else {
 					if (m_pCourseUI) {
-						m_pCourseUI->SetColor(((int)m_fAlpha << 24) | 0xFFFFFF);
+						m_pCourseUI->SetColor(((int)m_fAlpha[0] << 24) | 0xFFFFFF);
 						m_pCourseUI->Render(pCourse->m_name, m_items[0].fixX, m_items[0].fixY, m_items[0].scale, 0);
 					}
 
@@ -1971,17 +1965,17 @@ void CHoleInfo::Display(void) {
 		} else {
 			IFF_STRUCT::sCourse *pCourse = CSharedDoc::Instance()->m_pCurCourse;
 			if (m_pCourseUI) {
-				m_pCourseUI->SetColor(((int)m_fAlpha << 24) | 0xFFFFFF);
+				m_pCourseUI->SetColor(((int)m_fAlpha[0] << 24) | 0xFFFFFF);
 				m_pCourseUI->Render(pCourse->m_name, m_items[0].fixX, m_items[0].fixY, m_items[0].scale, 0);
 			}
 
 			if (m_pHoleUI) {
-				m_pHoleUI->SetColor(((int)m_fAlpha << 24) | 0xFFFFFF);
+				m_pHoleUI->SetColor(((int)m_fAlpha[0] << 24) | 0xFFFFFF);
 				m_pHoleUI->Render("Hole", m_items[1].fixX, m_items[1].fixY, m_items[1].scale, 0);
 				m_pHoleUI->Render("Par", m_items[1].scale * 105.0f + m_items[1].fixX, m_items[1].fixY, m_items[1].scale, 0);
 			}
 
-			SetColor(((int)m_fAlpha << 24) | 0xFFFFFF);
+			SetColor(((int)m_fAlpha[0] << 24) | 0xFFFFFF);
 
 			sprintf(m_pBuffer, "%d", GOLFDOC()->m_currentHole);
 			Print(m_items[1].scale * 65.0f + m_items[1].fixX, m_items[1].scale * 4.0f + m_items[1].fixY, m_pBuffer, 2.0f, 0, m_items[1].scale, NULL);
@@ -1997,7 +1991,7 @@ void CHoleInfo::Display(void) {
 			sprintf(m_pBuffer, "%I64d", GOLFDOC()->m_skinsPangTotal);
 			float fWidth = GetTextWidth(m_pBuffer, 1.0f, m_items[2].scale);
 
-			SetColor(((int)m_fAlpha << 24) | 0xFFDE44);
+			SetColor(((int)m_fAlpha[0] << 24) | 0xFFDE44);
 			Print(m_items[2].scale * 118.0f + m_items[2].fixX, m_items[2].scale * 4.0f + m_items[2].fixY, m_pBuffer, 2.0f, 0, m_items[2].scale, NULL);
 
 			if (GOLFDOC()->m_skinsCarryCount > 1 && m_pHoleUI) {
@@ -2023,17 +2017,17 @@ void CHoleInfo::Display(void) {
 		return;
 	}
 
-	if (m_fTargetAlpha > 0.0f && GOLFDOC()->m_gameState == 15) {
-		SetColor(((int)m_fTargetAlpha << 24) + 0xFFFFFF);
+	if (m_fAlpha[1] > 0.0f && GOLFDOC()->m_gameState == 15) {
+		SetColor(((int)m_fAlpha[1] << 24) + 0xFFFFFF);
 
 		if (m_nState != 3 && CSharedDoc::Instance()->m_gameMode == 0) {
 			if (CSharedDoc::Instance()->m_roomType == 7) {
 				if (GOLFDOC()->m_approachMode && m_pExtraStageOverlay) {
-					m_pExtraStageOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 110.0f, 97.0f, 256.0f, 64.0f), 0, ((int)m_fTargetAlpha << 24) | 0xFFFFFF, 0.0f, 0);
+					m_pExtraStageOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 110.0f, 97.0f, 256.0f, 64.0f), 0, ((int)m_fAlpha[1] << 24) | 0xFFFFFF, 0.0f, 0);
 				}
 
 				if (m_pSkinsPang1Overlay) {
-					m_pSkinsPang1Overlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 169.0f, 143.0f, 256.0f, 64.0f), 0, ((int)m_fTargetAlpha << 24) | 0xFFFFFF, 0.0f, 0);
+					m_pSkinsPang1Overlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 169.0f, 143.0f, 256.0f, 64.0f), 0, ((int)m_fAlpha[1] << 24) | 0xFFFFFF, 0.0f, 0);
 				}
 
 				sprintf(m_pBuffer, "%I64d", GOLFDOC()->m_skinsPangTotal);
@@ -2044,18 +2038,37 @@ void CHoleInfo::Display(void) {
 				}
 
 				if (m_pSkinsPang3Overlay) {
-					m_pSkinsPang3Overlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(fX + fWidth, 143.0f, 256.0f, 64.0f), 0, ((int)m_fTargetAlpha << 24) | 0xFFFFFF, 0.0f, 0);
+					m_pSkinsPang3Overlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(fX + fWidth, 143.0f, 256.0f, 64.0f), 0, ((int)m_fAlpha[1] << 24) | 0xFFFFFF, 0.0f, 0);
 				}
 
-				// TODO fontinfo.cpp:2353-2381: if (!GOLFDOC()->m_approachMode && m_currentHole == m_holeOrder[0])
-				// { five coins (m_pCoin1Overlay for i < <CSharedDoc 0x5BC> % 5 + (m_nEmoti >= 4), else m_pCoin2Overlay)
-				// at ((w - 250) * 0.5 + i * 50, 250, 64, 64); m_nEmoti 0..7: m_pEmotiUI->Render(MakeStr("%d", <0x5BC> % 5), ...);
-				// m_nEmoti == -1 && <0x5BC> == 5: m_pCoin3Overlay at ((w - 250) * 0.5 + 55, 265, 256, 32) }.
-				// Needs CSharedDoc 0x5BC (unsigned long, in PADDING(0x5AC, 0x5C6)) in SharedDoc.h.
+				if (!GOLFDOC()->m_approachMode && GOLFDOC()->m_currentHole == CSharedDoc::Instance()->m_holeOrder[0]) {
+						for (int i = 0; i < 5; i++) {
+							WOverlay *pCoin;
+							if (i < (int)(CSharedDoc::Instance()->m_myStatCoins % 5 + (m_nEmoti >= 4))) {
+								pCoin = m_pCoin1Overlay;
+							} else {
+								pCoin = m_pCoin2Overlay;
+							}
+
+							if (pCoin) {
+								pCoin->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect((g_view->GetWidth() - 250.0f) * 0.5f + i * 50.0f, 250.0f, 64.0f, 64.0f), 0, ((int)m_fAlpha[1] << 24) | 0xFFFFFF, 0.0f, 0);
+							}
+						}
+
+						if (m_nEmoti >= 0 && m_nEmoti <= 7) {
+							if (m_pEmotiUI) {
+								m_pEmotiUI->Render(MakeStr("%d", m_nEmoti), (CSharedDoc::Instance()->m_myStatCoins % 5) * 50.0f + (g_view->GetWidth() - 250.0f) * 0.5f - 10.0f, 225.0f, 1.5f, 0);
+							}
+						} else if (m_nEmoti == -1 && CSharedDoc::Instance()->m_myStatCoins == 5) {
+							if (m_pCoin3Overlay) {
+								m_pCoin3Overlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect((g_view->GetWidth() - 250.0f) * 0.5f + 55.0f, 265.0f, 256.0f, 32.0f), 0, 0xFFFFFFFF, 0.0f, 0);
+							}
+						}
+					}
 			} else if (CSharedDoc::Instance()->m_roomType == 10) {
 				if (GOLFDOC()->m_currentHole == CSharedDoc::Instance()->m_holeOrder[0]) {
 					if (m_pApproachOverlay) {
-						m_pApproachOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 128.0f, 143.0f, 256.0f, 128.0f), 0, ((int)m_fTargetAlpha << 24) | 0xFFFFFF, 0.0f, 0);
+						m_pApproachOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 128.0f, 143.0f, 256.0f, 128.0f), 0, ((int)m_fAlpha[1] << 24) | 0xFFFFFF, 0.0f, 0);
 					}
 				}
 			}
@@ -2063,29 +2076,32 @@ void CHoleInfo::Display(void) {
 			if (!GOLFDOC()->m_approachMode && GOLFDOC()->m_currentHole == CSharedDoc::Instance()->m_holeOrder[0]) {
 				m_nFlag = 0;
 				if (m_pCompleteOverlay) {
-					m_pCompleteOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 106.0f, 202.0f, 256.0f, 32.0f), 0, ((int)m_fTargetAlpha << 24) | 0xFFFFFF, 0.0f, 0);
+					m_pCompleteOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 106.0f, 202.0f, 256.0f, 32.0f), 0, ((int)m_fAlpha[1] << 24) | 0xFFFFFF, 0.0f, 0);
 				}
 
-				// TODO fontinfo.cpp:2402: sprintf(m_pBuffer, "%d", CSharedDoc::Instance()->m_roomPlayers[IsMassGame() ? 0 : MyIndex()].<sUserInfo 0x1C0>);
-				// sUserInfo 0x1C0 (int) is in PADDING(0x1B0, 0x1FA) in SharedDoc.h.
+				sprintf(m_pBuffer, "%d", CSharedDoc::Instance()->m_roomPlayers[IsMassGame() ? 0 : MyIndex()].m_statCombos);
 
 				Print(g_view->GetWidth() * 0.5f + 100.0f, 202.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
 
 				if (CSharedDoc::Instance()->m_holes == 18 && CSharedDoc::Instance()->m_roomInfo.m_roomMode != 14
 					&& (CSharedDoc::Instance()->m_roomType == 0 || IsMassGame())) {
 					if (m_pScoreEventOverlay) {
-						m_pScoreEventOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 106.0f, 242.0f, 256.0f, 72.0f), 0, ((int)m_fTargetAlpha << 24) | 0xFFFFFF, 0.0f, 0);
+						m_pScoreEventOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(g_view->GetWidth() * 0.5f - 106.0f, 242.0f, 256.0f, 72.0f), 0, ((int)m_fAlpha[1] << 24) | 0xFFFFFF, 0.0f, 0);
 					}
 
-					// TODO fontinfo.cpp:2428-2433: int score = IsClassicServer(GetServerProperty())
-					// ? m_myMapStatistics2[GetCurMap()].m_bestScore : m_myMapStatistics[GetCurMap()].m_bestScore;
-					// Print(w * 0.5f + 100.0f, 242.0f, score != 0x7F ? MakeStr("%d", score) : "-", 3.0f, 0, 1.0f, NULL);
-					// Needs CSharedDoc::m_myMapStatistics/2 reachable (protected; friend class CHoleInfo in SharedDoc.h).
+					int score;
+					if (S5::CLASSICSRV::IsClassicServer(S5::UTIL::GetServerProperty())) {
+						score = CSharedDoc::Instance()->m_myMapStatistics2[GetCurMap()].m_bestScore;
+					} else {
+						score = CSharedDoc::Instance()->m_myMapStatistics[GetCurMap()].m_bestScore;
+					}
+
+					Print(g_view->GetWidth() * 0.5f + 100.0f, 242.0f, score != 0x7F ? MakeStr("%d", score) : "-", 3.0f, 0, 1.0f, NULL);
 				}
 			}
 		}
 
-		CShuffleBonus::Instance()->Render(m_pShuffleBonusOverlay, m_fTargetAlpha);
+		CShuffleBonus::Instance()->Render(m_pShuffleBonusOverlay, m_fAlpha[1]);
 
 		if ((!GOLFDOC()->m_approachMode && GOLFDOC()->m_currentHole == CSharedDoc::Instance()->m_holeOrder[0])
 			|| CSharedDoc::Instance()->m_roomType == 4 || GalleryMode()) {
@@ -2093,7 +2109,7 @@ void CHoleInfo::Display(void) {
 		}
 
 		if (m_pStartPosiUI) {
-			m_pStartPosiUI->SetColor(((int)m_fTargetAlpha << 24) | 0xFFFFFF);
+			m_pStartPosiUI->SetColor(((int)m_fAlpha[1] << 24) | 0xFFFFFF);
 		}
 
 		switch (CSharedDoc::Instance()->m_roomType) {
@@ -2103,27 +2119,24 @@ void CHoleInfo::Display(void) {
 			}
 
 			if (m_pPlayerNumUI) {
-				sPlayerData *pPlayer = PLAYER(m_firstPlayer);
-				m_pPlayerNumUI->SetColor(((int)m_fTargetAlpha << 24) | pPlayer->m_color);
+				m_pPlayerNumUI->SetColor(((int)m_fAlpha[1] << 24) | PLAYER(m_firstPlayer)->m_color);
 				m_pPlayerNumUI->Render(MakeStr("%d", m_firstPlayer + 1), g_view->GetWidth() * 0.5f + 35.0f, 164.0f, 1.0f, 0);
 			}
 			break;
 
 		case 3: {
 			if (m_pStartPosiUI) {
-				m_pStartPosiUI->Render("vs", g_view->GetWidth() * 0.5f + 15.0f - 32.0f, 161.0f, 1.0f, 0);
+				m_pStartPosiUI->Render("vs", g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f, 161.0f, 1.0f, 0);
 
-				sPlayerData *pPlayer = PLAYER(0);
-				m_pPlayerNumUI->SetColor(((int)m_fTargetAlpha << 24) | pPlayer->m_color);
-				m_pPlayerNumUI->Render("1", g_view->GetWidth() * 0.5f + 15.0f - 32.0f - 60.0f, 168.0f, 1.0f, 0);
+				m_pPlayerNumUI->SetColor(((int)m_fAlpha[1] << 24) | PLAYER(0)->m_color);
+				m_pPlayerNumUI->Render("1", g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f - 60.0f, 168.0f, 1.0f, 0);
 
-				pPlayer = PLAYER(1);
-				m_pPlayerNumUI->SetColor(((int)m_fTargetAlpha << 24) | pPlayer->m_color);
+				m_pPlayerNumUI->SetColor(((int)m_fAlpha[1] << 24) | PLAYER(1)->m_color);
 				m_pPlayerNumUI->Render("2", g_view->GetWidth() * 0.5f + 68.0f, 168.0f, 1.0f, 0);
 			}
 
 			sprintf(m_pBuffer, "%d", PLAYER(0)->m_ghostResult);
-			Print(g_view->GetWidth() * 0.5f + 15.0f - 32.0f - 15.0f, 164.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
+			Print(g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f - data_9eb5b8[21].f, 164.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
 
 			sprintf(m_pBuffer, "%d", PLAYER(1)->m_ghostResult);
 			Print(g_view->GetWidth() * 0.5f + 47.0f - 5.0f, 164.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
@@ -2132,15 +2145,15 @@ void CHoleInfo::Display(void) {
 
 		case 1:
 			if (m_pStartPosiUI) {
-				m_pStartPosiUI->Render("vs", g_view->GetWidth() * 0.5f + 15.0f - 32.0f, 161.0f, 1.0f, 0);
+				m_pStartPosiUI->Render("vs", g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f, 161.0f, 1.0f, 0);
 
-				m_pPlayerNumUI->SetColor(((int)m_fTargetAlpha << 24) | 0xFFFFFF);
-				m_pPlayerNumUI->Render("red", g_view->GetWidth() * 0.5f + 15.0f - 32.0f - 50.0f, 168.0f, 1.0f, 0);
+				m_pPlayerNumUI->SetColor(((int)m_fAlpha[1] << 24) | 0xFFFFFF);
+				m_pPlayerNumUI->Render("red", g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f - 50.0f, 168.0f, 1.0f, 0);
 				m_pPlayerNumUI->Render("blue", g_view->GetWidth() * 0.5f + 68.0f, 168.0f, 1.0f, 0);
 			}
 
 			sprintf(m_pBuffer, "%d", TEAM(0)->m_resetCount);
-			Print(g_view->GetWidth() * 0.5f + 15.0f - 32.0f - 15.0f, 164.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
+			Print(g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f - data_9eb5b8[21].f, 164.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
 
 			sprintf(m_pBuffer, "%d", TEAM(1)->m_resetCount);
 			Print(g_view->GetWidth() * 0.5f + 47.0f - 5.0f, 164.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
@@ -2151,24 +2164,24 @@ void CHoleInfo::Display(void) {
 				break;
 			}
 
-			SetColor(((int)m_fTargetAlpha << 24) | 0xFFFFFF);
+			SetColor(((int)m_fAlpha[1] << 24) | 0xFFFFFF);
 
 			if (m_pStartPosiUI) {
-				m_pStartPosiUI->Render("vs", g_view->GetWidth() * 0.5f + 15.0f - 32.0f, 161.0f, 1.0f, 0);
+				m_pStartPosiUI->Render("vs", g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f, 161.0f, 1.0f, 0);
 			}
 
 			if (m_pPlayerNumUI) {
-				m_pPlayerNumUI->SetColor(((int)m_fTargetAlpha << 24) | 0xFFFFFF);
+				m_pPlayerNumUI->SetColor(((int)m_fAlpha[1] << 24) | 0xFFFFFF);
 			}
 
 			float fRedWidth = m_font.m_pTitleFont->GetTextWidth(g_view, MakeStr("%d", CSharedDoc::Instance()->m_teamResult[0].m_score));
 
 			if (m_pPlayerNumUI) {
-				m_pPlayerNumUI->Render("red", g_view->GetWidth() * 0.5f + 15.0f - 32.0f - 45.0f - fRedWidth, 168.0f, 1.0f, 0);
+				m_pPlayerNumUI->Render("red", g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f - 45.0f - fRedWidth, 168.0f, 1.0f, 0);
 			}
 
 			sprintf(m_pBuffer, "%d", CSharedDoc::Instance()->m_teamResult[0].m_score);
-			Print(g_view->GetWidth() * 0.5f + 15.0f - 32.0f - 5.0f - fRedWidth, 164.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
+			Print(g_view->GetWidth() * 0.5f + data_9eb5b8[21].f - 32.0f - 5.0f - fRedWidth, 164.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
 
 			float fBlueWidth = m_font.m_pTitleFont->GetTextWidth(g_view, MakeStr("%d", CSharedDoc::Instance()->m_teamResult[1].m_score));
 
@@ -2363,14 +2376,17 @@ void CPangInfo::ResetUiPosition(void) {
 
 	unsigned char roomType = CSharedDoc::Instance()->m_roomType;
 	if (roomType == 0 || roomType == 3 || roomType == 7) {
+		float fTop = 48.0f;
+		float fBottom = 141.0f;
+
 		m_uiPos[0][0] = -25.0f;
-		m_uiPos[0][1] = 48.0f;
+		m_uiPos[0][1] = fTop;
 		m_uiPos[1][0] = -25.0f;
-		m_uiPos[1][1] = 141.0f;
+		m_uiPos[1][1] = fBottom;
 		m_uiPos[2][0] = fWidth - 186.0f;
-		m_uiPos[2][1] = 48.0f;
+		m_uiPos[2][1] = fTop;
 		m_uiPos[3][0] = fWidth - 186.0f;
-		m_uiPos[3][1] = 141.0f;
+		m_uiPos[3][1] = fBottom;
 
 		m_uiPos[4][0] = -25.0f;
 		m_uiPos[4][1] = 68.0f;
@@ -2381,14 +2397,17 @@ void CPangInfo::ResetUiPosition(void) {
 		m_uiPos[7][0] = fWidth - 186.0f;
 		m_uiPos[7][1] = 161.0f;
 	} else if (roomType == 1) {
+		float fTop = 51.0f;
+		float fBottom = 100.0f;
+
 		m_uiPos[0][0] = -25.0f;
-		m_uiPos[0][1] = 51.0f;
+		m_uiPos[0][1] = fTop;
 		m_uiPos[1][0] = -25.0f;
-		m_uiPos[1][1] = 100.0f;
+		m_uiPos[1][1] = fBottom;
 		m_uiPos[2][0] = fWidth - 186.0f;
-		m_uiPos[2][1] = 51.0f;
+		m_uiPos[2][1] = fTop;
 		m_uiPos[3][0] = fWidth - 186.0f;
-		m_uiPos[3][1] = 100.0f;
+		m_uiPos[3][1] = fBottom;
 
 		m_uiPos[4][0] = -25.0f;
 		m_uiPos[4][1] = 68.0f;
@@ -2485,7 +2504,11 @@ int GetGameClearBonus(void) {
 				nCount++;
 			}
 		}
+#ifdef JP_PAKS
+		return data_9eb5b8[JpCourseRow(GetCurMap())].i * nCount;   // JP data: bounded row
+#else
 		return data_9eb5b8[GetCurMap()].i * nCount;
+#endif
 	} else if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
 		if (S5::CLASSICSRV::IsClassicServer(S5::UTIL::GetServerProperty())) {
 			for (int i = 0; i < WSingleton<CSharedDoc>::Instance()->m_holes; i++) {
@@ -2503,7 +2526,11 @@ int GetGameClearBonus(void) {
 				nCount++;
 			}
 		}
+#ifdef JP_PAKS
+		return data_9eb5b8[JpCourseRow(GetCurMap())].i * nCount;   // JP data: bounded row
+#else
 		return data_9eb5b8[GetCurMap()].i * nCount;
+#endif
 	} else {
 		if (S5::CLASSICSRV::IsClassicServer(S5::UTIL::GetServerProperty())) {
 			for (int i = 0; i < WSingleton<CSharedDoc>::Instance()->m_holes; i++) {
@@ -2529,7 +2556,11 @@ int GetGameClearBonus(void) {
 				break;
 			}
 		}
+#ifdef JP_PAKS
+		return (nKind2 + nKind3 * 2 + nKind4 * 3) * data_9eb5b8[JpCourseRow(GetCurMap())].i;   // JP data: bounded row
+#else
 		return (nKind2 + nKind3 * 2 + nKind4 * 3) * data_9eb5b8[GetCurMap()].i;
+#endif
 	}
 }
 
@@ -2886,7 +2917,11 @@ void CPangInfo::PreCalc(bool bFlag) {
 		int nOver = m_nPangRate + (ball.m_landed ? 1 : 0);
 
 		if (nOver >= 5 && bFlag) {
+#ifdef JP_PAKS
+			m_cases[8].m_pang = m_holeInPangs[JpCourseRow(GetCurMap())].m_perStroke * 5;   // JP data: bounded row
+#else
 			m_cases[8].m_pang = m_holeInPangs[GetCurMap()].m_perStroke * 5;
+#endif
 			m_pangs[0] += m_cases[8].m_pang;
 			m_cases[8].m_rect.y = 0.875f;
 		} else {
@@ -3594,6 +3629,9 @@ __int64 CPangInfo::GetHoleInPang(int nScore, int nPar) {
 
 	if (GOLFDOC()->m_gameState < 15)
 		course = 0;
+#ifdef JP_PAKS
+	course = JpCourseRow(course);   // JP data: m_holeInPangs has 20 rows
+#endif
 
 	if (nScore == 1)
 		return m_holeInPangs[course].m_holeInOne;
@@ -4280,13 +4318,13 @@ void CPangInfo::HoleIn(void) {
 		if (CSharedDoc::Instance()->m_roomType == 1) {
 			int team = PLAYER(MyIndex())->m_attribute;
 
-			if ((unsigned char)TEAM(1 - team)->m_holes[GOLFDOC()->m_currentHole - 1] >= (unsigned char)TEAM(team)->m_holes[GOLFDOC()->m_currentHole - 1]) {
+			if (TEAM(team)->m_holes[GOLFDOC()->m_currentHole - 1] <= TEAM(1 - team)->m_holes[GOLFDOC()->m_currentHole - 1]) {
 				m_cases[8].SetState(0x10);
 			} else {
 				m_cases[8].SetState(0x40);
 			}
 		} else if (CSharedDoc::Instance()->m_roomType == 3) {
-			if ((unsigned char)PLAYER(1 - MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] >= (unsigned char)PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1]) {
+			if (PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] <= PLAYER(1 - MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1]) {
 				m_cases[8].SetState(0x10);
 			} else {
 				m_cases[8].SetState(0x40);
@@ -4512,7 +4550,7 @@ void CPangInfo::GimmickItem(GIMMICK_ITEM_TYPE itemType) {
 		}
 
 		if (m_flags & 4) {
-			pangCase.SetState(0x10);
+			pangCase.m_state = 0x10;
 			m_cases[nCase].m_fTime = 0;
 		}
 	}
@@ -5478,7 +5516,7 @@ void CCalipers::Process(float fDelta) {
 							m_bSoundPlayed = true;
 							m_fSoundTime = 0;
 							m_bResetFlag = false;
-							g_audio->PlaySfx("½ÃÄÀ°Ë¸»", NULL, 0, NULL, NULL, 0.5f, 200.0f);
+							g_audio->PlaySfx("\xB9\xF6\xC6\xB0\xC5\xAC\xB8\xAF", NULL, 0, NULL, NULL, 0.5f, 200.0f);
 						}
 					}
 				}
@@ -5757,7 +5795,8 @@ void CExtraHoleInfo::Display(void) {
 					m_color = (i != m_leader ? 0x2DFF : 0) + 0xFFFFD200;
 				}
 
-				if (GOLFDOC()->GetPlayer(i)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)0) {
+				sPlayerData *player = GOLFDOC()->GetPlayer(i);
+				if (player->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)0) {
 					Print(g_view->GetWidth() - 85.0f, i * 23.0f + 213.0f, "-", 3.0f, 0, 1.0f, NULL);
 					Print(g_view->GetWidth() - 25.0f, i * 23.0f + 213.0f, "-", 3.0f, 0, 1.0f, NULL);
 				} else {

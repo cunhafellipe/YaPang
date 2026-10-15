@@ -2421,14 +2421,17 @@ void FrPrivateTradeWnd::OnViewDraw(void) {
 	DrawPang();
 
 	if (m_tradeState != 0) {
-		WRect rect(m_rect.x - 5.0f, m_rect.y - 5.0f, m_rect.w + 10.0f, m_rect.h + 10.0f);
 		if (m_tradeState == 1) {
-			pDevice->DrawTexture(pBitmap, src, rect, 0x40ffff00, 0);
+			pDevice->DrawTexture(pBitmap, src, m_rect + WRect(-5.0f, -5.0f, 10.0f, 10.0f), 0x40ffff00, 0);
 		} else {
-			pDevice->DrawTexture(pBitmap, src, rect, 0x4000ff00, 0);
+			pDevice->DrawTexture(pBitmap, src, m_rect + WRect(-5.0f, -5.0f, 10.0f, 10.0f), 0x4000ff00, 0);
 		}
 
-		WOverlay::DrawLineBox(g_view, WRect(rect.x - 1.0f, rect.y - 1.0f, rect.w + 2.0f, rect.h + 2.0f), 0, 0xff000000);
+		// Residue (90.2%): the original builds the outer rect in this rect's own
+		// slot, w and h through a spilled copy ([ebp-0x30]); ours uses a separate
+		// temporary. Assignment, op+ chains, WSize forms and a helper were tried.
+		WRect rect = m_rect + WRect(-5.0f, -5.0f, 10.0f, 10.0f);
+		WOverlay::DrawLineBox(g_view, WRect(rect.TopLeft() - WPoint(1.0f, 1.0f), rect.w + 2.0f, rect.h + 2.0f), 0, 0xff000000);
 	}
 }
 

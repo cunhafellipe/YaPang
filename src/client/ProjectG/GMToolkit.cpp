@@ -976,7 +976,7 @@ eGMToolResult CGMToolkit::CommandWind(eGMToolkitStatus status) {
 eGMToolResult CGMToolkit::CommandWeather(eGMToolkitStatus status) {
 	eGMToolResult result = GM_RESULT_SUCCEEDED;
 	if (m_argumentCount > 1) {
-		int weather;
+		int weather = -1;
 		if (strcmp(m_arguments[1], "fine") == 0) {
 			weather = 0;
 		} else if (strcmp(m_arguments[1], "cloud") == 0) {
@@ -985,16 +985,18 @@ eGMToolResult CGMToolkit::CommandWeather(eGMToolkitStatus status) {
 			weather = 2;
 		} else if (strcmp(m_arguments[1], "snow") == 0) {
 			weather = 3;
-		} else {
-			return GM_RESULT_BAD_ARGUMENT;
 		}
 
-		WSendPacket packet(GCT_GM_COMMAND);
-		packet.Encode2(GM_COMMAND_WEATHER);
-		packet.Encode1(weather);
-		packet.Send(SEND_TO_DEFAULT);
+		if (weather != -1) {
+			WSendPacket packet(GCT_GM_COMMAND);
+			packet.Encode2(GM_COMMAND_WEATHER);
+			packet.Encode1(weather);
+			packet.Send(SEND_TO_DEFAULT);
+		} else {
+			result = GM_RESULT_BAD_ARGUMENT;
+		}
 	} else {
-		return GM_RESULT_BAD_ARGUMENT;
+		result = GM_RESULT_BAD_ARGUMENT;
 	}
 	return result;
 }

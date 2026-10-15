@@ -935,7 +935,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 
 			if (count > 0 && typeId > 0) {
 				char message[0x400] = { 0 };
-				IFF_STRUCT::sItem *pItem = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindItem(typeId);
+				IFF_STRUCT::sItem *pItem = ItemManager()->FindItem(typeId);
 
 				if (pItem) {
 					// "PC bang attendance event: <count> times, <item> received"
@@ -1634,7 +1634,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 			sQuest quest;
 			quest.m_typeId = packet.Decode4();
 			quest.m_state = packet.Decode1();
-			quest.m_iff = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindQuest(quest.m_typeId);
+			quest.m_iff = ItemManager()->FindQuest(quest.m_typeId);
 			quest.m_flagC = false;
 
 			WSingleton<CSharedDoc>::Instance()->m_questList.push_back(quest);
@@ -2081,7 +2081,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		if (typeId) {
 			char szMsg[256] = {0,};
 			// "<item>(<count>) was given as a reward." (the reward notice)
-			sprintf(szMsg, "\xb9\xe6\xc0\xe5\xbf\xa1 \xb4\xeb\xc7\xd1 \xba\xb8\xbb\xf3\xc0\xb8\xb7\xce \\c0xffff0000\\c%s(%d)\\c0xff000000\\c\xc0\xcc \xc1\xf6\xb1\xde \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.", WSingleton<CSharedDoc>::Instance()->m_itemManager.GetItemName(typeId), count);
+			sprintf(szMsg, "\xb9\xe6\xc0\xe5\xbf\xa1 \xb4\xeb\xc7\xd1 \xba\xb8\xbb\xf3\xc0\xb8\xb7\xce \\c0xffff0000\\c%s(%d)\\c0xff000000\\c\xc0\xcc \xc1\xf6\xb1\xde \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.", ItemManager()->GetItemName(typeId), count);
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x26, (intptr_t)szMsg, typeId, 0, 0, 0));
 		}
 		break;

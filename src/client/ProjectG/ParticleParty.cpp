@@ -19,6 +19,11 @@
 #include <math.h>
 #include <stdio.h>
 
+#ifdef PG_MATERIAL_HINTS
+// The port's renderer learns which draws are light (port/compat).
+#include "pg_material_hints.h"
+#endif
+
 extern LightSet g_lightset;
 extern WMatrix g_camera;
 
@@ -189,7 +194,12 @@ void CPowerShot::Display(void) {
 			// the outer edge, 0/2 on the inner one.
 			float fSinSide = (j & 2) ? 1.0f : 0.0f;
 			float fCosSide = (j & 2) ? 1.0f : 0.0f;
-			m_buffers[j].m_vPos = WVector(cosf(fAngle + fCosSide * fStep), 0.0f, sinf(fAngle + fSinSide * fStep)) * ((m_fSize - ((j & 1) ? 0.0f : 1.0f) * m_fWidth) * m_fDistance) + m_vCenter;
+			WVector vPos;
+			vPos = WVector(cosf(fAngle + fCosSide * fStep), 0.0f, sinf(fAngle + fSinSide * fStep)) * ((m_fSize - ((j & 1) ? 0.0f : 1.0f) * m_fWidth) * m_fDistance) + m_vCenter;
+			WVector& vDst = m_buffers[j].m_vPos;
+			vDst.x = vPos.x;
+			vDst.y = vPos.y;
+			vDst.z = vPos.z;
 		}
 
 		g_view->DrawPolygonFan((WTVertex**)&m_pBuffer0, (m_texHandle & 0x7FF) | 0xC00000, 0x400, false);
@@ -198,7 +208,7 @@ void CPowerShot::Display(void) {
 
 // particleparty.cpp:456
 CLightColumn::CLightColumn(void) : m_hScreenTex(0) {
-	m_hEffectTex[0] = 0; m_hEffectTex[1] = 0; m_hEffectTex[2] = 0; m_hEffectTex[3] = 0; m_hEffectTex[4] = 0;
+	for (int i = 0; i < 5; i++) m_hEffectTex[i] = 0;
 }
 
 // particleparty.cpp:462
@@ -285,16 +295,21 @@ void CLightColumn::Display(void) {
 	WVector vWidth[2] = { vSide * (m_fDistance * 0.5f), vSide * (m_fDistance * 0.25f) };
 	unsigned char byAlpha[2] = { m_byTargetAlpha, m_byAlpha };
 	unsigned long nTex[2] = { (m_hEffectTex[nIndex] & 0x7FF) | 0x20400000, (m_hScreenTex & 0x7FF) | 0x20C00000 };
-	float fStart[3] = { 0.0f, 50.0f, m_fHeight * 0.6f };
-	float fLength[3] = { 50.0f, m_fHeight * 0.6f - 50.0f, m_fHeight * 0.4f };
 	float fTexScale[2] = { 2.0f, 400.0f };
 	int nSegments[3] = { 10, 1, 1 };
+	float fStart[3] = { 0.0f, 50.0f, m_fHeight * 0.6f };
+	float fLength[3] = { 50.0f, m_fHeight * 0.6f - 50.0f, m_fHeight * 0.4f };
 
 	m_buffers[0].m_fU = 0.0f;
 	m_buffers[1].m_fU = 0.0f;
 	m_buffers[2].m_fU = 1.0f;
 	m_buffers[3].m_fU = 1.0f;
 
+#ifdef PG_MATERIAL_HINTS
+	// The beam is light: it casts no sun shadow in the port's renderer.
+	int pgHint = PgMaterialHintGet();
+	PgMaterialHint(pgHint | PG_HINT_LIGHT | PG_HINT_EFFECT);
+#endif
 	for (int k = 0; k < 2; k++) {
 		unsigned char byLayerAlpha = byAlpha[k];
 		if (byLayerAlpha) {
@@ -326,6 +341,9 @@ void CLightColumn::Display(void) {
 			}
 		}
 	}
+#ifdef PG_MATERIAL_HINTS
+	PgMaterialHint(pgHint);
+#endif
 }
 
 // particleparty.cpp:671
@@ -451,11 +469,11 @@ void CGrassParticle::Process(float fElapsed) {
 // particleparty.cpp:970
 CBunkerShotParticle::CBunkerShotParticle(int nSmoke, int nParticle)
 	: m_pSmokes(NULL), m_pParticles(NULL), m_nSmokes(nSmoke), m_nParticles(nParticle), m_dwColor(0xF8E9AB) {
-	if (m_nSmokes > 0) {
-		m_pSmokes = new sSmoke[m_nSmokes];
+	if (nSmoke > 0) {
+		m_pSmokes = new sSmoke[nSmoke];
 	}
-	if (m_nParticles > 0) {
-		m_pParticles = new sParticle[m_nParticles];
+	if (nParticle > 0) {
+		m_pParticles = new sParticle[nParticle];
 	}
 }
 
@@ -1322,7 +1340,12 @@ void CEnergyCenter::Display(void) {
 			GetPVS().SetObjVtxColor(dwColor);
 
 			if (m_pGolfBg) {
-				m_pGolfBg << MsgObject(0, 0x13F, dwColor, 0, 0, 0, 0);
+				MsgObject msg;
+				msg.m_pSender = NULL;
+				msg.m_reserved = 0;
+				msg.m_msg = 0x13F;
+				msg.m_param1 = dwColor;
+				m_pGolfBg << msg;
 			}
 		}
 	}

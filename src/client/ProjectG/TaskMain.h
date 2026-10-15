@@ -10,6 +10,7 @@
 #include <string>
 
 class FrForm;
+class FrLevelupItemForm;
 class CRealMyRoom_EnterSetting;
 class FrSPCardBuffDlg;
 class FrGiftDlg;
@@ -358,7 +359,7 @@ private:
 	FrForm *m_completedMissionDlgs[5];  // 0x164
 
 protected:
-	std::vector<FrForm *> m_levelupForms;   // 0x178, CloseAllDialogs closes them, OnLevelupFormResult drops the last
+	std::vector<FrLevelupItemForm *> m_levelupForms;   // 0x178, CloseAllDialogs closes them, OnLevelupFormResult drops the last
 	float m_waitDlgTime;        // 0x188, OnProcess opens m_waitDlg past 0.5s, -10 when idle
 
 	FrButton *m_hoverButton;    // 0x18C, the hovered bar button (OnBarHoverOn sets it, OnBarHoverOff clears it)

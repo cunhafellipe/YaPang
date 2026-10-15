@@ -439,7 +439,7 @@ void CWind::AddWindArea(const Waabb& area, char* desc) {
 	case '+':
 		sscanf(desc + 1, "%f %f %f %s", &w.m_intensity, &w.m_yaw, &w.m_pitch, level);
 
-		w.m_flag = 0; w.m_wind = (m_intensity + w.m_intensity) * (RotMat(w.m_pitch * 0.017453292f, 0) * RotMat(w.m_yaw * 0.017453292f, 1)).za;
+		w.m_flag = 0; w.m_wind = ((float)m_intensity + w.m_intensity) * (RotMat(w.m_pitch * 0.017453292f, 0) * RotMat(w.m_yaw * 0.017453292f, 1)).za;
 		break;
 
 	case '-':
@@ -457,7 +457,7 @@ void CWind::AddWindArea(const Waabb& area, char* desc) {
 	default:
 		sscanf(desc, "%f %f %f %s", &w.m_intensity, &w.m_yaw, &w.m_pitch, level);
 
-		w.m_flag = 0; w.m_wind = (m_intensity + w.m_intensity) * (RotMat(w.m_pitch * 0.017453292f, 0) * RotMat(w.m_yaw * 0.017453292f, 1)).za;
+		w.m_flag = 0; w.m_wind = ((float)m_intensity + w.m_intensity) * (RotMat(w.m_pitch * 0.017453292f, 0) * RotMat(w.m_yaw * 0.017453292f, 1)).za;
 		break;
 	}
 
@@ -501,13 +501,19 @@ WVector CWind::GetWind(const WVector& pos) {
 	WVector wind;
 
 	if (IsLocalContent((localContentType_t)0x87)) {
-		if (!WisEqual(m_globalWind, m_wind, 0.00001f))
+		if (WisEqual(m_globalWind, m_wind, 0.00001f)) {
+			if (m_activeSpecialWind)
+				wind = m_specialWind;
+			else
+				wind = m_wind;
+		} else {
 			m_wind = m_globalWind;
 
-		if (m_activeSpecialWind)
-			wind = m_specialWind;
-		else
-			wind = m_wind;
+			if (m_activeSpecialWind)
+				wind = m_specialWind;
+			else
+				wind = m_wind;
+		}
 	} else {
 		if (m_activeSpecialWind)
 			wind = m_specialWind;
@@ -519,24 +525,20 @@ WVector CWind::GetWind(const WVector& pos) {
 		if (!IsInclude(it->m_area, pos))
 			continue;
 
-		if (it->m_linked >= 0) {
-			sWind* other = &m_windList[it->m_linked];
-			if (other->m_area.IsInclude(pos)) {
-				WVector c1 = (it->m_area.max + it->m_area.min) * 0.5f - pos;
-				WVector c2 = (other->m_area.max + other->m_area.min) * 0.5f - pos;
-				WVector s1 = it->m_area.max - it->m_area.min;
-				WVector s2 = other->m_area.max - other->m_area.min;
+		if (it->m_linked < 0 || !IsInclude(m_windList[it->m_linked].m_area, pos)) {
+			wind = it->m_wind;
+		} else {
+			WVector c1 = (it->m_area.min + it->m_area.max) * 0.5f - pos;
+			WVector c2 = (m_windList[it->m_linked].m_area.min + m_windList[it->m_linked].m_area.max) * 0.5f - pos;
+			WVector s1 = it->m_area.max - it->m_area.min;
+			WVector s2 = m_windList[it->m_linked].m_area.max - m_windList[it->m_linked].m_area.min;
 
-				float w1 = 1.0f - (c1.Magnitude() * 2.0f) / s1.Magnitude();
-				float w2 = 1.0f - (c2.Magnitude() * 2.0f) / s2.Magnitude();
-				float inv = 1.0f / (w1 + w2);
+			float w1 = 1.0f - (c1.Magnitude() * 2.0f) / s1.Magnitude();
+			float w2 = 1.0f - (c2.Magnitude() * 2.0f) / s2.Magnitude();
+			float inv = 1.0f / (w1 + w2);
 
-				wind = it->m_wind * (inv * w1) + other->m_wind * (inv * w2);
-				break;
-			}
+			wind = it->m_wind * (inv * w1) + m_windList[it->m_linked].m_wind * (inv * w2);
 		}
-
-		wind = it->m_wind;
 		break;
 	}
 

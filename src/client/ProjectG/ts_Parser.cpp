@@ -164,6 +164,7 @@ bool ts_Parser::PTS_OpenFile(const char *fileName, eFileType type) {
 
 			switch (m_fileType) {
 			case FILETYPE_NONE:
+				result = false;
 				break;
 			case FILETYPE_BINARY:
 				m_file = fopen(m_fileName, "rb");
@@ -179,6 +180,8 @@ bool ts_Parser::PTS_OpenFile(const char *fileName, eFileType type) {
 			} else {
 				result = false;
 			}
+		} else {
+			result = false;
 		}
 	}
 
@@ -351,27 +354,26 @@ bool ts_Parser::FindToken(const char *token) {
 
 	fpos_t startPos = 0;
 	fpos_t pos = 0;
-	if (fgetpos(m_file, &startPos) != 0) {
-		return false;
-	}
+	if (fgetpos(m_file, &startPos) == 0) {
+		memset(m_line, 0, sizeof(m_line));
+		memset(m_token, 0, sizeof(m_token));
 
-	memset(m_line, 0, sizeof(m_line));
-	memset(m_token, 0, sizeof(m_token));
+		while (!feof(m_file)) {
+			if (fgetpos(m_file, &pos) != 0) {
+				return false;
+			}
 
-	while (!feof(m_file)) {
-		if (fgetpos(m_file, &pos) != 0) {
-			return false;
+			fgets(m_line, sizeof(m_line), m_file);
+			sscanf(m_line, "%s", m_token);
+
+			if (strcmp(m_token, token) == 0) {
+				return fsetpos(m_file, &pos) == 0 ? true : false;
+			}
 		}
 
-		fgets(m_line, sizeof(m_line), m_file);
-		sscanf(m_line, "%s", m_token);
-
-		if (strcmp(m_token, token) == 0) {
-			return fsetpos(m_file, &pos) == 0 ? true : false;
-		}
+		fsetpos(m_file, &startPos);
 	}
 
-	fsetpos(m_file, &startPos);
 	return false;
 }
 
@@ -512,7 +514,7 @@ bool ts_Parser::PTS_LoadScript(const char *fileName) {
 	}
 
 	int count = m_macros.size();
-	return count > 0;
+	return count > 0 ? true : false;
 }
 
 // ts_parser.cpp:771
@@ -582,12 +584,12 @@ extern "C" {
 
 // ts_parser.cpp:909
 bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
-	char command[0x40] = "";
 	char argument[0x40] = "";
+	char command[0x40] = "";
 	char buffer[0x800] = "";
 
 	bool result = false;
-	sscanf(text, "%s %s", command, argument);
+	sscanf(text, "%s %s", argument, command);
 
 	switch (GetKeyword(command)) {
 	case TSKEY_TIP:
@@ -617,8 +619,8 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 		memset(buffer, 0, sizeof(buffer));
 		memcpy(buffer, text + begin, length);
 
-		int values[4] = { 0, 0, 0, 0 };
-		char names[4][0x40] = { "" };
+		int values[4] = { 0 };
+		char names[4][0x40] = { "\0" };
 		char numbers[0x40] = "";
 
 		sscanf(text + end + 1, "%d %d %d %d %s %s %s %s", &values[0], &values[1], &values[2], &values[3], names[0], names[1], names[2], names[3]);
@@ -655,11 +657,11 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 	case TSKEY_TIP_HARROW: {
 		int begin = 0;
 		int end;
-		int length = strlen(text);
+		int textLength = strlen(text);
 
 		FindQuotationMarkBlock(text, begin, end, 1, true);
 
-		length -= begin;
+		int length = textLength - begin;
 
 		if (length <= 1) break;
 
@@ -677,11 +679,11 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 	case TSKEY_TIP_IMAGE: {
 		int begin = 0;
 		int end;
-		int length = strlen(text);
+		int textLength = strlen(text);
 
 		FindQuotationMarkBlock(text, begin, end, 1, true);
 
-		length -= begin;
+		int length = textLength - begin;
 
 		if (length <= 1) break;
 
@@ -698,7 +700,7 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 
 	case TSKEY_WAIT: {
 		int delay = -1;
-		sscanf(text, "%s %s %d", command, command, &delay);
+		sscanf(text, "%s %s %d", argument, argument, &delay);
 
 		macro.m_type = MACRO_WAIT;
 		macro.m_text = NULL;
@@ -712,15 +714,15 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 	case TSKEY_KEY_DOWN: {
 		int param = -1;
 		int count = 1;
-		sscanf(text, "%s %s %s %d %d", command, command, argument, &param, &count);
+		sscanf(text, "%s %s %s %d %d", argument, argument, command, &param, &count);
 
-		int length = strlen(argument);
+		int length = strlen(command);
 		if (length == 0) break;
 
 		macro.m_type = (eMacroType)1;
-		macro.m_text = new char[strlen(argument) + 1];
-		memset(macro.m_text, 0, strlen(argument) + 1);
-		strcpy(macro.m_text, argument);
+		macro.m_text = new char[strlen(command) + 1];
+		memset(macro.m_text, 0, strlen(command) + 1);
+		strcpy(macro.m_text, command);
 
 		macro.m_param = param;
 		macro.m_count = count;
@@ -735,15 +737,15 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 	case TSKEY_KEY_DOWN_KEEP: {
 		int param = -1;
 		int count = 1;
-		sscanf(text, "%s %s %s %d %d", command, command, argument, &param, &count);
+		sscanf(text, "%s %s %s %d %d", argument, argument, command, &param, &count);
 
-		int length = strlen(argument);
+		int length = strlen(command);
 		if (length == 0) break;
 
 		macro.m_type = (eMacroType)1;
-		macro.m_text = new char[strlen(argument) + 1];
-		memset(macro.m_text, 0, strlen(argument) + 1);
-		strcpy(macro.m_text, argument);
+		macro.m_text = new char[strlen(command) + 1];
+		memset(macro.m_text, 0, strlen(command) + 1);
+		strcpy(macro.m_text, command);
 
 		macro.m_param = param;
 		macro.m_count = count;
@@ -767,13 +769,13 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 	case TSKEY_MOUSE_CLICK: {
 		int x = 0;
 		int y = 0;
-		sscanf(text, "%s %s %d %d", command, argument, &x, &y);
+		sscanf(text, "%s %s %d %d", argument, command, &x, &y);
 
 		macro.m_type = (eMacroType)4;
-		sprintf(command, "%d", x);
-		macro.m_text = new char[strlen(command) + 1];
-		memset(macro.m_text, 0, strlen(command) + 1);
-		strcpy(macro.m_text, command);
+		sprintf(argument, "%d", x);
+		macro.m_text = new char[strlen(argument) + 1];
+		memset(macro.m_text, 0, strlen(argument) + 1);
+		strcpy(macro.m_text, argument);
 
 		macro.m_param = y;
 
@@ -786,7 +788,7 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 		int x = 0;
 		int y = 0;
 		int param = 0;
-		sscanf(text, "%s %s %d %d %d", command, argument, &x, &y, &param);
+		sscanf(text, "%s %s %d %d %d", argument, command, &x, &y, &param);
 
 		memset(buffer, 0, sizeof(buffer));
 		sprintf(buffer, "%d %d", x, y);
@@ -816,18 +818,18 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 		break;
 
 	case TSKEY_TARGET: {
-		memset(argument, 0, sizeof(argument));
-
 		int param = 0;
-		sscanf(text, "%s %s %d", command, argument, &param);
 
-		int length = strlen(argument);
+		memset(command, 0, sizeof(command));
+		sscanf(text, "%s %s %d", argument, command, &param);
+
+		int length = strlen(command);
 		if (length == 0) break;
 
 		macro.m_type = (eMacroType)12;
-		macro.m_text = new char[strlen(argument) + 1];
-		memset(macro.m_text, 0, strlen(argument) + 1);
-		strcpy(macro.m_text, argument);
+		macro.m_text = new char[strlen(command) + 1];
+		memset(macro.m_text, 0, strlen(command) + 1);
+		strcpy(macro.m_text, command);
 
 		macro.m_param = param;
 
@@ -837,11 +839,11 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 	}
 
 	case TSKEY_SEND_MSG: {
-		char keys[3][0x40] = { "" };
-		char values[3][0x40] = { "" };
+		char keys[3][0x40] = { "\0" };
+		char values[3][0x40] = { "\0" };
 
-		memset(command, 0, sizeof(command));
 		memset(argument, 0, sizeof(argument));
+		memset(command, 0, sizeof(command));
 
 		int begin = 0;
 		int end = 0;
@@ -852,11 +854,11 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 			break;
 		}
 
-		memcpy(command, text + begin, length);
+		memcpy(argument, text + begin, length);
 
-		sscanf(text + end + 2, "%s %s %s %s %s %s %s", argument, keys[0], keys[1], keys[2], values[0], values[1], values[2]);
+		sscanf(text + end + 2, "%s %s %s %s %s %s %s", command, keys[0], keys[1], keys[2], values[0], values[1], values[2]);
 
-		taskMsg_t msg = GetTaskMessage(argument);
+		taskMsg_t msg = GetTaskMessage(command);
 
 		for (int i = 0; i < 3; i++) {
 			switch (GetKeyword(keys[i])) {
@@ -876,7 +878,7 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 		}
 
 		memset(buffer, 0, sizeof(buffer));
-		sprintf(buffer, command, msg, values[0], values[1], values[2]);
+		sprintf(buffer, argument, msg, values[0], values[1], values[2]);
 
 		macro.m_type = (eMacroType)13;
 		macro.m_text = new char[strlen(buffer) + 1];
@@ -891,7 +893,7 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 	}
 
 	case TSKEY_CURSOR: {
-		sscanf(text, "%s %s %s", command, argument, buffer);
+		sscanf(text, "%s %s %s", argument, command, buffer);
 
 		int length = strlen(buffer);
 		if (length == 0) break;
@@ -905,16 +907,16 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 			enable = 0;
 			break;
 		default:
-			return result;
+			goto done;
 		}
 
-		memset(command, 0, sizeof(command));
-		sprintf(command, "%d", enable);
+		memset(argument, 0, sizeof(argument));
+		sprintf(argument, "%d", enable);
 
 		macro.m_type = (eMacroType)14;
-		macro.m_text = new char[strlen(command) + 1];
-		memset(macro.m_text, 0, strlen(command) + 1);
-		strcpy(macro.m_text, command);
+		macro.m_text = new char[strlen(argument) + 1];
+		memset(macro.m_text, 0, strlen(argument) + 1);
+		strcpy(macro.m_text, argument);
 
 		macro.m_param = -1;
 		macro.m_count = 1;
@@ -924,7 +926,7 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 
 	case TSKEY_BLOCK_INPUT: {
 		result = false;
-		sscanf(text, "%s %s %s", command, argument, buffer);
+		sscanf(text, "%s %s %s", argument, command, buffer);
 
 		int withMouse;
 		switch (GetKeyword(buffer)) {
@@ -935,7 +937,7 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 			withMouse = 1;
 			break;
 		default:
-			return result;
+			goto done;
 		}
 
 		macro.m_type = (eMacroType)15;
@@ -961,9 +963,9 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 
 	case TSKEY_POINTNAME:
 	case TSKEY_TARGETNAME:
-		sscanf(text, "%s %s %s", command, argument, buffer);
+		sscanf(text, "%s %s %s", argument, command, buffer);
 
-		switch (GetKeyword(argument)) {
+		switch (GetKeyword(command)) {
 		case TSKEY_POINTNAME:
 			macro.m_type = (eMacroType)0x20;
 			break;
@@ -986,5 +988,6 @@ bool ts_Parser::PushMacro(const char *text, sTS_Macro &macro) {
 		break;
 	}
 
+done:	// the inner switches leave through here: a return there is folded to a constant, the original reloads result
 	return result;
 }

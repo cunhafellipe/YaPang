@@ -544,12 +544,13 @@ void InitPakedFile() {
 		WList<char*> paks(16, 16);
 		WIN32_FIND_DATA fd;
 		HANDLE hFind = FindFirstFile("projectg*.pak", &fd);
-		if (hFind != INVALID_HANDLE_VALUE) {
-			do {
-				char* name = new char[strlen(fd.cFileName) + 1];
-				strcpy(name, fd.cFileName);
-				paks += name;
-			} while (FindNextFile(hFind, &fd));
+		while (hFind != INVALID_HANDLE_VALUE) {
+			char* name = new char[strlen(fd.cFileName) + 1];
+			strcpy(name, fd.cFileName);
+			paks += name;
+			if (!FindNextFile(hFind, &fd)) {
+				break;
+			}
 		}
 		FindClose(hFind);
 

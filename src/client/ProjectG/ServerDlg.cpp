@@ -54,11 +54,6 @@ static unsigned int __stdcall XorWithKey(char *data, unsigned int size) {
 	return size;
 }
 
-// The server the player is connected to: CSharedDoc keeps it as an
-// sGameServerInfo from m_serverName on (ConnectToServer copies it there).
-static sGameServerInfo* ConnectedServer(void) {
-	return (sGameServerInfo*)WSingleton<CSharedDoc>::Instance()->m_serverName;
-}
 
 // serverdlg.cpp:81
 cProgressBar::cProgressBar(void)
@@ -221,7 +216,7 @@ void FrAutoConnect::OnProc(const float dt) {
 		Close((eFormRet)1, true);
 
 		FrWnd* pForm = g_pFresh->GetManager()->GetDesktop()->FindChildForm("server");
-		if ((__rtti_obj = pForm) != 0 && pForm->IsKindOf(&FrServerDlg::m_RTTI)) {
+		if (pForm && ((__rtti_obj = pForm) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrServerDlg::m_RTTI) : false)) {
 			FrServerDlg* pServerDlg = (FrServerDlg*)pForm;
 			pServerDlg->OnNotify("\xbc\xad\xb9\xf6\xbf\xa1 \xc1\xa2\xbc\xd3\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 2);
 			pServerDlg->FailedToConnectServer();
@@ -234,21 +229,27 @@ void FrAutoConnect::OnProc(const float dt) {
 	if (m_state == 1) {
 		if (m_elapsed > 1.0f) {
 			m_elapsed = 1.0f;
+			int delay = rand() % 1000;
 			m_state = 0;
-			m_retryTime = (float)(rand() % 1000 + 100) * 0.001f;
+			m_retryTime = (float)(delay + 100) * 0.001f;
 		}
 		return;
 	}
 
 	if (m_elapsed > m_retryTime) {
 		m_state = 2;
-		m_retryTime = (float)(rand() % 1000 + 100) * 0.001f + m_elapsed;
+		int delay = rand() % 1000;
+		m_retryTime = (float)(delay + 100) * 0.001f + m_elapsed;
 
 		std::string id = WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().id;
 		std::string server = WSingleton<CSharedDoc>::Instance()->m_loginServerAddress;
 
 		unsigned long key = 0x77DEF61B;
-		XorWithKey((char *)&key, sizeof(key));
+		// Called through a pointer: the original's copy keeps the plain
+		// __stdcall frame of an address-taken function (neither inlined nor
+		// given cl's register convention for statics, unlike GameUnit's).
+		unsigned int (__stdcall *fn)(char *, unsigned int) = XorWithKey;
+		fn((char *)&key, sizeof(key));
 
 		WSendPacket send(GCT_CONNECT);
 		send.EncodeStr(id);
@@ -840,10 +841,10 @@ void FrServerDlg::ConnectToServer(unsigned long serverId) {
 			continue;
 
 
-		if (ConnectedServer()->id == 0) {
-			memcpy(ConnectedServer(), &m_selectedServer, sizeof(sGameServerInfo));
+		if (WSingleton<CSharedDoc>::Instance()->m_curServer.id == 0) {
+			memcpy(&WSingleton<CSharedDoc>::Instance()->m_curServer, &m_selectedServer, sizeof(sGameServerInfo));
 
-		} else if (ConnectedServer()->id == pServer->id) {
+		} else if (WSingleton<CSharedDoc>::Instance()->m_curServer.id == pServer->id) {
 			continue;
 		}
 
@@ -893,7 +894,7 @@ void FrServerDlg::ConnectToServer(void) {
 	if (m_pConnectMessage)
 		m_pConnectMessage->SetVisible(false);
 
-	memcpy(WSingleton<CSharedDoc>::Instance()->m_serverName, &m_selectedServer, sizeof(sGameServerInfo));
+	memcpy(&WSingleton<CSharedDoc>::Instance()->m_curServer, &m_selectedServer, sizeof(sGameServerInfo));
 
 	m_state = (gsLoginState_t)2;
 }
@@ -916,8 +917,8 @@ void FrServerDlg::BuildServerList(void) {
 		if ((it->flags & 0x80) && !(it->flags & 0x10))
 			continue;
 
-		if ((it->flags & 0x10) && !((WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity >> 10) & 1) && IsLocalContent((localContentType_t)10)) {
-			if (!((WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity >> 2) & 1))
+		if ((it->flags & 0x10) && !(bool)((WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity >> 10) & 1) && IsLocalContent((localContentType_t)10)) {
+			if (!(bool)((WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity >> 2) & 1))
 				continue;
 
 			strcat(it->name, " [\xb8\xc1\xc5\xe4]");
@@ -976,7 +977,7 @@ void FrServerDlg::OnServerListBtnDown(void) {
 	if (!pServer || !pServer->name[0])
 		return;
 
-	if (ConnectedServer()->id == pServer->id)
+	if (WSingleton<CSharedDoc>::Instance()->m_curServer.id == pServer->id)
 		return;
 
 	if (m_connectDelay > 0)
@@ -1111,17 +1112,17 @@ void FrServerDlg::OnServerListOwnerDraw(int param) {
 
 	gdi->SetTextStyle(1);
 
-	if (ConnectedServer()->id == pServer->id)
+	if (WSingleton<CSharedDoc>::Instance()->m_curServer.id == pServer->id) {
 		gdi->DrawTexture(m_pConnectionIcon, WRect(pItem->pos.x + 9.0f, pItem->pos.y + 3.0f, (float)m_pConnectionIcon->Width(), (float)m_pConnectionIcon->Height()), 0xffffffff, 0);
 
-	if (pServer->m_badgeCount > 0) {
-		float x = m_rect.x;
-		float y = m_rect.y;
-		gdi->DrawTexture(m_pServerIcon[2], WRect(x + 420.0f, y + 83.0f, (float)m_pServerIcon[2]->Width(), (float)m_pServerIcon[2]->Height()), 0xffffffff, 0);
+		if (pServer->m_badgeCount > 0) {
+			WPoint pos = m_rect.TopLeft();
+			gdi->DrawTexture(m_pServerIcon[2], WRect(pos.x + 420.0f, pos.y + 83.0f, (float)m_pServerIcon[2]->Width(), (float)m_pServerIcon[2]->Height()), 0xffffffff, 0);
 
-		const char* text = MakeStr("%d", pServer->m_badgeCount);
-		m_pTitleFont->GetTextWidth(g_view, text);
-		m_pTitleFont->Print(g_view, x + 440.0f, y + 90.0f, text, 0, 0xffffffff, 0);
+			const char* text = MakeStr("%d", pServer->m_badgeCount);
+			m_pTitleFont->GetTextWidth(g_view, text);
+			m_pTitleFont->Print(g_view, pos.x + 440.0f, pos.y + 90.0f, text, 0, 0xffffffff, 0);
+		}
 	}
 
 	float offset = 143.0f;
@@ -1204,7 +1205,7 @@ void FrServerDlg::OnChannelListBtnDown(void) {
 	}
 
 	if (!(WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity & 0x14)) {
-		if (ConnectedServer()->flags & 0x20) {
+		if (WSingleton<CSharedDoc>::Instance()->m_curServer.flags & 0x20) {
 			// A server with the level limits of the channels.
 			unsigned long games = WSingleton<CSharedDoc>::Instance()->m_myStatGamesPlayed;
 			if (games < 1)
@@ -1514,7 +1515,7 @@ void FrServerDlg::SetLoginMessageAlert(const char* msg) {
 
 // serverdlg.cpp:1722
 void FrServerDlg::TurnOnChannels(void) {
-	m_pCurServer->SetCaption(WSingleton<CSharedDoc>::Instance()->m_serverName);
+	m_pCurServer->SetCaption(WSingleton<CSharedDoc>::Instance()->m_curServer.name);
 	m_pMessage->SetVisible(false);
 	m_pCurServer->SetVisible(true);
 	m_pChannelList->SetVisible(true);
@@ -1535,14 +1536,12 @@ void FrServerDlg::FailedToConnectServer(void) {
 	if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT))
 		WSingleton<WNetworkSystem>::Instance()->ForceShutDown(WNetworkSystem::NET_UNIT_DEFAULT);
 
-	// CSharedDoc keeps the connected server as an sGameServerInfo at 0x4B05
-	// (see ConnectToServer); its id, at 0x4B2D, is cleared.
-	ConnectedServer()->id = 0;
+	WSingleton<CSharedDoc>::Instance()->m_curServer.id = 0;
 
 	m_bAutoLoginEnabled = false;
 
 	m_state = (gsLoginState_t)0;
-	m_pCurServer->SetCaption(WSingleton<CSharedDoc>::Instance()->m_serverName);
+	m_pCurServer->SetCaption(WSingleton<CSharedDoc>::Instance()->m_curServer.name);
 	m_pConnectMessage->SetVisible(true);
 	m_pCurServer->SetVisible(true);
 	m_pChannelList->SetVisible(false);

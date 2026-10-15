@@ -53,7 +53,7 @@ struct sTradeItem {
 	unsigned long index;          // 0x00
 	unsigned long typeId;         // 0x04
 	unsigned long guid;           // 0x08
-	unsigned long count;          // 0x0C
+	int count;                    // 0x0C
 	unsigned char kind;           // 0x10
 	unsigned short flag;          // 0x11
 	__int64 price;                // 0x13, pang (summed by SumForTradeItemList)

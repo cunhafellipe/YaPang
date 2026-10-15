@@ -180,7 +180,8 @@ ntAvatar::ntAvatar(CQuadTree &pvs, const sSlotInfo &slotInfo, const sCharacterIn
 	m_balloonTime = 1.0f;
 
 	m_pendingMove.Reset();
-	m_angle = m_targetAngle = RadianNormalize2PI(slotInfo.m_angle);
+	float angle = slotInfo.m_angle;
+	m_targetAngle = m_angle = RadianNormalize2PI(angle);
 	SetState(m_state);
 	SetAction(m_action);
 	if (slotInfo.m_tradeTitle) {
@@ -247,7 +248,7 @@ bool ntAvatar::IsClickable(float x, float y) const {
 			int screenY = (int)floorf(screen.y) - 48;
 
 			if (m_state & 0x80) {
-				if ((WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar->m_position - m_position).Magnitude() > 19.2f) {
+				if ((WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar->GetPosition() - GetPosition()).Magnitude() > 19.2f) {
 					return false;
 				}
 
@@ -718,8 +719,8 @@ static bool SlideMove(const WVector &velocity, const WVector &pos, CQuadTree *pP
 		}
 
 		for (i = 0; i < numPlanes; i++) {
-			if (WDotProduct(trace.m_normal, planes[i].normal) > 0.99f) {
-				dir += trace.m_normal;
+			if (WDotProduct(trace.m_plane.normal, planes[i].normal) > 0.99f) {
+				dir += trace.m_plane.normal;
 				break;
 			}
 		}
@@ -727,8 +728,8 @@ static bool SlideMove(const WVector &velocity, const WVector &pos, CQuadTree *pP
 			continue;
 		}
 
-		planes[numPlanes].normal = trace.m_normal;
-		planes[numPlanes].dis = trace.m_planeDist;
+		planes[numPlanes].normal = trace.m_plane.normal;
+		planes[numPlanes].dis = trace.m_plane.dis;
 		numPlanes++;
 
 		for (i = 0; i < numPlanes; i++) {
@@ -887,7 +888,7 @@ void ntAvatar::Process(float elapsed) {
 
 		if (move.Magnitude() > 0.01f) {
 			int hit;
-			m_pPVS->GetGroundPoint(newPos, true, &hit, true);
+			GetPVS().GetGroundPoint(newPos, true, &hit, true);
 			if (hit >= 0) {
 				m_position = newPos;
 			}
@@ -963,7 +964,7 @@ void ntAvatar::Process(float elapsed) {
 		}
 	}
 
-	m_position = m_pPVS->GetGroundPoint(m_position, false, NULL, false);
+	m_position = GetPVS().GetGroundPoint(m_position, false, NULL, false);
 
 	WVector toCamera;
 	toCamera = g_view->camera.pivot - m_position;
@@ -998,7 +999,7 @@ void ntAvatar::Process(float elapsed) {
 
 	WVector up;
 	if (m_motionType == 3) {
-		up = m_pPVS->GetMeshNormal(m_position);
+		up = GetPVS().GetMeshNormal(m_position);
 	}
 	else {
 		up = WVector::UNIT_POS_Y;
@@ -1059,9 +1060,10 @@ void ntAvatar::Render() {
 		if (this != WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar && m_canKick) {
 			CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
 			int guid = m_guid;
-			const sBriefUserInfo &info = (*pDoc->m_userMap.find(guid)).second;
+			std::map<unsigned long, sBriefUserInfo>::iterator it;
+			it = pDoc->m_userMap.find(guid);
 
-			if (!sBriefUserInfo(info).invisible) {
+			if (!sBriefUserInfo((*it).second).invisible) {
 				if (guid != WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid) {
 					return;
 				}
@@ -1071,18 +1073,18 @@ void ntAvatar::Render() {
 
 	WVector pos;
 	if (m_pPetFrame == NULL || m_pPetFrame->GetCurAniPet() == NULL) {
-		pos = m_pPVS->GetGroundPoint(m_position, false, NULL, false);
+		pos = GetPVS().GetGroundPoint(GetPosition(), false, NULL, false);
 	}
 	else {
 		pos = m_pPetFrame->GetBonePet()->FindBone("Bip01 Pelvis")->GetMatrix().pivot;
-		pos = m_pPVS->GetGroundPoint(pos, false, NULL, false);
+		pos = GetPVS().GetGroundPoint(pos, false, NULL, false);
 	}
 
 	if (COption::Instance()->vIsShadowEnabled()) {
 		WVector xAxis = WVector(2.9f, 0.0f, 0.0f) * m_spItems[0].getvalue();
 		WVector zAxis = WVector(0.0f, 0.0f, 2.9f) * m_spItems[0].getvalue();
 
-		m_pPVS->DrawDecal(m_pChatMain->m_shadowTexture, pos, xAxis, zAxis, 1.0f, m_time, (enumPolyBlend)0, false);
+		GetPVS().DrawDecal(m_pChatMain->m_shadowTexture, pos, xAxis, zAxis, 1.0f, m_time, (enumPolyBlend)0, false);
 	}
 
 	if (m_pPetFrame != NULL && m_pPetFrame->GetCurAniPet() != NULL) {
@@ -1094,7 +1096,7 @@ void ntAvatar::Render() {
 			else {
 				m_light.nearone = g_lightset.nearone;
 				m_light.ambient = ModifyColor(g_lightset.ambient, 1.0f);
-				m_light.diffuse = ModifyColor(g_lightset.diffuse, m_pPVS->GetShadowIntensity(pos));
+				m_light.diffuse = ModifyColor(g_lightset.diffuse, GetPVS().GetShadowIntensity(pos));
 			}
 
 			m_pPetFrame->UpdateLightSource(&m_light, false, NULL);
@@ -1506,7 +1508,7 @@ void ntAvatar::ParsePuppetScript(const char *script) {
 					}
 				}
 
-				const char *sound = m_pPVS->GetStepSound(m_pPVS->GetGroundPoint(m_position, false, NULL, false));
+				const char *sound = GetPVS().GetStepSound(GetPVS().GetGroundPoint(m_position, false, NULL, false));
 
 				if (sound) {
 					WVector toCamera = m_position - g_camera.pivot;
@@ -1516,7 +1518,7 @@ void ntAvatar::ParsePuppetScript(const char *script) {
 				}
 			}
 			else {
-				const char *sound = m_pPVS->GetStepSound(m_pPVS->GetGroundPoint(m_position, false, NULL, false));
+				const char *sound = GetPVS().GetStepSound(GetPVS().GetGroundPoint(m_position, false, NULL, false));
 
 				if (sound) {
 					WVector toCamera = m_position - g_camera.pivot;
@@ -1779,10 +1781,10 @@ ntAvatar *ntAvatarManager::CreateAvatar(const sSlotInfo &slotInfo, const sCharac
 
 	m_avatarCount++;
 
-	ntAvatar *pAvatar = new ntAvatar(*m_pPVS, slotInfo, charInfo, pChatMain);
+	ntAvatar *pAvatar = new ntAvatar(GetPVS(), slotInfo, charInfo, pChatMain);
 
 	WVector pos(slotInfo.m_x, 0.0f, slotInfo.m_z);
-	pos = m_pPVS->GetGroundPoint(pos, false, NULL, false);
+	pos = GetPVS().GetGroundPoint(pos, false, NULL, false);
 	pAvatar->SetPosition(pos);
 	// avatar_avatar.cpp:2433: SetAngle written out; it reads 2 pi from the
 	// unit's .rdata (data_9f4084[1]) where the inline RadianNormalize2PI has

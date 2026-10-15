@@ -89,8 +89,8 @@ void _gateway::CGatewayActor::QueryHandler(localContentType_t type, taskMsg_t ms
 		throw WAppException("Passed Unknown doctype!!\nCode[0]");
 	}
 
-	IContentsDataContainer* pDoc = WSingleton<CContentsDoc>::Instance()->GetContainer(type);
-	if (!pDoc) {
+	IContentsDataContainer* pDoc;
+	if (!WSingleton<CContentsDoc>::Instance()->GetContainer(type, pDoc)) {
 		throw WAppException("Need Doc Object!!\nCode[1]");
 	}
 

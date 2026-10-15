@@ -19,6 +19,14 @@
 #include "wd3d8.h"
 #include "wlocalize.h"
 
+#ifdef PG_MATERIAL_HINTS
+// Port only (port/compat/pg_material_hints.h): the merge buffer holds the
+// draws of one material hint, set again around its device draw.
+#include "pg_material_hints.h"
+
+static int s_pgMergeHint = 0;
+#endif
+
 // The VC7.1 <xmmintrin.h> is missing from externs/vs-2003: these are its
 // declarations of the SSE type and the intrinsics FillVertex uses.
 #ifndef _INCLUDED_MM2
@@ -3030,7 +3038,7 @@ int WDirect3D8::LockIB(const unsigned short* iptr, int inum) {
 		m_iIBOffset = 0;
 	}
 
-	if (m_pLockableIB->Lock(m_iIBOffset, len, (void**)&pIptr, flags) != D3D_OK) {
+	if (fnWD3DIndexBuffer_Lock(m_pLockableIB, m_iIBOffset, len, &pIptr, flags) != D3D_OK) {
 		return -1;
 	}
 	memcpy(pIptr, iptr, len);
@@ -3135,6 +3143,11 @@ void WDirect3D8::FlushRenderPrimitive(void) {
 
 	if (GetCurrentThreadId() != m_mainThreadId) return;
 
+#ifdef PG_MATERIAL_HINTS
+	int pgHint = PgMaterialHintGet();
+	PgMaterialHint(s_pgMergeHint);
+#endif
+
 	xInstantiateAndFillTexture(m_lastTexState & 0x7ff);
 	xInstantiateAndFillTexture((m_lastTexState >> 11) & 0x7f);
 
@@ -3232,6 +3245,9 @@ void WDirect3D8::FlushRenderPrimitive(void) {
 
 end:
 	m_MergeBuffer.PrimitiveCount = 0;
+#ifdef PG_MATERIAL_HINTS
+	PgMaterialHint(pgHint);
+#endif
 }
 
 // wd3d8.cpp:5324
@@ -3474,6 +3490,13 @@ void WDirect3D8::_DrawPrimitiveUP(_D3DPRIMITIVETYPE Type, unsigned int Primitive
 	case D3DPT_LINELIST: NumVertices = PrimitiveCount * 2; break;
 	}
 
+#ifdef PG_MATERIAL_HINTS
+	// Draws of another material hint are not merged.
+	if (m_MergeBuffer.PrimitiveCount > 0 && s_pgMergeHint != PgMaterialHintGet())
+		FlushRenderPrimitive();
+	s_pgMergeHint = PgMaterialHintGet();
+#endif
+
 	if (m_MergeBuffer.PrimitiveCount > 0) {
 		bool merge = false;
 		if (m_MergeBuffer.Type == D3DPT_LINELIST || m_MergeBuffer.Type == D3DPT_LINESTRIP) {
@@ -3485,7 +3508,7 @@ void WDirect3D8::_DrawPrimitiveUP(_D3DPRIMITIVETYPE Type, unsigned int Primitive
 		}
 
 		if (m_MergeBuffer.xhVb == 0 && m_MergeBuffer.xhIb == 0 && m_MergeBuffer.VertexStreamZeroStride == VertexStreamZeroStride && (m_MergeBuffer.NumVertices + NumVertices) * VertexStreamZeroStride < m_MergeBuffer.GetVertexStreamBufferSize() && merge) {
-			int indicesPerPrimitive;
+			int indicesPerPrimitive = 3;
 			if (Type == D3DPT_LINELIST || Type == D3DPT_LINESTRIP) {
 				indicesPerPrimitive = 2;
 			} else if (Type == D3DPT_TRIANGLELIST || Type == D3DPT_TRIANGLESTRIP || Type == D3DPT_TRIANGLEFAN) {
@@ -3518,13 +3541,13 @@ void WDirect3D8::_DrawPrimitiveUP(_D3DPRIMITIVETYPE Type, unsigned int Primitive
 
 	m_MergeBuffer.Type = Type;
 	m_MergeBuffer.PrimitiveCount = PrimitiveCount;
-	m_MergeBuffer.NumVertices = NumVertices;
 	m_MergeBuffer.VertexStreamZeroStride = VertexStreamZeroStride;
-	m_MergeBuffer.m_xLastMatrix = m_xLastWorldMatrix[0];
+	m_MergeBuffer.NumVertices = NumVertices;
 	m_MergeBuffer.xhVb = 0;
 	m_MergeBuffer.xhIb = 0;
 	m_MergeBuffer.LockVertex = 1;
 	m_MergeBuffer.LockIndex = 0;
+	m_MergeBuffer.m_xLastMatrix = m_xLastWorldMatrix[0];
 	m_MergeBuffer.CheckAndIncreaseVertexStreamBuffer(NumVertices * VertexStreamZeroStride);
 
 	FillVertex(m_MergeBuffer.VertexStreamBuffer, (const unsigned char*)pVertexStreamZeroData, m_xLastVertexDecl, NumVertices, VertexStreamZeroStride, m_xLastWorldMatrix);
@@ -3533,6 +3556,13 @@ void WDirect3D8::_DrawPrimitiveUP(_D3DPRIMITIVETYPE Type, unsigned int Primitive
 // wd3d8.cpp:5797
 void WDirect3D8::_DrawIndexedPrimitive(_D3DPRIMITIVETYPE Type, unsigned int MinIndex, unsigned int NumVertices, unsigned int StartIndex, unsigned int PrimitiveCount) {
 	if (m_devState == W_VDEVSTATE_LOST) return;
+
+#ifdef PG_MATERIAL_HINTS
+	// Draws of another material hint are not merged.
+	if (m_MergeBuffer.PrimitiveCount > 0 && s_pgMergeHint != PgMaterialHintGet())
+		FlushRenderPrimitive();
+	s_pgMergeHint = PgMaterialHintGet();
+#endif
 
 	if (m_MergeBuffer.PrimitiveCount > 0) {
 		if (m_MergeBuffer.xhVb != 0 && m_MergeBuffer.Type == D3DPT_TRIANGLELIST && m_xaVbList[m_xhLastVb].xbStride == m_MergeBuffer.VertexStreamZeroStride && m_xaVbList[m_xhLastVb].xpVertexData && m_xaIbList[m_xhLastIb].xpIndexData && (m_MergeBuffer.NumVertices + NumVertices) * m_xaVbList[m_xhLastVb].xbStride <= m_MergeBuffer.GetVertexStreamBufferSize()) {
@@ -4266,25 +4296,25 @@ void WDirect3D8::UpdateTextureSurfaceDirect(void* buff, int pitch, pix_info* pix
 	int cps = bi->bmiHeader.biBitCount / 8;
 	int w = bi->bmiHeader.biWidth, h = bi->bmiHeader.biHeight;
 
-	int nCps = ((w * cps + 3) & ~3) - w * cps; int nPitch = pitch - pix->cpp * w;
+	int nCps = ((w * cps + 3) & ~3) - w * cps; int nPitch = pitch - pix->cpp * w; unsigned char* src = (unsigned char*)data;
 	unsigned char* ptr = (unsigned char*)buff;
 	unsigned long code;
 
 	if (bi->bmiHeader.biBitCount == 8) {
 		for (int y = 0; y < h; y++) {
 			for (int x = 0; x < w; x++) {
-				unsigned char* p = (unsigned char*)&bi->bmiColors[*(unsigned char*)data]; code = pix->a_r_shift == 8 ? pix->Pack(p[2], p[1], p[0]) : pix->Pack(p[3], p[2], p[1], p[0]); (unsigned char*&)data += cps;
+				unsigned char* p = (unsigned char*)&bi->bmiColors[*src]; code = pix->a_r_shift == 8 ? pix->Pack(p[2], p[1], p[0]) : pix->Pack(p[3], p[2], p[1], p[0]); src += cps;
 				memcpy(ptr, &code, pix->cpp); ptr += pix->cpp;
 			}
-			ptr += nPitch; (unsigned char*&)data += nCps;
+			ptr += nPitch; src += nCps;
 		}
 	} else {
 		for (int y = 0; y < h; y++) {
 			for (int x = 0; x < w; x++) {
-				code = pix->a_r_shift == 8 ? pix->Pack(((unsigned char*)data)[2], ((unsigned char*)data)[1], ((unsigned char*)data)[0]) : pix->Pack(((unsigned char*)data)[3], ((unsigned char*)data)[2], ((unsigned char*)data)[1], ((unsigned char*)data)[0]); (unsigned char*&)data += cps;
+				code = pix->a_r_shift == 8 ? pix->Pack(src[2], src[1], src[0]) : pix->Pack(src[3], src[2], src[1], src[0]); src += cps;
 				memcpy(ptr, &code, pix->cpp); ptr += pix->cpp;
 			}
-			ptr += nPitch; (unsigned char*&)data += nCps;
+			ptr += nPitch; src += nCps;
 		}
 	}
 }
@@ -4302,10 +4332,10 @@ void WDirect3D8::UpdateTextureSurfaceSampling(void* buff, int width, int height,
 
 	for (int j = 0; j < height; j++) {
 		unsigned char* ptr = (unsigned char*)buff + pitch * j;
-		int srcY = bi->bmiHeader.biHeight == height ? j * bpl : bi->bmiHeader.biHeight * j / height * bpl;
+		int srcY = bi->bmiHeader.biHeight != height ? bi->bmiHeader.biHeight * j / height * bpl : j * bpl;
 
 		for (int i = 0; i < width; i++) {
-			int srcX = bi->bmiHeader.biWidth == width ? i * cps : bi->bmiHeader.biWidth * i / width * cps;
+			int srcX = bi->bmiHeader.biWidth != width ? bi->bmiHeader.biWidth * i / width * cps : i * cps;
 			unsigned char* src = (unsigned char*)data + srcY + srcX;
 			unsigned long code;
 			if (bi->bmiHeader.biBitCount == 8)
@@ -4430,7 +4460,7 @@ void WDirect3D8::UpdateTextureSurface(int texHandle, tagBITMAPINFO* bi, void* da
 		} else {
 			if (bi->bmiHeader.biWidth == tex->bitmap->Width() && bi->bmiHeader.biHeight == tex->bitmap->Height()
 				&& bi->bmiHeader.biBitCount == tex->bitmap->BitsPerPixel())
-				memcpy(tex->bitmap->vram, data, tex->bitmap->Size());
+				memcpy(tex->bitmap->vram, data, tex->bitmap->pitch * tex->bitmap->Height());
 		}
 
 		tex->updateType = type;
@@ -5061,93 +5091,92 @@ bool WDirect3D8::BeginCapturedBackground(void) {
 	FlushRenderPrimitive();
 
 	IDirect3DSurface9* pRenderTarget;
-	if (m_pd3dDevice->GetRenderTarget(0, &pRenderTarget) != D3D_OK)
-		return false;
+	if (m_pd3dDevice->GetRenderTarget(0, &pRenderTarget) == D3D_OK) {
+		if (pRenderTarget->GetDesc(&m_capturedDdsd) == D3D_OK) {
+			bool ready = true;
 
-	if (pRenderTarget->GetDesc(&m_capturedDdsd) == D3D_OK) {
-		bool ready = true;
+			if (g_captureOption.useTexture) {
+				if (m_hCopiedScreenTexture == 0) {
+					pix_info* pix = FindPixInfoByFormat(m_capturedDdsd.Format);
 
-		if (g_captureOption.useTexture) {
-			if (m_hCopiedScreenTexture == 0) {
-				pix_info* pix = FindPixInfoByFormat(m_capturedDdsd.Format);
+					ready = false;
+					if (pix != NULL) {
+						tagBITMAPINFO bi;
+						memset(&bi, 0, sizeof(bi));
+						bi.bmiHeader.biWidth = m_capturedDdsd.Width;
+						bi.bmiHeader.biHeight = m_capturedDdsd.Height;
+						bi.bmiHeader.biBitCount = (WORD)(pix->cpp * 8);
 
-				ready = false;
-				if (pix != NULL) {
-					tagBITMAPINFO bi;
-					memset(&bi, 0, sizeof(bi));
-					bi.bmiHeader.biWidth = m_capturedDdsd.Width;
-					bi.bmiHeader.biHeight = m_capturedDdsd.Height;
-					bi.bmiHeader.biBitCount = (WORD)(pix->cpp * 8);
+						m_hCopiedScreenTexture = CreateTexture(&bi, 0x4000);
 
-					m_hCopiedScreenTexture = CreateTexture(&bi, 0x4000);
-
-					if (m_hCopiedScreenTexture > 0) {
-						if (m_texList[m_hCopiedScreenTexture].pTex != NULL)
-							ready = true;
-						else
-							DestroyTexture(m_hCopiedScreenTexture);
+						if (m_hCopiedScreenTexture > 0) {
+							if (m_texList[m_hCopiedScreenTexture].pTex != NULL)
+								ready = true;
+							else
+								DestroyTexture(m_hCopiedScreenTexture);
+						}
 					}
 				}
-			}
-		} else {
-			if (m_pCopiedScreenSurface == NULL) {
-				HRESULT hr;
-				if (!g_captureOption.useMemCopy && g_captureOption.dxCopyRectsOK)
-					hr = m_pd3dDevice->CreateRenderTarget(m_capturedDdsd.Width, m_capturedDdsd.Height, m_capturedDdsd.Format, D3DMULTISAMPLE_NONE, 0, FALSE, &m_pCopiedScreenSurface, NULL);
-				else
-					hr = m_pd3dDevice->CreateOffscreenPlainSurface(m_capturedDdsd.Width, m_capturedDdsd.Height, m_capturedDdsd.Format, D3DPOOL_DEFAULT, &m_pCopiedScreenSurface, NULL);
+			} else {
+				if (m_pCopiedScreenSurface == NULL) {
+					HRESULT hr;
+					if (!g_captureOption.useMemCopy && g_captureOption.dxCopyRectsOK)
+						hr = m_pd3dDevice->CreateRenderTarget(m_capturedDdsd.Width, m_capturedDdsd.Height, m_capturedDdsd.Format, D3DMULTISAMPLE_NONE, 0, FALSE, &m_pCopiedScreenSurface, NULL);
+					else
+						hr = fnWD3DDevice_CreateSurface(m_pd3dDevice, m_capturedDdsd.Width, m_capturedDdsd.Height, m_capturedDdsd.Format, D3DPOOL_DEFAULT, &m_pCopiedScreenSurface, NULL);
 
-				ready = SUCCEEDED(hr);
+					ready = SUCCEEDED(hr);
+				}
+			}
+
+			if (ready) {
+				m_useCopiedScreen = true;
+
+				IDirect3DSurface9* pSurf = NULL;
+				if (g_captureOption.useTexture)
+					m_texList[m_hCopiedScreenTexture].pTex->GetSurfaceLevel(0, &pSurf);
+				else
+					pSurf = m_pCopiedScreenSurface;
+
+				bool copied = false;
+				if (!g_captureOption.useMemCopy && g_captureOption.dxCopyRectsOK) {
+					rc.left = 0;
+					rc.top = 0;
+					rc.right = m_capturedDdsd.Width;
+					rc.bottom = m_capturedDdsd.Height;
+
+					if (fnWD3DDevice_CopyRect(m_pd3dDevice, pRenderTarget, &rc, pSurf) == D3D_OK)
+						copied = true;
+					else
+						g_captureOption.dxCopyRectsOK = false;
+				}
+
+				if (!copied) {
+					_D3DLOCKED_RECT lrSrc;
+					_D3DLOCKED_RECT lrDst;
+
+					pRenderTarget->LockRect(&lrSrc, NULL, D3DLOCK_READONLY | D3DLOCK_NOSYSLOCK | D3DLOCK_NO_DIRTY_UPDATE);
+					pSurf->LockRect(&lrDst, NULL, 0);
+					int smallerPitch = Min(lrSrc.Pitch, lrDst.Pitch);
+
+					for (int i = 0; i < (int)m_capturedDdsd.Height; i++)
+						memcpy((unsigned char*)lrDst.pBits + i * lrDst.Pitch, (unsigned char*)lrSrc.pBits + i * lrSrc.Pitch, smallerPitch);
+
+					pRenderTarget->UnlockRect();
+					pSurf->UnlockRect();
+				}
+
+				pRenderTarget->Release();
+
+				if (g_captureOption.useTexture)
+					pSurf->Release();
+
+				return true;
 			}
 		}
 
-		if (ready) {
-			m_useCopiedScreen = true;
-
-			IDirect3DSurface9* pSurf = NULL;
-			if (g_captureOption.useTexture)
-				m_texList[m_hCopiedScreenTexture].pTex->GetSurfaceLevel(0, &pSurf);
-			else
-				pSurf = m_pCopiedScreenSurface;
-
-			bool copied = false;
-			if (!g_captureOption.useMemCopy && g_captureOption.dxCopyRectsOK) {
-				rc.left = 0;
-				rc.top = 0;
-				rc.right = m_capturedDdsd.Width;
-				rc.bottom = m_capturedDdsd.Height;
-
-				if (fnWD3DDevice_CopyRect(m_pd3dDevice, pRenderTarget, &rc, pSurf) == D3D_OK)
-					copied = true;
-				else
-					g_captureOption.dxCopyRectsOK = false;
-			}
-
-			if (!copied) {
-				_D3DLOCKED_RECT lrSrc;
-				_D3DLOCKED_RECT lrDst;
-
-				pRenderTarget->LockRect(&lrSrc, NULL, D3DLOCK_READONLY | D3DLOCK_NOSYSLOCK | D3DLOCK_NO_DIRTY_UPDATE);
-				pSurf->LockRect(&lrDst, NULL, 0);
-				int smallerPitch = Min(lrSrc.Pitch, lrDst.Pitch);
-
-				for (int i = 0; i < (int)m_capturedDdsd.Height; i++)
-					memcpy((unsigned char*)lrDst.pBits + i * lrDst.Pitch, (unsigned char*)lrSrc.pBits + i * lrSrc.Pitch, smallerPitch);
-
-				pRenderTarget->UnlockRect();
-				pSurf->UnlockRect();
-			}
-
-			pRenderTarget->Release();
-
-			if (g_captureOption.useTexture)
-				pSurf->Release();
-
-			return true;
-		}
+		pRenderTarget->Release();
 	}
-
-	pRenderTarget->Release();
 
 	return false;
 }
@@ -5530,7 +5559,8 @@ void WDirect3D8::xReleaseIndexBuffer(int hIb) {
 		if (m_xaIbList[hIb].xpIndexData) { delete[] m_xaIbList[hIb].xpIndexData; m_xaIbList[hIb].xpIndexData = NULL; }
 
 		if (m_xaIbList[hIb].xpIb) { m_xaIbList[hIb].xpIb->Release(); m_xaIbList[hIb].xpIb = NULL; }
-		m_xaIbList[hIb].xpIb = NULL;
+
+		memset(&m_xaIbList[hIb].xpIb, 0, sizeof(m_xaIbList[hIb].xpIb));
 
 		WDirect3D::xReleaseIndexBuffer(hIb);
 	}

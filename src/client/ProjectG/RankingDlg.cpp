@@ -1308,13 +1308,13 @@ void FrRankingDlg::OnUpperMiniInfoOwnerDraw(void) {
 		return;
 	}
 
-	WPoint pt = m_pUpperMiniInfo->GetRect().TopLeft();
+	WRect rc = m_pUpperMiniInfo->GetRect();
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (m_userInfo.uid != 0xffffffff) {
 		unsigned char level = m_userInfo.level + 1 < 0x47 ? m_userInfo.level + 1 : 0x47;
 		const Bitmap* pImg = g_pFresh->GetManager()->GetBitmap("LEVELS", MakeStr("level_%03d", level));
 		if (pImg) {
-			pGDI->DrawTexture(pImg, WRect(pt.x + 5.0f, pt.y + 6.0f, (float)pImg->Width(), (float)pImg->Height()), 0xffffffff, 0);
+			pGDI->DrawTexture(pImg, WRect(rc.x + 5.0f, rc.y + 6.0f, (float)pImg->Width(), (float)pImg->Height()), 0xffffffff, 0);
 		}
 
 		char text[256];
@@ -1322,7 +1322,7 @@ void FrRankingDlg::OnUpperMiniInfoOwnerDraw(void) {
 		pGDI->SetTextStyle(0);
 
 		if (!WSingleton<CProjectG>::Instance()->HidePrivacy()) {
-			g_pFresh->GetManager()->PrintText(WPoint(pt.x + 60.0f, pt.y + 9.0f), 0, text, -1.0f, 0xffffffff);
+			g_pFresh->GetManager()->PrintText(WPoint(rc.x + 60.0f, rc.y + 9.0f), 0, text, -1.0f, 0xffffffff);
 		}
 	}
 
@@ -1405,7 +1405,8 @@ void FrRankingDlg::OnRankTypeListOwnerDraw(int param) {
 		if (pItem) {
 			FrLine* pLine = (FrLine*)pItem->pData;
 
-			WOverlay::DrawBox(g_view, WRect(pItem->pos.x, pItem->pos.y, 82.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
+			WPoint pt(pItem->pos.x, pItem->pos.y);
+			WOverlay::DrawBox(g_view, WRect(pt, 82.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
 
 			if (pItem->underCursor) {
 				pGDI->Box(WRect(pItem->pos.x + 1.0f, pItem->pos.y + 1.0f, 80.0f, 20.0f), 0x80082B46, 0, 0.0f);
@@ -1514,7 +1515,8 @@ void FrRankingDlg::OnGeneralSubTypeListOwnerDraw(int param) {
 		if (pItem) {
 			FrLine* pLine = (FrLine*)pItem->pData;
 
-			WOverlay::DrawBox(g_view, WRect(pItem->pos.x, pItem->pos.y, 91.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
+			WPoint pt(pItem->pos.x, pItem->pos.y);
+			WOverlay::DrawBox(g_view, WRect(pt, 91.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
 
 			if (pItem->underCursor) {
 				pGDI->Box(WRect(pItem->pos.x + 1.0f, pItem->pos.y + 1.0f, 90.0f, 20.0f), 0x80082B46, 0, 0.0f);
@@ -1630,7 +1632,8 @@ void FrRankingDlg::OnCourseTypeListOwnerDraw(int param) {
 		if (pItem) {
 			FrLine* pLine = (FrLine*)pItem->pData;
 
-			WOverlay::DrawBox(g_view, WRect(pItem->pos.x, pItem->pos.y, 91.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
+			WPoint pt(pItem->pos.x, pItem->pos.y);
+			WOverlay::DrawBox(g_view, WRect(pt, 91.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
 
 			if (pItem->underCursor) {
 				pGDI->Box(WRect(pItem->pos.x + 1.0f, pItem->pos.y + 1.0f, 90.0f, 20.0f), 0x80082B46, 0, 0.0f);
@@ -1739,7 +1742,8 @@ void FrRankingDlg::OnRecordTypeListOwnerDraw(int param) {
 		if (pItem) {
 			FrLine* pLine = (FrLine*)pItem->pData;
 
-			WOverlay::DrawBox(g_view, WRect(pItem->pos.x, pItem->pos.y, 91.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
+			WPoint pt(pItem->pos.x, pItem->pos.y);
+			WOverlay::DrawBox(g_view, WRect(pt, 91.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
 
 			if (pItem->underCursor) {
 				pGDI->Box(WRect(pItem->pos.x + 1.0f, pItem->pos.y + 1.0f, 90.0f, 20.0f), 0x80082B46, 0, 0.0f);
@@ -1840,7 +1844,8 @@ void FrRankingDlg::OnSearchTypeListOwnerDraw(int param) {
 		if (pItem) {
 			FrLine* pLine = (FrLine*)pItem->pData;
 
-			WOverlay::DrawBox(g_view, WRect(pItem->pos.x, pItem->pos.y, 62.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
+			WPoint pt(pItem->pos.x, pItem->pos.y);
+			WOverlay::DrawBox(g_view, WRect(pt, 62.0f, 22.0f), 0, 0xAA0E4F75, 0.0f);
 
 			if (pItem->underCursor) {
 				pGDI->Box(WRect(pItem->pos.x + 1.0f, pItem->pos.y + 1.0f, 62.0f, 20.0f), 0x80082B46, 0, 0.0f);

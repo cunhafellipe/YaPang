@@ -910,8 +910,7 @@ void CCreature::CheckTarget(float dt) {
 			}
 
 			float limit = dt * m_turnRate;
-			angle = Between(-limit, angle, limit);
-			m_matrix = RotMat(angle, 1) * m_matrix;
+			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 		} else if (Abs(m_motionParam) > 0) {
 			if (Abs(m_motionParam) > dt * m_rollRate)
 				m_motionParam += (m_motionParam > 0 ? -m_rollRate : m_rollRate) * dt;
@@ -1232,7 +1231,7 @@ void CSanta::CheckTarget(float dt) {
 	WVector d = m_pos - m_matrix.pivot;
 	d.y = 0.0f;
 
-	if (d.Magnitude() < (dt < 0.1f ? 0.1f : dt) * m_unk74) {
+	if (d.Magnitude() < Max(dt, 0.1f) * m_unk74) {
 		if (m_replayIndex >= m_recordedPath.size() || m_recorded) {
 			if (m_nodeIndex == m_nodes.size() - 1) {
 				m_active = false;
@@ -1242,21 +1241,18 @@ void CSanta::CheckTarget(float dt) {
 			unsigned char prev = m_nodeIndex;
 			m_nodeIndex = (m_nodeIndex + 1) % m_nodes.size();
 			m_pos = m_nodes[m_nodeIndex];
-			m_pos += (RotMat(Random(-1.5707964f, 1.5707964f, -1), 0).za * m_unkAC) * RotMat(Random(-3.1415927f, 3.1415927f, -1), 1);
+			m_pos += (m_unkAC * RotMat(Random(-1.5707964f, 1.5707964f, -1), 0).za) * RotMat(Random(-3.1415927f, 3.1415927f, -1), 1);
 
 			d = m_pos - m_matrix.pivot;
 			d.y = 0.0f;
-			WVector seg;
-			seg.x = m_nodes[m_nodeIndex].x - m_nodes[prev].x;
+			WVector seg = m_nodes[m_nodeIndex] - m_nodes[prev];
 			seg.y = 0.0f;
-			seg.z = m_nodes[m_nodeIndex].z - m_nodes[prev].z;
 
 			float dist = d.Magnitude();
 			m_unk74 = dist * 120.0f / seg.Magnitude();
 			m_climbRate = (m_pos.y - m_matrix.pivot.y) / dist * m_unk74;
 
-			float turn = CalcDeltaAngle(d, m_matrix.za * -1.0f);
-			m_unk7C = Abs(turn) > 1.5707964f ? 1.5707964f : Abs(turn);
+			m_unk7C = Min(Abs(CalcDeltaAngle(d, m_matrix.za * -1.0f)), 1.5707964f);
 			m_state = 1;
 
 			if (m_recorded)
@@ -1275,14 +1271,13 @@ void CSanta::CheckTarget(float dt) {
 
 	if (Abs(angle) > data_9f0fc0) {
 		float limit = dt * m_turnRate;
-		angle = Between(-limit, angle, limit);
-		m_matrix = RotMat(angle, 1) * m_matrix;
+		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
 
 	switch (m_state) {
 	case 0:
 		if (Abs(m_motionParam) > dt * m_rollRate) {
-			m_motionParam += (angle > 0 ? -m_rollRate : m_rollRate) * dt;
+			m_motionParam += (m_motionParam > 0 ? -m_rollRate : m_rollRate) * dt;
 		} else {
 			m_motionParam = 0;
 			m_state = 2;
@@ -1332,7 +1327,7 @@ void CFighter::CheckTarget(float dt) {
 	WVector d = m_pos - m_matrix.pivot;
 	d.y = 0.0f;
 
-	if (d.Magnitude() < (dt < 0.1f ? 0.1f : dt) * m_unk74) {
+	if (d.Magnitude() < Max(dt, 0.1f) * m_unk74) {
 		if (m_replayIndex >= m_recordedPath.size() || m_recorded) {
 			if (m_nodeIndex == m_nodes.size() - 1) {
 				m_active = false;
@@ -1345,11 +1340,11 @@ void CFighter::CheckTarget(float dt) {
 			d = m_pos - m_matrix.pivot;
 			d.y = 0.0f;
 
-			m_unk74 = d.Magnitude();
-			m_climbRate = (m_pos.y - m_matrix.pivot.y) / m_unk74 * m_unk74;
+			float dist = d.Magnitude();
+			m_unk74 = dist;
+			m_climbRate = (m_pos.y - m_matrix.pivot.y) / dist * m_unk74;
 
-			float turn = CalcDeltaAngle(d, m_matrix.za * -1.0f);
-			m_unk7C = Abs(turn) > 1.5707964f ? 1.5707964f : Abs(turn);
+			m_unk7C = Min(Abs(CalcDeltaAngle(d, m_matrix.za * -1.0f)), 1.5707964f);
 			m_state = 1;
 
 			if (m_recorded)
@@ -1368,14 +1363,13 @@ void CFighter::CheckTarget(float dt) {
 
 	if (Abs(angle) > data_9f0fc0) {
 		float limit = dt * m_turnRate;
-		angle = Between(-limit, angle, limit);
-		m_matrix = RotMat(angle, 1) * m_matrix;
+		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
 
 	switch (m_state) {
 	case 0:
 		if (Abs(m_motionParam) > dt * m_rollRate) {
-			m_motionParam += (angle > 0 ? -m_rollRate : m_rollRate) * dt;
+			m_motionParam += (m_motionParam > 0 ? -m_rollRate : m_rollRate) * dt;
 		} else {
 			m_motionParam = 0;
 			m_state = 2;
@@ -1431,7 +1425,7 @@ void CUfo::CheckTarget(float dt) {
 	WVector d = m_pos - m_matrix.pivot;
 	d.y = 0.0f;
 
-	if (d.Magnitude() < (dt < 0.1f ? 0.1f : dt) * m_unk74) {
+	if (d.Magnitude() < Max(dt, 0.1f) * m_unk74) {
 		if (m_replayIndex >= m_recordedPath.size() || m_recorded) {
 			if (m_nodeIndex == m_nodes.size() - 1) {
 				m_active = false;
@@ -1453,8 +1447,7 @@ void CUfo::CheckTarget(float dt) {
 			m_unk74 = len * 120.0f / e.Magnitude();
 			m_climbRate = (m_pos.y - m_matrix.pivot.y) / len * m_unk74;
 
-			float turn = CalcDeltaAngle(d, m_matrix.za * -1.0f);
-			m_unk7C = Abs(turn) > 1.5707964f ? 1.5707964f : Abs(turn);
+			m_unk7C = Min(Abs(CalcDeltaAngle(d, m_matrix.za * -1.0f)), 1.5707964f);
 			m_state = 1;
 
 			if (m_recorded)
@@ -1473,14 +1466,13 @@ void CUfo::CheckTarget(float dt) {
 
 	if (Abs(angle) > data_9f0fc0) {
 		float limit = dt * m_turnRate;
-		angle = Between(-limit, angle, limit);
-		m_matrix = RotMat(angle, 1) * m_matrix;
+		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
 
 	switch (m_state) {
 	case 0:
 		if (Abs(m_motionParam) > dt * m_rollRate) {
-			m_motionParam += (angle > 0 ? -m_rollRate : m_rollRate) * dt;
+			m_motionParam += (m_motionParam > 0 ? -m_rollRate : m_rollRate) * dt;
 		} else {
 			m_motionParam = 0;
 			m_state = 2;
@@ -1536,14 +1528,14 @@ void ntPenguin::CheckTarget(float dt) {
 	WVector d = m_pos - m_matrix.pivot;
 	d.y = 0.0f;
 
-	if (d.Magnitude() < (dt < 0.1f ? 0.1f : dt) * m_unk74) {
+	if (d.Magnitude() < Max(dt, 0.1f) * m_unk74) {
 		if (m_replayIndex >= m_recordedPath.size() || m_recorded) {
 			if (m_nodeIndex == m_nodes.size() - 1)
 				m_nodeIndex = 0;
 
 			m_nodeIndex = (m_nodeIndex + 1) % m_nodes.size();
 			m_pos = m_nodes[m_nodeIndex];
-			m_pos += (RotMat(Random(-1.5707964f, 1.5707964f, -1), 0).za * m_unkAC) * RotMat(Random(-3.1415927f, 3.1415927f, -1), 1);
+			m_pos += (m_unkAC * RotMat(Random(-1.5707964f, 1.5707964f, -1), 0).za) * RotMat(Random(-3.1415927f, 3.1415927f, -1), 1);
 
 			d = m_pos - m_matrix.pivot;
 			d.y = 0.0f;
@@ -1555,7 +1547,7 @@ void ntPenguin::CheckTarget(float dt) {
 				m_pos = m_recordedPath[m_replayIndex];
 				m_replayIndex++;
 			} else {
-				m_nodeIndex = 0;
+				m_replayIndex = 0;
 			}
 		}
 	}
@@ -1564,8 +1556,7 @@ void ntPenguin::CheckTarget(float dt) {
 
 	if (Abs(angle) > data_9f0fc0) {
 		float limit = dt * m_turnRate;
-		angle = Between(-limit, angle, limit);
-		m_matrix = RotMat(angle, 1) * m_matrix;
+		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
 
 	m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -1720,8 +1711,7 @@ void ntPenguin_Sailor::CheckTarget(float dt) {
 
 		if (Abs(angle) > data_9f0fc0) {
 			float limit = dt * m_turnRate;
-			angle = Between(-limit, angle, limit);
-			m_matrix = RotMat(angle, 1) * m_matrix;
+			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 		}
 
 		m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2075,8 +2065,7 @@ void ntNpc_BlackSparrow::CheckTarget(float dt) {
 
 		if (Abs(angle) > data_9f0fc0) {
 			float limit = dt * m_turnRate;
-			angle = Between(-limit, angle, limit);
-			m_matrix = RotMat(angle, 1) * m_matrix;
+			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 		}
 
 		m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2202,8 +2191,7 @@ void ntNpc_PolaPenguin1::CheckTarget(float dt) {
 
 	if (Abs(angle) > data_9f0fc0) {
 		float limit = dt * m_turnRate;
-		angle = Between(-limit, angle, limit);
-		m_matrix = RotMat(angle, 1) * m_matrix;
+		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
 
 	m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2298,8 +2286,7 @@ void ntNpc_PolaPenguin2::CheckTarget(float dt) {
 
 		if (Abs(angle) > data_9f0fc0) {
 			float limit = dt * m_turnRate;
-			angle = Between(-limit, angle, limit);
-			m_matrix = RotMat(angle, 1) * m_matrix;
+			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 		}
 
 		m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2391,8 +2378,7 @@ void CNPC_BIRD::CheckTarget(float dt) {
 
 	if (Abs(angle) > data_9f0fc0) {
 		float limit = dt * m_turnRate;
-		angle = Between(-limit, angle, limit);
-		m_matrix = RotMat(angle, 1) * m_matrix;
+		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
 
 	m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2457,14 +2443,14 @@ void CNPC_TORTOISE::CheckTarget(float dt) {
 	WVector d = m_pos - m_matrix.pivot;
 	d.y = 0.0f;
 
-	if (d.Magnitude() < (dt < 0.1f ? 0.1f : dt) * m_unk74) {
+	if (d.Magnitude() < Max(dt, 0.1f) * m_unk74) {
 		if (m_replayIndex >= m_recordedPath.size() || m_recorded) {
 			if (m_nodeIndex == m_nodes.size() - 1)
 				m_nodeIndex = 0;
 
 			m_nodeIndex = (m_nodeIndex + 1) % m_nodes.size();
 			m_pos = m_nodes[m_nodeIndex];
-			m_pos += (RotMat(Random(-1.5707964f, 1.5707964f, -1), 0).za * m_unkAC) * RotMat(Random(-3.1415927f, 3.1415927f, -1), 1);
+			m_pos += (m_unkAC * RotMat(Random(-1.5707964f, 1.5707964f, -1), 0).za) * RotMat(Random(-3.1415927f, 3.1415927f, -1), 1);
 
 			d = m_pos - m_matrix.pivot;
 			d.y = 0.0f;
@@ -2476,7 +2462,7 @@ void CNPC_TORTOISE::CheckTarget(float dt) {
 				m_pos = m_recordedPath[m_replayIndex];
 				m_replayIndex++;
 			} else {
-				m_nodeIndex = 0;
+				m_replayIndex = 0;
 			}
 		}
 	}
@@ -2485,8 +2471,7 @@ void CNPC_TORTOISE::CheckTarget(float dt) {
 
 	if (Abs(angle) > data_9f0fc0) {
 		float limit = dt * m_turnRate;
-		angle = Between(-limit, angle, limit);
-		m_matrix = RotMat(angle, 1) * m_matrix;
+		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
 
 	m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2621,8 +2606,7 @@ void ntNpc_AreaWalker::CheckTarget(float dt) {
 
 		if (Abs(angle) > data_9f0fc0) {
 			float limit = dt * m_turnRate;
-			angle = Between(-limit, angle, limit);
-			m_matrix = RotMat(angle, 1) * m_matrix;
+			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 		}
 
 		m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;

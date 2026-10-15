@@ -26,16 +26,14 @@ struct trace_s {
 
 	WVector m_endPos;      // 0x0, where the box stops (the end when start == end)
 	float m_fraction;      // 0xC, TraceAABB_BackGround ends by setting it to 1.0
-	WVector m_normal;      // 0x10, the hit plane's normal (TraceAABB copies the WPlane AabbIntersect returns)
-	float m_planeDist;     // 0x1C, the hit plane's distance
+	WPlane m_plane;        // 0x10, the hit plane (TraceAABB copies the WPlane AabbIntersect returns)
 	bool m_flag;           // 0x20, TraceAABB clears it (meaning not established)
 	// 0x21-0x24: alignment padding left implicit (a char-array PADDING would bring /GS cookies the original lacks, sub_537c50)
 };
 CHECK_SIZE(trace_s, 0x24);
 CHECK_FIELD(trace_s, m_endPos, 0x0);
 CHECK_FIELD(trace_s, m_fraction, 0xC);
-CHECK_FIELD(trace_s, m_normal, 0x10);
-CHECK_FIELD(trace_s, m_planeDist, 0x1C);
+CHECK_FIELD(trace_s, m_plane, 0x10);
 CHECK_FIELD(trace_s, m_flag, 0x20);
 
 // avatar_avatar.cpp defines AVATAR_AVATAR_QUADTREE_INLINE empty before its

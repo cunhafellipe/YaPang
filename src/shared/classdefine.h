@@ -547,7 +547,7 @@ CHECK_FIELD(sNonVisibleItem, m_typeId, 0x8);
 struct sRandomBox {
 	unsigned char m_active;          // 0x0
 	UNKNOWN(0x1, 0x24);
-	unsigned long m_boxTypeId;       // 0x24, the box the item belongs to
+	unsigned int m_boxTypeId;        // 0x24, the box the item belongs to; unsigned int: the key type of CItemManager::m_randomBoxMap
 	unsigned char m_kind;            // 0x28, 1 to 4
 	UNKNOWN(0x29, 0x2C);
 	unsigned long m_itemTypeId;      // 0x2C, the item given (stFindRandomBox)
@@ -813,13 +813,16 @@ CHECK_FIELD(sSpecialPrizeItem, m_value, 0x8);
 // A random recycle record (MakeRandomRecycleMap: 0x10 bytes, keyed by its
 // first dword; the same key also goes into a std::set<unsigned long>).
 struct sRandomRecycle {
-	unsigned long m_recycleId;       // 0x0, the key of the record
+	unsigned int m_recycleId;        // 0x0, the key of the record; unsigned int: the set<unsigned long> lookups of MakeRandomRecycleMap bind a converted temporary
 	unsigned long m_typeId;          // 0x4, the item type id (RecycleDlg CheckRandomRecycleItem)
-	UNKNOWN(0x8, 0x10);
+	unsigned long m_reserved8;       // 0x8, not read by the client; scalar, not UNKNOWN (no /GS cookie on a local copy)
+	unsigned long m_reservedC;       // 0xC
 };
 CHECK_SIZE(sRandomRecycle, 0x10);
 CHECK_FIELD(sRandomRecycle, m_recycleId, 0x0);
 CHECK_FIELD(sRandomRecycle, m_typeId, 0x4);
+CHECK_FIELD(sRandomRecycle, m_reserved8, 0x8);
+CHECK_FIELD(sRandomRecycle, m_reservedC, 0xC);
 
 // An offline shop record (MakeOfflineMap: 0xC8 bytes; CItemManager's map
 // node puts its color byte at 0xD8). Fields not transcribed yet.
@@ -949,16 +952,39 @@ namespace S5 {
 // type id). S5::CCutin loads one WOverlay from each image name (OnProcess,
 // TwAnimateTest).
 struct sCutinInformation {
+	// One overlay image of the cut-in.
+	struct sImage {
+		char m_name[0x28];           // 0x0, the overlay image name
+		unsigned long m_param;       // 0x28, zeroed by the constructor; no reader known
+	};
+
+	// classdefine.h:773
+	sCutinInformation() {
+		m_active = 0; m_typeId = 0; m_8 = 0; m_c = 0; m_charSerial = 0; m_condition = 0; memset(m_images[0].m_name, 0, sizeof(m_images[0].m_name));
+		m_images[0].m_param = 0;
+		memset(m_images[1].m_name, 0, sizeof(m_images[1].m_name));
+		m_images[1].m_param = 0;
+		memset(m_images[2].m_name, 0, sizeof(m_images[2].m_name));
+		m_images[2].m_param = 0;
+		memset(m_images[3].m_name, 0, sizeof(m_images[3].m_name));
+		m_images[3].m_param = 0;
+		m_cc = 0;
+	}
+
 	unsigned char m_active;          // 0x0
 	UNKNOWN(0x1, 0x4);
 	unsigned long m_typeId;          // 0x4
-	UNKNOWN(0x8, 0x10);
+	unsigned long m_8;               // 0x8, zeroed by the constructor
+	unsigned long m_c;               // 0xC, zeroed by the constructor
 	unsigned long m_condition;       // 0x10, the cut-in condition (CGolfTask passes it to S5::CCutin as message 0x24C's param3, CCutinSystem::SetCondition)
 	UNKNOWN(0x14, 0x18);
 	int m_charSerial;                // 0x18, the character (type id & 0x3FFFFFF) the cut-in belongs to, 100 or more: every character (CShopMain::Build_Cutin)
-	char m_images[4][0x2C];          // 0x1C, the overlay image names
-	UNKNOWN(0xCC, 0xD0);
+	sImage m_images[4];              // 0x1C, the overlay images S5::CCutin loads
+	unsigned long m_cc;              // 0xCC, zeroed by the constructor
 };
+CHECK_SIZE(sCutinInformation::sImage, 0x2C);
+CHECK_FIELD(sCutinInformation::sImage, m_name, 0x0);
+CHECK_FIELD(sCutinInformation::sImage, m_param, 0x28);
 CHECK_SIZE(sCutinInformation, 0xD0);
 CHECK_FIELD(sCutinInformation, m_charSerial, 0x18);
 CHECK_FIELD(sCutinInformation, m_active, 0x0);

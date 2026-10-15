@@ -352,7 +352,9 @@ protected:
 	unsigned int m_version;
 #endif
 };
+#ifndef PG_7XX // PG_7XX appends members past the original layout
 CHECK_SIZE(WPuppet, 0x1c8);
+#endif
 
 // PDB layout, size 0x1c.
 struct WPuppet::w_tex_piece {
