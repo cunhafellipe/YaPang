@@ -44,13 +44,13 @@ protected:
 	virtual bool OnInit(void);
 
 	void OnLeftAreaInit(intptr_t param);
-	void OnLeftAreaOwnerDraw(int param);
+	void OnLeftAreaOwnerDraw(PG_MSGARG param);
 	void OnLeftListInit(intptr_t param);
-	void OnLeftListOwnerDraw(int param);
+	void OnLeftListOwnerDraw(PG_MSGARG param);
 	void OnRightAreaInit(intptr_t param);
-	void OnRightAreaOwnerDraw(int param);
+	void OnRightAreaOwnerDraw(PG_MSGARG param);
 	void OnRightListInit(intptr_t param);
-	void OnRightListOwnerDraw(int param);
+	void OnRightListOwnerDraw(PG_MSGARG param);
 
 private:
 	FrArea* m_pLeftArea;                // 0x110 ("left_area")
@@ -117,9 +117,9 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnDrawAreaInit(intptr_t param);
-	void OnDrawAreaOwnerDraw(int param);
+	void OnDrawAreaOwnerDraw(PG_MSGARG param);
 	void OnListInit(intptr_t param);
-	void OnListOwnerDraw(int param);
+	void OnListOwnerDraw(PG_MSGARG param);
 
 private:
 	FrArea* m_pDrawArea;         // 0x110 ("draw_area")

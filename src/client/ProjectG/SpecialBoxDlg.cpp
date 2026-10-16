@@ -143,7 +143,7 @@ void FrSpecialBoxDlg::OnNotifyAreaInit(intptr_t param) {
 }
 
 // specialboxdlg.cpp:111
-void FrSpecialBoxDlg::OnNotifyAreaOwnerdraw(int param) {
+void FrSpecialBoxDlg::OnNotifyAreaOwnerdraw(PG_MSGARG param) {
 
 
 

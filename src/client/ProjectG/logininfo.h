@@ -209,14 +209,14 @@ END_LAYOUT_CHECK
 // they are defined in the header without inline.
 
 // logininfo.h:258
-ChannelingChecker::ChannelingChecker() : m_mapData(NULL), m_provType(0xFFFFFFFF) {}
+inline ChannelingChecker::ChannelingChecker() : m_mapData(NULL), m_provType(0xFFFFFFFF) {}
 
 // logininfo.h:260
-ChannelingChecker::~ChannelingChecker() {
+inline ChannelingChecker::~ChannelingChecker() {
 }
 
 // logininfo.h:269
-int ChannelingChecker::ChannelingCheck() {
+inline int ChannelingChecker::ChannelingCheck() {
 	m_mapping = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, "927628CA6D76A6E9162C56D4E3E6D6E3");
 	if (m_mapping == NULL) {
 		return FALSE;
@@ -230,13 +230,13 @@ int ChannelingChecker::ChannelingCheck() {
 }
 
 // logininfo.h:288
-void* ChannelingChecker::GetMapData() { return m_mapData; }
+inline void* ChannelingChecker::GetMapData() { return m_mapData; }
 
 // logininfo.h:289
-unsigned long ChannelingChecker::GetProvType() { return m_provType; }
+inline unsigned long ChannelingChecker::GetProvType() { return m_provType; }
 
 // logininfo.h:293
-void ChannelingChecker::SetChannelingFlag() {
+inline void ChannelingChecker::SetChannelingFlag() {
 	std::string mapText((const char*)m_mapData);
 	if (mapText.find("SiteCode") != std::string::npos) {
 		m_provType = 4;

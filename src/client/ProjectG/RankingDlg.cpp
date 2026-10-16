@@ -1024,7 +1024,7 @@ void FrRankingDlg::SendRequestSearchUser(const char* nickname) {
 }
 
 // rankingdlg.cpp:1257
-void FrRankingDlg::OnTermType_S5_BtnInit(int param) {
+void FrRankingDlg::OnTermType_S5_BtnInit(PG_MSGARG param) {
 	m_pTermS5Btn = DYNAMIC_CAST(FrButton, param);
 	m_pTermS5Btn->SetPushDelay(1.0f);
 
@@ -1043,16 +1043,16 @@ void FrRankingDlg::OnTermType_S5_BtnUp(void) {
 }
 
 // rankingdlg.cpp:1283
-void FrRankingDlg::OnCourseAreaInit(int param) {
+void FrRankingDlg::OnCourseAreaInit(PG_MSGARG param) {
 	m_pCourseArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // rankingdlg.cpp:1288
-void FrRankingDlg::OnCourseAreaOwnerDraw(int param) {
+void FrRankingDlg::OnCourseAreaOwnerDraw(PG_MSGARG param) {
 }
 
 // rankingdlg.cpp:1315
-void FrRankingDlg::OnRankList_Init(int param) {
+void FrRankingDlg::OnRankList_Init(PG_MSGARG param) {
 	if (m_pRankList) {
 		m_pRankList->ClearItem();
 	} else {
@@ -1061,7 +1061,7 @@ void FrRankingDlg::OnRankList_Init(int param) {
 }
 
 // rankingdlg.cpp:1321
-void FrRankingDlg::OnRankList_OwnerDraw(int param) {
+void FrRankingDlg::OnRankList_OwnerDraw(PG_MSGARG param) {
 	if (m_rankList.empty()) {
 		return;
 	}
@@ -1095,7 +1095,7 @@ void FrRankingDlg::OnRankList_LBtnDown(void) {
 }
 
 // rankingdlg.cpp:1353
-void FrRankingDlg::OnRankList_PrevPageInit(int param) {
+void FrRankingDlg::OnRankList_PrevPageInit(PG_MSGARG param) {
 	FrButton* pBtn = DYNAMIC_CAST(FrButton, param);
 	pBtn->SetPushDelay(1.0f);
 }
@@ -1112,7 +1112,7 @@ void FrRankingDlg::OnRankList_PrevPageBtnUp(void) {
 }
 
 // rankingdlg.cpp:1372
-void FrRankingDlg::OnRankList_NextPageInit(int param) {
+void FrRankingDlg::OnRankList_NextPageInit(PG_MSGARG param) {
 	FrButton* pBtn = DYNAMIC_CAST(FrButton, param);
 	pBtn->SetPushDelay(1.0f);
 }
@@ -1124,17 +1124,17 @@ void FrRankingDlg::OnRankList_NextPageBtnUp(void) {
 }
 
 // rankingdlg.cpp:1384
-void FrRankingDlg::OnRankList_CurrentPageInit(int param) {
+void FrRankingDlg::OnRankList_CurrentPageInit(PG_MSGARG param) {
 	m_pCurPageEdit = DYNAMIC_CAST(FrEdit, param);
 }
 
 // rankingdlg.cpp:1389
-void FrRankingDlg::OnRankList_TotalPageInit(int param) {
+void FrRankingDlg::OnRankList_TotalPageInit(PG_MSGARG param) {
 	m_pTotalPageEdit = DYNAMIC_CAST(FrEdit, param);
 }
 
 // rankingdlg.cpp:1394
-void FrRankingDlg::OnRankList_MyInfo_Init(int param) {
+void FrRankingDlg::OnRankList_MyInfo_Init(PG_MSGARG param) {
 	if (m_pMyInfoList) {
 		m_pMyInfoList->ClearItem();
 	} else {
@@ -1166,20 +1166,20 @@ void FrRankingDlg::OnRankList_MyInfo_LBtnDown(void) {
 }
 
 // rankingdlg.cpp:1422
-void FrRankingDlg::OnRankList_MyInfo_OwnerDraw(int param) {
+void FrRankingDlg::OnRankList_MyInfo_OwnerDraw(PG_MSGARG param) {
 	if (param) {
 		SetListItemInfo((FrListItem*)param);
 	}
 }
 
 // rankingdlg.cpp:1433
-void FrRankingDlg::OnRankList_NoInRank_Init(int param) {
+void FrRankingDlg::OnRankList_NoInRank_Init(PG_MSGARG param) {
 	m_pNoMyRankWnd = DYNAMIC_CAST(FrStatic, param);
 	m_pNoMyRankWnd->SetVisible(false);
 }
 
 // rankingdlg.cpp:1439
-void FrRankingDlg::OnRankList_SearchUserInit(int param) {
+void FrRankingDlg::OnRankList_SearchUserInit(PG_MSGARG param) {
 	m_pSearchUserBtn = DYNAMIC_CAST(FrButton, param);
 	m_pSearchUserBtn->SetPushDelay(0.1f);
 }
@@ -1198,7 +1198,7 @@ void FrRankingDlg::OnRankList_SearchUserBtnUp(void) {
 }
 
 // rankingdlg.cpp:1456
-void FrRankingDlg::OnRankList_UserIdEditInit(int param) {
+void FrRankingDlg::OnRankList_UserIdEditInit(PG_MSGARG param) {
 	m_pUserIdEdit = DYNAMIC_CAST(FrEdit, param);
 	m_pUserIdEdit->SetCharLimit(0x20, true);
 }
@@ -1243,7 +1243,7 @@ void FrRankingDlg::OnLanguageInit(intptr_t param) {
 }
 
 // rankingdlg.cpp:1506
-void FrRankingDlg::OnAboutBtnInit(int param) {
+void FrRankingDlg::OnAboutBtnInit(PG_MSGARG param) {
 	if ((__rtti_obj = (void*)param) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) : false) {
 	}
 }
@@ -1263,13 +1263,13 @@ void FrRankingDlg::OnCloseBtnUp(void) {
 }
 
 // rankingdlg.cpp:1528
-void FrRankingDlg::OnBottomMessageInit(int param) {
+void FrRankingDlg::OnBottomMessageInit(PG_MSGARG param) {
 	m_pBottomMsg = DYNAMIC_CAST(FrStatic, param);
 	m_pBottomMsg->SetVisible(false);
 }
 
 // rankingdlg.cpp:1534
-void FrRankingDlg::OnPetCharacterInit(int param) {
+void FrRankingDlg::OnPetCharacterInit(PG_MSGARG param) {
 	m_pPetCharacterArea = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -1289,7 +1289,7 @@ void FrRankingDlg::OnPetCharacterOwnerDraw(void) {
 }
 
 // rankingdlg.cpp:1553
-void FrRankingDlg::OnPetLoadInit(int param) {
+void FrRankingDlg::OnPetLoadInit(PG_MSGARG param) {
 	m_pPetLoadGauge = DYNAMIC_CAST(FrGaugeBar, param);
 	if (m_pPetLoadGauge) {
 		m_pPetLoadGauge->SetRange(0, 150, 0);
@@ -1298,7 +1298,7 @@ void FrRankingDlg::OnPetLoadInit(int param) {
 }
 
 // rankingdlg.cpp:1563
-void FrRankingDlg::OnUpperMiniInfoInit(int param) {
+void FrRankingDlg::OnUpperMiniInfoInit(PG_MSGARG param) {
 	m_pUpperMiniInfo = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -1330,7 +1330,7 @@ void FrRankingDlg::OnUpperMiniInfoOwnerDraw(void) {
 }
 
 // rankingdlg.cpp:1595
-void FrRankingDlg::OnClassType_ComboInit(int param) {
+void FrRankingDlg::OnClassType_ComboInit(PG_MSGARG param) {
 	m_pClassTypeCombo = DYNAMIC_CAST(FrComboBox, param);
 
 	for (int i = 0; i < 4; i++) {
@@ -1342,7 +1342,7 @@ void FrRankingDlg::OnClassType_ComboInit(int param) {
 }
 
 // rankingdlg.cpp:1608
-void FrRankingDlg::OnClassType_ComboDown(int param) {
+void FrRankingDlg::OnClassType_ComboDown(PG_MSGARG param) {
 	const char* text = m_pClassTypeCombo->GetLine(1, false);
 
 	int prevClassType = s_iClassType;
@@ -1359,7 +1359,7 @@ void FrRankingDlg::OnClassType_ComboDown(int param) {
 }
 
 // rankingdlg.cpp:1622
-void FrRankingDlg::OnRankTypeListInit(int param) {
+void FrRankingDlg::OnRankTypeListInit(PG_MSGARG param) {
 	m_pRankTypeList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pRankTypeList) {
@@ -1397,7 +1397,7 @@ void FrRankingDlg::OnRankTypeListLDown(void) {
 }
 
 // rankingdlg.cpp:1662
-void FrRankingDlg::OnRankTypeListOwnerDraw(int param) {
+void FrRankingDlg::OnRankTypeListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -1422,7 +1422,7 @@ void FrRankingDlg::OnRankTypeListOwnerDraw(int param) {
 }
 
 // rankingdlg.cpp:1691
-void FrRankingDlg::OnRankTypeViewerInit(int param) {
+void FrRankingDlg::OnRankTypeViewerInit(PG_MSGARG param) {
 	m_pRankTypeViewer = DYNAMIC_CAST(FrViewer, param);
 
 	m_pRankTypeViewerImg[0] = g_pFresh->RegisterBitmap("btn_drop01_n");
@@ -1471,7 +1471,7 @@ void FrRankingDlg::OnRankTypeViewerOwnerDraw(void) {
 }
 
 // rankingdlg.cpp:1750
-void FrRankingDlg::OnGeneralSubTypeListInit(int param) {
+void FrRankingDlg::OnGeneralSubTypeListInit(PG_MSGARG param) {
 	m_pGenSubTypeList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pGenSubTypeList) {
@@ -1507,7 +1507,7 @@ void FrRankingDlg::OnGeneralSubTypeListLDown(void) {
 }
 
 // rankingdlg.cpp:1786
-void FrRankingDlg::OnGeneralSubTypeListOwnerDraw(int param) {
+void FrRankingDlg::OnGeneralSubTypeListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -1532,7 +1532,7 @@ void FrRankingDlg::OnGeneralSubTypeListOwnerDraw(int param) {
 }
 
 // rankingdlg.cpp:1815
-void FrRankingDlg::OnGeneralSubTypeViewerInit(int param) {
+void FrRankingDlg::OnGeneralSubTypeViewerInit(PG_MSGARG param) {
 	m_pGenSubTypeViewer = DYNAMIC_CAST(FrViewer, param);
 
 	m_pGenSubTypeViewerImg[0] = g_pFresh->RegisterBitmap("btn_drop02_n");
@@ -1581,7 +1581,7 @@ void FrRankingDlg::OnGeneralSubTypeViewerOwnerDraw(void) {
 }
 
 // rankingdlg.cpp:1874
-void FrRankingDlg::OnCourseTypeListInit(int param) {
+void FrRankingDlg::OnCourseTypeListInit(PG_MSGARG param) {
 	m_pCourseTypeList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pCourseTypeList) {
@@ -1624,7 +1624,7 @@ void FrRankingDlg::OnCourseTypeListLDown(void) {
 }
 
 // rankingdlg.cpp:1921
-void FrRankingDlg::OnCourseTypeListOwnerDraw(int param) {
+void FrRankingDlg::OnCourseTypeListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -1649,7 +1649,7 @@ void FrRankingDlg::OnCourseTypeListOwnerDraw(int param) {
 }
 
 // rankingdlg.cpp:1950
-void FrRankingDlg::OnCourseTypeViewerInit(int param) {
+void FrRankingDlg::OnCourseTypeViewerInit(PG_MSGARG param) {
 	m_pCourseTypeViewer = DYNAMIC_CAST(FrViewer, param);
 
 	m_pCourseTypeViewerImg[0] = g_pFresh->RegisterBitmap("btn_drop02_n");
@@ -1698,7 +1698,7 @@ void FrRankingDlg::OnCourseTypeViewerOwnerDraw(void) {
 }
 
 // rankingdlg.cpp:2010
-void FrRankingDlg::OnRecordTypeListInit(int param) {
+void FrRankingDlg::OnRecordTypeListInit(PG_MSGARG param) {
 	m_pRecordTypeList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pRecordTypeList) {
@@ -1734,7 +1734,7 @@ void FrRankingDlg::OnRecordTypeListLDown(void) {
 }
 
 // rankingdlg.cpp:2058
-void FrRankingDlg::OnRecordTypeListOwnerDraw(int param) {
+void FrRankingDlg::OnRecordTypeListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -1759,7 +1759,7 @@ void FrRankingDlg::OnRecordTypeListOwnerDraw(int param) {
 }
 
 // rankingdlg.cpp:2087
-void FrRankingDlg::OnRecordTypeViewerInit(int param) {
+void FrRankingDlg::OnRecordTypeViewerInit(PG_MSGARG param) {
 	m_pRecordTypeViewer = DYNAMIC_CAST(FrViewer, param);
 
 	m_pRecordTypeViewerImg[0] = g_pFresh->RegisterBitmap("btn_drop02_n");
@@ -1808,7 +1808,7 @@ void FrRankingDlg::OnRecordTypeViewerOwnerDraw(void) {
 }
 
 // rankingdlg.cpp:2146
-void FrRankingDlg::OnSearchTypeListInit(int param) {
+void FrRankingDlg::OnSearchTypeListInit(PG_MSGARG param) {
 	m_pSearchTypeList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pSearchTypeList) {
@@ -1836,7 +1836,7 @@ void FrRankingDlg::OnSearchTypeListLDown(void) {
 }
 
 // rankingdlg.cpp:2177
-void FrRankingDlg::OnSearchTypeListOwnerDraw(int param) {
+void FrRankingDlg::OnSearchTypeListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -1861,7 +1861,7 @@ void FrRankingDlg::OnSearchTypeListOwnerDraw(int param) {
 }
 
 // rankingdlg.cpp:2206
-void FrRankingDlg::OnSearchTypeViewerInit(int param) {
+void FrRankingDlg::OnSearchTypeViewerInit(PG_MSGARG param) {
 	m_pSearchTypeViewer = DYNAMIC_CAST(FrViewer, param);
 
 	m_pSearchTypeViewerImg[0] = g_pFresh->RegisterBitmap("btn_drop03_n");
@@ -1910,7 +1910,7 @@ void FrRankingDlg::OnSearchTypeViewerOwnerDraw(void) {
 }
 
 // rankingdlg.cpp:2264
-void FrRankingDlg::OnUserRankEditInit(int param) {
+void FrRankingDlg::OnUserRankEditInit(PG_MSGARG param) {
 	m_pUserRankEdit = DYNAMIC_CAST(FrEdit, param);
 	m_pUserRankEdit->SetVisible(false);
 }
@@ -1982,7 +1982,7 @@ bool FrRankingDlg::OnAboutDlgResult(int ret, FrForm* pForm) {
 }
 
 // rankingdlg.cpp:2363
-void FrRankingDlg::OnGhostBtnInit(int param) {
+void FrRankingDlg::OnGhostBtnInit(PG_MSGARG param) {
 	m_pGhostBtn = DYNAMIC_CAST(FrButton, param);
 	m_pGhostBtn->SetVisible(false);
 	m_pGhostBtn->Enable(false);

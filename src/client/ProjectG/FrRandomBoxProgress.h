@@ -36,7 +36,7 @@ protected:
 	virtual void OnProc(const float dt);
 
 	void OnProgressInit(intptr_t param);
-	void OnCancelUp(int param);
+	void OnCancelUp(PG_MSGARG param);
 	void OnExplaneStatic_Init(intptr_t param);
 
 private:

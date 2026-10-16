@@ -40,7 +40,7 @@ protected:
 
 	void OnInitExistGuildNameButton(intptr_t param);
 	void OnLButtonUpExistGuildNameButton(void);
-	void OnExistGuildName_EnterKey(int param);
+	void OnExistGuildName_EnterKey(PG_MSGARG param);
 	void OnGuildRegister_ButtonInit(intptr_t param);
 	void OnGuildRegister_LButtonUp(void);
 	void OnCancel_ButtonInit(intptr_t param);
@@ -94,7 +94,7 @@ protected:
 	void OnCancel_ButtonInit(intptr_t param);
 	void OnCancel_LButtonUp(void);
 	void OnMarkViewer_AreaInit(intptr_t param);
-	void OnMarkViewer_OwnerDraw(int param);
+	void OnMarkViewer_OwnerDraw(PG_MSGARG param);
 	void OnMarkPath_EditInit(intptr_t param);
 
 private:

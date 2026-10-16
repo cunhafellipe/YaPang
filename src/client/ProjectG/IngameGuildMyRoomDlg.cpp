@@ -151,7 +151,7 @@ void FrCreateGuildKit::OnLButtonUpExistGuildNameButton(void) {
 }
 
 // ingameguildmyroomdlg.cpp:113
-void FrCreateGuildKit::OnExistGuildName_EnterKey(int param) {
+void FrCreateGuildKit::OnExistGuildName_EnterKey(PG_MSGARG param) {
 	OnLButtonUpExistGuildNameButton();
 }
 
@@ -503,7 +503,7 @@ void FrRegisterGuildMark::OnMarkViewer_AreaInit(intptr_t param) {
 }
 
 // ingameguildmyroomdlg.cpp:448
-void FrRegisterGuildMark::OnMarkViewer_OwnerDraw(int param) {
+void FrRegisterGuildMark::OnMarkViewer_OwnerDraw(PG_MSGARG param) {
 	// ingameguildmyroomdlg.cpp:451
 	if (m_pMarkBitmap) {
 		const WRect& rect = m_pMarkViewerArea->GetRect();

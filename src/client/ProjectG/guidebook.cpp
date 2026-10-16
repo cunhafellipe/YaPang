@@ -126,7 +126,7 @@ void FrGuideBookDlg::OnContentInit(intptr_t param) {
 }
 
 // guidebook.cpp:104
-void FrGuideBookDlg::OnContentOwnerDraw(int param) {
+void FrGuideBookDlg::OnContentOwnerDraw(PG_MSGARG param) {
 	if (m_pPage) {
 		WRect src(0.0f, 0.0f, 1.0f, 1.0f);
 		WRect dst = m_pContent->GetRect();

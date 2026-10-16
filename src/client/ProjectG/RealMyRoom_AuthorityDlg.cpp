@@ -173,7 +173,7 @@ void CRealMyRoom_AuthorityDlg::OnAuth_PasswordInit(intptr_t param) {
 }
 
 // realmyroom_authoritydlg.cpp:168
-void CRealMyRoom_AuthorityDlg::OnAuthEditBgInit(int) {
+void CRealMyRoom_AuthorityDlg::OnAuthEditBgInit(PG_MSGARG) {
 }
 
 // realmyroom_authoritydlg.cpp:183
@@ -258,7 +258,7 @@ void CRealMyRoom_AuthorityDlg::OnLBDownStorageChangePass(void) {
 }
 
 // realmyroom_authoritydlg.cpp:267
-bool CRealMyRoom_AuthorityDlg::OnAuth_PWEnterKey(int) {
+bool CRealMyRoom_AuthorityDlg::OnAuth_PWEnterKey(PG_MSGARG) {
 	OnFreshOkay();
 	return true;
 }
@@ -377,7 +377,7 @@ std::string CRealMyRoom_EnterSetting::GetPassWord(void) {
 }
 
 // realmyroom_authoritydlg.cpp:494
-bool CRealMyRoom_EnterSetting::OnInputPwEnterKey(int) {
+bool CRealMyRoom_EnterSetting::OnInputPwEnterKey(PG_MSGARG) {
 	OnFreshOkay();
 	return true;
 }

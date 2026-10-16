@@ -135,7 +135,7 @@ void FrDemonNextHole::OnAreaPattern_Init(intptr_t param) {
 }
 
 // demonlanddlg.cpp:146
-void FrDemonNextHole::OnAreaPattern_OwnerDraw(int param) {
+void FrDemonNextHole::OnAreaPattern_OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI == 0)
 		return;
@@ -154,7 +154,7 @@ void FrDemonNextHole::OnAreaNextHole_Init(intptr_t param) {
 }
 
 // demonlanddlg.cpp:168
-void FrDemonNextHole::OnAreaNextHole_OwnerDraw(int param) {
+void FrDemonNextHole::OnAreaNextHole_OwnerDraw(PG_MSGARG param) {
 	if (m_state == 1)
 		return;
 
@@ -241,7 +241,7 @@ void FrDemonAttackGauge::OnAreaAttackMarker_Init(intptr_t param) {
 }
 
 // demonlanddlg.cpp:258
-void FrDemonAttackGauge::OnAreaAttackMarker_OwnerDraw(int param) {
+void FrDemonAttackGauge::OnAreaAttackMarker_OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI == 0)
 		return;
@@ -260,7 +260,7 @@ void FrDemonAttackGauge::OnAreaBlingBar_Init(intptr_t param) {
 }
 
 // demonlanddlg.cpp:281
-void FrDemonAttackGauge::OnAreaBlingBar_OwnerDraw(int param) {
+void FrDemonAttackGauge::OnAreaBlingBar_OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI == 0)
 		return;
@@ -324,7 +324,7 @@ void FrDemonProcessRank::OnAreaLeaderPet_Init(intptr_t param) {
 }
 
 // demonlanddlg.cpp:360
-void FrDemonProcessRank::OnAreaLeaderPet_OwnerDraw(int) {
+void FrDemonProcessRank::OnAreaLeaderPet_OwnerDraw(PG_MSGARG) {
 }
 
 // demonlanddlg.cpp:401
@@ -352,7 +352,7 @@ const Bitmap* GetTitleBitmap(const sRivalData* pInfo) {
 }
 
 // demonlanddlg.cpp:429
-void FrDemonProcessRank::OnListBoxUserInfoList_OwnerDraw(int param) {
+void FrDemonProcessRank::OnListBoxUserInfoList_OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 		FrListItem* pItem = (FrListItem*)param;

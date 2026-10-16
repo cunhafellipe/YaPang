@@ -691,7 +691,7 @@ CHECK_FIELD(sBriefUserInfo, lobbyFlags, 0x3F);
 CHECK_FIELD(sBriefUserInfo, nickColorType, 0x40);
 
 // The game style of a room; its enumerators are not transcribed yet.
-enum eGameStyle;
+PG_ENUM_FWD(eGameStyle)
 
 // A room's game class: its style and a byte value (8 bytes; the constructor
 // stores a dword at 0x0 and a byte at 0x4). Its out-of-line constructor is

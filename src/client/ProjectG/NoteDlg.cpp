@@ -86,7 +86,7 @@ void FrNoteDlg::OnNoteLBtnDown(void) {
 }
 
 // notedlg.cpp:61
-bool FrNoteDlg::OnNoteEnterKey(int param) {
+bool FrNoteDlg::OnNoteEnterKey(PG_MSGARG param) {
 	if (!m_pNote->GetStyle().GetFlag(0x2)) {
 		OnOKBtnUp();
 	}

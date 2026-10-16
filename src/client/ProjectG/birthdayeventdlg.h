@@ -79,7 +79,7 @@ protected:
 	void OnLButtonDownHelpButton(void);
 	void OnInitGiftButton(intptr_t param);
 	void OnLButtonDownGiftButton(void);
-	void OnOwnerDrawBoardArea(int param);
+	void OnOwnerDrawBoardArea(PG_MSGARG param);
 	void OnInitBoardNumberArea(intptr_t param);
 	void OnInitBoardBG1Area(intptr_t param);
 

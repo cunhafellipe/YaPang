@@ -32,7 +32,7 @@ protected:
 
 	void OnMemoInit(intptr_t param);
 	void OnMemoLButtonDown(void);
-	bool OnMemoEnterKey(int param);
+	bool OnMemoEnterKey(PG_MSGARG param);
 	void OnOkBtnUp(void);
 	virtual void OnProc(const float dt);
 

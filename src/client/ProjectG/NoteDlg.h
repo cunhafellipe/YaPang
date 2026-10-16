@@ -42,7 +42,7 @@ protected:
 	void OnPaidInit(intptr_t param);
 	void OnNoteInit(intptr_t param);
 	void OnNoteLBtnDown(void);
-	bool OnNoteEnterKey(int param);
+	bool OnNoteEnterKey(PG_MSGARG param);
 	void OnNoteStaticInit(intptr_t param);
 	void OnNickInit(intptr_t param);
 	void OnNickStaticInit(intptr_t param);

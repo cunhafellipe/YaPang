@@ -57,7 +57,7 @@ void FrPasswordDlg::OnPasswordInit(intptr_t param) {
 }
 
 // passworddlg.cpp:69
-bool FrPasswordDlg::OnPasswordEnterKey(int param) {
+bool FrPasswordDlg::OnPasswordEnterKey(PG_MSGARG param) {
 	if (m_pPassword && !m_pPassword->GetStyle().GetFlag(0x2)) {
 		OnFreshOkay();
 	}

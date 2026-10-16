@@ -49,10 +49,10 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // offlinetradedlg.cpp:36
 
-	void OnTradeItemListOwnerDraw(int);
+	void OnTradeItemListOwnerDraw(PG_MSGARG);
 	void OnTradeItemListLBtnUp(void);
 	void OnToolTipInit(intptr_t);                // offlinetradedlg.cpp:363
-	void OnToolTipOnwerDraw(int);           // offlinetradedlg.cpp:369
+	void OnToolTipOnwerDraw(PG_MSGARG);           // offlinetradedlg.cpp:369
 
 private:
 	FrListItem* m_pSelectedSlotItem;    // 0x198, its pData is a sStallSlot
@@ -121,26 +121,26 @@ protected:
 	virtual bool OnInit(void);              // offlinetradedlg.cpp:511
 	void OnProc(const float dt);            // offlinetradedlg.cpp:538
 	void OnAreaSubNickInit(intptr_t);            // offlinetradedlg.cpp:544
-	void OnAreaSubNickOwnerDraw(int);       // offlinetradedlg.cpp:556
+	void OnAreaSubNickOwnerDraw(PG_MSGARG);       // offlinetradedlg.cpp:556
 	void OnAreaSubNickLBtnUP(void);         // offlinetradedlg.cpp:582
 	void OnAreaSubPriceInit(intptr_t);           // offlinetradedlg.cpp:592
-	void OnAreaSubPriceOwnerDraw(int);      // offlinetradedlg.cpp:603
+	void OnAreaSubPriceOwnerDraw(PG_MSGARG);      // offlinetradedlg.cpp:603
 	void OnAreaSubItemNameInit(intptr_t);        // offlinetradedlg.cpp:643
-	void OnAreaSubItemNameOwnerDraw(int);   // offlinetradedlg.cpp:655
+	void OnAreaSubItemNameOwnerDraw(PG_MSGARG);   // offlinetradedlg.cpp:655
 	void OnAreaSubPriceLBtnUP(void);        // offlinetradedlg.cpp:632
 	void OnAreaSubItemNameLBtnUP(void);     // offlinetradedlg.cpp:682
 	void OnMaketListInit(intptr_t);              // offlinetradedlg.cpp:691
-	void OnMaketListOwnerDraw(int);         // offlinetradedlg.cpp:726
+	void OnMaketListOwnerDraw(PG_MSGARG);         // offlinetradedlg.cpp:726
 	void OnMaketListBtnDown(void);          // offlinetradedlg.cpp:795
 	void OnItemSearchInit(intptr_t);             // offlinetradedlg.cpp:835
-	bool OnItemSearchEnterKey(int);         // offlinetradedlg.cpp:849
+	bool OnItemSearchEnterKey(PG_MSGARG);         // offlinetradedlg.cpp:849
 	void OnItemSearchLBtnUp(void);          // offlinetradedlg.cpp:857
 	void OnBtnMainSearchInit(intptr_t);          // offlinetradedlg.cpp:877
 	void OnBtnMainSearchUp(void);           // offlinetradedlg.cpp:885
 	void OnEditMaxPageInit(intptr_t);            // offlinetradedlg.cpp:911
 	void OnEditCurrentPageInit(intptr_t);        // offlinetradedlg.cpp:922
 
-	bool OnEditCurrentPageEnterKey(int);    // offlinetradedlg.cpp:932
+	bool OnEditCurrentPageEnterKey(PG_MSGARG);    // offlinetradedlg.cpp:932
 	void OnBtnGoPageInit(intptr_t);              // offlinetradedlg.cpp:1076
 	void OnBtnRefreshInit(intptr_t);             // offlinetradedlg.cpp:1104
 	void OnBtnRefreshBtnUp(void);           // offlinetradedlg.cpp:1112
@@ -153,7 +153,7 @@ protected:
 	void OnBtnNextInit(intptr_t);                // offlinetradedlg.cpp:1048
 	void OnBtnNextBtnUp(void);              // offlinetradedlg.cpp:1057
 	void OnBtnGoPageBtnUp(void);            // offlinetradedlg.cpp:1085
-	void OnToolTipOnwerDraw(int);           // offlinetradedlg.cpp:1204
+	void OnToolTipOnwerDraw(PG_MSGARG);           // offlinetradedlg.cpp:1204
 	void OnEditMsgLBtnUp(void);             // offlinetradedlg.cpp:1191
 
 private:
@@ -300,25 +300,25 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // offlinetradedlg.cpp:1659
 
-	void OnAreaBg01Init(int);               // offlinetradedlg.cpp:1770
-	void OnAreaBg02Init(int);               // offlinetradedlg.cpp:1787
-	void OnAreaBg03Init(int);               // offlinetradedlg.cpp:1804
-	void OnAreaBg04Init(int);               // offlinetradedlg.cpp:1822
-	void OnAreaBg05Init(int);               // offlinetradedlg.cpp:1839
-	void OnStallSlotNumInit(int);           // offlinetradedlg.cpp:1855
-	void OnOpenBnInit(int);                 // offlinetradedlg.cpp:2062
+	void OnAreaBg01Init(PG_MSGARG);               // offlinetradedlg.cpp:1770
+	void OnAreaBg02Init(PG_MSGARG);               // offlinetradedlg.cpp:1787
+	void OnAreaBg03Init(PG_MSGARG);               // offlinetradedlg.cpp:1804
+	void OnAreaBg04Init(PG_MSGARG);               // offlinetradedlg.cpp:1822
+	void OnAreaBg05Init(PG_MSGARG);               // offlinetradedlg.cpp:1839
+	void OnStallSlotNumInit(PG_MSGARG);           // offlinetradedlg.cpp:1855
+	void OnOpenBnInit(PG_MSGARG);                 // offlinetradedlg.cpp:2062
 	void OnCloseBnInit(intptr_t);                // offlinetradedlg.cpp:2266
-	void OnSlotNumInit(int);                // offlinetradedlg.cpp:1864
-	void OnTradeItemListInit(int);          // offlinetradedlg.cpp:1873
+	void OnSlotNumInit(PG_MSGARG);                // offlinetradedlg.cpp:1864
+	void OnTradeItemListInit(PG_MSGARG);          // offlinetradedlg.cpp:1873
 	void OnTradeItemListLClick(void);       // offlinetradedlg.cpp:1889
-	void OnTradeItemListOwnerDraw(int);     // offlinetradedlg.cpp:1932
+	void OnTradeItemListOwnerDraw(PG_MSGARG);     // offlinetradedlg.cpp:1932
 	void OnTradeMyItemOkBnUp(void);         // offlinetradedlg.cpp:2079
-	void OnVisitorInit(int);                // offlinetradedlg.cpp:2044
+	void OnVisitorInit(PG_MSGARG);                // offlinetradedlg.cpp:2044
 	void OnToolTipInit(intptr_t);                // offlinetradedlg.cpp:2573
 	void OnProc(const float dt);            // offlinetradedlg.cpp:2349
 	void OnExitBnUp(void);                  // offlinetradedlg.cpp:2298
 	virtual bool OnInit(void);              // offlinetradedlg.cpp:2317
-	void OnToolTipOnwerDraw(int);           // offlinetradedlg.cpp:2579
+	void OnToolTipOnwerDraw(PG_MSGARG);           // offlinetradedlg.cpp:2579
 
 private:
 	FrListBox* m_pShopItemList;         // 0x290, OnTradeItemListInit
@@ -393,13 +393,13 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // offlinetradedlg.cpp:2668
 
 	void OnVisitorBackOwnerDraw(void);      // offlinetradedlg.cpp:2802
-	void OnVisitorInit(int);                // offlinetradedlg.cpp:2807
+	void OnVisitorInit(PG_MSGARG);                // offlinetradedlg.cpp:2807
 	void OnCloseBnUp(void);                 // offlinetradedlg.cpp:2826
-	void OnVisitorBackInit(int);            // offlinetradedlg.cpp:2847
-	void OnTradeItemListOwnerDraw(int);     // offlinetradedlg.cpp:2857
+	void OnVisitorBackInit(PG_MSGARG);            // offlinetradedlg.cpp:2847
+	void OnTradeItemListOwnerDraw(PG_MSGARG);     // offlinetradedlg.cpp:2857
 	void OnTradeItemListLClick(void);       // offlinetradedlg.cpp:3054
 	void OnToolTipInit(intptr_t);                // offlinetradedlg.cpp:3021
-	void OnToolTipOnwerDraw(int);           // offlinetradedlg.cpp:3027
+	void OnToolTipOnwerDraw(PG_MSGARG);           // offlinetradedlg.cpp:3027
 	void OnProc(const float dt);            // offlinetradedlg.cpp:3174
 
 private:
@@ -470,12 +470,12 @@ protected:
 	void OnEditBnUp(void);                  // offlinetradedlg.cpp:3304
 	void OnVisitorBackOwnerDraw(void);      // offlinetradedlg.cpp:3320
 	void OnCloseBnUp(void);                 // offlinetradedlg.cpp:3326
-	void OnVisitorInit(int);                // offlinetradedlg.cpp:3341
-	void OnVisitorBackInit(int);            // offlinetradedlg.cpp:3360
-	void OnTradeItemListOwnerDraw(int);     // offlinetradedlg.cpp:3370
+	void OnVisitorInit(PG_MSGARG);                // offlinetradedlg.cpp:3341
+	void OnVisitorBackInit(PG_MSGARG);            // offlinetradedlg.cpp:3360
+	void OnTradeItemListOwnerDraw(PG_MSGARG);     // offlinetradedlg.cpp:3370
 	void OnTradeItemListLClick(void);       // offlinetradedlg.cpp:3466
 	void OnToolTipInit(intptr_t);                // offlinetradedlg.cpp:3517
-	void OnToolTipOnwerDraw(int);           // offlinetradedlg.cpp:3523
+	void OnToolTipOnwerDraw(PG_MSGARG);           // offlinetradedlg.cpp:3523
 	void OnProc(const float dt);            // offlinetradedlg.cpp:3554
 
 private:

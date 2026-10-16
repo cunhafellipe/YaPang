@@ -151,7 +151,7 @@ FrOfflineTradeFinishEditDlg::~FrOfflineTradeFinishEditDlg(void) {
 }
 
 // offlinetradedlg.cpp:118
-void FrOfflineTradeFinishEditDlg::OnTradeItemListOwnerDraw(int param) {
+void FrOfflineTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 	FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(param);
 
 	FrWndManager* pManager = g_pFresh->GetManager();
@@ -325,7 +325,7 @@ void FrOfflineTradeFinishEditDlg::OnToolTipInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:369
-void FrOfflineTradeFinishEditDlg::OnToolTipOnwerDraw(int) {
+void FrOfflineTradeFinishEditDlg::OnToolTipOnwerDraw(PG_MSGARG) {
 	CIconToolTip::GetInstance()->Render();
 }
 
@@ -520,7 +520,7 @@ void COfflineTradeDlg::OnAreaSubNickInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:556
-void COfflineTradeDlg::OnAreaSubNickOwnerDraw(int) {
+void COfflineTradeDlg::OnAreaSubNickOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 
@@ -560,7 +560,7 @@ void COfflineTradeDlg::OnAreaSubPriceInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:603
-void COfflineTradeDlg::OnAreaSubPriceOwnerDraw(int) {
+void COfflineTradeDlg::OnAreaSubPriceOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 
@@ -600,7 +600,7 @@ void COfflineTradeDlg::OnAreaSubItemNameInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:655
-void COfflineTradeDlg::OnAreaSubItemNameOwnerDraw(int) {
+void COfflineTradeDlg::OnAreaSubItemNameOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 
@@ -649,7 +649,7 @@ void COfflineTradeDlg::SetListItem(void) {
 }
 
 // offlinetradedlg.cpp:726
-void COfflineTradeDlg::OnMaketListOwnerDraw(int param) {
+void COfflineTradeDlg::OnMaketListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	FrListItem* pItem = (FrListItem*)param;
@@ -754,7 +754,7 @@ void COfflineTradeDlg::OnItemSearchInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:849
-bool COfflineTradeDlg::OnItemSearchEnterKey(int) {
+bool COfflineTradeDlg::OnItemSearchEnterKey(PG_MSGARG) {
 	OnAreaSubItemNameLBtnUP();
 	return true;
 }
@@ -810,7 +810,7 @@ void COfflineTradeDlg::OnEditCurrentPageInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:932
-bool COfflineTradeDlg::OnEditCurrentPageEnterKey(int) {
+bool COfflineTradeDlg::OnEditCurrentPageEnterKey(PG_MSGARG) {
 	return true;
 }
 
@@ -990,7 +990,7 @@ void COfflineTradeDlg::OnToolTipInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:1204
-void COfflineTradeDlg::OnToolTipOnwerDraw(int) {
+void COfflineTradeDlg::OnToolTipOnwerDraw(PG_MSGARG) {
 	CIconToolTip::GetInstance()->Render();
 }
 
@@ -1451,7 +1451,7 @@ COfflineShopEditDlg::~COfflineShopEditDlg(void) {
 }
 
 // offlinetradedlg.cpp:1770
-void COfflineShopEditDlg::OnAreaBg01Init(int param) {
+void COfflineShopEditDlg::OnAreaBg01Init(PG_MSGARG param) {
 	m_pAreaBg01 = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pAreaBg01) {
@@ -1460,7 +1460,7 @@ void COfflineShopEditDlg::OnAreaBg01Init(int param) {
 }
 
 // offlinetradedlg.cpp:1787
-void COfflineShopEditDlg::OnAreaBg02Init(int param) {
+void COfflineShopEditDlg::OnAreaBg02Init(PG_MSGARG param) {
 	m_pAreaBg02 = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pAreaBg02) {
@@ -1469,7 +1469,7 @@ void COfflineShopEditDlg::OnAreaBg02Init(int param) {
 }
 
 // offlinetradedlg.cpp:1804
-void COfflineShopEditDlg::OnAreaBg03Init(int param) {
+void COfflineShopEditDlg::OnAreaBg03Init(PG_MSGARG param) {
 	m_pAreaBg03 = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pAreaBg03) {
@@ -1478,7 +1478,7 @@ void COfflineShopEditDlg::OnAreaBg03Init(int param) {
 }
 
 // offlinetradedlg.cpp:1822
-void COfflineShopEditDlg::OnAreaBg04Init(int param) {
+void COfflineShopEditDlg::OnAreaBg04Init(PG_MSGARG param) {
 	m_pAreaBg04 = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pAreaBg04) {
@@ -1487,7 +1487,7 @@ void COfflineShopEditDlg::OnAreaBg04Init(int param) {
 }
 
 // offlinetradedlg.cpp:1839
-void COfflineShopEditDlg::OnAreaBg05Init(int param) {
+void COfflineShopEditDlg::OnAreaBg05Init(PG_MSGARG param) {
 	m_pAreaBg05 = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pAreaBg05) {
@@ -1496,17 +1496,17 @@ void COfflineShopEditDlg::OnAreaBg05Init(int param) {
 }
 
 // offlinetradedlg.cpp:1855
-void COfflineShopEditDlg::OnStallSlotNumInit(int param) {
+void COfflineShopEditDlg::OnStallSlotNumInit(PG_MSGARG param) {
 	m_pStallSlotNum = DYNAMIC_CAST(FrEdit, param);
 }
 
 // offlinetradedlg.cpp:1864
-void COfflineShopEditDlg::OnSlotNumInit(int param) {
+void COfflineShopEditDlg::OnSlotNumInit(PG_MSGARG param) {
 	m_pSlotNum = DYNAMIC_CAST(FrEdit, param);
 }
 
 // offlinetradedlg.cpp:1873
-void COfflineShopEditDlg::OnTradeItemListInit(int param) {
+void COfflineShopEditDlg::OnTradeItemListInit(PG_MSGARG param) {
 	m_pShopItemList = DYNAMIC_CAST(FrListBox, param);
 
 	if (IsLocalContent((localContentType_t)0x66) && CSharedDoc::Instance()->GetTradeMode() == 1) {
@@ -1530,7 +1530,7 @@ void COfflineShopEditDlg::OnTradeItemListLClick(void) {
 }
 
 // offlinetradedlg.cpp:1932
-void COfflineShopEditDlg::OnTradeItemListOwnerDraw(int param) {
+void COfflineShopEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI == 0) {
@@ -1586,7 +1586,7 @@ void COfflineShopEditDlg::OnTradeItemListOwnerDraw(int param) {
 }
 
 // offlinetradedlg.cpp:2044
-void COfflineShopEditDlg::OnVisitorInit(int param) {
+void COfflineShopEditDlg::OnVisitorInit(PG_MSGARG param) {
 	m_pVisitor = DYNAMIC_CAST(FrEdit, param);
 
 	if (IsLocalContent((localContentType_t)0x66) && CSharedDoc::Instance()->GetTradeMode() == 1) {
@@ -1595,7 +1595,7 @@ void COfflineShopEditDlg::OnVisitorInit(int param) {
 }
 
 // offlinetradedlg.cpp:2062
-void COfflineShopEditDlg::OnOpenBnInit(int param) {
+void COfflineShopEditDlg::OnOpenBnInit(PG_MSGARG param) {
 	m_pShopOpenBn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pShopOpenBn) {
@@ -1925,7 +1925,7 @@ void COfflineShopEditDlg::OnToolTipInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:2579
-void COfflineShopEditDlg::OnToolTipOnwerDraw(int) {
+void COfflineShopEditDlg::OnToolTipOnwerDraw(PG_MSGARG) {
 	CIconToolTip::GetInstance()->Render();
 }
 
@@ -2102,7 +2102,7 @@ void COfflineShopDlg::OnVisitorBackOwnerDraw(void) {
 }
 
 // offlinetradedlg.cpp:2807
-void COfflineShopDlg::OnVisitorInit(int param) {
+void COfflineShopDlg::OnVisitorInit(PG_MSGARG param) {
 	m_pVisitor = DYNAMIC_CAST(FrEdit, param);
 
 	if (IsLocalContent((localContentType_t)0x66) && CSharedDoc::Instance()->GetTradeMode() == 1) {
@@ -2123,7 +2123,7 @@ void COfflineShopDlg::OnCloseBnUp(void) {
 }
 
 // offlinetradedlg.cpp:2847
-void COfflineShopDlg::OnVisitorBackInit(int param) {
+void COfflineShopDlg::OnVisitorBackInit(PG_MSGARG param) {
 	m_pVisitorBack = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pVisitorBack) {
@@ -2132,7 +2132,7 @@ void COfflineShopDlg::OnVisitorBackInit(int param) {
 }
 
 // offlinetradedlg.cpp:2857
-void COfflineShopDlg::OnTradeItemListOwnerDraw(int param) {
+void COfflineShopDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 	FrTradeDlg::OnTradeItemListOwnerDraw(param);
 
 	FrWndManager* pManager = g_pFresh->GetManager();
@@ -2250,7 +2250,7 @@ void COfflineShopDlg::OnToolTipInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:3027
-void COfflineShopDlg::OnToolTipOnwerDraw(int) {
+void COfflineShopDlg::OnToolTipOnwerDraw(PG_MSGARG) {
 	CIconToolTip::GetInstance()->Render();
 }
 
@@ -2484,7 +2484,7 @@ void COfflineShopVisitorDlg::OnCloseBnUp(void) {
 }
 
 // offlinetradedlg.cpp:3341
-void COfflineShopVisitorDlg::OnVisitorInit(int param) {
+void COfflineShopVisitorDlg::OnVisitorInit(PG_MSGARG param) {
 	m_pVisitor = DYNAMIC_CAST(FrEdit, param);
 
 	if (IsLocalContent((localContentType_t)0x66) && CSharedDoc::Instance()->GetTradeMode() == 1) {
@@ -2493,7 +2493,7 @@ void COfflineShopVisitorDlg::OnVisitorInit(int param) {
 }
 
 // offlinetradedlg.cpp:3360
-void COfflineShopVisitorDlg::OnVisitorBackInit(int param) {
+void COfflineShopVisitorDlg::OnVisitorBackInit(PG_MSGARG param) {
 	m_pVisitorBack = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pVisitorBack) {
@@ -2502,7 +2502,7 @@ void COfflineShopVisitorDlg::OnVisitorBackInit(int param) {
 }
 
 // offlinetradedlg.cpp:3370
-void COfflineShopVisitorDlg::OnTradeItemListOwnerDraw(int param) {
+void COfflineShopVisitorDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 	FrTradeDlg::OnTradeItemListOwnerDraw(param);
 
 	FrWndManager* pManager = g_pFresh->GetManager();
@@ -2611,7 +2611,7 @@ void COfflineShopVisitorDlg::OnToolTipInit(intptr_t param) {
 }
 
 // offlinetradedlg.cpp:3523
-void COfflineShopVisitorDlg::OnToolTipOnwerDraw(int) {
+void COfflineShopVisitorDlg::OnToolTipOnwerDraw(PG_MSGARG) {
 	CIconToolTip::GetInstance()->Render();
 }
 

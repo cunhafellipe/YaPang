@@ -47,7 +47,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	bool OnTitleEnterKey(int param);
+	bool OnTitleEnterKey(PG_MSGARG param);
 	void ChangeUserLimit(unsigned char userLimit);
 	void ChangeHole(unsigned char hole);
 	void ChangeTimeLimit(unsigned long timeLimit);
@@ -77,39 +77,39 @@ protected:
 	bool OnMapSelectDlgResult(int result, FrForm* pForm);
 	void DrawHoleTypeButton(FrGraphicInterface* pDevice, eHoleType holeType, WRect rect, bool b);
 
-	void OnMakeVsInit(int param);
-	void OnMakeMassInit(int param);
-	void OnMakeBattleInit(int param);
-	void OnMakeChatInit(int param);
-	void OnPictureInit(int param);
+	void OnMakeVsInit(PG_MSGARG param);
+	void OnMakeMassInit(PG_MSGARG param);
+	void OnMakeBattleInit(PG_MSGARG param);
+	void OnMakeChatInit(PG_MSGARG param);
+	void OnPictureInit(PG_MSGARG param);
 	void OnTextInit(intptr_t param);
 	void OnTitleInit(intptr_t param);
 	void OnPasswordInit(intptr_t param);
 	void OnMapPrevInit(intptr_t param);
 	void OnMapNextInit(intptr_t param);
-	void OnMapPrevChatInit(int param);
-	void OnMapNextChatInit(int param);
+	void OnMapPrevChatInit(PG_MSGARG param);
+	void OnMapNextChatInit(PG_MSGARG param);
 	void OnGameTypeInit(intptr_t param);
 	void OnUserLimitInit(intptr_t param);
 	void OnHoleInit(intptr_t param);
 	void OnTimeLimitInit(intptr_t param);
 	void OnCourseInit(intptr_t param);
 	void OnHoleTypeInit(intptr_t param);
-	void OnCourseChatInit(int param);
-	void OnHoleChatInit(int param);
-	void OnHoleMinInit(int param);
-	void OnHolePrevInit(int param);
-	void OnHoleNextInit(int param);
-	void OnHoleMaxInit(int param);
-	void OnMakeChaosInit(int param);
-	void OnOverGauge_Init(int param);
+	void OnCourseChatInit(PG_MSGARG param);
+	void OnHoleChatInit(PG_MSGARG param);
+	void OnHoleMinInit(PG_MSGARG param);
+	void OnHolePrevInit(PG_MSGARG param);
+	void OnHoleNextInit(PG_MSGARG param);
+	void OnHoleMaxInit(PG_MSGARG param);
+	void OnMakeChaosInit(PG_MSGARG param);
+	void OnOverGauge_Init(PG_MSGARG param);
 	void OnGameTypeOwnerDraw(intptr_t param);
 	void OnUserLimitOwnerDraw(intptr_t param);
 	void OnHoleOwnerDraw(intptr_t param);
 	void OnTimeLimitOwnerDraw(intptr_t param);
-	void OnHoleChatOwnerDraw(int param);
-	void OnCourseOwnerDraw(int param);
-	void OnHoleTypeOwnerDraw(int param);
+	void OnHoleChatOwnerDraw(PG_MSGARG param);
+	void OnCourseOwnerDraw(PG_MSGARG param);
+	void OnHoleTypeOwnerDraw(PG_MSGARG param);
 
 	FrButton* m_pMakeBtn[5];       // 0x110, vs, mass, battle, chat, chaos (OnMakeXxxInit)
 	FrViewer* m_pPicture;          // 0x124

@@ -80,7 +80,7 @@ protected:
 	void OnPageUpInit(intptr_t param);           // post_recivedlg.cpp:1055
 	void OnPageUpBtnUp(void);               // post_recivedlg.cpp:1061
 	void OnToolTipInit(intptr_t param);          // post_recivedlg.cpp:1375
-	void OnToolTipOnwerDraw(int param);     // post_recivedlg.cpp:1381
+	void OnToolTipOnwerDraw(PG_MSGARG param);     // post_recivedlg.cpp:1381
 	void OnIndexAreaInit(intptr_t param);        // post_recivedlg.cpp:1502
 	void OnIndexListInit(intptr_t param);        // post_recivedlg.cpp:1562
 	void OnPageListBtnDown(void);     // post_recivedlg.cpp:349
@@ -88,7 +88,7 @@ protected:
 	void OnPostListMouseMove(void);   // post_recivedlg.cpp:948
 	void OnPostListDClick(void);      // post_recivedlg.cpp:1123
 	const char* MakeStatusString(int statusType, int statusValue, int slotValue);   // post_recivedlg.cpp:777
-	bool OnEditPageEndterKey(int);    // post_recivedlg.cpp:1129
+	bool OnEditPageEndterKey(PG_MSGARG);    // post_recivedlg.cpp:1129
 	void OnDeleteItem(FrListItem *pItem); // post_recivedlg.cpp:1774
 	void OnLoadImage(void);                 // post_recivedlg.cpp
 	void DrawStatus2(FrGraphicInterface* pGI, FrListItem* pItem, short status[5], short slot[5], float x);   // post_recivedlg.cpp:764

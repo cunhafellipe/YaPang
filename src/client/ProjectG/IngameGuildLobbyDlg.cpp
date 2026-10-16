@@ -804,7 +804,7 @@ GUILD_CLASS_IDX CGuildMainForm::MyGuildClassIndex(void) {
 }
 
 // ingameguildlobbydlg.cpp:858
-void CGuildMainForm::OnGuildInfo_ButtonInit(int param) {
+void CGuildMainForm::OnGuildInfo_ButtonInit(PG_MSGARG param) {
 	m_pTabs[0] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -832,7 +832,7 @@ void CGuildMainForm::OnGuildInfo_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:892
-void CGuildMainForm::OnGuildMember_ButtonInit(int param) {
+void CGuildMainForm::OnGuildMember_ButtonInit(PG_MSGARG param) {
 	m_pTabs[1] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -851,7 +851,7 @@ void CGuildMainForm::OnGuildMember_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:912
-void CGuildMainForm::OnGuildSearch_ButtonInit(int param) {
+void CGuildMainForm::OnGuildSearch_ButtonInit(PG_MSGARG param) {
 	m_pTabs[2] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -877,7 +877,7 @@ void CGuildMainForm::OnGuildSearch_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:941
-void CGuildMainForm::OnGuildDetail_AreaInit(int param) {
+void CGuildMainForm::OnGuildDetail_AreaInit(PG_MSGARG param) {
 	m_pAreas[0] = DYNAMIC_CAST(FrArea, param);
 	Controller()->InsertControl(m_pAreas[0]);
 	Controller()->InsertPostAction(m_pAreas[0], FORM_GUILD_INFO, AUTHORITY_MASTER | AUTHORITY_CLASS2 | AUTHORITY_CLASS3, &CGuildFormController::EnableWindow);
@@ -891,7 +891,7 @@ void CGuildMainForm::OnGuildDetail_AreaInit(int param) {
 static const float s_detailLineGap = 28.0f;
 
 // ingameguildlobbydlg.cpp:951
-void CGuildMainForm::OnGuildDetail_OwnerDraw(int param) {
+void CGuildMainForm::OnGuildDetail_OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 
 	const WRect &rect = m_pAreas[0]->GetRect();
@@ -958,7 +958,7 @@ void CGuildMainForm::OnGuildDetail_OwnerDraw(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1034
-void CGuildMainForm::OnGuildIntroduce_AreaInit(int param) {
+void CGuildMainForm::OnGuildIntroduce_AreaInit(PG_MSGARG param) {
 	m_pAreas[1] = DYNAMIC_CAST(FrArea, param);
 	Controller()->InsertControl(m_pAreas[1]);
 	Controller()->InsertPostAction(m_pAreas[1], FORM_GUILD_INFO, AUTHORITY_MASTER | AUTHORITY_CLASS2 | AUTHORITY_CLASS3, &CGuildFormController::EnableWindow);
@@ -968,28 +968,28 @@ void CGuildMainForm::OnGuildIntroduce_AreaInit(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1044
-void CGuildMainForm::OnGuildNotice_AreaInit(int param) {
+void CGuildMainForm::OnGuildNotice_AreaInit(PG_MSGARG param) {
 	m_pAreas[2] = DYNAMIC_CAST(FrArea, param);
 	Controller()->InsertControl(m_pAreas[2]);
 	Controller()->InsertPostAction(m_pAreas[2], FORM_GUILD_INFO, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1051
-void CGuildMainForm::OnGuildAct_AreaInit(int param) {
+void CGuildMainForm::OnGuildAct_AreaInit(PG_MSGARG param) {
 	m_pAreas[3] = DYNAMIC_CAST(FrArea, param);
 	Controller()->InsertControl(m_pAreas[3]);
 	Controller()->InsertPostAction(m_pAreas[3], FORM_GUILD_INFO, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1058
-void CGuildMainForm::OnEmptyGuild_AreaInit(int param) {
+void CGuildMainForm::OnEmptyGuild_AreaInit(PG_MSGARG param) {
 	m_pAreas[4] = DYNAMIC_CAST(FrArea, param);
 	Controller()->InsertControl(m_pAreas[4]);
 	Controller()->InsertPostAction(m_pAreas[4], FORM_GUILD_INFO, AUTHORITY_CLASS0 | AUTHORITY_CLASS9, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1065
-void CGuildMainForm::OnEmptyGuild_AreaOwnerDraw(int param) {
+void CGuildMainForm::OnEmptyGuild_AreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (GuildInfo()->IsWaitingJoin()) {
@@ -1014,14 +1014,14 @@ void CGuildMainForm::OnEmptyGuild_AreaOwnerDraw(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1100
-void CGuildMainForm::OnGuildMemberInfoBg_AreaInit(int param) {
+void CGuildMainForm::OnGuildMemberInfoBg_AreaInit(PG_MSGARG param) {
 	m_pAreas[5] = DYNAMIC_CAST(FrArea, param);
 	Controller()->InsertControl(m_pAreas[5]);
 	Controller()->InsertPostAction(m_pAreas[5], FORM_GUILD_MEMBER, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1107
-void CGuildMainForm::OnGuildMemberInfoBg_OwnerDraw(int param) {
+void CGuildMainForm::OnGuildMemberInfoBg_OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 
 	// The four corners of the member information background.
@@ -1032,21 +1032,21 @@ void CGuildMainForm::OnGuildMemberInfoBg_OwnerDraw(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1120
-void CGuildMainForm::OnSearchBg1_AreaInit(int param) {
+void CGuildMainForm::OnSearchBg1_AreaInit(PG_MSGARG param) {
 	m_pAreas[6] = DYNAMIC_CAST(FrArea, param);
 	Controller()->InsertControl(m_pAreas[6]);
 	Controller()->InsertPostAction(m_pAreas[6], FORM_GUILD_SEARCH, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1127
-void CGuildMainForm::OnSearchBg2_AreaInit(int param) {
+void CGuildMainForm::OnSearchBg2_AreaInit(PG_MSGARG param) {
 	m_pAreas[7] = DYNAMIC_CAST(FrArea, param);
 	Controller()->InsertControl(m_pAreas[7]);
 	Controller()->InsertPostAction(m_pAreas[7], FORM_GUILD_SEARCH, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1136
-void CGuildMainForm::OnGuildIntroduce_EditInit(int param) {
+void CGuildMainForm::OnGuildIntroduce_EditInit(PG_MSGARG param) {
 	m_pEdits[0] = DYNAMIC_CAST(FrEdit, param);
 	Controller()->InsertControl(m_pEdits[0]);
 	Controller()->InsertPostAction(m_pEdits[0], FORM_GUILD_INFO, AUTHORITY_MASTER | AUTHORITY_CLASS2 | AUTHORITY_CLASS3, &CGuildFormController::EnableWindow);
@@ -1061,7 +1061,7 @@ void CGuildMainForm::OnGuildIntroduce_EditInit(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1151
-void CGuildMainForm::OnGuildNotice_EditInit(int param) {
+void CGuildMainForm::OnGuildNotice_EditInit(PG_MSGARG param) {
 	m_pEdits[1] = DYNAMIC_CAST(FrEdit, param);
 	Controller()->InsertControl(m_pEdits[1]);
 	Controller()->InsertPostAction(m_pEdits[1], FORM_GUILD_INFO, AUTHORITY_MASTER | AUTHORITY_CLASS2 | AUTHORITY_CLASS3, &CGuildFormController::EnableWindow);
@@ -1070,7 +1070,7 @@ void CGuildMainForm::OnGuildNotice_EditInit(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1160
-void CGuildMainForm::OnGuildAct_EditInit(int param) {
+void CGuildMainForm::OnGuildAct_EditInit(PG_MSGARG param) {
 	m_pEdits[2] = DYNAMIC_CAST(FrEdit, param);
 	Controller()->InsertControl(m_pEdits[2]);
 	Controller()->InsertPostAction(m_pEdits[2], FORM_GUILD_INFO, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
@@ -1078,25 +1078,25 @@ void CGuildMainForm::OnGuildAct_EditInit(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1168
-void CGuildMainForm::OnGuildSearch_EditInit(int param) {
+void CGuildMainForm::OnGuildSearch_EditInit(PG_MSGARG param) {
 	m_pEdits[3] = DYNAMIC_CAST(FrEdit, param);
 	Controller()->InsertControl(m_pEdits[3]);
 	Controller()->InsertPostAction(m_pEdits[3], FORM_GUILD_SEARCH, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1175
-void CGuildMainForm::OnGuildSearch_EnterKey(int param) {
+void CGuildMainForm::OnGuildSearch_EnterKey(PG_MSGARG param) {
 	OnGuildSearchInfo_LButtonUp();
 }
 
 // ingameguildlobbydlg.cpp:1180
-void CGuildMainForm::OnGuildMemberTalk_EditInit(int param) {
+void CGuildMainForm::OnGuildMemberTalk_EditInit(PG_MSGARG param) {
 	m_pEdits[4] = DYNAMIC_CAST(FrEdit, param);
 	Controller()->InsertControl(m_pEdits[4]);
 }
 
 // ingameguildlobbydlg.cpp:1186
-void CGuildMainForm::OnGuildForm_CloseInit(int param) {
+void CGuildMainForm::OnGuildForm_CloseInit(PG_MSGARG param) {
 	m_pButtons[0] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1106,7 +1106,7 @@ void CGuildMainForm::OnGuildForm_CloseLButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1196
-void CGuildMainForm::OnGuildIntroConfirm_ButtonInit(int param) {
+void CGuildMainForm::OnGuildIntroConfirm_ButtonInit(PG_MSGARG param) {
 	m_pButtons[1] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[1]);
 	Controller()->InsertPostAction(m_pButtons[1], FORM_GUILD_INFO, AUTHORITY_MASTER | AUTHORITY_CLASS2, &CGuildFormController::EnableWindow);
@@ -1118,7 +1118,7 @@ void CGuildMainForm::OnGuildIntroConfirm_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1208
-void CGuildMainForm::OnGuildNoticeConfirm_ButtonInit(int param) {
+void CGuildMainForm::OnGuildNoticeConfirm_ButtonInit(PG_MSGARG param) {
 	m_pButtons[2] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[2]);
 	Controller()->InsertPostAction(m_pButtons[2], FORM_GUILD_INFO, AUTHORITY_MASTER | AUTHORITY_CLASS2, &CGuildFormController::EnableWindow);
@@ -1130,7 +1130,7 @@ void CGuildMainForm::OnGuildNoticeConfirm_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1220
-void CGuildMainForm::OnGuildJoin_ButtonInit(int param) {
+void CGuildMainForm::OnGuildJoin_ButtonInit(PG_MSGARG param) {
 	m_pButtons[3] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[3]);
 	Controller()->InsertPostAction(m_pButtons[3], FORM_GUILD_SEARCH, AUTHORITY_CLASS0, &CGuildFormController::EnableWindow);
@@ -1147,7 +1147,7 @@ void CGuildMainForm::OnGuildJoin_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1238
-void CGuildMainForm::OnGuildSearchInfo_ButtonInit(int param) {
+void CGuildMainForm::OnGuildSearchInfo_ButtonInit(PG_MSGARG param) {
 	m_pButtons[4] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[4]);
 	Controller()->InsertPostAction(m_pButtons[4], FORM_GUILD_SEARCH, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
@@ -1172,7 +1172,7 @@ void CGuildMainForm::OnGuildSearchInfo_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1278
-void CGuildMainForm::OnGuildJoinAbort_ButtonInit(int param) {
+void CGuildMainForm::OnGuildJoinAbort_ButtonInit(PG_MSGARG param) {
 	m_pButtons[6] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[6]);
 	Controller()->InsertPostAction(m_pButtons[6], FORM_GUILD_INFO | FORM_GUILD_MEMBER | FORM_GUILD_SEARCH, AUTHORITY_CLASS9, &CGuildFormController::EnableWindow);
@@ -1184,7 +1184,7 @@ void CGuildMainForm::OnGuildJoinAbort_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1290
-void CGuildMainForm::OnGuildMemberTalk_ButtonInit(int param) {
+void CGuildMainForm::OnGuildMemberTalk_ButtonInit(PG_MSGARG param) {
 	m_pButtons[8] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[8]);
 }
@@ -1232,7 +1232,7 @@ void CGuildMainForm::OnGuildMemberTalk_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1344
-void CGuildMainForm::OnGuildSearchPrev_ButtonInit(int param) {
+void CGuildMainForm::OnGuildSearchPrev_ButtonInit(PG_MSGARG param) {
 	m_pButtons[9] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[9]);
 	Controller()->InsertPostAction(m_pButtons[9], FORM_GUILD_SEARCH, AUTHORITY_ALL, &CGuildFormController::VisibleWindow);
@@ -1248,7 +1248,7 @@ void CGuildMainForm::OnGuildSearchPrev_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1360
-void CGuildMainForm::OnGuildSearchNext_ButtonInit(int param) {
+void CGuildMainForm::OnGuildSearchNext_ButtonInit(PG_MSGARG param) {
 	m_pButtons[10] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[10]);
 	Controller()->InsertPostAction(m_pButtons[10], FORM_GUILD_SEARCH, AUTHORITY_ALL, &CGuildFormController::VisibleWindow);
@@ -1264,7 +1264,7 @@ void CGuildMainForm::OnGuildSearchNext_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1376
-void CGuildMainForm::OnGuildShutDown_ButtonInit(int param) {
+void CGuildMainForm::OnGuildShutDown_ButtonInit(PG_MSGARG param) {
 	m_pButtons[5] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[5]);
 	Controller()->InsertPostAction(m_pButtons[5], FORM_GUILD_INFO | FORM_GUILD_MEMBER | FORM_GUILD_SEARCH, AUTHORITY_MASTER, &CGuildFormController::EnableWindow);
@@ -1276,7 +1276,7 @@ void CGuildMainForm::OnGuildShutDown_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1388
-void CGuildMainForm::OnGuildOut_ButtonInit(int param) {
+void CGuildMainForm::OnGuildOut_ButtonInit(PG_MSGARG param) {
 	m_pButtons[7] = DYNAMIC_CAST(FrButton, param);
 	Controller()->InsertControl(m_pButtons[7]);
 	Controller()->InsertPostAction(m_pButtons[7], FORM_GUILD_INFO | FORM_GUILD_MEMBER | FORM_GUILD_SEARCH, AUTHORITY_CLASS2 | AUTHORITY_CLASS3, &CGuildFormController::EnableWindow);
@@ -1288,14 +1288,14 @@ void CGuildMainForm::OnGuildOut_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1400
-void CGuildMainForm::OnGuildMemberInfo_ListBoxInit(int param) {
+void CGuildMainForm::OnGuildMemberInfo_ListBoxInit(PG_MSGARG param) {
 	m_pListBoxes[0] = DYNAMIC_CAST(FrListBox, param);
 	Controller()->InsertControl(m_pListBoxes[0]);
 	Controller()->InsertPostAction(m_pListBoxes[0], FORM_GUILD_MEMBER, AUTHORITY_MASTER | AUTHORITY_CLASS2 | AUTHORITY_CLASS3, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1407
-void CGuildMainForm::OnGuildMemberInfo_OwnerDraw(int param) {
+void CGuildMainForm::OnGuildMemberInfo_OwnerDraw(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == 0) {
 		return;
@@ -1394,7 +1394,7 @@ void CGuildMainForm::OnGuildMemberInfo_LButtonDown(void) {
 }
 
 // ingameguildlobbydlg.cpp:1537
-void CGuildMainForm::OnMemberPage_ListBoxInit(int param) {
+void CGuildMainForm::OnMemberPage_ListBoxInit(PG_MSGARG param) {
 	m_pListBoxes[2] = DYNAMIC_CAST(FrListBox, param);
 	Controller()->InsertControl(m_pListBoxes[2]);
 	Controller()->InsertPostAction(m_pListBoxes[2], FORM_GUILD_MEMBER, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
@@ -1403,7 +1403,7 @@ void CGuildMainForm::OnMemberPage_ListBoxInit(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1546
-void CGuildMainForm::OnMemberPage_ListOwnerDraw(int param) {
+void CGuildMainForm::OnMemberPage_ListOwnerDraw(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == 0) {
 		return;
@@ -1438,14 +1438,14 @@ void CGuildMainForm::OnMemberPage_ListLButtonDown(void) {
 }
 
 // ingameguildlobbydlg.cpp:1588
-void CGuildMainForm::OnGuildSearchInfo_ListBoxInit(int param) {
+void CGuildMainForm::OnGuildSearchInfo_ListBoxInit(PG_MSGARG param) {
 	m_pListBoxes[1] = DYNAMIC_CAST(FrListBox, param);
 	Controller()->InsertControl(m_pListBoxes[1]);
 	Controller()->InsertPostAction(m_pListBoxes[1], FORM_GUILD_SEARCH, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1595
-void CGuildMainForm::OnGuildSearchInfo_OwnerDraw(int param) {
+void CGuildMainForm::OnGuildSearchInfo_OwnerDraw(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == 0) {
 		return;
@@ -1489,14 +1489,14 @@ void CGuildMainForm::OnGuildSearchInfo_LButtonDown(void) {
 }
 
 // ingameguildlobbydlg.cpp:1659
-void CGuildMainForm::OnGuildSearchPage_ListBoxInit(int param) {
+void CGuildMainForm::OnGuildSearchPage_ListBoxInit(PG_MSGARG param) {
 	m_pListBoxes[3] = DYNAMIC_CAST(FrListBox, param);
 	Controller()->InsertControl(m_pListBoxes[3]);
 	Controller()->InsertPostAction(m_pListBoxes[3], FORM_GUILD_SEARCH, AUTHORITY_ALL, &CGuildFormController::EnableWindow);
 }
 
 // ingameguildlobbydlg.cpp:1666
-void CGuildMainForm::OnGuildSearchPage_OwnerDraw(int param) {
+void CGuildMainForm::OnGuildSearchPage_OwnerDraw(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == 0) {
 		return;
@@ -1534,7 +1534,7 @@ void CGuildMainForm::OnGuildSearchPage_LButtonDown(void) {
 }
 
 // ingameguildlobbydlg.cpp:1712
-void CGuildMainForm::OnGuildManagerCmd_ContextInit(int param) {
+void CGuildMainForm::OnGuildManagerCmd_ContextInit(PG_MSGARG param) {
 	m_pManagerCmd = DYNAMIC_CAST(FrWnd, param);
 	if (m_pManagerCmd == 0) {
 		return;
@@ -1647,12 +1647,12 @@ void FrGuildJoin::SetSuccessRequest(void) {
 }
 
 // ingameguildlobbydlg.cpp:1804
-void FrGuildJoin::OnGuildJoin_AreaInit(int param) {
+void FrGuildJoin::OnGuildJoin_AreaInit(PG_MSGARG param) {
 	m_pJoinArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // ingameguildlobbydlg.cpp:1809
-void FrGuildJoin::OnGuildJoin_AreaOwnerDraw(int param) {
+void FrGuildJoin::OnGuildJoin_AreaOwnerDraw(PG_MSGARG param) {
 	if (m_bRequested == true) {
 		return;
 	}
@@ -1662,12 +1662,12 @@ void FrGuildJoin::OnGuildJoin_AreaOwnerDraw(int param) {
 }
 
 // ingameguildlobbydlg.cpp:1823
-void FrGuildJoin::OnJoin_EditInit(int param) {
+void FrGuildJoin::OnJoin_EditInit(PG_MSGARG param) {
 	m_pJoinEdit = DYNAMIC_CAST(FrEdit, param);
 }
 
 // ingameguildlobbydlg.cpp:1828
-void FrGuildJoin::OnRequestJoin_ButtonInit(int param) {
+void FrGuildJoin::OnRequestJoin_ButtonInit(PG_MSGARG param) {
 	m_pButtons[0] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1699,7 +1699,7 @@ void FrGuildJoin::OnRequestJoin_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1862
-void FrGuildJoin::OnRequestOK_ButtonInit(int param) {
+void FrGuildJoin::OnRequestOK_ButtonInit(PG_MSGARG param) {
 	FrButton *pButton = DYNAMIC_CAST(FrButton, param);
 	m_pButtons[1] = pButton;
 	if (pButton) {
@@ -1715,7 +1715,7 @@ void FrGuildJoin::OnRequestOK_LButtonUp(void) {
 }
 
 // ingameguildlobbydlg.cpp:1876
-void FrGuildJoin::OnFormClose_ButtonInit(int param) {
+void FrGuildJoin::OnFormClose_ButtonInit(PG_MSGARG param) {
 	m_pButtons[2] = DYNAMIC_CAST(FrButton, param);
 }
 

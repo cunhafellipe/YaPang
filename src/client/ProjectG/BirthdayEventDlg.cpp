@@ -394,7 +394,7 @@ void FrBirthdayEventDlg::OnLButtonDownGiftButton(void) {
 }
 
 // birthdayeventdlg.cpp:422
-void FrBirthdayEventDlg::OnOwnerDrawBoardArea(int param) {
+void FrBirthdayEventDlg::OnOwnerDrawBoardArea(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	for (int i = 0; i < 4; ++i) {

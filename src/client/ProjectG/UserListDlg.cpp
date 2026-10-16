@@ -325,7 +325,7 @@ void FrUserListDlg::OnUserListInit(intptr_t param) {
 }
 
 // userlistdlg.cpp:343
-void FrUserListDlg::OnUserListOwnerDraw(int param) {
+void FrUserListDlg::OnUserListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == 0)
 		return;

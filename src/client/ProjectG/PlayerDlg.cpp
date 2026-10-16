@@ -368,7 +368,7 @@ void FrSubEquipBar::OnInitSubEquipList(intptr_t param) {
 }
 
 // playerdlg.cpp:478
-void FrSubEquipBar::OnDownSubEquipList(int param) {
+void FrSubEquipBar::OnDownSubEquipList(PG_MSGARG param) {
 	FrListItem* pSelected = m_pSubEquipList->GetSelected();
 	if (pSelected == NULL) {
 		return;
@@ -390,7 +390,7 @@ void FrSubEquipBar::OnDownSubEquipList(int param) {
 }
 
 // playerdlg.cpp:507
-void FrSubEquipBar::OnDrawSubEquipList(int param) {
+void FrSubEquipBar::OnDrawSubEquipList(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	FrListItem* pListItem = (FrListItem*)param;
 	if (pListItem == NULL || pGDI == NULL)
@@ -1006,12 +1006,12 @@ void FrPlayerDlg::UnSelect(void) {
 }
 
 // playerdlg.cpp:1236
-void FrPlayerDlg::OnPetInit(int param) {
+void FrPlayerDlg::OnPetInit(PG_MSGARG param) {
 	m_pPetArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // playerdlg.cpp:1241
-void FrPlayerDlg::OnCharPrevInit(int param) {
+void FrPlayerDlg::OnCharPrevInit(PG_MSGARG param) {
 	m_pCharPrevBtn = DYNAMIC_CAST(FrButton, param);
 	m_pCharPrevBtn->SetPushDelay(0.0f);
 }
@@ -1034,7 +1034,7 @@ void FrPlayerDlg::OnCharPrevBtnUp(void) {
 }
 
 // playerdlg.cpp:1252
-void FrPlayerDlg::OnCharNextInit(int param) {
+void FrPlayerDlg::OnCharNextInit(PG_MSGARG param) {
 	m_pCharNextBtn = DYNAMIC_CAST(FrButton, param);
 	m_pCharNextBtn->SetPushDelay(0.0f);
 }
@@ -1057,17 +1057,17 @@ void FrPlayerDlg::OnCharNextBtnUp(void) {
 }
 
 // playerdlg.cpp:1263
-void FrPlayerDlg::OnCaddieInit(int param) {
+void FrPlayerDlg::OnCaddieInit(PG_MSGARG param) {
 	m_pCaddieArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // playerdlg.cpp:1268
-void FrPlayerDlg::OnCaddieLimitInit(int param) {
+void FrPlayerDlg::OnCaddieLimitInit(PG_MSGARG param) {
 	m_pCaddieLimitArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // playerdlg.cpp:1273
-void FrPlayerDlg::OnCaddiePrevInit(int param) {
+void FrPlayerDlg::OnCaddiePrevInit(PG_MSGARG param) {
 	m_pCaddiePrevBtn = DYNAMIC_CAST(FrButton, param);
 	m_pCaddiePrevBtn->SetPushDelay(0.0f);
 }
@@ -1078,7 +1078,7 @@ void FrPlayerDlg::OnCaddiePrevBtnUp(void) {
 }
 
 // playerdlg.cpp:1284
-void FrPlayerDlg::OnCaddieNextInit(int param) {
+void FrPlayerDlg::OnCaddieNextInit(PG_MSGARG param) {
 	m_pCaddieNextBtn = DYNAMIC_CAST(FrButton, param);
 	m_pCaddieNextBtn->SetPushDelay(0.0f);
 }
@@ -1089,17 +1089,17 @@ void FrPlayerDlg::OnCaddieNextBtnUp(void) {
 }
 
 // playerdlg.cpp:1295
-void FrPlayerDlg::OnClubInit(int param) {
+void FrPlayerDlg::OnClubInit(PG_MSGARG param) {
 	m_pClubArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // playerdlg.cpp:1300
-void FrPlayerDlg::OnClubLimitInit(int param) {
+void FrPlayerDlg::OnClubLimitInit(PG_MSGARG param) {
 	m_pClubLimitArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // playerdlg.cpp:1305
-void FrPlayerDlg::OnClubPrevInit(int param) {
+void FrPlayerDlg::OnClubPrevInit(PG_MSGARG param) {
 	m_pClubPrevBtn = DYNAMIC_CAST(FrButton, param);
 	m_pClubPrevBtn->SetPushDelay(0.0f);
 }
@@ -1122,7 +1122,7 @@ void FrPlayerDlg::OnClubPrevBtnUp(void) {
 }
 
 // playerdlg.cpp:1316
-void FrPlayerDlg::OnClubNextInit(int param) {
+void FrPlayerDlg::OnClubNextInit(PG_MSGARG param) {
 	m_pClubNextBtn = DYNAMIC_CAST(FrButton, param);
 	m_pClubNextBtn->SetPushDelay(0.0f);
 }
@@ -1145,12 +1145,12 @@ void FrPlayerDlg::OnClubNextBtnUp(void) {
 }
 
 // playerdlg.cpp:1327
-void FrPlayerDlg::OnBallInit(int param) {
+void FrPlayerDlg::OnBallInit(PG_MSGARG param) {
 	m_pBallArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // playerdlg.cpp:1332
-void FrPlayerDlg::OnBallPrevInit(int param) {
+void FrPlayerDlg::OnBallPrevInit(PG_MSGARG param) {
 	m_pBallPrevBtn = DYNAMIC_CAST(FrButton, param);
 	m_pBallPrevBtn->SetPushDelay(0.0f);
 }
@@ -1175,7 +1175,7 @@ void FrPlayerDlg::OnBallPrevBtnUp(void) {
 }
 
 // playerdlg.cpp:1343
-void FrPlayerDlg::OnBallNextInit(int param) {
+void FrPlayerDlg::OnBallNextInit(PG_MSGARG param) {
 	m_pBallNextBtn = DYNAMIC_CAST(FrButton, param);
 	m_pBallNextBtn->SetPushDelay(0.0f);
 }
@@ -1200,7 +1200,7 @@ void FrPlayerDlg::OnBallNextBtnUp(void) {
 }
 
 // playerdlg.cpp:1354
-void FrPlayerDlg::OnRemoveInit(int param) {
+void FrPlayerDlg::OnRemoveInit(PG_MSGARG param) {
 	m_pRemoveBtn = DYNAMIC_CAST(FrButton, param);
 	m_pRemoveBtn->SetPushDelay(0.0f);
 }
@@ -1676,27 +1676,27 @@ void FrPlayerDlg::OnCurveBarInit(intptr_t param) {
 }
 
 // playerdlg.cpp:1987
-void FrPlayerDlg::OnPowerEditInit(int param) {
+void FrPlayerDlg::OnPowerEditInit(PG_MSGARG param) {
 	m_pLevelEdit[0] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // playerdlg.cpp:1992
-void FrPlayerDlg::OnControlEditInit(int param) {
+void FrPlayerDlg::OnControlEditInit(PG_MSGARG param) {
 	m_pLevelEdit[1] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // playerdlg.cpp:1997
-void FrPlayerDlg::OnImpactEditInit(int param) {
+void FrPlayerDlg::OnImpactEditInit(PG_MSGARG param) {
 	m_pLevelEdit[2] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // playerdlg.cpp:2002
-void FrPlayerDlg::OnSpinEditInit(int param) {
+void FrPlayerDlg::OnSpinEditInit(PG_MSGARG param) {
 	m_pLevelEdit[3] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // playerdlg.cpp:2007
-void FrPlayerDlg::OnCurveEditInit(int param) {
+void FrPlayerDlg::OnCurveEditInit(PG_MSGARG param) {
 	m_pLevelEdit[4] = DYNAMIC_CAST(FrEdit, param);
 }
 

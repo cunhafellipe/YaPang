@@ -34,7 +34,7 @@ class FrTradeDlg;
 class FrWnd;
 class IObject;
 class ntAvatar;
-enum eSPAVILITYTYPE;
+PG_ENUM_FWD(eSPAVILITYTYPE)
 
 // The avatar (lounge) chat main screen, a CTaskMain (its constructor calls
 // CTaskMain's). Its size (0x4EC) is the `new` of ntAvatarChatMainMakeInstance.
@@ -87,14 +87,14 @@ protected:
 
 	void InitUI(void);
 	void ResetFrWndPointers(void);
-	void OnAvatarChatMainInit(int);
+	void OnAvatarChatMainInit(PG_MSGARG);
 	void OnAvatarChatMainFinish(void);
 	bool OnAvatarTipDlgResult(int, FrForm*);
 	bool OnJukeBoxDlgResult(int, FrForm*);
 	bool OnAvatarChatLogDlgResult(int, FrForm*);
 	bool OnAvatarUserListDlgResult(int, FrForm*);
-	void OnChatTargetBtnDown(int);
-	bool OnChatTargetEnterKey(int);
+	void OnChatTargetBtnDown(PG_MSGARG);
+	bool OnChatTargetEnterKey(PG_MSGARG);
 	bool OnReportResult(int, FrForm*);
 	bool OnAddFriendDlgResult(int, FrForm*);
 	bool OnTradeDlgResult(int, FrForm*);
@@ -109,20 +109,20 @@ protected:
 	void OnPortraitChatLogButtonBtnUp(void);
 	void OnAvatarUserListButtonBtnUp(void);
 	void OnPortraitInit(intptr_t);
-	void OnPortraitMaskAreaInit(int);
-	void OnPortraitMaskInit(int);
+	void OnPortraitMaskAreaInit(PG_MSGARG);
+	void OnPortraitMaskInit(PG_MSGARG);
 	void OnPortraitMaskBtnUp(void);
-	void OnPortraitJukeBoxButtonAreaInit(int);
-	void OnPortraitJukeBoxButtonInit(int);
-	void OnPortraitChatLogButtonInit(int);
-	void OnAvatarUserListButtonInit(int);
-	void OnChatFrameInit(int);
+	void OnPortraitJukeBoxButtonAreaInit(PG_MSGARG);
+	void OnPortraitJukeBoxButtonInit(PG_MSGARG);
+	void OnPortraitChatLogButtonInit(PG_MSGARG);
+	void OnAvatarUserListButtonInit(PG_MSGARG);
+	void OnChatFrameInit(PG_MSGARG);
 	void OnChatViewInit(intptr_t);
 	void OnChatInputInit(intptr_t);
 	void OnEmoticonInit(intptr_t);
 	void OnLanguageInit(intptr_t);
-	void OnReportInit(int);
-	void OnRightMenuInit(int);
+	void OnReportInit(PG_MSGARG);
+	void OnRightMenuInit(PG_MSGARG);
 	bool OnNoteDlgResult(int, FrForm*);
 	void OnAddFriend(void);
 	void OnFollowAvatar(void);
@@ -136,7 +136,7 @@ protected:
 	void OnOpenTradeShop(void);
 	void OnEnterTradeShop(void);
 	bool OnPasswordDlgResult(int, FrForm*);
-	void OnPortraitTipButtonInit(int);
+	void OnPortraitTipButtonInit(PG_MSGARG);
 	void OnEmoticonBtnUp(void);
 	void ProcessUI(float);
 	void OnAvatarInfo(void);

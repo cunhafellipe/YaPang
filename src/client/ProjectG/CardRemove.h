@@ -44,7 +44,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnDrawAreaInit(intptr_t param);
-	void OnDrawAreaOwnerDraw(int param);
+	void OnDrawAreaOwnerDraw(PG_MSGARG param);
 	void OnItemListInit(intptr_t param);
 	void OnItemListOwnerDraw(intptr_t param);
 	void OnItemListDBClick(void);
@@ -99,7 +99,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	void OnDrawAreaOwnerDraw(int param);
+	void OnDrawAreaOwnerDraw(PG_MSGARG param);
 	void OnConfirmInit(intptr_t param);
 	void OnConfirmLBDown(void);
 	void OnCancelInit(intptr_t param);
@@ -151,7 +151,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	void OnDrawAreaOwnerDraw(int param);
+	void OnDrawAreaOwnerDraw(PG_MSGARG param);
 	void OnConfirmInit(intptr_t param);
 	void OnConfirmLBDown(void);
 

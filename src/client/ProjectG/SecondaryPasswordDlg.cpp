@@ -467,67 +467,67 @@ void FrPasswordInputDlg::CheckEnableCreateButton(void) {
 }
 
 // secondarypassworddlg.cpp:480
-void FrPasswordInputDlg::OnInitNumberSlot0(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot0(PG_MSGARG param) {
 	SetButtonProperty(0, param);
 }
 
 // secondarypassworddlg.cpp:485
-void FrPasswordInputDlg::OnInitNumberSlot1(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot1(PG_MSGARG param) {
 	SetButtonProperty(1, param);
 }
 
 // secondarypassworddlg.cpp:490
-void FrPasswordInputDlg::OnInitNumberSlot2(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot2(PG_MSGARG param) {
 	SetButtonProperty(2, param);
 }
 
 // secondarypassworddlg.cpp:495
-void FrPasswordInputDlg::OnInitNumberSlot3(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot3(PG_MSGARG param) {
 	SetButtonProperty(3, param);
 }
 
 // secondarypassworddlg.cpp:500
-void FrPasswordInputDlg::OnInitNumberSlot4(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot4(PG_MSGARG param) {
 	SetButtonProperty(4, param);
 }
 
 // secondarypassworddlg.cpp:505
-void FrPasswordInputDlg::OnInitNumberSlot5(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot5(PG_MSGARG param) {
 	SetButtonProperty(5, param);
 }
 
 // secondarypassworddlg.cpp:510
-void FrPasswordInputDlg::OnInitNumberSlot6(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot6(PG_MSGARG param) {
 	SetButtonProperty(6, param);
 }
 
 // secondarypassworddlg.cpp:515
-void FrPasswordInputDlg::OnInitNumberSlot7(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot7(PG_MSGARG param) {
 	SetButtonProperty(7, param);
 }
 
 // secondarypassworddlg.cpp:520
-void FrPasswordInputDlg::OnInitNumberSlot8(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot8(PG_MSGARG param) {
 	SetButtonProperty(8, param);
 }
 
 // secondarypassworddlg.cpp:525
-void FrPasswordInputDlg::OnInitNumberSlot9(int param) {
+void FrPasswordInputDlg::OnInitNumberSlot9(PG_MSGARG param) {
 	SetButtonProperty(9, param);
 }
 
 // secondarypassworddlg.cpp:530
-void FrPasswordInputDlg::OnBackSpace_ButtonInit(int param) {
+void FrPasswordInputDlg::OnBackSpace_ButtonInit(PG_MSGARG param) {
 	SetButtonProperty(10, param);
 }
 
 // secondarypassworddlg.cpp:535
-void FrPasswordInputDlg::OnClear_ButtonInit(int param) {
+void FrPasswordInputDlg::OnClear_ButtonInit(PG_MSGARG param) {
 	SetButtonProperty(11, param);
 }
 
 // secondarypassworddlg.cpp:540
-void FrPasswordInputDlg::OnCreatePassword_ButtonInit(int param) {
+void FrPasswordInputDlg::OnCreatePassword_ButtonInit(PG_MSGARG param) {
 	SetButtonProperty(12, param);
 }
 
@@ -537,12 +537,12 @@ void FrPasswordInputDlg::OnConfirm_ButtonInit(intptr_t param) {
 }
 
 // secondarypassworddlg.cpp:550
-void FrPasswordInputDlg::OnChangePassword_ButtonInit(int param) {
+void FrPasswordInputDlg::OnChangePassword_ButtonInit(PG_MSGARG param) {
 	SetButtonProperty(14, param);
 }
 
 // secondarypassworddlg.cpp:555
-void FrPasswordInputDlg::OnReport_ButtonInit(int param) {
+void FrPasswordInputDlg::OnReport_ButtonInit(PG_MSGARG param) {
 	SetButtonProperty(15, param);
 }
 
@@ -666,7 +666,7 @@ void FrPasswordInputDlg::OnReport_LButtonUp(void) {
 }
 
 // secondarypassworddlg.cpp:702
-void FrPasswordInputDlg::OnConfirmFirstPassword_ButtonInit(int param) {
+void FrPasswordInputDlg::OnConfirmFirstPassword_ButtonInit(PG_MSGARG param) {
 	SetButtonProperty(16, param);
 }
 
@@ -698,7 +698,7 @@ void FrPasswordInputDlg::OnExplaneBlock_AreaInit(intptr_t param) {
 }
 
 // secondarypassworddlg.cpp:741
-void FrPasswordInputDlg::OnExplaneBlock_AreaOwnerdraw(int param) {
+void FrPasswordInputDlg::OnExplaneBlock_AreaOwnerdraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 
 	switch (m_dlgType) {
@@ -734,7 +734,7 @@ void FrPasswordInputDlg::OnPasswordConfirm_EditInit(intptr_t param) {
 }
 
 // secondarypassworddlg.cpp:783
-void FrPasswordInputDlg::OnInputAgain_ButtonInit(int param) {
+void FrPasswordInputDlg::OnInputAgain_ButtonInit(PG_MSGARG param) {
 	SetButtonProperty(17, param);
 }
 
@@ -877,7 +877,7 @@ void FrSelectCertification::OnInFrame_AreaInit(intptr_t param) {
 }
 
 // secondarypassworddlg.cpp:946
-void FrSelectCertification::OnInFrame_AreaOwnerDraw(int param) {
+void FrSelectCertification::OnInFrame_AreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 
 	const Bitmap* pBitmap;
@@ -1077,7 +1077,7 @@ void FrPasswordNotifyDlg::OnIcon_AreaInit(intptr_t param) {
 }
 
 // secondarypassworddlg.cpp:1125
-void FrPasswordNotifyDlg::OnIcon_AreaOwnerdraw(int param) {
+void FrPasswordNotifyDlg::OnIcon_AreaOwnerdraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 
 	const Bitmap* pIcon;

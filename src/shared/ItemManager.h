@@ -125,11 +125,11 @@ CHECK_SIZE(status_t, 0x2);
 CHECK_FIELD(status_t, m_level, 0x0);
 CHECK_FIELD(status_t, m_penalty, 0x1);
 
-enum COUNTING_TYPE;
-enum PANGYA_ITEM_GROUP;
-enum eLvlType;
-enum eSPAVILITYTYPE;
-enum specialcardavility;
+PG_ENUM_FWD(COUNTING_TYPE)
+PG_ENUM_FWD(PANGYA_ITEM_GROUP)
+PG_ENUM_FWD(eLvlType)
+PG_ENUM_FWD(eSPAVILITYTYPE)
+PG_ENUM_FWD(specialcardavility)
 
 // The item database: the IFF tables loaded into maps keyed by type id.
 // Only the members the functions built so far use are named.

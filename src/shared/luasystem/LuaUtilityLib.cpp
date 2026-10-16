@@ -30,7 +30,7 @@ static bool is_debug_mode();
 static const char *get_my_country();
 static const char *get_current_dir(const char *name);
 static void print_client(const char *text);
-static int random(int low, int high);
+static int pg_random(int low, int high);
 static int wait_frame(lua_State *L);
 static int wait_time(lua_State *L);
 static lua_system::lua_script *get_lua_script(lua_State *L);
@@ -61,7 +61,7 @@ void LuaOpenUtilityLib(lua_State *L) {
 	lua_tinker::def(L, "get_my_country", get_my_country);
 	lua_tinker::def(L, "get_current_dir", get_current_dir);
 	lua_tinker::def(L, "print_client", print_client);
-	lua_tinker::def(L, "random", random);
+	lua_tinker::def(L, "pg_random", pg_random);
 }
 
 // luautilitylib.cpp:76
@@ -318,7 +318,7 @@ static int print_value_info(lua_State *L) {
 }
 
 // luautilitylib.cpp:451
-static int random(int low, int high) {
+static int pg_random(int low, int high) {
 	if (low == high) {
 		return high;
 	}

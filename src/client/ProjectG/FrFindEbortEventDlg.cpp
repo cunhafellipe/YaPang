@@ -46,7 +46,7 @@ FrFindEbortEventDlg::~FrFindEbortEventDlg(void) {
 }
 
 // frfindeborteventdlg.cpp:40
-void FrFindEbortEventDlg::OnCurrentItemOwnerDraw(int param) {
+void FrFindEbortEventDlg::OnCurrentItemOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 

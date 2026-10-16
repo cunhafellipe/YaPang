@@ -267,7 +267,7 @@ void FrMissionEventDlg::OnInitMissionClearArea(intptr_t param) {
 }
 
 // missioneventdlg.cpp:236
-void FrMissionEventDlg::OnOwnerDrawMissionClearArea(int param) {
+void FrMissionEventDlg::OnOwnerDrawMissionClearArea(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -315,7 +315,7 @@ void FrMissionEventDlg::OnInitCourseClearArea(intptr_t param) {
 }
 
 // missioneventdlg.cpp:282
-void FrMissionEventDlg::OnOwnerDrawCourseClearArea(int param) {
+void FrMissionEventDlg::OnOwnerDrawCourseClearArea(PG_MSGARG param) {
 	if (m_bHoverCourse) {
 
 

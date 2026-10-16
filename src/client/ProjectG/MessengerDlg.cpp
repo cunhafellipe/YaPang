@@ -234,12 +234,12 @@ bool FrMessengerDlg::OnLButtonDown(const WPoint& pt) {
 }
 
 // messengerdlg.cpp:314
-void FrMessengerDlg::OnMessenger_MyInfoInit(int param) {
+void FrMessengerDlg::OnMessenger_MyInfoInit(PG_MSGARG param) {
 	m_pMyInfo = DYNAMIC_CAST(FrArea, param);
 }
 
 // messengerdlg.cpp:329
-void FrMessengerDlg::OnMessenger_MyInfoOwnerDraw(int param) {
+void FrMessengerDlg::OnMessenger_MyInfoOwnerDraw(PG_MSGARG param) {
 	if (m_pMyInfo == NULL)
 		return;
 
@@ -277,7 +277,7 @@ void FrMessengerDlg::OnMessenger_MyInfoOwnerDraw(int param) {
 }
 
 // messengerdlg.cpp:398
-void FrMessengerDlg::OnMessenger_FriendListInit(int param) {
+void FrMessengerDlg::OnMessenger_FriendListInit(PG_MSGARG param) {
 	m_pFriendList = DYNAMIC_CAST(FrListBox, param);
 	if (m_pFriendList == NULL)
 		return;
@@ -302,7 +302,7 @@ void FrMessengerDlg::OnMessenger_FriendListInit(int param) {
 }
 
 // messengerdlg.cpp:441
-void FrMessengerDlg::OnMessenger_FriendListOwnerDraw(int param) {
+void FrMessengerDlg::OnMessenger_FriendListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == NULL)
 		return;
@@ -492,7 +492,7 @@ void FrMessengerDlg::OnMessenger_FriendListDBtnDown(void) {
 }
 
 // messengerdlg.cpp:738
-void FrMessengerDlg::OnMessenger_GuildListInit(int param) {
+void FrMessengerDlg::OnMessenger_GuildListInit(PG_MSGARG param) {
 	m_pGuildList = DYNAMIC_CAST(FrListBox, param);
 	if (m_pGuildList == NULL)
 		return;
@@ -516,7 +516,7 @@ void FrMessengerDlg::OnMessenger_GuildListInit(int param) {
 }
 
 // messengerdlg.cpp:790
-void FrMessengerDlg::OnMessenger_GuildListOwnerDraw(int param) {
+void FrMessengerDlg::OnMessenger_GuildListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == NULL)
 		return;
@@ -698,7 +698,7 @@ void FrMessengerDlg::OnMessenger_GuildListDBtnDown(void) {
 }
 
 // messengerdlg.cpp:1176
-void FrMessengerDlg::OnMessenger_RightMenuInit(int param) {
+void FrMessengerDlg::OnMessenger_RightMenuInit(PG_MSGARG param) {
 	m_pRightMenu = (FrContextMenuCtrl*)DYNAMIC_CAST(FrWnd, param);
 	if (m_pRightMenu != NULL) {
 		m_pRightMenu->SetVisible(false);
@@ -771,7 +771,7 @@ void FrMessengerDlg::OnMessenger_RightMenuLBtnDown(void) {
 }
 
 // messengerdlg.cpp:1296
-void FrMessengerDlg::OnMessenger_StateMenuInit(int param) {
+void FrMessengerDlg::OnMessenger_StateMenuInit(PG_MSGARG param) {
 	m_pStateMenu = (FrContextMenuCtrl*)DYNAMIC_CAST(FrWnd, param);
 	if (m_pStateMenu != NULL) {
 		m_pStateMenu->SetVisible(false);
@@ -1208,7 +1208,7 @@ void FrMessengerDlg::OnMessenger_CloseLBtnDown(void) {
 }
 
 // messengerdlg.cpp:1985
-void FrMessengerDlg::OnMessenger_FriendBtnInit(int param) {
+void FrMessengerDlg::OnMessenger_FriendBtnInit(PG_MSGARG param) {
 	m_pTabBtn[0] = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pTabBtn[0] != NULL) {
@@ -1233,7 +1233,7 @@ void FrMessengerDlg::OnMessenger_FriendLBtnDown(void) {
 }
 
 // messengerdlg.cpp:2047
-void FrMessengerDlg::OnMessenger_GuildBtnInit(int param) {
+void FrMessengerDlg::OnMessenger_GuildBtnInit(PG_MSGARG param) {
 	m_pTabBtn[1] = DYNAMIC_CAST(FrButton, param);
 	if (CSharedDoc::Instance()->GetPangyaUserInfo().guildUID == 0) {
 		m_pTabBtn[1]->Enable(false);
@@ -1264,7 +1264,7 @@ void FrMessengerDlg::OnMessenger_GuildLBtnDown(void) {
 }
 
 // messengerdlg.cpp:2156
-void FrMessengerDlg::OnMessenger_StateBtnInit(int param) {
+void FrMessengerDlg::OnMessenger_StateBtnInit(PG_MSGARG param) {
 	m_pStateBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1274,7 +1274,7 @@ void FrMessengerDlg::OnMessenger_StateLBtnDown(void) {
 }
 
 // messengerdlg.cpp:2187
-void FrMessengerDlg::OnMessenger_GuildNoticeBtnInit(int param) {
+void FrMessengerDlg::OnMessenger_GuildNoticeBtnInit(PG_MSGARG param) {
 	m_pGuildNoticeBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pGuildNoticeBtn != NULL) {

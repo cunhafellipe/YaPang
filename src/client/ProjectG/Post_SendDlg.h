@@ -75,8 +75,8 @@ protected:
 	void OnPostServiceChargeInit(intptr_t param);    // post_senddlg.cpp:563
 	void OnEmoticonBtnInit(intptr_t param);          // post_senddlg.cpp:573
 	void OnEmoticonBtnUp(void);                 // post_senddlg.cpp:583
-	bool OnPostReciveMsgEnterKey(int);    // post_senddlg.cpp:182
-	bool OnPostReceiveUserEnterKey(int);  // post_senddlg.cpp:196
+	bool OnPostReciveMsgEnterKey(PG_MSGARG);    // post_senddlg.cpp:182
+	bool OnPostReceiveUserEnterKey(PG_MSGARG);  // post_senddlg.cpp:196
 	void OnPostSearchUserBtnUp(void);
 	void OnPostListOwnerDraw(intptr_t param);  // post_senddlg.cpp:315
 	void DrawPartsSlot(FrGraphicInterface* pGDI, FrListItem* pItem);   // post_senddlg.cpp:432
@@ -246,7 +246,7 @@ public:
 	int GetCount(void);
 	void OnPostMinusBtnUp(void);
 	void OnPostPluseBtnUp(void);
-	bool OnPostEditItemCountEnterKey(int);
+	bool OnPostEditItemCountEnterKey(PG_MSGARG);
 	void OnPostMinusInit(intptr_t param);   // post_senddlg.cpp:2160
 	void OnPostPluseInit(intptr_t param);   // post_senddlg.cpp:2181
 	void OnPostEditItemCountInit(intptr_t param);   // post_senddlg.cpp:2201

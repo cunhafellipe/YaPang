@@ -830,12 +830,12 @@ void CPetBody::SetMotion(const char *name, bool loop, float time, bool applyDelt
 // petbody.cpp:881
 void CPetBody::SetScale(float scale) {
 	m_scale = scale;
-	m_matrix.AxisScale(WVector(scale, scale, scale));
+	{ WVector pg_scale(scale, scale, scale); m_matrix.AxisScale(pg_scale); }
 
 	if (m_pPet) {
 
 
-		m_pPet->GetMatrix().AxisScale(WVector(scale, scale, scale));
+		{ WVector pg_scale(scale, scale, scale); m_pPet->GetMatrix().AxisScale(pg_scale); }
 	}
 }
 

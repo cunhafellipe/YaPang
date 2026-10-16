@@ -53,7 +53,7 @@ protected:
 	void OnSendPangInit(intptr_t param);
 	void OnTotalPangInit(intptr_t param);
 	void OnItemInit(intptr_t param);
-	void OnItemOwnerDraw(int param);
+	void OnItemOwnerDraw(PG_MSGARG param);
 
 private:
 	FrArea* m_pItemArea;             // 0x110 (OnItemInit)

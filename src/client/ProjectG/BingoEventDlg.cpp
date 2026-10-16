@@ -166,7 +166,7 @@ CBingoLine& CBingoLine::operator=(const CBingoLine& other) {
 }
 
 // bingoeventdlg.cpp:218
-bool CBingoLine::operator+=(CBingoPoint& point) {
+bool CBingoLine::operator+=(const CBingoPoint& point) {
 	m_points.push_back(point);
 	return true;
 }
@@ -715,7 +715,7 @@ void FrBingoEventDlg::OnInitBoardNumberArea(intptr_t param) {
 }
 
 // bingoeventdlg.cpp:835
-void FrBingoEventDlg::OnOwnerDrawBoardNumberArea(int param) {
+void FrBingoEventDlg::OnOwnerDrawBoardNumberArea(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 		const WRect& rect = GetRect();
@@ -851,7 +851,7 @@ void FrBingoGiftDlg::OnInitGiftArea(intptr_t param) {
 }
 
 // bingoeventdlg.cpp:968
-void FrBingoGiftDlg::OnOwnerDrawGiftArea(int param) {
+void FrBingoGiftDlg::OnOwnerDrawGiftArea(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 		float offset = 0.0f;

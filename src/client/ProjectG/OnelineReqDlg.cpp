@@ -76,7 +76,7 @@ void FrOnelineReqDlg::OnChatInputInit(intptr_t param) {
 }
 
 // onelinereqdlg.cpp:59
-bool FrOnelineReqDlg::OnChatEnterKey(int param) {
+bool FrOnelineReqDlg::OnChatEnterKey(PG_MSGARG param) {
 	OnOK();
 	return false;
 }

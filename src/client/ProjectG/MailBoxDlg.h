@@ -29,7 +29,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	void OnNoteOwnerDraw(int);
+	void OnNoteOwnerDraw(PG_MSGARG);
 	void OnNoteLBtnUp(void);
 	bool OnNoteDlgResult(int, FrForm*);
 	void OnNoteRBtnUp(void);

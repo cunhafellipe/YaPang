@@ -113,7 +113,7 @@ FrLevelupItemForm::~FrLevelupItemForm(void) {
 }
 
 // levelupitemdlg.cpp:71
-void FrLevelupItemForm::OnLevelUpItemInit(int) {
+void FrLevelupItemForm::OnLevelUpItemInit(PG_MSGARG) {
 }
 
 // levelupitemdlg.cpp:76

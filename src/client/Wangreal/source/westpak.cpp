@@ -85,9 +85,9 @@ void __cdecl HookPAKFile(cFile* fp);
 struct sPakinfo {
 	char type;         // 0x0
 	short next;        // 0x2
-	long offset;       // 0x4
-	long packedsize;   // 0x8
-	long size;         // 0xc
+	int offset;       // 0x4
+	int packedsize;   // 0x8
+	int size;         // 0xc
 	char filename[1];  // 0x10
 };
 CHECK_SIZE(sPakinfo, 0x14);
@@ -100,9 +100,9 @@ CHECK_FIELD(sPakinfo, filename, 0x10);
 
 // An opened pak: its file, the base offset, the name hash and the index.
 struct sPak {
-	long num;             // 0x0
+	int num;             // 0x0
 	cFile* fp;            // 0x4
-	long offset;          // 0x8
+	int offset;          // 0x8
 	short hash[256];      // 0xc
 	void* lock;           // 0x20c
 	sPakinfo** list;      // 0x210
@@ -454,7 +454,7 @@ int cFileMemory::Tell() {
 }
 
 // <new>: the array form is declared from here on (the earlier new[] call operator new).
-void* __cdecl operator new[](unsigned int);
+// port: operator new[] is declared by <new>
 
 // westpak.cpp:573
 static sPak* OpenPAKFILE2(cFile* fp) {

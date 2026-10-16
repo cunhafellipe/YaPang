@@ -43,7 +43,7 @@ protected:
 	void OnOkBtnUp(void);
 	void OnCancelBtnInit(intptr_t param);
 	void OnCancelBtnUp(void);       // ucccopydlg.cpp:163
-	void OnEtcOwnerDraw(int param);
+	void OnEtcOwnerDraw(PG_MSGARG param);
 	bool OnUccCopyConfirmDlgResult(int ret, FrForm* pForm);
 	void BuildItemList(void);
 
@@ -96,7 +96,7 @@ protected:
 	void OnOkBtnUp(void);
 	void OnCancelBtnInit(intptr_t param);
 	void OnCancelBtnUp(void);
-	void OnEtcOwnerDraw(int param);
+	void OnEtcOwnerDraw(PG_MSGARG param);
 
 	sItemInfo* m_pSrcItem;      // 0x110
 	sItemInfo* m_pDestItem;     // 0x114
@@ -136,7 +136,7 @@ protected:
 
 	void OnOkBtnInit(intptr_t param);
 	void OnOkBtnUp(void);
-	void OnEtcOwnerDraw(int param);
+	void OnEtcOwnerDraw(PG_MSGARG param);
 
 	unsigned long m_typeId;     // 0x110
 	char m_name[10];            // 0x114

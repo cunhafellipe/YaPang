@@ -304,7 +304,7 @@ FrBongdariShopDlg::~FrBongdariShopDlg(void) {
 }
 
 // bongdarishopdlg.cpp:258
-void FrBongdariShopDlg::OnBongdariShopInit(int) {
+void FrBongdariShopDlg::OnBongdariShopInit(PG_MSGARG) {
 }
 
 // bongdarishopdlg.cpp:262
@@ -2143,7 +2143,7 @@ FrAboutShopDlg::~FrAboutShopDlg(void) {
 }
 
 // bongdarishopdlg.cpp:2873
-void FrAboutShopDlg::OnAboutShopInit(int) {
+void FrAboutShopDlg::OnAboutShopInit(PG_MSGARG) {
 }
 
 // bongdarishopdlg.cpp:2877
@@ -2394,7 +2394,7 @@ FrTotalItemDlg::~FrTotalItemDlg(void) {
 }
 
 // bongdarishopdlg.cpp:3120
-void FrTotalItemDlg::OnTotalItemInit(int) {
+void FrTotalItemDlg::OnTotalItemInit(PG_MSGARG) {
 }
 
 // bongdarishopdlg.cpp:3124
@@ -2409,7 +2409,7 @@ void FrTotalItemDlg::OnTotalItemListInit(intptr_t param) {
 }
 
 // bongdarishopdlg.cpp:3135
-void FrTotalItemDlg::OnTotalItemListOwnerDraw(int param) {
+void FrTotalItemDlg::OnTotalItemListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (!pGDI)
@@ -2661,7 +2661,7 @@ FrBongdarishopNoticeDlg::~FrBongdarishopNoticeDlg(void) {
 }
 
 // bongdarishopdlg.cpp:3399
-void FrBongdarishopNoticeDlg::OnBongdarishopNoticeInit(int) {
+void FrBongdarishopNoticeDlg::OnBongdarishopNoticeInit(PG_MSGARG) {
 }
 
 // bongdarishopdlg.cpp:3403
@@ -2933,7 +2933,7 @@ FrBongdarishopRareItemDlg::~FrBongdarishopRareItemDlg(void) {
 }
 
 // bongdarishopdlg.cpp:3688
-void FrBongdarishopRareItemDlg::OnBongdarishopRareItemInit(int) {
+void FrBongdarishopRareItemDlg::OnBongdarishopRareItemInit(PG_MSGARG) {
 }
 
 // bongdarishopdlg.cpp:3692
@@ -3141,7 +3141,7 @@ FrBongdarishopWarningDlg::~FrBongdarishopWarningDlg(void) {
 }
 
 // bongdarishopdlg.cpp:3909
-void FrBongdarishopWarningDlg::OnBongdarishopWarningInit(int) {
+void FrBongdarishopWarningDlg::OnBongdarishopWarningInit(PG_MSGARG) {
 }
 
 // bongdarishopdlg.cpp:3913
@@ -3186,7 +3186,7 @@ void FrBongdarishopWarningDlg::SetImgWarningBack(int type, int price) {
 }
 
 // bongdarishopdlg.cpp:3964
-void FrBongdarishopWarningDlg::OnWarningBackOwnerDraw(int) {
+void FrBongdarishopWarningDlg::OnWarningBackOwnerDraw(PG_MSGARG) {
 	if (m_backType == 2) {
 		WRect rc;
 		rc = GetRect();
@@ -3261,7 +3261,7 @@ FrClosedBonusBallResultDlg::~FrClosedBonusBallResultDlg(void) {
 }
 
 // bongdarishopdlg.cpp:4012
-void FrClosedBonusBallResultDlg::OnClosedBonusBallResultInit(int) {
+void FrClosedBonusBallResultDlg::OnClosedBonusBallResultInit(PG_MSGARG) {
 }
 
 // bongdarishopdlg.cpp:4016
@@ -3275,7 +3275,7 @@ void FrClosedBonusBallResultDlg::OnClosedBonusBallListInit(intptr_t param) {
 }
 
 // bongdarishopdlg.cpp:4026
-void FrClosedBonusBallResultDlg::OnClosedBonusBallListOwnerDraw(int param) {
+void FrClosedBonusBallResultDlg::OnClosedBonusBallListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (!pGDI)

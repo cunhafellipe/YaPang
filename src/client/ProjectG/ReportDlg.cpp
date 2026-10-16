@@ -84,7 +84,7 @@ void FrReportDlg::OnIdInit(intptr_t param) {
 }
 
 // reportdlg.cpp:64
-bool FrReportDlg::OnIdEnterKey(int param) {
+bool FrReportDlg::OnIdEnterKey(PG_MSGARG param) {
 	OnOK();
 
 	return false;

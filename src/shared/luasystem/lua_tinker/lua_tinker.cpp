@@ -1,4 +1,9 @@
 // Original: d:\build\custom\temp\code\shared\luasystem\lua_tinker\lua_tinker.cpp
+#ifdef PG_PORT
+// See lua_tinker.h: keep `long` distinct from `int` for the specialisations.
+#pragma push_macro("long")
+#undef long
+#endif
 #include "lua_tinker/lua_tinker.h"
 
 #include <stdarg.h>
@@ -733,3 +738,6 @@ table_obj_manager &table_obj_manager::GetInstance()
 	static table_obj_manager instance;
 	return instance;
 }
+#ifdef PG_PORT
+#pragma pop_macro("long")
+#endif

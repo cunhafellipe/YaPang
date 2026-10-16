@@ -61,7 +61,7 @@ public:
 	}
 
 private:
-	HINSTANCE__ *m_hModule;                                           // 0x0
+	HINSTANCE m_hModule;                                           // 0x0
 	HRESULT (__stdcall *m_pProc)(IScreenCape **, unsigned long);      // 0x4
 };
 

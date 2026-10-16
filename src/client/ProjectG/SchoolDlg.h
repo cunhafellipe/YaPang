@@ -46,7 +46,7 @@ protected:
 	virtual bool OnInit(void);
 
 	void OnLikeInit(intptr_t param);
-	bool OnLikeEnterKey(int param);
+	bool OnLikeEnterKey(PG_MSGARG param);
 	void OnSchoolInit(intptr_t param);
 	void OnSchoolBtnDown(intptr_t param);
 	void OnSearchBtnUp(void);

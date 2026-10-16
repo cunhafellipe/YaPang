@@ -198,7 +198,7 @@ bool FrMakeRoomDlg::OnInit(void) {
 }
 
 // makeroomdlg.cpp:222
-void FrMakeRoomDlg::OnMakeVsInit(int param) {
+void FrMakeRoomDlg::OnMakeVsInit(PG_MSGARG param) {
 	m_pMakeBtn[0] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -208,7 +208,7 @@ void FrMakeRoomDlg::OnMakeVsDown(void) {
 }
 
 // makeroomdlg.cpp:235
-void FrMakeRoomDlg::OnMakeMassInit(int param) {
+void FrMakeRoomDlg::OnMakeMassInit(PG_MSGARG param) {
 	m_pMakeBtn[1] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -218,7 +218,7 @@ void FrMakeRoomDlg::OnMakeMassDown(void) {
 }
 
 // makeroomdlg.cpp:248
-void FrMakeRoomDlg::OnMakeBattleInit(int param) {
+void FrMakeRoomDlg::OnMakeBattleInit(PG_MSGARG param) {
 	m_pMakeBtn[2] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -228,7 +228,7 @@ void FrMakeRoomDlg::OnMakeBattleDown(void) {
 }
 
 // makeroomdlg.cpp:283
-void FrMakeRoomDlg::OnMakeChatInit(int param) {
+void FrMakeRoomDlg::OnMakeChatInit(PG_MSGARG param) {
 	m_pMakeBtn[3] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -238,7 +238,7 @@ void FrMakeRoomDlg::OnMakeChatDown(void) {
 }
 
 // makeroomdlg.cpp:297
-void FrMakeRoomDlg::OnMakeChaosInit(int param) {
+void FrMakeRoomDlg::OnMakeChaosInit(PG_MSGARG param) {
 	m_pMakeBtn[4] = DYNAMIC_CAST(FrButton, param);
 	if (m_pMakeBtn[4]) {
 		bool found = false;
@@ -271,7 +271,7 @@ void FrMakeRoomDlg::OnMakeChaosDown(void) {
 }
 
 // makeroomdlg.cpp:354
-void FrMakeRoomDlg::OnPictureInit(int param) {
+void FrMakeRoomDlg::OnPictureInit(PG_MSGARG param) {
 	m_pPicture = DYNAMIC_CAST(FrViewer, param);
 
 	if (m_pPicture) {
@@ -296,7 +296,7 @@ void FrMakeRoomDlg::OnTitleInit(intptr_t param) {
 }
 
 // makeroomdlg.cpp:381
-bool FrMakeRoomDlg::OnTitleEnterKey(int param) {
+bool FrMakeRoomDlg::OnTitleEnterKey(PG_MSGARG param) {
 	return false;
 }
 
@@ -342,7 +342,7 @@ void FrMakeRoomDlg::OnMapNextUp(void) {
 }
 
 // makeroomdlg.cpp:471
-void FrMakeRoomDlg::OnMapPrevChatInit(int param) {
+void FrMakeRoomDlg::OnMapPrevChatInit(PG_MSGARG param) {
 	m_pMapPrevChat = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pMapPrevChat) {
@@ -352,7 +352,7 @@ void FrMakeRoomDlg::OnMapPrevChatInit(int param) {
 }
 
 // makeroomdlg.cpp:482
-void FrMakeRoomDlg::OnMapNextChatInit(int param) {
+void FrMakeRoomDlg::OnMapNextChatInit(PG_MSGARG param) {
 	m_pMapNextChat = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pMapNextChat) {
@@ -1218,7 +1218,7 @@ void FrMakeRoomDlg::OnCourseUp(void) {
 }
 
 // makeroomdlg.cpp:1777
-void FrMakeRoomDlg::OnCourseOwnerDraw(int param) {
+void FrMakeRoomDlg::OnCourseOwnerDraw(PG_MSGARG param) {
 	if (m_gameType == 10 || m_gameType == 6)
 		return;
 
@@ -1275,7 +1275,7 @@ void FrMakeRoomDlg::DrawHoleTypeButton(FrGraphicInterface* pDevice, eHoleType ho
 }
 
 // makeroomdlg.cpp:1843
-void FrMakeRoomDlg::OnHoleTypeOwnerDraw(int param) {
+void FrMakeRoomDlg::OnHoleTypeOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pDevice = g_pFresh->GetManager()->GetGDI();
 	if (pDevice == 0)
 		return;
@@ -1313,7 +1313,7 @@ void FrMakeRoomDlg::OnHoleTypeOwnerDraw(int param) {
 }
 
 // makeroomdlg.cpp:1950
-void FrMakeRoomDlg::OnCourseChatInit(int param) {
+void FrMakeRoomDlg::OnCourseChatInit(PG_MSGARG param) {
 	m_pCourseChat = DYNAMIC_CAST(FrViewer, param);
 
 	if (m_pCourseChat) {
@@ -1327,7 +1327,7 @@ void FrMakeRoomDlg::OnCourseChatUp(void) {
 }
 
 // makeroomdlg.cpp:1964
-void FrMakeRoomDlg::OnHoleChatInit(int param) {
+void FrMakeRoomDlg::OnHoleChatInit(PG_MSGARG param) {
 	m_pHoleChat = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pHoleChat) {
@@ -1336,7 +1336,7 @@ void FrMakeRoomDlg::OnHoleChatInit(int param) {
 }
 
 // makeroomdlg.cpp:1973
-void FrMakeRoomDlg::OnHoleChatOwnerDraw(int param) {
+void FrMakeRoomDlg::OnHoleChatOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pDevice = g_pFresh->GetManager()->GetGDI();
 	if (pDevice) {
 		WRect rect = m_pHoleChat->GetRect();
@@ -1346,7 +1346,7 @@ void FrMakeRoomDlg::OnHoleChatOwnerDraw(int param) {
 }
 
 // makeroomdlg.cpp:1985
-void FrMakeRoomDlg::OnHoleMinInit(int param) {
+void FrMakeRoomDlg::OnHoleMinInit(PG_MSGARG param) {
 	m_pHoleMin = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pHoleMin) {
@@ -1361,7 +1361,7 @@ void FrMakeRoomDlg::OnHoleMinUp(void) {
 }
 
 // makeroomdlg.cpp:2000
-void FrMakeRoomDlg::OnHolePrevInit(int param) {
+void FrMakeRoomDlg::OnHolePrevInit(PG_MSGARG param) {
 	m_pHolePrev = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pHolePrev) {
@@ -1377,7 +1377,7 @@ void FrMakeRoomDlg::OnHolePrevUp(void) {
 }
 
 // makeroomdlg.cpp:2016
-void FrMakeRoomDlg::OnHoleNextInit(int param) {
+void FrMakeRoomDlg::OnHoleNextInit(PG_MSGARG param) {
 	m_pHoleNext = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pHoleNext) {
@@ -1393,7 +1393,7 @@ void FrMakeRoomDlg::OnHoleNextUp(void) {
 }
 
 // makeroomdlg.cpp:2032
-void FrMakeRoomDlg::OnHoleMaxInit(int param) {
+void FrMakeRoomDlg::OnHoleMaxInit(PG_MSGARG param) {
 	m_pHoleMax = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pHoleMax) {
@@ -1408,7 +1408,7 @@ void FrMakeRoomDlg::OnHoleMaxUp(void) {
 }
 
 // makeroomdlg.cpp:2047
-void FrMakeRoomDlg::OnOverGauge_Init(int param) {
+void FrMakeRoomDlg::OnOverGauge_Init(PG_MSGARG param) {
 	m_pOverGauge = DYNAMIC_CAST(FrGaugeBarImage, param);
 
 	if (m_pOverGauge) {

@@ -75,7 +75,7 @@ void CStandingInLine::OnView_TotalInit(intptr_t param) {
 }
 
 // standinginline.cpp:64
-void CStandingInLine::OnView_TotalOwnerDraw(int param) {
+void CStandingInLine::OnView_TotalOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pDevice = g_pFresh->GetManager()->GetGDI();
 	pDevice->SetTextColor(0xff1f1f1f, 0xffffffff);
 

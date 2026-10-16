@@ -135,7 +135,7 @@ void FrReplayControlDlg::OnPlayBtnUp(void) {
 }
 
 // replaydlg.cpp:109
-void FrReplayControlDlg::OnBeforeShotBtnInit(int param) {
+void FrReplayControlDlg::OnBeforeShotBtnInit(PG_MSGARG param) {
 	m_pBeforeShotBtn = DYNAMIC_CAST(FrButton, param);
 	m_pBeforeShotBtn->Enable(false);
 }
@@ -150,7 +150,7 @@ void FrReplayControlDlg::OnBeforeShotBtnUp(void) {
 }
 
 // replaydlg.cpp:130
-void FrReplayControlDlg::OnNextShotBtnInit(int param) {
+void FrReplayControlDlg::OnNextShotBtnInit(PG_MSGARG param) {
 	m_pNextShotBtn = DYNAMIC_CAST(FrButton, param);
 	m_pNextShotBtn->Enable(false);
 }
@@ -184,7 +184,7 @@ void FrReplayControlDlg::OnExitBtnUp(void) {
 }
 
 // replaydlg.cpp:172
-void FrReplayControlDlg::OnMinimizeBtnInit(int param) {
+void FrReplayControlDlg::OnMinimizeBtnInit(PG_MSGARG param) {
 	m_pMinimizeBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -195,7 +195,7 @@ void FrReplayControlDlg::OnMinimizeBtnUp(void) {
 }
 
 // replaydlg.cpp:184
-void FrReplayControlDlg::OnRecordBtnInit(int param) {
+void FrReplayControlDlg::OnRecordBtnInit(PG_MSGARG param) {
 	m_pRecordBtn = DYNAMIC_CAST(FrButton, param);
 	m_pRecordBtn->Enable(false);
 

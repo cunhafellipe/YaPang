@@ -95,7 +95,7 @@ void FrPangGiftDlg::OnItemInit(intptr_t param) {
 }
 
 // panggiftdlg.cpp:78
-void FrPangGiftDlg::OnItemOwnerDraw(int param) {
+void FrPangGiftDlg::OnItemOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 

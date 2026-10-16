@@ -34,9 +34,9 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	void OnQuestInfoInit(int);
+	void OnQuestInfoInit(PG_MSGARG);
 	void OnRewardItemListInit(intptr_t param);
-	void OnRewardItemListOwnerDraw(int param);
+	void OnRewardItemListOwnerDraw(PG_MSGARG param);
 	void OnQuestNameEditInit(intptr_t param);
 	void OnQuestMessageEditInit(intptr_t param);
 	void OnQuestExplaneEditInit(intptr_t param);
@@ -90,7 +90,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnGiftListInit(intptr_t param);
-	void OnGiftListOwnerDraw(int param);
+	void OnGiftListOwnerDraw(PG_MSGARG param);
 	void OnGiftListLBtnDown(void);
 	void OnSelectInit(intptr_t param);
 	void OnItemBack4(intptr_t param);

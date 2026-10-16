@@ -39,9 +39,9 @@ protected:
 	void OnAuth_KindPowerInit(intptr_t);
 	void OnAuth_KindPowerOwnerdraw(intptr_t);
 	void OnAuth_KindPowerBtnDown(void);
-	void OnAuthEditBgInit(int);
+	void OnAuthEditBgInit(PG_MSGARG);
 	void OnAuth_PasswordInit(intptr_t);
-	bool OnAuth_PWEnterKey(int);
+	bool OnAuth_PWEnterKey(PG_MSGARG);
 	void OnInitStorageLock(intptr_t);
 	void OnInitStorageUnLock(intptr_t);
 	void OnInitStorageChangePass(intptr_t);
@@ -98,7 +98,7 @@ protected:
 	virtual void OnCancle(void);
 
 	void OnInputPwInit(intptr_t);
-	bool OnInputPwEnterKey(int);
+	bool OnInputPwEnterKey(PG_MSGARG);
 
 	FrEdit* m_pInputPwEdit;   // 0x110
 	UNKNOWN(0x114, 0x118);

@@ -9241,13 +9241,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11678
 			pDlg->SetCaption("\xbd\xc5\xb1\xd4\xb0\xa1\xc0\xd4 \xc0\xcc\xba\xa5\xc6\xae");
 			// taskmanager.cpp:11680
-			pDlg->SetDlgSize(WRect(-1.0f, -1.0f, 301.0f, 309.0f));
+			{ WRect pg_rect(-1.0f, -1.0f, 301.0f, 309.0f); pDlg->SetDlgSize(pg_rect); }
 			// taskmanager.cpp:11685
-			pDlg->SetBackGroundImage(0, 0, WRect(0.0f, 0.0f, 256.0f, 220.0f), "event_new_02_a", true);
+			{ WRect pg_rect(0.0f, 0.0f, 256.0f, 220.0f); pDlg->SetBackGroundImage(0, 0, pg_rect, "event_new_02_a", true); }
 			// taskmanager.cpp:11691
-			pDlg->SetBackGroundImage(2, 0, WRect(256.0f, 0.0f, 314.0f, 247.0f), "event_new_02_b", true);
+			{ WRect pg_rect(256.0f, 0.0f, 314.0f, 247.0f); pDlg->SetBackGroundImage(2, 0, pg_rect, "event_new_02_b", true); }
 			// taskmanager.cpp:11694
-			pDlg->SetOkButton(WRect(114.0f, 247.0f, 0.0f, 0.0f), true);
+			{ WRect pg_rect(114.0f, 247.0f, 0.0f, 0.0f); pDlg->SetOkButton(pg_rect, true); }
 			// taskmanager.cpp:11696
 			pDlg->SetDesc("8\xbf\xf9 31\xc0\xcf \xc6\xce\xbe\xdf \xc8\xa8\xc6\xe4\xc0\xcc\xc1\xf6\xbf\xa1\xbc\xad \xc8\xae\xc0\xce\xc7\xcf\xbc\xbc\xbf\xe4.");
 			// taskmanager.cpp:11698
@@ -9260,13 +9260,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11710
 			pDlg->SetCaption("\xbd\xc5\xb1\xd4\xb0\xa1\xc0\xd4 \xc0\xcc\xba\xa5\xc6\xae");
 			// taskmanager.cpp:11712
-			pDlg->SetDlgSize(WRect(-1.0f, -1.0f, 342.0f, 334.0f));
+			{ WRect pg_rect(-1.0f, -1.0f, 342.0f, 334.0f); pDlg->SetDlgSize(pg_rect); }
 			// taskmanager.cpp:11717
-			pDlg->SetBackGroundImage(0, 0, WRect(0.0f, 0.0f, 256.0f, 256.0f), "event_new_03_a", true);
+			{ WRect pg_rect(0.0f, 0.0f, 256.0f, 256.0f); pDlg->SetBackGroundImage(0, 0, pg_rect, "event_new_03_a", true); }
 			// taskmanager.cpp:11723
-			pDlg->SetBackGroundImage(2, 0, WRect(256.0f, 0.0f, 333.0f, 256.0f), "event_new_03_b", true);
+			{ WRect pg_rect(256.0f, 0.0f, 333.0f, 256.0f); pDlg->SetBackGroundImage(2, 0, pg_rect, "event_new_03_b", true); }
 			// taskmanager.cpp:11726
-			pDlg->SetOkButton(WRect(127.0f, 273.0f, 0.0f, 0.0f), true);
+			{ WRect pg_rect(127.0f, 273.0f, 0.0f, 0.0f); pDlg->SetOkButton(pg_rect, true); }
 			// taskmanager.cpp:11728
 			pDlg->SetDesc("8\xbf\xf9 31\xc0\xcf \xc6\xce\xbe\xdf \xc8\xa8\xc6\xe4\xc0\xcc\xc1\xf6\xbf\xa1\xbc\xad \xc8\xae\xc0\xce\xc7\xcf\xbc\xbc\xbf\xe4.");
 			// taskmanager.cpp:11730

@@ -379,13 +379,13 @@ protected:
 	virtual void OnProc(const float deltaTime);
 
 protected:
-	void OnTab0Init(int param);
-	void OnTab1Init(int param);
-	void OnNextLevelTextInit(int param);
+	void OnTab0Init(PG_MSGARG param);
+	void OnTab1Init(PG_MSGARG param);
+	void OnNextLevelTextInit(PG_MSGARG param);
 
 protected:
 	void OnUserListInit(intptr_t param);
-	void OnUserListOwnerDraw(int param);
+	void OnUserListOwnerDraw(PG_MSGARG param);
 	void OnExpBar0Init(intptr_t param);
 	void OnExpBar1Init(intptr_t param);
 	void OnExpBar2Init(intptr_t param);
@@ -562,12 +562,12 @@ protected:
 	void LoadBitmaps(void);
 	virtual bool OnInit(void);
 	virtual void OnDraw(void);
-	void OnBlankPanel01OwnerDraw(int param);
-	void OnBlankPanel02OwnerDraw(int param);
-	void OnBlankPanel03OwnerDraw(int param);
+	void OnBlankPanel01OwnerDraw(PG_MSGARG param);
+	void OnBlankPanel02OwnerDraw(PG_MSGARG param);
+	void OnBlankPanel03OwnerDraw(PG_MSGARG param);
 	void OnCancelBtnUp(void);
 	void OnCloseBtnInit(intptr_t param);
-	void OnPangListInit(int param);
+	void OnPangListInit(PG_MSGARG param);
 	void OnCloseBtnUp(void);
 	virtual void OnProc(const float dt);
 	void OnGraphBtnUp(void);
@@ -590,19 +590,19 @@ protected:
 	void OnHoleListOwnerDraw(intptr_t param);
 	void OnParListInit(intptr_t param);
 	void OnParListOwnerDraw(intptr_t param);
-	void OnPangListOwnerDraw(int param);
+	void OnPangListOwnerDraw(PG_MSGARG param);
 	void OnGolferListInit(intptr_t param);
 	void OnGolferListOwnerDraw(intptr_t param);
 	void OnRecordListInit(intptr_t param);
 	void OnRecordListOwnerDraw(intptr_t param);
 	void OnTotalListInit(intptr_t param);
-	void OnTotalListOwnerDraw(int param);
+	void OnTotalListOwnerDraw(PG_MSGARG param);
 	void OnTotalInit(intptr_t param);
 	void OnPPLInit(intptr_t param);
 	void OnBoard1Init(intptr_t param);
 	void OnBoard2Init(intptr_t param);
 	void OnDrawLinesInit(intptr_t param);
-	void OnDrawLinesOwnerDraw(int param);
+	void OnDrawLinesOwnerDraw(PG_MSGARG param);
 	void OnCancelBtnInit(intptr_t param);
 	void OnBlankPanel01Init(intptr_t param);
 	void OnBlankPanel02Init(intptr_t param);
@@ -716,7 +716,7 @@ public:
 protected:
 	virtual bool OnInit(void);
 	void OnViewInit(intptr_t param);
-	void OnViewOwnerDraw(int param);
+	void OnViewOwnerDraw(PG_MSGARG param);
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];

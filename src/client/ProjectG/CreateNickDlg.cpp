@@ -148,7 +148,7 @@ void FrCreateNickDlg::OnEditNickDown(void) {
 }
 
 // createnickdlg.cpp:136
-bool FrCreateNickDlg::OnEditNickEnterKey(int param) {
+bool FrCreateNickDlg::OnEditNickEnterKey(PG_MSGARG param) {
 	OnCheckBtnUp();
 	return false;
 }

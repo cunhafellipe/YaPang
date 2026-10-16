@@ -100,7 +100,7 @@ bool IsAngelWing(unsigned long typeId) {
 // shareddoc.inl:602, under 3% of the local player's games ended without
 // manners. Inline in the original (RealMyRoomMainUI emitted the copy the
 // linker kept); defined here until that unit's callers are transcribed.
-bool IsMannerPlayer(void) {
+inline bool IsMannerPlayer(void) {
 	unsigned long games = WSingleton<CSharedDoc>::Instance()->m_myStatGamesPlayed;
 	if (games < 1) {
 		games = 1;

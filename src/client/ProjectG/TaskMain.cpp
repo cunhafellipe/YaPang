@@ -1258,7 +1258,7 @@ void CTaskMain::OnUnderBar_MagicBoxUp(void) {
 }
 
 // taskmain.cpp:1389
-void CTaskMain::OnUnderBar_TikiMagicBoxInit(int) {
+void CTaskMain::OnUnderBar_TikiMagicBoxInit(PG_MSGARG) {
 }
 
 // taskmain.cpp:1393
@@ -1691,7 +1691,7 @@ void CTaskMain::CloseAllSubSelection(void) {
 }
 
 // taskmain.cpp:2200
-void CTaskMain::OnOverBar_Bar1Init(int param) {
+void CTaskMain::OnOverBar_Bar1Init(PG_MSGARG param) {
 	m_overBarArea[0] = DYNAMIC_CAST(FrArea, param);
 	if (m_overBarArea[0]) {
 		if (S5::CLASSICSRV::IsClassicServer(S5::UTIL::GetServerProperty()))
@@ -1700,7 +1700,7 @@ void CTaskMain::OnOverBar_Bar1Init(int param) {
 }
 
 // taskmain.cpp:2210
-void CTaskMain::OnOverBar_Bar2Init(int param) {
+void CTaskMain::OnOverBar_Bar2Init(PG_MSGARG param) {
 	m_overBarArea[1] = DYNAMIC_CAST(FrArea, param);
 	if (m_overBarArea[1]) {
 		float w = m_overBarArea[2]->GetRect().x - m_overBarArea[0]->GetRect().x - m_overBarArea[0]->GetRect().w;
@@ -1712,7 +1712,7 @@ void CTaskMain::OnOverBar_Bar2Init(int param) {
 }
 
 // taskmain.cpp:2223
-void CTaskMain::OnOverBar_Bar3Init(int param) {
+void CTaskMain::OnOverBar_Bar3Init(PG_MSGARG param) {
 	m_overBarArea[2] = DYNAMIC_CAST(FrArea, param);
 	if (m_overBarArea[2]) {
 		SetLeftOffset(m_overBarArea[2], m_screenWidth);
@@ -1725,7 +1725,7 @@ void CTaskMain::OnOverBar_TitleInit(intptr_t param) {
 }
 
 // taskmain.cpp:2239
-void CTaskMain::OnOverBar_Frame1Init(int param) {
+void CTaskMain::OnOverBar_Frame1Init(PG_MSGARG param) {
 	m_overBarFrame[0] = DYNAMIC_CAST(FrArea, param);
 	if (m_overBarFrame[0]) {
 		const WRect &cur = m_overBarFrame[0]->GetRect();
@@ -1737,7 +1737,7 @@ void CTaskMain::OnOverBar_Frame1Init(int param) {
 }
 
 // taskmain.cpp:2252
-void CTaskMain::OnOverBar_Frame2Init(int param) {
+void CTaskMain::OnOverBar_Frame2Init(PG_MSGARG param) {
 	m_overBarFrame[1] = DYNAMIC_CAST(FrArea, param);
 	if (m_overBarFrame[1]) {
 		const WRect &cur = m_overBarFrame[1]->GetRect();
@@ -1749,7 +1749,7 @@ void CTaskMain::OnOverBar_Frame2Init(int param) {
 }
 
 // taskmain.cpp:2265
-void CTaskMain::OnOverBar_Frame3Init(int param) {
+void CTaskMain::OnOverBar_Frame3Init(PG_MSGARG param) {
 	m_overBarFrame[2] = DYNAMIC_CAST(FrArea, param);
 	if (m_overBarFrame[2]) {
 		const WRect &cur = m_overBarFrame[2]->GetRect();
@@ -1806,7 +1806,7 @@ void CTaskMain::OnOverBar_CharDown(void) {
 }
 
 // taskmain.cpp:2346
-void CTaskMain::OnOverBar_CharOwnerDraw(int) {
+void CTaskMain::OnOverBar_CharOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -1897,7 +1897,7 @@ void CTaskMain::OnOverBar_CaddieDown(void) {
 }
 
 // taskmain.cpp:2476
-void CTaskMain::OnOverBar_CaddieOwnerDraw(int) {
+void CTaskMain::OnOverBar_CaddieOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -1966,7 +1966,7 @@ void CTaskMain::OnOverBar_ClubDown(void) {
 }
 
 // taskmain.cpp:2550
-void CTaskMain::OnOverBar_ClubOwnerDraw(int) {
+void CTaskMain::OnOverBar_ClubOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -2073,7 +2073,7 @@ bool CTaskMain::OnResultSubEquipBar(int result, FrForm *) {
 }
 
 // taskmain.cpp:2746
-void CTaskMain::OnOverBar_AztecOwnerDraw(int) {
+void CTaskMain::OnOverBar_AztecOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -2126,7 +2126,7 @@ void CTaskMain::OnOverBar_MascotDown(void) {
 }
 
 // taskmain.cpp:2802
-void CTaskMain::OnOverBar_MascotOwnerDraw(int) {
+void CTaskMain::OnOverBar_MascotOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -2165,7 +2165,7 @@ void CTaskMain::OnOverBar_CharSelInit(intptr_t param) {
 }
 
 // taskmain.cpp:2844
-void CTaskMain::OnOverBar_CharSelOwnerDraw(int) {
+void CTaskMain::OnOverBar_CharSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -2248,7 +2248,7 @@ void CTaskMain::OnOverBar_CaddieSelInit(intptr_t param) {
 }
 
 // taskmain.cpp:2935
-void CTaskMain::OnOverBar_CaddieSelOwnerDraw(int) {
+void CTaskMain::OnOverBar_CaddieSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -2357,7 +2357,7 @@ void CTaskMain::OnOverBar_ClubSelInit(intptr_t param) {
 }
 
 // taskmain.cpp:3062
-void CTaskMain::OnOverBar_ClubSelOwnerDraw(int) {
+void CTaskMain::OnOverBar_ClubSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -2453,7 +2453,7 @@ void CTaskMain::OnOverBar_AztecSelInit(intptr_t param) {
 }
 
 // taskmain.cpp:3168
-void CTaskMain::OnOverBar_AztecSelOwnerDraw(int) {
+void CTaskMain::OnOverBar_AztecSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -2536,7 +2536,7 @@ void CTaskMain::OnOverBar_MascotSelInit(intptr_t param) {
 }
 
 // taskmain.cpp:3263
-void CTaskMain::OnOverBar_MascotSelOwnerDraw(int) {
+void CTaskMain::OnOverBar_MascotSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == NULL)
 		return;
@@ -2957,7 +2957,7 @@ void CTaskMain::OnOverBar_OneLineViewInit(intptr_t param) {
 }
 
 // taskmain.cpp:3458
-void CTaskMain::OnOverBar_OneLineViewOwnerDraw(int) {
+void CTaskMain::OnOverBar_OneLineViewOwnerDraw(PG_MSGARG) {
 	COneLineBoard::Instance()->Display();
 }
 
@@ -2998,7 +2998,7 @@ void CTaskMain::OnOverBar_PangCookieInit(intptr_t param) {
 }
 
 // taskmain.cpp:3520
-void CTaskMain::OnOverBar_PangCookieOwnerDraw(int) {
+void CTaskMain::OnOverBar_PangCookieOwnerDraw(PG_MSGARG) {
 	if (WSingleton<CProjectG>::Instance()->HidePrivacy())
 		return;
 
@@ -3084,7 +3084,7 @@ void CTaskMain::OnBarHoverOff(intptr_t param) {
 }
 
 // taskmain.cpp:3737
-void CTaskMain::OnBarTooltipOwnerDraw(int) {
+void CTaskMain::OnBarTooltipOwnerDraw(PG_MSGARG) {
 	TOOLTIP()->Render();
 }
 
@@ -3184,7 +3184,7 @@ void CTaskMain::OnMessengerBubbleInit(intptr_t param) {
 }
 
 // taskmain.cpp:3866
-void CTaskMain::OnMessengerBubbleOwnerDraw(int) {
+void CTaskMain::OnMessengerBubbleOwnerDraw(PG_MSGARG) {
 	if (m_messengerBubbleEdit == NULL)
 		return;
 

@@ -70,7 +70,7 @@ void FrUccSetInfoDlg::OnNameInit(intptr_t param) {
 }
 
 // uccsetinfodlg.cpp:35
-bool FrUccSetInfoDlg::OnNameEnterKey(int param) {
+bool FrUccSetInfoDlg::OnNameEnterKey(PG_MSGARG param) {
 	OnOkBtnUp();
 	return true;
 }
@@ -128,7 +128,7 @@ void FrUccSetInfoDlg::OnIconAreaInit(intptr_t param) {
 }
 
 // uccsetinfodlg.cpp:113
-void FrUccSetInfoDlg::OnIconAreaOwnerDraw(int param) {
+void FrUccSetInfoDlg::OnIconAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = GetGDI();
 	if (pGDI == 0)
 		return;

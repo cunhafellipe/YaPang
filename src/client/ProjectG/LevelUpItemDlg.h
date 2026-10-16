@@ -177,7 +177,7 @@ protected:
 	virtual bool OnInit(void);
 	virtual void OnProc(const float dt);
 
-	void OnLevelUpItemInit(int);
+	void OnLevelUpItemInit(PG_MSGARG);
 	void OnCloseUp(void);
 	void OnLevelIcon(intptr_t param);
 	void OnFrame2Init(intptr_t param);

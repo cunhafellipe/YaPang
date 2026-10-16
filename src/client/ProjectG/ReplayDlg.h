@@ -36,15 +36,15 @@ protected:
 
 	void OnPlayInit(intptr_t param);
 	void OnPlayBtnUp(void);        // replaydlg.cpp:104
-	void OnBeforeShotBtnInit(int param);
+	void OnBeforeShotBtnInit(PG_MSGARG param);
 	void OnBeforeShotBtnUp(void);
-	void OnNextShotBtnInit(int param);
+	void OnNextShotBtnInit(PG_MSGARG param);
 	void OnNextShotBtnUp(void);
 	void OnExitBtnInit(intptr_t param);
 	void OnExitBtnUp(void);
-	void OnMinimizeBtnInit(int param);
+	void OnMinimizeBtnInit(PG_MSGARG param);
 	void OnMinimizeBtnUp(void);
-	void OnRecordBtnInit(int param);
+	void OnRecordBtnInit(PG_MSGARG param);
 	void OnRecordBtnUp(void);
 
 	FrButton* m_pBeforeShotBtn;    // 0x110

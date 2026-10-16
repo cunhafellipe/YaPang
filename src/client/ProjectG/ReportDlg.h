@@ -35,7 +35,7 @@ protected:
 	virtual void OnProc(const float dt);
 
 	void OnIdInit(intptr_t param);
-	bool OnIdEnterKey(int param);
+	bool OnIdEnterKey(PG_MSGARG param);
 	void OnEmoticonBtnUp(void);
 	bool OnEmoticonResult(int ret, FrForm* pForm);
 	void OnReasonInit(intptr_t param);

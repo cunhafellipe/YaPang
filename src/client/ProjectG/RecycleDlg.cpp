@@ -207,11 +207,11 @@ FrRecycleDlg::~FrRecycleDlg(void) {
 }
 
 // recycledlg.cpp:186
-void FrRecycleDlg::OnRecycleDlgInit(int) {
+void FrRecycleDlg::OnRecycleDlgInit(PG_MSGARG) {
 }
 
 // recycledlg.cpp:191
-void FrRecycleDlg::OnAboutBnInit(int param) {
+void FrRecycleDlg::OnAboutBnInit(PG_MSGARG param) {
 	DYNAMIC_CAST(FrButton, param);
 }
 
@@ -236,7 +236,7 @@ void FrRecycleDlg::OnCloseBnUp(void) {
 }
 
 // recycledlg.cpp:220
-void FrRecycleDlg::OnLevelLowBnInit(int param) {
+void FrRecycleDlg::OnLevelLowBnInit(PG_MSGARG param) {
 	m_pLevelLowBn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pLevelLowBn) {
@@ -260,7 +260,7 @@ void FrRecycleDlg::OnLevelLowBnUp(void) {
 }
 
 // recycledlg.cpp:246
-void FrRecycleDlg::OnLevelMidBnInit(int param) {
+void FrRecycleDlg::OnLevelMidBnInit(PG_MSGARG param) {
 	m_pLevelMidBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -279,7 +279,7 @@ void FrRecycleDlg::OnLevelMidBnUp(void) {
 }
 
 // recycledlg.cpp:267
-void FrRecycleDlg::OnLevelHighBnInit(int param) {
+void FrRecycleDlg::OnLevelHighBnInit(PG_MSGARG param) {
 	m_pLevelHighBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -298,7 +298,7 @@ void FrRecycleDlg::OnLevelHighBnUp(void) {
 }
 
 // recycledlg.cpp:288
-void FrRecycleDlg::OnLevelSpecialBnInit(int param) {
+void FrRecycleDlg::OnLevelSpecialBnInit(PG_MSGARG param) {
 	m_pLevelSpecialBn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pLevelSpecialBn) {
@@ -326,7 +326,7 @@ void FrRecycleDlg::OnLevelSpecialBnUp(void) {
 }
 
 // recycledlg.cpp:317
-void FrRecycleDlg::OnLevelEventBnInit(int param) {
+void FrRecycleDlg::OnLevelEventBnInit(PG_MSGARG param) {
 	m_pLevelEventBn = DYNAMIC_CAST(FrButton, param);
 
 	if (g_NumEventRecycleItem > 0) {
@@ -363,7 +363,7 @@ void FrRecycleDlg::OnLevelEventBnUp(void) {
 }
 
 // recycledlg.cpp:362
-void FrRecycleDlg::OnCharacterSelectListInit(int param) {
+void FrRecycleDlg::OnCharacterSelectListInit(PG_MSGARG param) {
 	m_pCharacterSelectList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pCharacterSelectList) {
@@ -385,7 +385,7 @@ void FrRecycleDlg::OnCharacterSelectListLBnUp(void) {
 }
 
 // recycledlg.cpp:386
-void FrRecycleDlg::OnCharacterSelectListOwnerDraw(int param) {
+void FrRecycleDlg::OnCharacterSelectListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (pItem) {
@@ -445,7 +445,7 @@ void FrRecycleDlg::AddHaveItemMap(const sRecycleItem* pItem) {
 }
 
 // recycledlg.cpp:447
-void FrRecycleDlg::OnRecycleItemListInit(int param) {
+void FrRecycleDlg::OnRecycleItemListInit(PG_MSGARG param) {
 	m_pRecycleItemList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pRecycleItemList) {
@@ -480,7 +480,7 @@ void FrRecycleDlg::OnRecycleItemListRBnUp(void) {
 }
 
 // recycledlg.cpp:484
-void FrRecycleDlg::OnRecycleItemListOwnerDraw(int param) {
+void FrRecycleDlg::OnRecycleItemListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (pItem) {
@@ -570,19 +570,19 @@ void FrRecycleDlg::OnRecycleItemListOwnerDraw(int param) {
 }
 
 // recycledlg.cpp:600
-void FrRecycleDlg::OnRecycleNumberInit(int param) {
+void FrRecycleDlg::OnRecycleNumberInit(PG_MSGARG param) {
 	m_pRecycleNumber = DYNAMIC_CAST(FrEdit, param);
 
 	ControlRecycleNumber(-1);
 }
 
 // recycledlg.cpp:608
-bool FrRecycleDlg::OnRecycleNumberEnterKey(int) {
+bool FrRecycleDlg::OnRecycleNumberEnterKey(PG_MSGARG) {
 	return false;
 }
 
 // recycledlg.cpp:614
-void FrRecycleDlg::OnMixBnInit(int param) {
+void FrRecycleDlg::OnMixBnInit(PG_MSGARG param) {
 	m_pMixBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -626,7 +626,7 @@ void FrRecycleDlg::OnMixBnUp(void) {
 }
 
 // recycledlg.cpp:656
-void FrRecycleDlg::OnArrowMinimumBnInit(int param) {
+void FrRecycleDlg::OnArrowMinimumBnInit(PG_MSGARG param) {
 	m_pArrowMinimumBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -636,7 +636,7 @@ void FrRecycleDlg::OnArrowMinimumBnDown(void) {
 }
 
 // recycledlg.cpp:668
-void FrRecycleDlg::OnArrowLeftBnInit(int param) {
+void FrRecycleDlg::OnArrowLeftBnInit(PG_MSGARG param) {
 	m_pArrowLeftBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -670,7 +670,7 @@ void FrRecycleDlg::OnArrowLeftBnUp(void) {
 }
 
 // recycledlg.cpp:715
-void FrRecycleDlg::OnArrowRightBnInit(int param) {
+void FrRecycleDlg::OnArrowRightBnInit(PG_MSGARG param) {
 	m_pArrowRightBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -704,7 +704,7 @@ void FrRecycleDlg::OnArrowRightBnUp(void) {
 }
 
 // recycledlg.cpp:762
-void FrRecycleDlg::OnArrowMaximumBnInit(int param) {
+void FrRecycleDlg::OnArrowMaximumBnInit(PG_MSGARG param) {
 	m_pArrowMaximumBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -714,7 +714,7 @@ void FrRecycleDlg::OnArrowMaximumBnDown(void) {
 }
 
 // recycledlg.cpp:774
-void FrRecycleDlg::OnAreaPictureInit(int param) {
+void FrRecycleDlg::OnAreaPictureInit(PG_MSGARG param) {
 	DYNAMIC_CAST(FrArea, param);
 }
 
@@ -735,12 +735,12 @@ void FrRecycleDlg::OnAreaPictureOwnerDraw(void) {
 }
 
 // recycledlg.cpp:794
-void FrRecycleDlg::OnRecycleItemNameInit(int param) {
+void FrRecycleDlg::OnRecycleItemNameInit(PG_MSGARG param) {
 	m_pRecycleItemName = DYNAMIC_CAST(FrEdit, param);
 }
 
 // recycledlg.cpp:800
-void FrRecycleDlg::OnCadieMessageInit(int param) {
+void FrRecycleDlg::OnCadieMessageInit(PG_MSGARG param) {
 	m_pCadieMsg = DYNAMIC_CAST(FrEdit, param);
 
 	if (m_pCadieMsg) {
@@ -2184,7 +2184,7 @@ FrRecycleAboutDlg::~FrRecycleAboutDlg(void) {
 }
 
 // recycledlg.cpp:2754
-void FrRecycleAboutDlg::OnAboutInit(int) {
+void FrRecycleAboutDlg::OnAboutInit(PG_MSGARG) {
 }
 
 // recycledlg.cpp:2758
@@ -2465,7 +2465,7 @@ void FrRecycleDlg::DrawPartsSlot(FrGraphicInterface* pGI, sItemInfo* pItem, FrAr
 }
 
 // recycledlg.cpp:3045
-void FrRecycleDlg::OnSelectPartInit(int param) {
+void FrRecycleDlg::OnSelectPartInit(PG_MSGARG param) {
 	m_pSelectPartBn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pSelectPartBn) {
@@ -2518,17 +2518,17 @@ bool FrRecycleDlg::OnSelectPartDlgResult(int ret, FrForm* pForm) {
 }
 
 // recycledlg.cpp:3095
-void FrRecycleDlg::OnCardSlotInit(int param) {
+void FrRecycleDlg::OnCardSlotInit(PG_MSGARG param) {
 	m_pCardSlot = DYNAMIC_CAST(FrArea, param);
 }
 
 // recycledlg.cpp:3101
-void FrRecycleDlg::OnCardSlotResultInit(int param) {
+void FrRecycleDlg::OnCardSlotResultInit(PG_MSGARG param) {
 	m_pCardSlotResult = DYNAMIC_CAST(FrArea, param);
 }
 
 // recycledlg.cpp:3107
-void FrRecycleDlg::OnCardSlotOwnerDraw(int) {
+void FrRecycleDlg::OnCardSlotOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI) {
 
@@ -2702,7 +2702,7 @@ void FrSelectPartDlg::OnLBUpListBox(void) {
 }
 
 // recycledlg.cpp:3267
-void FrSelectPartDlg::OnOwnerDrawListBox(int param) {
+void FrSelectPartDlg::OnOwnerDrawListBox(PG_MSGARG param) {
 	if (m_pListBox) {
 
 		FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();

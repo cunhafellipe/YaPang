@@ -101,7 +101,7 @@ sFRESH_ENTRY FrTikiMagicBoxDlg::_MsgEntries[] = {
 };
 
 // tikimagicboxdlg.cpp:67
-void FrTikiMagicBoxDlg::OnBackImageOwnerDraw(int param) {
+void FrTikiMagicBoxDlg::OnBackImageOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pDevice = g_pFresh->GetManager()->GetGDI();
 	if (pDevice == 0) {
 		return;
@@ -134,7 +134,7 @@ void FrTikiMagicBoxDlg::OnMyItemListInit(intptr_t param) {
 }
 
 // tikimagicboxdlg.cpp:105
-void FrTikiMagicBoxDlg::OnMyItemListOwnerDraw(int param) {
+void FrTikiMagicBoxDlg::OnMyItemListOwnerDraw(PG_MSGARG param) {
 }
 
 // tikimagicboxdlg.cpp:110
@@ -150,12 +150,12 @@ void FrTikiMagicBoxDlg::OnMyItemListLBUp(void) {
 }
 
 // tikimagicboxdlg.cpp:124
-void FrTikiMagicBoxDlg::OnMtrListInit(int param) {
+void FrTikiMagicBoxDlg::OnMtrListInit(PG_MSGARG param) {
 	BindListBox(m_pMtrList, param);
 }
 
 // tikimagicboxdlg.cpp:129
-void FrTikiMagicBoxDlg::OnMtrListOwnerDraw(int param) {
+void FrTikiMagicBoxDlg::OnMtrListOwnerDraw(PG_MSGARG param) {
 }
 
 // tikimagicboxdlg.cpp:133
@@ -171,12 +171,12 @@ void FrTikiMagicBoxDlg::OnMtrListLBUp(void) {
 }
 
 // tikimagicboxdlg.cpp:147
-void FrTikiMagicBoxDlg::OnCategoryListInit(int param) {
+void FrTikiMagicBoxDlg::OnCategoryListInit(PG_MSGARG param) {
 	BindListBox(m_pCategoryList, param);
 }
 
 // tikimagicboxdlg.cpp:152
-void FrTikiMagicBoxDlg::OnCategoryListOwnerDraw(int param) {
+void FrTikiMagicBoxDlg::OnCategoryListOwnerDraw(PG_MSGARG param) {
 }
 
 // tikimagicboxdlg.cpp:156
@@ -184,12 +184,12 @@ void FrTikiMagicBoxDlg::OnCategoryListLBDown(void) {
 }
 
 // tikimagicboxdlg.cpp:162
-void FrTikiMagicBoxDlg::OnCharacterListInit(int param) {
+void FrTikiMagicBoxDlg::OnCharacterListInit(PG_MSGARG param) {
 	BindListBox(m_pCharacterList, param);
 }
 
 // tikimagicboxdlg.cpp:167
-void FrTikiMagicBoxDlg::OnCharacterListOwnerDraw(int param) {
+void FrTikiMagicBoxDlg::OnCharacterListOwnerDraw(PG_MSGARG param) {
 }
 
 // tikimagicboxdlg.cpp:171
@@ -215,7 +215,7 @@ void FrTikiMagicBoxDlg::OnCloseBtnLBUp(void) {
 }
 
 // tikimagicboxdlg.cpp:200
-void FrTikiMagicBoxDlg::OnCharTabInit(int param) {
+void FrTikiMagicBoxDlg::OnCharTabInit(PG_MSGARG param) {
 	BindButton(m_pCharTab, param);
 }
 
@@ -224,7 +224,7 @@ void FrTikiMagicBoxDlg::OnCharTabLBUp(void) {
 }
 
 // tikimagicboxdlg.cpp:211
-void FrTikiMagicBoxDlg::OnItemTabInit(int param) {
+void FrTikiMagicBoxDlg::OnItemTabInit(PG_MSGARG param) {
 	BindButton(m_pItemTab, param);
 }
 
@@ -233,7 +233,7 @@ void FrTikiMagicBoxDlg::OnItemTabLBUp(void) {
 }
 
 // tikimagicboxdlg.cpp:221
-void FrTikiMagicBoxDlg::OnInsertBtnInit(int param) {
+void FrTikiMagicBoxDlg::OnInsertBtnInit(PG_MSGARG param) {
 	BindButton(m_pInsertBtn, param);
 }
 
@@ -242,7 +242,7 @@ void FrTikiMagicBoxDlg::OnInsertBtnLBUp(void) {
 }
 
 // tikimagicboxdlg.cpp:232
-void FrTikiMagicBoxDlg::OnMixBtnInit(int param) {
+void FrTikiMagicBoxDlg::OnMixBtnInit(PG_MSGARG param) {
 	BindButton(m_pMixBtn, param);
 }
 

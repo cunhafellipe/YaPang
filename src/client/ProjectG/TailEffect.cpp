@@ -5,7 +5,7 @@
 #include "wview.h"
 #include "wvideo.h"
 
-extern int index;
+extern int pg_index;
 extern "C" int data_af23f0;
 
 // scenemanager.h:67
@@ -59,7 +59,7 @@ void CTailEffect::Reset(void) {
 
 	m_tail = 0;
 	m_head = 0;
-	index = 0;
+	pg_index = 0;
 }
 
 // taileffect.cpp:82
@@ -69,7 +69,7 @@ void CTailEffect::PutSpot(const WVector &spot1, const WVector &spot2) {
 		return;
 	}
 
-	if (index >= m_maxEdges) {
+	if (pg_index >= m_maxEdges) {
 		return;
 	}
 
@@ -78,12 +78,12 @@ void CTailEffect::PutSpot(const WVector &spot1, const WVector &spot2) {
 	edge.fLife = m_life;
 	edge.v1 = spot1;
 	edge.v2 = spot2;
-	m_spots[index++] = edge;
+	m_spots[pg_index++] = edge;
 
 	m_lastSpot1 = spot1;
 	m_lastSpot2 = spot2;
 
-	int spots = index;
+	int spots = pg_index;
 	m_tail = 0;
 	m_head = 0;
 

@@ -5090,7 +5090,7 @@ void CLobbyMain::OpenEventPrizeForm(unsigned char event) {
 }
 
 // lobbymain.cpp:5476
-void CLobbyMain::OnToppage_Init(int) {
+void CLobbyMain::OnToppage_Init(PG_MSGARG) {
 	CTaskMain::OnInit();
 
 	CSharedDoc::Instance()->ClearUserInfoTimeMap((unsigned long)-1);
@@ -5341,7 +5341,7 @@ void CLobbyMain::OnToppage_NewInit(intptr_t param) {
 
 // lobbymain.cpp:5767
 // Draws the "new" tab image next to the Pangya's study button.
-void CLobbyMain::OnToppage_NewOwnerDraw(int) {
+void CLobbyMain::OnToppage_NewOwnerDraw(PG_MSGARG) {
 	if (m_toppagePangysStudyBtn) {
 		if (m_newTabBitmap) {
 			WRECT rect = m_toppagePangysStudyBtn->GetRect();
@@ -5353,7 +5353,7 @@ void CLobbyMain::OnToppage_NewOwnerDraw(int) {
 // lobbymain.cpp:5798
 // Draws the attendance-point balloon under the point event button: the
 // three "login" pieces and its three lines of text.
-void CLobbyMain::OnFirstConnectOwnerDraw(int) {
+void CLobbyMain::OnFirstConnectOwnerDraw(PG_MSGARG) {
 	if (!m_toppagePointEventBtn)
 		return;
 
@@ -5861,7 +5861,7 @@ void CLobbyMain::CloseAllDialogs(void) {
 }
 
 // lobbymain.cpp:6705
-void CLobbyMain::OnServer_Init(int) {
+void CLobbyMain::OnServer_Init(PG_MSGARG) {
 	CTaskMain::OnInit();
 	SetRandomBGM();
 	TurnOn3DBackground();
@@ -5916,7 +5916,7 @@ bool CLobbyMain::OnNewRecordDlgResult(int, FrForm*) {
 }
 
 // lobbymain.cpp:6775
-void CLobbyMain::OnLogin_Init(int) {
+void CLobbyMain::OnLogin_Init(PG_MSGARG) {
 	CTaskMain::OnInit();
 
 	if (WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
@@ -5955,7 +5955,7 @@ void CLobbyMain::OnLogin_Finish(void) {
 }
 
 // lobbymain.cpp:6815
-void CLobbyMain::OnBlank_Init(int) {
+void CLobbyMain::OnBlank_Init(PG_MSGARG) {
 	CTaskMain::OnInit();
 }
 
@@ -5968,7 +5968,7 @@ void CLobbyMain::OnBlank_Finish(void) {
 }
 
 // lobbymain.cpp:6833
-void CLobbyMain::OnSecond_Pwd_Init(int) {
+void CLobbyMain::OnSecond_Pwd_Init(PG_MSGARG) {
 	CTaskMain::OnInit();
 }
 
@@ -8358,7 +8358,7 @@ void CLobbyMain::RoomList_LoadRoomImages(void) {
 }
 
 // lobbymain.cpp:10044
-void CLobbyMain::OnRoomList_Init(int param) {
+void CLobbyMain::OnRoomList_Init(PG_MSGARG param) {
 	CTaskMain::OnInit();
 
 	WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType = 0x10;
@@ -8509,7 +8509,7 @@ unsigned long DecideRoomColor(sRoomInfo* info) {
 // Draws one row of the room list: the three background pieces (tinted by the
 // room's state), the room number or event mark, the category, game type,
 // title, course image, hole count and players.
-void CLobbyMain::OnRoomList_RoomListOwnerDraw(int param) {
+void CLobbyMain::OnRoomList_RoomListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (!pItem)
@@ -8882,7 +8882,7 @@ void CLobbyMain::OnRoomList_RoomSortNoDown(void) {
 }
 
 // lobbymain.cpp:10955
-void CLobbyMain::OnRoomList_RoomSortNoOwnerDraw(int) {
+void CLobbyMain::OnRoomList_RoomSortNoOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
@@ -9021,7 +9021,7 @@ void CLobbyMain::OnRoomList_RoomSortHoleDown(void) {
 }
 
 // lobbymain.cpp:11177
-void CLobbyMain::OnRoomList_RoomSortHoleOwnerDraw(int) {
+void CLobbyMain::OnRoomList_RoomSortHoleOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
@@ -9092,7 +9092,7 @@ void CLobbyMain::OnRoomList_RoomSortCourseDown(void) {
 }
 
 // lobbymain.cpp:11226
-void CLobbyMain::OnRoomList_RoomSortCourseOwnerDraw(int) {
+void CLobbyMain::OnRoomList_RoomSortCourseOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
@@ -9163,7 +9163,7 @@ void CLobbyMain::OnRoomList_RoomSortStateDown(void) {
 }
 
 // lobbymain.cpp:11275
-void CLobbyMain::OnRoomList_RoomSortStateOwnerDraw(int) {
+void CLobbyMain::OnRoomList_RoomSortStateOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
@@ -9225,7 +9225,7 @@ void CLobbyMain::OnRoomList_RoomSortCateVS_ListLUp(void) {
 }
 
 // lobbymain.cpp:11341
-void CLobbyMain::OnRoomList_RoomSortCateVS_ListOwnerDraw(int param) {
+void CLobbyMain::OnRoomList_RoomSortCateVS_ListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -9288,7 +9288,7 @@ void CLobbyMain::OnRoomList_RoomSortCateMass_ListLUp(void) {
 }
 
 // lobbymain.cpp:11411
-void CLobbyMain::OnRoomList_RoomSortCateMass_ListOwnerDraw(int param) {
+void CLobbyMain::OnRoomList_RoomSortCateMass_ListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -9351,7 +9351,7 @@ void CLobbyMain::OnRoomList_RoomSortCateBattle_ListLUp(void) {
 }
 
 // lobbymain.cpp:11481
-void CLobbyMain::OnRoomList_RoomSortCateBattle_ListOwnerDraw(int param) {
+void CLobbyMain::OnRoomList_RoomSortCateBattle_ListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -9498,7 +9498,7 @@ void CLobbyMain::OnRoomList_UserListRBtnUp(void) {
 // Draws one row of the room list screen's user list: the selection box, the
 // gender icon (angel / manner variants), the in-room mark, the level (or
 // ladder, or title) icon, the guild emblem and the nick.
-void CLobbyMain::OnRoomList_UserListOwnerDraw(int param) {
+void CLobbyMain::OnRoomList_UserListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (!pItem)
@@ -9629,7 +9629,7 @@ void CLobbyMain::OnRoomList_UserSortGenderUp(void) {
 }
 
 // lobbymain.cpp:12231
-void CLobbyMain::OnRoomList_UserSortGenderOwnerDraw(int) {
+void CLobbyMain::OnRoomList_UserSortGenderOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
@@ -9697,7 +9697,7 @@ void CLobbyMain::OnRoomList_UserSortLevelUp(void) {
 }
 
 // lobbymain.cpp:12290
-void CLobbyMain::OnRoomList_UserSortLevelOwnerDraw(int) {
+void CLobbyMain::OnRoomList_UserSortLevelOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
@@ -9765,7 +9765,7 @@ void CLobbyMain::OnRoomList_UserSortGuildUp(void) {
 }
 
 // lobbymain.cpp:12396
-void CLobbyMain::OnRoomList_UserSortGuildOwnerDraw(int) {
+void CLobbyMain::OnRoomList_UserSortGuildOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
@@ -9833,7 +9833,7 @@ void CLobbyMain::OnRoomList_UserSortNickUp(void) {
 }
 
 // lobbymain.cpp:12455
-void CLobbyMain::OnRoomList_UserSortNickOwnerDraw(int) {
+void CLobbyMain::OnRoomList_UserSortNickOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
@@ -10141,7 +10141,7 @@ void CLobbyMain::OnChatBgInit(intptr_t param) {
 }
 
 // lobbymain.cpp:12796
-void CLobbyMain::OnChatBgOwnerDraw(int) {
+void CLobbyMain::OnChatBgOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI) {
@@ -10273,12 +10273,12 @@ void CLobbyMain::OnChatTargetInit(intptr_t param) {
 }
 
 // lobbymain.cpp:12960
-void CLobbyMain::OnChatTargetBtnDown(int) {
+void CLobbyMain::OnChatTargetBtnDown(PG_MSGARG) {
 	m_chatEdit->SetKeyFocus(false);
 }
 
 // lobbymain.cpp:12965
-bool CLobbyMain::OnChatTargetEnterKey(int) {
+bool CLobbyMain::OnChatTargetEnterKey(PG_MSGARG) {
 	m_chatEdit->SetKeyFocus(true);
 	return false;
 }
@@ -10313,7 +10313,7 @@ void CLobbyMain::OnChannelRoomCloseBtnInit(intptr_t param) {
 }
 
 // lobbymain.cpp:13007
-void CLobbyMain::OnGameRoom_Init(int) {
+void CLobbyMain::OnGameRoom_Init(PG_MSGARG) {
 	CTaskMain::OnInit();
 
 	m_away = false;
@@ -10424,7 +10424,7 @@ void CLobbyMain::Banish(void) {
 
 // lobbymain.cpp:13132
 // The room's player list: right button and dummy rows on, and its bitmaps.
-void CLobbyMain::OnGameRoom_RoomUserInit(int param) {
+void CLobbyMain::OnGameRoom_RoomUserInit(PG_MSGARG param) {
 	m_roomUserListBox = (FrListBox*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrListBox::m_RTTI) ? (void*)param : 0) : 0);
 	if (m_roomUserListBox == 0)
 		return;
@@ -10467,7 +10467,7 @@ void CLobbyMain::OnGameRoom_RoomUserInit(int param) {
 // mark, the master / ready sign, the dive mark, the gender icon, the level
 // (ladder or title) icon, the guild emblem and the nick. Two layouts, picked
 // by local content 0x54, differ in the level icon and the invitation rules.
-void CLobbyMain::OnGameRoom_RoomUserOwnerDraw(int param) {
+void CLobbyMain::OnGameRoom_RoomUserOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (!pItem)
 		return;
@@ -10823,7 +10823,7 @@ void CLobbyMain::OnGameRoom_TitleInit(intptr_t param) {
 }
 
 // lobbymain.cpp:13788
-void CLobbyMain::OnGameRoom_EventOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_EventOwnerDraw(PG_MSGARG) {
 	if (WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit >= 100) {
 		FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
@@ -10850,7 +10850,7 @@ void CLobbyMain::OnGameRoom_MapBgInit(intptr_t param) {
 // lobbymain.cpp:13811
 // The game room's treasure hunter gauge of the room's course (0-300 past
 // 700 points); empty for a random course.
-void CLobbyMain::OnGameRoom_MapGaugeInit(int param) {
+void CLobbyMain::OnGameRoom_MapGaugeInit(PG_MSGARG param) {
 	m_mapGauge = (FrGaugeBarImage*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrGaugeBarImage::m_RTTI) ? (void*)param : 0) : 0);
 	if (m_mapGauge) {
 		m_mapGauge->SetRange(0, 300, 0);
@@ -11040,7 +11040,7 @@ void CLobbyMain::OnGameRoom_CharDown(void) {
 // lobbymain.cpp:14067
 // Draws the game room's character button (greyed while disabled): the
 // equipped character's icon, or "w_caddie_no" without one.
-void CLobbyMain::OnGameRoom_CharOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_CharOwnerDraw(PG_MSGARG) {
 	if (!m_charViewer)
 		return;
 
@@ -11101,7 +11101,7 @@ void CLobbyMain::OnGameRoom_CaddieDown(void) {
 // Draws the game room's caddie button (greyed while disabled): the equipped
 // caddie's icon, struck through in red when its contract ran out, or
 // "w_caddie_no" without one.
-void CLobbyMain::OnGameRoom_CaddieOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_CaddieOwnerDraw(PG_MSGARG) {
 	if (!m_caddieViewer)
 		return;
 
@@ -11167,7 +11167,7 @@ void CLobbyMain::OnGameRoom_ClubDown(void) {
 // lobbymain.cpp:14204
 // Draws the game room's club button (greyed while disabled): the equipped
 // club set's icon, or "w_caddie_no" without one.
-void CLobbyMain::OnGameRoom_ClubOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_ClubOwnerDraw(PG_MSGARG) {
 	if (!m_clubViewer)
 		return;
 
@@ -11225,7 +11225,7 @@ void CLobbyMain::OnGameRoom_AztecDown(void) {
 // lobbymain.cpp:14268
 // Draws the game room's ball button (greyed while disabled): the equipped
 // ball's icon with the count held, or "w_caddie_no" without one.
-void CLobbyMain::OnGameRoom_AztecOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_AztecOwnerDraw(PG_MSGARG) {
 	if (!m_aztecViewer)
 		return;
 
@@ -11313,7 +11313,7 @@ void CLobbyMain::OnGameRoom_MascotDown(void) {
 // lobbymain.cpp:14373
 // Draws the game room's mascot button (greyed while disabled): the equipped
 // mascot's icon, or "w_caddie_no" without one.
-void CLobbyMain::OnGameRoom_MascotOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_MascotOwnerDraw(PG_MSGARG) {
 	if (!m_mascotViewer)
 		return;
 
@@ -11393,7 +11393,7 @@ void CLobbyMain::OnGameRoom_EquipItemDown(void) {
 // lobbymain.cpp:14427
 // Draws the game room's equip item button (greyed while disabled) and, while
 // enabled, the selection frame around it.
-void CLobbyMain::OnGameRoom_EquipItemOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_EquipItemOwnerDraw(PG_MSGARG) {
 	if (!m_equipItemViewer)
 		return;
 
@@ -11431,7 +11431,7 @@ void CLobbyMain::OnGameRoom_CharSelDown(void) {
 // Draws the character selection bar above the character button: one icon
 // per owned character, framed under the mouse, which becomes the hovered
 // sub selection.
-void CLobbyMain::OnGameRoom_CharSelOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_CharSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -11515,7 +11515,7 @@ void CLobbyMain::OnGameRoom_CaddieSelDown(void) {
 // in red when its contract ran out) plus, while a caddie is equipped, the
 // "w_caddie_no" slot that unequips it; the icon under the mouse is framed and
 // becomes the hovered sub selection.
-void CLobbyMain::OnGameRoom_CaddieSelOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_CaddieSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -11627,7 +11627,7 @@ void CLobbyMain::OnGameRoom_ClubSelDown(void) {
 // Draws the club set selection bar: one icon per owned item, struck through
 // in red when the player's level is under the club set's; the icon under the
 // mouse is framed and, when usable, becomes the hovered sub selection.
-void CLobbyMain::OnGameRoom_ClubSelOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_ClubSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -11718,7 +11718,7 @@ void CLobbyMain::OnGameRoom_AztecSelDown(void) {
 // lobbymain.cpp:14799
 // Draws the ball selection bar: one icon per gear item with the count held;
 // the icon under the mouse is framed and becomes the hovered sub selection.
-void CLobbyMain::OnGameRoom_AztecSelOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_AztecSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -11812,7 +11812,7 @@ void CLobbyMain::OnGameRoom_MascotSelDown(void) {
 // Draws the mascot selection bar: one icon per owned mascot plus, while a
 // mascot is equipped, the "w_caddie_no" slot that unequips it; the icon under
 // the mouse is framed and becomes the hovered sub selection.
-void CLobbyMain::OnGameRoom_MascotSelOwnerDraw(int) {
+void CLobbyMain::OnGameRoom_MascotSelOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -12090,7 +12090,7 @@ void CLobbyMain::OnGameRoom_RoomOptionBtnUp(void) {
 }
 
 // lobbymain.cpp:15289
-void CLobbyMain::OnGameRoom_MapInit(int param) {
+void CLobbyMain::OnGameRoom_MapInit(PG_MSGARG param) {
 	m_mapBtn = DYNAMIC_CAST(FrButton, param);
 	if (!m_mapBtn) {
 		return;
@@ -12192,7 +12192,7 @@ void CLobbyMain::OnGameRoom_MapNextBtnUp(void) {
 }
 
 // lobbymain.cpp:15422
-void CLobbyMain::OnGameRoom_MapHoleComboInit(int param) {
+void CLobbyMain::OnGameRoom_MapHoleComboInit(PG_MSGARG param) {
 	m_holeCombo = DYNAMIC_CAST(FrComboCtlEx, param);
 	ReLoadHoleItem();
 
@@ -12252,7 +12252,7 @@ void CLobbyMain::OnGameRoom_MapLockInit(intptr_t param) {
 }
 
 // lobbymain.cpp:15494
-void CLobbyMain::OnGameRoom_UserListInit(int) {
+void CLobbyMain::OnGameRoom_UserListInit(PG_MSGARG) {
 }
 
 // lobbymain.cpp:15498
@@ -12401,7 +12401,7 @@ void CLobbyMain::OnGameRoom_ScoreBtnUp(void) {
 }
 
 // lobbymain.cpp:15645
-void CLobbyMain::OnGameRoomExt_Init(int param) {
+void CLobbyMain::OnGameRoomExt_Init(PG_MSGARG param) {
 	OnGameRoom_Init(param);
 }
 
@@ -12439,7 +12439,7 @@ void CLobbyMain::OnGameRoomExt_Destroy(void) {
 // lobbymain.cpp:15721
 // The extended room's player list: right button and dummy rows on, its
 // bitmaps, no selection, and the list itself once the chat window is open.
-void CLobbyMain::OnGameRoomExt_RoomUserInit(int param) {
+void CLobbyMain::OnGameRoomExt_RoomUserInit(PG_MSGARG param) {
 	m_roomUserListBox = (FrListBox*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrListBox::m_RTTI) ? (void*)param : 0) : 0);
 	if (m_roomUserListBox == 0)
 		return;
@@ -12489,7 +12489,7 @@ void CLobbyMain::OnGameRoomExt_RoomUserInit(int param) {
 // colours in team and guild games), the gender icon (angel / manner
 // variants), the dive mark, the level (or ladder, or title) icon, the guild
 // emblem, the nick and, for the room master, the kick button.
-void CLobbyMain::OnGameRoomExt_RoomUserOwnerDraw(int param) {
+void CLobbyMain::OnGameRoomExt_RoomUserOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (!pItem)
 		return;
@@ -12664,7 +12664,7 @@ void CLobbyMain::OnGameRoomExt_TeamNumInit(intptr_t param) {
 // lobbymain.cpp:16097
 // Team counts of the extended game room: the red and blue team sizes in a
 // team game (game types 1 and 5), otherwise the room's player count.
-void CLobbyMain::OnGameRoomExt_TeamNumOwnerDraw(int) {
+void CLobbyMain::OnGameRoomExt_TeamNumOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -12708,7 +12708,7 @@ void CLobbyMain::OnGameRoomExt_GuildNumInit(intptr_t param) {
 // Guild counts of the extended game room in a guild match: each guild's
 // emblem, name and member count (red, then blue) and, on the result screen,
 // the guild points.
-void CLobbyMain::OnGameRoomExt_GuildNumOwnerDraw(int) {
+void CLobbyMain::OnGameRoomExt_GuildNumOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -12836,7 +12836,7 @@ void CLobbyMain::OnGameRoomExtRes_RoomUserRankTabInit(intptr_t param) {
 // lobbymain.cpp:16354
 // The result screen's user ranking (not in guild rooms): one item per result
 // line, sorted by rank, and the rank bitmaps.
-void CLobbyMain::OnGameRoomExtRes_RoomUserRankInit(int param) {
+void CLobbyMain::OnGameRoomExtRes_RoomUserRankInit(PG_MSGARG param) {
 	m_userRankListBox = (FrListBox*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrListBox::m_RTTI) ? (void*)param : 0) : 0);
 	if (m_userRankListBox == 0)
 		return;
@@ -12880,7 +12880,7 @@ void CLobbyMain::OnGameRoomExtRes_RoomUserRankInit(int param) {
 // medal, guild emblem, nickname (the local player in red, or his team's
 // colour), then the approach distance and points, or the score, pang and
 // hole.
-void CLobbyMain::OnGameRoomExtRes_RoomUserRankOwnerDraw(int param) {
+void CLobbyMain::OnGameRoomExtRes_RoomUserRankOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (!pItem)
@@ -13046,7 +13046,7 @@ void CLobbyMain::OnGameRoomExtRes_RoomUserRankRBtnUp(void) {
 // lobbymain.cpp:16630
 // The result screen's guild ranking (guild rooms only): one item per guild
 // match pairing, and the two guilds' emblems.
-void CLobbyMain::OnGameRoomExtRes_RoomGuildRankInit(int param) {
+void CLobbyMain::OnGameRoomExtRes_RoomGuildRankInit(PG_MSGARG param) {
 	m_guildRankListBox = (FrListBox*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrListBox::m_RTTI) ? (void*)param : 0) : 0);
 	if (m_guildRankListBox == 0)
 		return;
@@ -13106,7 +13106,7 @@ void CLobbyMain::OnGameRoomExtRes_RoomGuildRankRBtnUp(void) {
 // The result screen's guild ranking line: the pairing's rank, then each of
 // the two players with the team emblem, nickname, unite guild index, pang
 // and hole (the local player in red, a skipped one in grey).
-void CLobbyMain::OnGameRoomExtRes_RoomGuildRankOwnerDraw(int param) {
+void CLobbyMain::OnGameRoomExtRes_RoomGuildRankOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (!pItem)
@@ -13214,7 +13214,7 @@ void CLobbyMain::OnGameRoomExt_UserInfoLBtnUp(void) {
 }
 
 // lobbymain.cpp:16878
-void CLobbyMain::OnGameRoomExtRes_Init(int) {
+void CLobbyMain::OnGameRoomExtRes_Init(PG_MSGARG) {
 	CTaskMain::OnInit();
 
 	m_away = false;
@@ -13259,7 +13259,7 @@ void CLobbyMain::OnGameRoomExtRes_Destroy(void) {
 }
 
 // lobbymain.cpp:16932
-void CLobbyMain::OnCreate_Init(int) {
+void CLobbyMain::OnCreate_Init(PG_MSGARG) {
 	CTaskMain::OnInit();
 }
 
@@ -13276,7 +13276,7 @@ void CLobbyMain::OnCreate_Destroy(void) {
 }
 
 // lobbymain.cpp:16951
-void CLobbyMain::OnCreatePetInit(int param) {
+void CLobbyMain::OnCreatePetInit(PG_MSGARG param) {
 	m_petArea[0] = (FrArea*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrArea::m_RTTI) ? (void*)param : 0) : 0);
 	m_createCharType = ((WSingleton<CSharedDoc>::Instance()->m_userInfo.eventFlags >> 1) & 1) % 2;
 	SetFirstChar(&WSingleton<CSharedDoc>::Instance()->GetMyPartTidList());
@@ -13760,7 +13760,7 @@ void CLobbyMain::CheckTikiReport(const char* layout) {
 }
 
 // lobbymain.cpp:18052
-void CLobbyMain::OnToppage_TopIcon1Init(int param) {
+void CLobbyMain::OnToppage_TopIcon1Init(PG_MSGARG param) {
 	CIconManager::Instance()->InitalizeTopIcon(0, param);
 }
 
@@ -13771,7 +13771,7 @@ void CLobbyMain::OnToppage_TopIcon1Up(void) {
 }
 
 // lobbymain.cpp:18062
-void CLobbyMain::OnToppage_TopIcon2Init(int param) {
+void CLobbyMain::OnToppage_TopIcon2Init(PG_MSGARG param) {
 	CIconManager::Instance()->InitalizeTopIcon(1, param);
 }
 
@@ -13782,7 +13782,7 @@ void CLobbyMain::OnToppage_TopIcon2Up(void) {
 }
 
 // lobbymain.cpp:18072
-void CLobbyMain::OnToppage_TopIcon3Init(int param) {
+void CLobbyMain::OnToppage_TopIcon3Init(PG_MSGARG param) {
 	CIconManager::Instance()->InitalizeTopIcon(2, param);
 }
 
@@ -13793,7 +13793,7 @@ void CLobbyMain::OnToppage_TopIcon3Up(void) {
 }
 
 // lobbymain.cpp:18082
-void CLobbyMain::OnToppage_TopIcon4Init(int param) {
+void CLobbyMain::OnToppage_TopIcon4Init(PG_MSGARG param) {
 	CIconManager::Instance()->InitalizeTopIcon(3, param);
 }
 
@@ -13804,7 +13804,7 @@ void CLobbyMain::OnToppage_TopIcon4Up(void) {
 }
 
 // lobbymain.cpp:18093
-void CLobbyMain::OnToppage_TopIcon5Init(int param) {
+void CLobbyMain::OnToppage_TopIcon5Init(PG_MSGARG param) {
 	CIconManager::Instance()->InitalizeTopIcon(4, param);
 }
 
@@ -13815,7 +13815,7 @@ void CLobbyMain::OnToppage_TopIcon5Up(void) {
 }
 
 // lobbymain.cpp:18104
-void CLobbyMain::OnToppage_TopIcon6Init(int param) {
+void CLobbyMain::OnToppage_TopIcon6Init(PG_MSGARG param) {
 	CIconManager::Instance()->InitalizeTopIcon(5, param);
 }
 

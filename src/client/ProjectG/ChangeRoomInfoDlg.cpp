@@ -655,7 +655,7 @@ void FrChangeRoomInfoDlg::OnCourseUp(void) {
 }
 
 // changeroominfodlg.cpp:770
-void FrChangeRoomInfoDlg::OnCourseOwnerDraw(int param) {
+void FrChangeRoomInfoDlg::OnCourseOwnerDraw(PG_MSGARG param) {
 	if (m_gameType == 10 || m_gameType == 6)
 		return;
 
@@ -701,7 +701,7 @@ void FrChangeRoomInfoDlg::DrawHoleTypeButton(FrGraphicInterface* pDevice, eHoleT
 }
 
 // changeroominfodlg.cpp:829
-void FrChangeRoomInfoDlg::OnHoleTypeOwnerDraw(int param) {
+void FrChangeRoomInfoDlg::OnHoleTypeOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pDevice = g_pFresh->GetManager()->GetGDI();
 	if (pDevice == 0)
 		return;

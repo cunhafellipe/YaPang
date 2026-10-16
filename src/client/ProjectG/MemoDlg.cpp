@@ -65,7 +65,7 @@ void FrMemoDlg::OnMemoLButtonDown(void) {
 }
 
 // memodlg.cpp:51
-bool FrMemoDlg::OnMemoEnterKey(int param) {
+bool FrMemoDlg::OnMemoEnterKey(PG_MSGARG param) {
 	if (!m_pMemo->GetStyle().GetFlag(0x2)) {
 		OnOkBtnUp();
 	}

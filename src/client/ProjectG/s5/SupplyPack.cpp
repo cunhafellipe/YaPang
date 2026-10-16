@@ -519,7 +519,7 @@ void FrSupplyPackDlg::OnBgAreaDraw(void) {
 }
 
 // supplypack.cpp:548
-void FrSupplyPackDlg::OnItemListDraw(int param) {
+void FrSupplyPackDlg::OnItemListDraw(PG_MSGARG param) {
 	if (m_pItemList->IsVisible()) {
 		FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 

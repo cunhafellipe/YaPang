@@ -340,7 +340,7 @@ public:
 	virtual void DrawPolygonFan(WTVertex** p, int iType, int iNum, int iType2, unsigned long fvf) = 0;  // vtable 0x18
 	virtual void DrawIndexedTriangles(WTVertex* p, int pnum, unsigned short* f, int fnum, int type, int type2);  // vtable 0x1c
 	virtual void DrawLine(WTVertex** ppVtx, int nVtx) = 0;                                          // vtable 0x20
-	virtual int Command(wVDevMessage msg, int wParam, int lParam) = 0;                              // vtable 0x24
+	virtual PG_PTRINT Command(wVDevMessage msg, PG_PTRINT wParam, PG_PTRINT lParam) = 0;            // vtable 0x24
 	virtual int CreateTexture(tagBITMAPINFO* pInfo, int flags) = 0;                                 // vtable 0x28
 	virtual void UpdateTexture(int tex, tagBITMAPINFO* pInfo, void* pBits, unsigned long flags) = 0;  // vtable 0x2c
 	virtual void DestroyTexture(int tex) = 0;                                                       // vtable 0x30

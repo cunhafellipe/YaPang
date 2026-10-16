@@ -81,7 +81,7 @@ void FrNewRecordDlg::OnCourseListInit(intptr_t param) {
 }
 
 // newrecorddlg.cpp:62
-void FrNewRecordDlg::OnCourseListOwnerDraw(int param) {
+void FrNewRecordDlg::OnCourseListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (pItem == 0)

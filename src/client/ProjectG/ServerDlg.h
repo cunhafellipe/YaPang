@@ -120,7 +120,7 @@ protected:
 	void OnWaitNotify(const char* msg, unsigned long flag);
 
 	void OnServerListInit(intptr_t param);
-	void OnServerListOwnerDraw(int param);
+	void OnServerListOwnerDraw(PG_MSGARG param);
 	void OnServerListBtnDown(void);
 	void OnChannelListInit(intptr_t param);
 	void OnChannelListOwnerDraw(intptr_t param);

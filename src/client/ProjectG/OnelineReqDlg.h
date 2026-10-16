@@ -35,7 +35,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnChatInputInit(intptr_t param);
-	bool OnChatEnterKey(int param);
+	bool OnChatEnterKey(PG_MSGARG param);
 	void OnEmoticonInit(intptr_t param);
 	void OnEmoticonBtnUp(void);
 	bool OnEmoticonResult(int ret, FrForm* pForm);

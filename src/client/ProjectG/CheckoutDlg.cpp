@@ -1076,7 +1076,7 @@ void FrCheckoutDlg::OnDaysInit(intptr_t param) {
 }
 
 // checkoutdlg.cpp:2211
-void FrCheckoutDlg::OnDays2Init(int param) {
+void FrCheckoutDlg::OnDays2Init(PG_MSGARG param) {
 	m_miniBtn[1].m_pDays = DYNAMIC_CAST(FrComboBox, param);
 }
 
@@ -1132,7 +1132,7 @@ void FrCheckoutDlg::OnCartInit(intptr_t param) {
 }
 
 // checkoutdlg.cpp:2286
-void FrCheckoutDlg::OnCartOwnerDraw(int param) {
+void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem) {
 		FrGraphicInterface* pGDI = m_pCart->WndManager()->GetGDI();

@@ -17,7 +17,7 @@
 // Each record repeats the head members it uses under the IFF_ITEM_COMMON
 // names; the original relation between the two types is not established.
 // The special prize ability kinds (defined in avatar_avatar.h).
-enum eSPAVILITYTYPE;
+PG_ENUM_FWD(eSPAVILITYTYPE)
 
 namespace IFF_STRUCT {
 

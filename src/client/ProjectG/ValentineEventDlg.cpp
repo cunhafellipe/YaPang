@@ -208,7 +208,7 @@ void FrValEventDlg::BuildHeartCount(void) {
 }
 
 // valentineeventdlg.cpp:197
-void FrValEventDlg::DrawInDlg(const char* name, WPoint& pt) {
+void FrValEventDlg::DrawInDlg(const char* name, const WPoint& pt) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -226,7 +226,7 @@ void FrValEventDlg::DrawInDlg(const char* name, WPoint& pt) {
 }
 
 // valentineeventdlg.cpp:214
-void FrValEventDlg::DrawGauge(WPoint& pt, unsigned char count) {
+void FrValEventDlg::DrawGauge(const WPoint& pt, unsigned char count) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -247,7 +247,7 @@ void FrValEventDlg::OnBackImgInit(intptr_t id) {
 }
 
 // valentineeventdlg.cpp:243
-void FrValEventDlg::OnBackImgOwnerDraw(int param) {
+void FrValEventDlg::OnBackImgOwnerDraw(PG_MSGARG param) {
 	if (g_pFresh->GetManager()->GetGDI()) {
 
 		DrawInDlg("Frame_WhiteDay_01", WPoint(0.0f, 0.0f));
@@ -260,7 +260,7 @@ void FrValEventDlg::OnBackImgOwnerDraw(int param) {
 }
 
 // valentineeventdlg.cpp:266
-void FrValEventDlg::OnGaugeImgOwnerDraw(int param) {
+void FrValEventDlg::OnGaugeImgOwnerDraw(PG_MSGARG param) {
 	if (g_pFresh->GetManager()->GetGDI()) {
 
 		if (m_giftFlag & 0x20) {

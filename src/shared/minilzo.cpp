@@ -1653,7 +1653,7 @@ extern "C" {
 #  elif (LZO_SIZEOF_INT == LZO_SIZEOF_VOID_P)
 #    define lzo_uintptr_t       unsigned int
 #  elif (LZO_SIZEOF_LONG_LONG == LZO_SIZEOF_VOID_P)
-#    define lzo_uintptr_t       unsigned long long
+#    define lzo_uintptr_t       unsigned __int64
 #  else
 #    define lzo_uintptr_t       size_t
 #  endif

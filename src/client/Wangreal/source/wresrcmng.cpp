@@ -131,10 +131,10 @@ CHECK_FIELD(sTgaHeader, bitcount, 0x10);
 #pragma pack(push, 1)
 struct bmp_head {
 	char signature[2];  // 0x0
-	long size;          // 0x2
+	int size;           // 0x2
 	short reserved1;    // 0x6
 	short reserved2;    // 0x8
-	long offbits;       // 0xa
+	int offbits;        // 0xa
 };
 #pragma pack(pop)
 CHECK_SIZE(bmp_head, 0xe);
@@ -1308,7 +1308,12 @@ static void __cdecl png_cexcept_error(png_struct_def* png_ptr, const char* msg) 
 // wresrcmng.cpp:2018
 static void __cdecl png_read_data(png_struct_def* png_ptr, unsigned char* data, unsigned int length) {
 	cFile* file = (cFile*)png_ptr->io_ptr;
-	if ((unsigned int)file->Read(data, length) != length) {
+	int n = file->Read(data, length);
+#ifdef PG_DEBUG_PNG
+	fprintf(stderr, "[pngread] tell=%d len=%u got=%d data=%02x%02x%02x%02x%02x%02x%02x%02x\n",
+		file->Tell(), length, n, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+#endif
+	if ((unsigned int)n != length) {
 		png_error(png_ptr, "Read Error");
 	}
 }
@@ -1324,8 +1329,8 @@ static void __cdecl png_read_data2(png_struct_def* png_ptr, unsigned char* data,
 // wresrcmng.cpp:2051
 Bitmap* WResourceManager::LoadPNG(const char* filename, bool bFromMem, bool bNet) {
 	unsigned char pngSig[8];
-	unsigned long iWidth;
-	unsigned long iHeight;
+	png_uint_32 iWidth;
+	png_uint_32 iHeight;
 	int iBitDepth;
 	int iColorType;
 	cFile* fp = NULL;
@@ -1374,11 +1379,11 @@ Bitmap* WResourceManager::LoadPNG(const char* filename, bool bFromMem, bool bNet
 		}
 
 		if (!bFromMem) {
-			png_set_read_fn(png_ptr, fp, png_read_data);
+			png_set_read_fn(png_ptr, fp, (png_rw_ptr)png_read_data);
 			png_set_sig_bytes(png_ptr, 8);
 		} else {
 			data += 8;
-			png_set_read_fn(png_ptr, (void*)data, png_read_data2);
+			png_set_read_fn(png_ptr, (void*)data, (png_rw_ptr)png_read_data2);
 			png_set_sig_bytes(png_ptr, 8);
 		}
 

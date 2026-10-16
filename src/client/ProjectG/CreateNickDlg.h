@@ -37,7 +37,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnEditNickInit(intptr_t param);
-	bool OnEditNickEnterKey(int param);
+	bool OnEditNickEnterKey(PG_MSGARG param);
 	void OnEditNickDown(void);
 	void OnDispNickInit(intptr_t param);
 	void OnMessasgeInit(intptr_t param);

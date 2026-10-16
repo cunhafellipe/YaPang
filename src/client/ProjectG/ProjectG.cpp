@@ -173,7 +173,7 @@ static bool __stdcall SaveScreenShot(const char* fileName) {
 
 	Bitmap* screen = new Bitmap(g_last_screen_width, g_last_screen_height, 24);
 
-	if (g_resrcmng->VideoReference()->Command(W_VDEV_CAPTURE_SCREEN, 0, (int)screen) == 1) {
+	if (g_resrcmng->VideoReference()->Command(W_VDEV_CAPTURE_SCREEN, 0, (PG_PTRINT)screen) == 1) {
 		if (COption::Instance()->GetOption()->m_captureLogo == 1 && CSharedDoc::Instance()->m_playingMode != (eReplayModeType)2) {
 			if (s_logo == NULL)
 				s_logo = g_resrcmng->LoadTGA("pangya_s3.tga");
@@ -758,12 +758,7 @@ void CProjectG::LoadKeyLayout(void) {
 int MainLoop(void) {
 	int result = 1;
 
-	__asm {
-		mov eax, fs:[18h]
-		mov eax, [eax+30h]
-		movzx eax, byte ptr [eax+2]
-		mov result, eax
-	}
+	result = 0;
 
 	return result;
 }
@@ -1309,7 +1304,7 @@ void CProjectG::Paint(void) {
 	bool active = ((m_appFlags >> 1) & 1) != 0;
 	if (active && g_bAviCapture) {
 		static Bitmap s_captureBitmap(g_last_screen_width, g_last_screen_height, 24);
-		if (g_resrcmng->VideoReference()->Command(W_VDEV_CAPTURE_SCREEN, 0, (int)&s_captureBitmap) == 1) {
+		if (g_resrcmng->VideoReference()->Command(W_VDEV_CAPTURE_SCREEN, 0, (PG_PTRINT)&s_captureBitmap) == 1) {
 			m_aviEncoder.Write(&s_captureBitmap);
 			SetGameSpeed(1.0f);
 			g_bAviCapture = false;

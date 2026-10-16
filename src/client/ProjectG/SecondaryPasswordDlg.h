@@ -50,28 +50,28 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	void OnInitNumberSlot0(int param);
-	void OnInitNumberSlot1(int param);
-	void OnInitNumberSlot2(int param);
-	void OnInitNumberSlot3(int param);
-	void OnInitNumberSlot4(int param);
-	void OnInitNumberSlot5(int param);
-	void OnInitNumberSlot6(int param);
-	void OnInitNumberSlot7(int param);
-	void OnInitNumberSlot8(int param);
-	void OnInitNumberSlot9(int param);
-	void OnBackSpace_ButtonInit(int param);
-	void OnClear_ButtonInit(int param);
-	void OnCreatePassword_ButtonInit(int param);
+	void OnInitNumberSlot0(PG_MSGARG param);
+	void OnInitNumberSlot1(PG_MSGARG param);
+	void OnInitNumberSlot2(PG_MSGARG param);
+	void OnInitNumberSlot3(PG_MSGARG param);
+	void OnInitNumberSlot4(PG_MSGARG param);
+	void OnInitNumberSlot5(PG_MSGARG param);
+	void OnInitNumberSlot6(PG_MSGARG param);
+	void OnInitNumberSlot7(PG_MSGARG param);
+	void OnInitNumberSlot8(PG_MSGARG param);
+	void OnInitNumberSlot9(PG_MSGARG param);
+	void OnBackSpace_ButtonInit(PG_MSGARG param);
+	void OnClear_ButtonInit(PG_MSGARG param);
+	void OnCreatePassword_ButtonInit(PG_MSGARG param);
 	void OnConfirm_ButtonInit(intptr_t param);
-	void OnChangePassword_ButtonInit(int param);
-	void OnReport_ButtonInit(int param);
-	void OnConfirmFirstPassword_ButtonInit(int param);
-	void OnInputAgain_ButtonInit(int param);
+	void OnChangePassword_ButtonInit(PG_MSGARG param);
+	void OnReport_ButtonInit(PG_MSGARG param);
+	void OnConfirmFirstPassword_ButtonInit(PG_MSGARG param);
+	void OnInputAgain_ButtonInit(PG_MSGARG param);
 	void OnClose_ButtonInit(intptr_t param);
 	void OnCaption_AreaInit(intptr_t param);
 	void OnExplaneBlock_AreaInit(intptr_t param);
-	void OnExplaneBlock_AreaOwnerdraw(int param);
+	void OnExplaneBlock_AreaOwnerdraw(PG_MSGARG param);
 	void OnPasswordInput_EditInit(intptr_t param);
 	void OnPasswordConfirm_EditInit(intptr_t param);
 
@@ -156,7 +156,7 @@ protected:
 	void OnLeft_EditInit(intptr_t param);
 	void OnRight_EditInit(intptr_t param);
 	void OnInFrame_AreaInit(intptr_t param);
-	void OnInFrame_AreaOwnerDraw(int param);
+	void OnInFrame_AreaOwnerDraw(PG_MSGARG param);
 
 private:
 	FrButton* m_pButtons[2];           // 0x110 ("RequestCertify", "PassCertify")
@@ -223,7 +223,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnIcon_AreaInit(intptr_t param);
-	void OnIcon_AreaOwnerdraw(int param);
+	void OnIcon_AreaOwnerdraw(PG_MSGARG param);
 	void OnSystemMsg_EditInit(intptr_t param);
 	void OnClose_ButtonInit(intptr_t param);
 	void OnClose_LButtonUp(void);

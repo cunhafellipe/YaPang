@@ -689,7 +689,7 @@ void FrScoreDlg::OnTotalListInit(intptr_t param) {
 }
 
 // scoredlg.cpp:660
-void FrScoreDlg::OnTotalListOwnerDraw(int param) {
+void FrScoreDlg::OnTotalListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (!pItem)
 		return;
@@ -831,7 +831,7 @@ void FrScoreDlg::OnBlankPanel01Init(intptr_t param) {
 }
 
 // scoredlg.cpp:810
-void FrScoreDlg::OnBlankPanel01OwnerDraw(int param) {
+void FrScoreDlg::OnBlankPanel01OwnerDraw(PG_MSGARG param) {
 	if (m_pBlankPanel[0]) {
 
 
@@ -850,7 +850,7 @@ void FrScoreDlg::OnBlankPanel02Init(intptr_t param) {
 }
 
 // scoredlg.cpp:828
-void FrScoreDlg::OnBlankPanel02OwnerDraw(int param) {
+void FrScoreDlg::OnBlankPanel02OwnerDraw(PG_MSGARG param) {
 	if (m_pBlankPanel[1]) {
 
 
@@ -869,7 +869,7 @@ void FrScoreDlg::OnBlankPanel03Init(intptr_t param) {
 }
 
 // scoredlg.cpp:846
-void FrScoreDlg::OnBlankPanel03OwnerDraw(int param) {
+void FrScoreDlg::OnBlankPanel03OwnerDraw(PG_MSGARG param) {
 	if (m_pBlankPanel[2]) {
 
 

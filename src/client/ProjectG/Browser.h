@@ -1,4 +1,9 @@
 // Original: d:\build\custom\temp\code\client\projectg\browser.h
+#ifdef PG_PORT
+// Port: the embedded IE/ATL browser cannot compile off Windows; compat/
+// pg_browser_port.h keeps only the CBrowser value interface the units call.
+#include "pg_browser_port.h"
+#else
 #ifndef PG_CLIENT_PROJECTG_BROWSER_H
 #define PG_CLIENT_PROJECTG_BROWSER_H
 
@@ -194,3 +199,4 @@ CHECK_SIZE(CBrowser, 0x124);
 
 
 #endif
+#endif // PG_PORT

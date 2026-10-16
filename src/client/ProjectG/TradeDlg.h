@@ -84,26 +84,26 @@ public:
 	void UpdateCountVisitor(void);   // tradedlg.cpp:1378
 
 protected:
-	void OnTradeDlgInit(int);                // tradedlg.cpp:513
-	void OnVisitorBackInit(int);             // tradedlg.cpp:518
-	void OnVisitorInit(int);                 // tradedlg.cpp:984
+	void OnTradeDlgInit(PG_MSGARG);                // tradedlg.cpp:513
+	void OnVisitorBackInit(PG_MSGARG);             // tradedlg.cpp:518
+	void OnVisitorInit(PG_MSGARG);                 // tradedlg.cpp:984
 	void OnVisitorBackOwnerDraw(void);       // tradedlg.cpp:524
 	void OnTradeItemListLClick(void);        // tradedlg.cpp:552
 	void OnTradeItemListRClick(void);        // tradedlg.cpp:625
-	void OnTradeItemListOwnerDraw(int);      // tradedlg.cpp:722
+	void OnTradeItemListOwnerDraw(PG_MSGARG);      // tradedlg.cpp:722
 	void OnMyPangInit(intptr_t);                  // tradedlg.cpp:529
 	void OnMyPangOwnerDraw(void);            // tradedlg.cpp:535
-	void OnTradeItemListInit(int);           // tradedlg.cpp:541
-	void OnNoItem01Init(int);                // tradedlg.cpp:962
-	void OnNoItem02Init(int);                // tradedlg.cpp:973
-	void OnUserIdInit(int);                  // tradedlg.cpp:992
+	void OnTradeItemListInit(PG_MSGARG);           // tradedlg.cpp:541
+	void OnNoItem01Init(PG_MSGARG);                // tradedlg.cpp:962
+	void OnNoItem02Init(PG_MSGARG);                // tradedlg.cpp:973
+	void OnUserIdInit(PG_MSGARG);                  // tradedlg.cpp:992
 	void OnTitleInit(intptr_t);                   // tradedlg.cpp:998
-	void OnEditBnInit(int);                  // tradedlg.cpp:1006
+	void OnEditBnInit(PG_MSGARG);                  // tradedlg.cpp:1006
 	void OnEditBnUp(void);                   // tradedlg.cpp:1012
 	void OnCloseBnInit(intptr_t);                 // tradedlg.cpp:1041
-	void OnHideBnInit(int);                  // tradedlg.cpp:1060
-	void OnExitBnInit(int);                  // tradedlg.cpp:1080
-	void OnPackagePurchaseButtonInit(int);   // tradedlg.cpp:1099
+	void OnHideBnInit(PG_MSGARG);                  // tradedlg.cpp:1060
+	void OnExitBnInit(PG_MSGARG);                  // tradedlg.cpp:1080
+	void OnPackagePurchaseButtonInit(PG_MSGARG);   // tradedlg.cpp:1099
 	void OnPackagePurchaseLButtonUp(void);   // tradedlg.cpp:1104
 	void OnCloseBnUp(void);                  // tradedlg.cpp:1047
 	void OnHideBnUp(void);                   // tradedlg.cpp:1066
@@ -241,42 +241,42 @@ public:
 	void UpdateTradeTitleEdit(void);            // tradedlg.cpp:4778
 
 protected:
-	void OnTradeEditDlgInit(int);       // tradedlg.cpp:3029
+	void OnTradeEditDlgInit(PG_MSGARG);       // tradedlg.cpp:3029
 	void OnMyItemListInit(intptr_t);   // tradedlg.cpp:3034
 	void OnMyItemListLClick(void);   // tradedlg.cpp:3045
 	void OnMyItemListRClick(void);   // tradedlg.cpp:3068
-	void OnMyItemListOwnerDraw(int);   // tradedlg.cpp:3164
-	void OnTradeItemListInit(int);   // tradedlg.cpp:3234
+	void OnMyItemListOwnerDraw(PG_MSGARG);   // tradedlg.cpp:3164
+	void OnTradeItemListInit(PG_MSGARG);   // tradedlg.cpp:3234
 	void OnTradeItemListLClick(void);   // tradedlg.cpp:3240
-	void OnTradeItemListOwnerDraw(int);   // tradedlg.cpp:3279
-	void OnVisitorInit(int);     // tradedlg.cpp:3342
-	void OnUserIdInit(int);      // tradedlg.cpp:3357
+	void OnTradeItemListOwnerDraw(PG_MSGARG);   // tradedlg.cpp:3279
+	void OnVisitorInit(PG_MSGARG);     // tradedlg.cpp:3342
+	void OnUserIdInit(PG_MSGARG);      // tradedlg.cpp:3357
 	void OnTitleInit(intptr_t);       // tradedlg.cpp:3369
-	void OnTitleEditInit(int);   // tradedlg.cpp:3377
-	bool OnTitleEditEnterKey(int);   // tradedlg.cpp:3383
-	void OnTitleEditBnInit(int);   // tradedlg.cpp:3395
+	void OnTitleEditInit(PG_MSGARG);   // tradedlg.cpp:3377
+	bool OnTitleEditEnterKey(PG_MSGARG);   // tradedlg.cpp:3383
+	void OnTitleEditBnInit(PG_MSGARG);   // tradedlg.cpp:3395
 	void OnTitleEditBnUp(void);    // tradedlg.cpp:3401
-	void OnTradeMyItemIconInit(int);   // tradedlg.cpp:3411
+	void OnTradeMyItemIconInit(PG_MSGARG);   // tradedlg.cpp:3411
 	void OnTradeMyItemIconOwnerDraw(void);   // tradedlg.cpp:3417
-	void OnTradeMyItemNameInit(int);   // tradedlg.cpp:3438
-	void OnTradeMyItemAbilityInit(int);   // tradedlg.cpp:3444
-	void OnTradeMyItemNumberInit(int);   // tradedlg.cpp:3450
-	void OnTradeMyItemOkBnInit(int);   // tradedlg.cpp:3475
+	void OnTradeMyItemNameInit(PG_MSGARG);   // tradedlg.cpp:3438
+	void OnTradeMyItemAbilityInit(PG_MSGARG);   // tradedlg.cpp:3444
+	void OnTradeMyItemNumberInit(PG_MSGARG);   // tradedlg.cpp:3450
+	void OnTradeMyItemOkBnInit(PG_MSGARG);   // tradedlg.cpp:3475
 	void OnTradeMyItemOkBnUp(void);   // tradedlg.cpp:3481
-	void OnTradeMyItemCancelBnInit(int);   // tradedlg.cpp:3619
+	void OnTradeMyItemCancelBnInit(PG_MSGARG);   // tradedlg.cpp:3619
 	void OnTradeMyItemCancelBnUp(void);    // tradedlg.cpp:3625
-	void OnOpenBnInit(int);   // tradedlg.cpp:3632
+	void OnOpenBnInit(PG_MSGARG);   // tradedlg.cpp:3632
 	void OnOpenBnUp(void);    // tradedlg.cpp:3638
 	void OnCloseBnInit(intptr_t);   // tradedlg.cpp:3665
-	void OnExitBnInit(int);   // tradedlg.cpp:3677
+	void OnExitBnInit(PG_MSGARG);   // tradedlg.cpp:3677
 	void OnExitBnUp(void);         // tradedlg.cpp:3683
-	void OnPackageSaleInit(int);   // tradedlg.cpp:3698
-	void OnTooltipAreaInit(int);   // tradedlg.cpp:3717
-	void OnTradeMyItemPriceInit(int);   // tradedlg.cpp:3456
+	void OnPackageSaleInit(PG_MSGARG);   // tradedlg.cpp:3698
+	void OnTooltipAreaInit(PG_MSGARG);   // tradedlg.cpp:3717
+	void OnTradeMyItemPriceInit(PG_MSGARG);   // tradedlg.cpp:3456
 	void OnTradeMyItemPriceClick(void); // tradedlg.cpp:3468
 	void OnCloseBnUp(void);             // tradedlg.cpp:3671
 	void OnPackageSaleButtonUp(void);   // tradedlg.cpp:3707
-	void OnTooltipAreaOwnerDraw(int);   // tradedlg.cpp:3722
+	void OnTooltipAreaOwnerDraw(PG_MSGARG);   // tradedlg.cpp:3722
 	virtual bool OnInit(void);          // tradedlg.cpp:3729
 	bool PushPackageSaleButton(void);   // tradedlg.cpp:3756
 	bool IsPushedPackageSaleButton(void);   // tradedlg.cpp:3768
@@ -406,14 +406,14 @@ public:
 	void SetListTradeItem(std::list<sTradeItem>* pList);   // tradedlg.cpp:5251
 
 protected:
-	void OnTradeFinishEditDlgInit(int);   // tradedlg.cpp:4898
-	void OnUserIdInit(int);   // tradedlg.cpp:4903
+	void OnTradeFinishEditDlgInit(PG_MSGARG);   // tradedlg.cpp:4898
+	void OnUserIdInit(PG_MSGARG);   // tradedlg.cpp:4903
 	void OnTitleInit(intptr_t);   // tradedlg.cpp:4909
 	void OnOkBnInit(intptr_t);   // tradedlg.cpp:4915
 	void OnOkBnUp(void);    // tradedlg.cpp:4921
-	void OnTradeItemListInit(int);   // tradedlg.cpp:4979
+	void OnTradeItemListInit(PG_MSGARG);   // tradedlg.cpp:4979
 	virtual bool OnInit(void);            // tradedlg.cpp:4970
-	void OnTradeItemListOwnerDraw(int);   // tradedlg.cpp:4985
+	void OnTradeItemListOwnerDraw(PG_MSGARG);   // tradedlg.cpp:4985
 
 	FrListBox* m_pTradeItemList;     // 0x110
 	FrEdit* m_pUserId;               // 0x114
@@ -485,23 +485,23 @@ public:
 	void SetControlsItemList(void);          // tradedlg.cpp:2279
 
 protected:
-	void OnTradeBuyDlgInit(int);   // tradedlg.cpp:1526
+	void OnTradeBuyDlgInit(PG_MSGARG);   // tradedlg.cpp:1526
 	void OnOkBnInit(intptr_t);   // tradedlg.cpp:1531
 	void OnOkBnUp(void);   // tradedlg.cpp:1537
-	void OnBuyItemIconInit(int);   // tradedlg.cpp:1738
+	void OnBuyItemIconInit(PG_MSGARG);   // tradedlg.cpp:1738
 	void OnBuyItemIconOwnerDraw(void);   // tradedlg.cpp:1744
-	void OnBuyItemNameInit(int);   // tradedlg.cpp:1853
-	void OnBuyItemAbilityInit(int);   // tradedlg.cpp:1859
+	void OnBuyItemNameInit(PG_MSGARG);   // tradedlg.cpp:1853
+	void OnBuyItemAbilityInit(PG_MSGARG);   // tradedlg.cpp:1859
 	void OnMyPangInit(intptr_t);   // tradedlg.cpp:1865
 	void OnPriceInit(intptr_t);   // tradedlg.cpp:1880
-	void OnPangLeftInit(int);   // tradedlg.cpp:1886
-	void OnNumberInit(int);   // tradedlg.cpp:1892
-	void OnNumberNextBnInit(int);   // tradedlg.cpp:1898
+	void OnPangLeftInit(PG_MSGARG);   // tradedlg.cpp:1886
+	void OnNumberInit(PG_MSGARG);   // tradedlg.cpp:1892
+	void OnNumberNextBnInit(PG_MSGARG);   // tradedlg.cpp:1898
 	void OnNumberNextBnUp(void);    // tradedlg.cpp:1909
-	void OnNumberPrevBnInit(int);   // tradedlg.cpp:1933
+	void OnNumberPrevBnInit(PG_MSGARG);   // tradedlg.cpp:1933
 	void OnNumberPrevBnUp(void);    // tradedlg.cpp:1944
-	void OnPurchaseListInit(int);   // tradedlg.cpp:1968
-	void OnPurchaseListOwnerdraw(int);   // tradedlg.cpp:1973
+	void OnPurchaseListInit(PG_MSGARG);   // tradedlg.cpp:1968
+	void OnPurchaseListOwnerdraw(PG_MSGARG);   // tradedlg.cpp:1973
 	virtual bool OnInit(void);     // tradedlg.cpp:2112
 	virtual void OnProc(const float dt);   // tradedlg.cpp:2120
 
@@ -572,13 +572,13 @@ public:
 	void SetResultItemList(std::vector<sTradeItem>* pList);   // tradedlg.cpp:2731
 
 protected:
-	void OnTradeResultDlgInit(int);   // tradedlg.cpp:2441
+	void OnTradeResultDlgInit(PG_MSGARG);   // tradedlg.cpp:2441
 	void OnResultItemIconInit(intptr_t);   // tradedlg.cpp:2446
 	void OnResultItemIconOwnerDraw(void);   // tradedlg.cpp:2452
 	void OnResultItemNameInit(intptr_t);   // tradedlg.cpp:2552
 	void OnResultItemAbilityInit(intptr_t);   // tradedlg.cpp:2558
-	void OnPurchaseListInit(int);   // tradedlg.cpp:2564
-	void OnPurchaseListOwnerdraw(int);   // tradedlg.cpp:2569
+	void OnPurchaseListInit(PG_MSGARG);   // tradedlg.cpp:2564
+	void OnPurchaseListOwnerdraw(PG_MSGARG);   // tradedlg.cpp:2569
 	virtual bool OnInit(void);        // tradedlg.cpp:2704
 
 	FrArea* m_pResultItemIcon;      // 0x110
@@ -630,12 +630,12 @@ public:
 	void SetWarningMessageForPackage(int code);                   // tradedlg.cpp:5587
 
 protected:
-	void OnTradeWarningDlgInit(int);   // tradedlg.cpp:5291
-	void OnMsg01Init(int);   // tradedlg.cpp:5296
-	void OnMsg02Init(int);   // tradedlg.cpp:5302
+	void OnTradeWarningDlgInit(PG_MSGARG);   // tradedlg.cpp:5291
+	void OnMsg01Init(PG_MSGARG);   // tradedlg.cpp:5296
+	void OnMsg02Init(PG_MSGARG);   // tradedlg.cpp:5302
 	void OnOkBnInit(intptr_t);   // tradedlg.cpp:5308
 	void OnOkBnUp(void);    // tradedlg.cpp:5314
-	void OnCancelBnInit(int);   // tradedlg.cpp:5355
+	void OnCancelBnInit(PG_MSGARG);   // tradedlg.cpp:5355
 	void OnCancelBnUp(void);           // tradedlg.cpp:5361
 
 	// Controls stored by the OnXxxInit handlers.

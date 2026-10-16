@@ -66,8 +66,8 @@ protected:
 	void OnUserLimitOwnerDraw(intptr_t param);
 	void OnHoleOwnerDraw(intptr_t param);
 	void OnTimeLimitOwnerDraw(intptr_t param);
-	void OnCourseOwnerDraw(int param);
-	void OnHoleTypeOwnerDraw(int param);
+	void OnCourseOwnerDraw(PG_MSGARG param);
+	void OnHoleTypeOwnerDraw(PG_MSGARG param);
 
 	void DrawGameTypeButton(FrGraphicInterface* pDevice, int gameType, WRect rect, bool b);
 	void DrawUserLimitButton(FrGraphicInterface* pDevice, int userLimit, WRect rect);

@@ -209,7 +209,7 @@ void FrApproachResultDlg::OnLeftAreaInit(intptr_t param) {
 }
 
 // approachresultdlg.cpp:211
-void FrApproachResultDlg::OnLeftAreaOwnerDraw(int param) {
+void FrApproachResultDlg::OnLeftAreaOwnerDraw(PG_MSGARG param) {
 	if (g_view->GetWidth() < 700.0f)
 		return;
 
@@ -340,7 +340,7 @@ void FrApproachResultDlg::OnLeftListInit(intptr_t param) {
 }
 
 // approachresultdlg.cpp:371
-void FrApproachResultDlg::OnLeftListOwnerDraw(int param) {
+void FrApproachResultDlg::OnLeftListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -424,7 +424,7 @@ void FrApproachResultDlg::OnRightAreaInit(intptr_t param) {
 }
 
 // approachresultdlg.cpp:495
-void FrApproachResultDlg::OnRightAreaOwnerDraw(int param) {
+void FrApproachResultDlg::OnRightAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -466,7 +466,7 @@ void FrApproachResultDlg::OnRightListInit(intptr_t param) {
 }
 
 // approachresultdlg.cpp:536
-void FrApproachResultDlg::OnRightListOwnerDraw(int param) {
+void FrApproachResultDlg::OnRightListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -713,7 +713,7 @@ void FrApproachEndDlg::OnDrawAreaInit(intptr_t param) {
 }
 
 // approachresultdlg.cpp:827
-void FrApproachEndDlg::OnDrawAreaOwnerDraw(int param) {
+void FrApproachEndDlg::OnDrawAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (!pGDI)
 		return;
@@ -781,7 +781,7 @@ void FrApproachEndDlg::OnListInit(intptr_t param) {
 }
 
 // approachresultdlg.cpp:894
-void FrApproachEndDlg::OnListOwnerDraw(int param) {
+void FrApproachEndDlg::OnListOwnerDraw(PG_MSGARG param) {
 	if (!m_pList)
 		return;
 

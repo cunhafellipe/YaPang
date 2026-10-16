@@ -180,7 +180,7 @@ void FrTrainingDlg::OnTrainingBtnUp(void) {
 }
 
 // trainingdlg.cpp:156
-void FrTrainingDlg::OnTrainingOwnerDraw(int param) {
+void FrTrainingDlg::OnTrainingOwnerDraw(PG_MSGARG param) {
 	if (m_pListBox == 0) {
 		return;
 	}

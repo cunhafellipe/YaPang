@@ -1530,7 +1530,7 @@ void WBone::Transform(const WMatrix& mat, WView* view, float matscale, int flag)
 				m_matrix = m_localMat;
 			}
 			if (m_flag.GetFlag(SCALEBONE)) {
-				m_matrix.AxisScale(WVector(m_bonescale, m_bonescale, m_bonescale));
+				{ WVector pg_scale(m_bonescale, m_bonescale, m_bonescale); m_matrix.AxisScale(pg_scale); }
 			}
 			if (m_flag.GetFlag(MOVEBONE)) {
 				m_matrix.pivot -= m_moveVec;

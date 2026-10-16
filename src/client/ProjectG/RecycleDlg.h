@@ -117,53 +117,53 @@ protected:
 
 	virtual bool OnInit(void);   // recycledlg.cpp:811
 	virtual void OnProc(const float dt);   // recycledlg.cpp:850
-	void OnRecycleDlgInit(int);   // recycledlg.cpp:186
-	void OnAboutBnInit(int);   // recycledlg.cpp:191
+	void OnRecycleDlgInit(PG_MSGARG);   // recycledlg.cpp:186
+	void OnAboutBnInit(PG_MSGARG);   // recycledlg.cpp:191
 	void OnAboutBnUp(void);   // recycledlg.cpp:197
 	void OnCharacterSelectListLBnUp(void);   // recycledlg.cpp:373
 	void OnCloseBnUp(void);   // recycledlg.cpp:214
 	void OnRecycleItemListLBnUp(void);   // recycledlg.cpp:463
-	bool OnRecycleNumberEnterKey(int);   // recycledlg.cpp:608
+	bool OnRecycleNumberEnterKey(PG_MSGARG);   // recycledlg.cpp:608
 	void OnArrowMinimumBnDown(void);   // recycledlg.cpp:662
 	void OnArrowLeftBnUp(void);   // recycledlg.cpp:704
 	void OnArrowRightBnUp(void);   // recycledlg.cpp:751
-	void OnAreaPictureInit(int);   // recycledlg.cpp:774
+	void OnAreaPictureInit(PG_MSGARG);   // recycledlg.cpp:774
 	void OnAreaPictureOwnerDraw(void);   // recycledlg.cpp:780
 	void OnArrowRightBnDown(void);   // recycledlg.cpp:721
 	virtual void OnCancel(void);   // recycledlg.cpp:951
 	bool OnSelectPartDlgResult(int ret, FrForm* pForm);   // recycledlg.cpp:3073
 	void OnCloseBnInit(intptr_t);   // recycledlg.cpp:208
-	void OnLevelLowBnInit(int);   // recycledlg.cpp:220
+	void OnLevelLowBnInit(PG_MSGARG);   // recycledlg.cpp:220
 	void OnLevelLowBnUp(void);   // recycledlg.cpp:231
-	void OnLevelMidBnInit(int);   // recycledlg.cpp:246
+	void OnLevelMidBnInit(PG_MSGARG);   // recycledlg.cpp:246
 	void OnLevelMidBnUp(void);   // recycledlg.cpp:252
-	void OnLevelHighBnInit(int);   // recycledlg.cpp:267
+	void OnLevelHighBnInit(PG_MSGARG);   // recycledlg.cpp:267
 	void OnLevelHighBnUp(void);   // recycledlg.cpp:273
 	void OnLevelSpecialBnUp(void);   // recycledlg.cpp:302
 	void OnLevelEventBnUp(void);   // recycledlg.cpp:336
-	void OnMixBnInit(int);   // recycledlg.cpp:614
+	void OnMixBnInit(PG_MSGARG);   // recycledlg.cpp:614
 	void OnMixBnUp(void);   // recycledlg.cpp:620
-	void OnArrowMinimumBnInit(int);   // recycledlg.cpp:656
-	void OnArrowLeftBnInit(int);   // recycledlg.cpp:668
-	void OnArrowRightBnInit(int);   // recycledlg.cpp:715
-	void OnArrowMaximumBnInit(int);   // recycledlg.cpp:762
-	void OnRecycleItemNameInit(int);   // recycledlg.cpp:794
-	void OnCardSlotInit(int);   // recycledlg.cpp:3095
-	void OnCardSlotResultInit(int);   // recycledlg.cpp:3101
-	void OnCardSlotOwnerDraw(int);   // recycledlg.cpp:3107
-	void OnLevelEventBnInit(int);   // recycledlg.cpp:317
-	void OnCharacterSelectListInit(int);   // recycledlg.cpp:362
+	void OnArrowMinimumBnInit(PG_MSGARG);   // recycledlg.cpp:656
+	void OnArrowLeftBnInit(PG_MSGARG);   // recycledlg.cpp:668
+	void OnArrowRightBnInit(PG_MSGARG);   // recycledlg.cpp:715
+	void OnArrowMaximumBnInit(PG_MSGARG);   // recycledlg.cpp:762
+	void OnRecycleItemNameInit(PG_MSGARG);   // recycledlg.cpp:794
+	void OnCardSlotInit(PG_MSGARG);   // recycledlg.cpp:3095
+	void OnCardSlotResultInit(PG_MSGARG);   // recycledlg.cpp:3101
+	void OnCardSlotOwnerDraw(PG_MSGARG);   // recycledlg.cpp:3107
+	void OnLevelEventBnInit(PG_MSGARG);   // recycledlg.cpp:317
+	void OnCharacterSelectListInit(PG_MSGARG);   // recycledlg.cpp:362
 	void OnRecycleItemListRBnUp(void);   // recycledlg.cpp:469
-	void OnRecycleItemListInit(int);   // recycledlg.cpp:447
-	void OnRecycleItemListOwnerDraw(int);
-	void OnRecycleNumberInit(int);   // recycledlg.cpp:600
+	void OnRecycleItemListInit(PG_MSGARG);   // recycledlg.cpp:447
+	void OnRecycleItemListOwnerDraw(PG_MSGARG);
+	void OnRecycleNumberInit(PG_MSGARG);   // recycledlg.cpp:600
 	void OnArrowLeftBnDown(void);   // recycledlg.cpp:674
-	void OnSelectPartInit(int);   // recycledlg.cpp:3045
+	void OnSelectPartInit(PG_MSGARG);   // recycledlg.cpp:3045
 	void OnSelectPartLBDown(void);   // recycledlg.cpp:3057
-	void OnLevelSpecialBnInit(int);   // recycledlg.cpp:288
-	void OnCharacterSelectListOwnerDraw(int);   // recycledlg.cpp:386
+	void OnLevelSpecialBnInit(PG_MSGARG);   // recycledlg.cpp:288
+	void OnCharacterSelectListOwnerDraw(PG_MSGARG);   // recycledlg.cpp:386
 	void OnArrowMaximumBnDown(void);   // recycledlg.cpp:768
-	void OnCadieMessageInit(int);   // recycledlg.cpp:800
+	void OnCadieMessageInit(PG_MSGARG);   // recycledlg.cpp:800
 
 	FrButton* m_pCloseBn;                // 0x110
 	FrButton* m_pLevelLowBn;             // 0x114
@@ -302,7 +302,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	virtual bool OnInit(void);   // recycledlg.cpp:2846
-	void OnAboutInit(int);   // recycledlg.cpp:2754
+	void OnAboutInit(PG_MSGARG);   // recycledlg.cpp:2754
 	void OnAboutViewerInit(intptr_t);   // recycledlg.cpp:2758
 	void OnIndex01Init(intptr_t);   // recycledlg.cpp:2764
 	void OnIndex01BnUp(void);   // recycledlg.cpp:2769
@@ -362,7 +362,7 @@ protected:
 
 	void OnInitListBox(intptr_t);   // recycledlg.cpp:3256
 	void OnLBUpListBox(void);   // recycledlg.cpp:3262
-	void OnOwnerDrawListBox(int);
+	void OnOwnerDrawListBox(PG_MSGARG);
 
 	FrListBox* m_pListBox;     // 0x110
 	unsigned long m_partTid;   // 0x114, set by SetPartTID

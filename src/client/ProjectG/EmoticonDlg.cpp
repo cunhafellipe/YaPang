@@ -123,7 +123,7 @@ void FrEmoticonDlg::OnListInit(intptr_t param) {
 }
 
 // emoticondlg.cpp:114
-void FrEmoticonDlg::OnListOwnerDraw(int param) {
+void FrEmoticonDlg::OnListOwnerDraw(PG_MSGARG param) {
 	FrEmoticon* pEmoticon = g_pFresh->GetManager()->GetEmoticon();
 	if (!pEmoticon)
 		return;

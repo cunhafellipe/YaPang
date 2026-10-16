@@ -472,7 +472,7 @@ void FrUserInfoForm::Clear(void) {
 }
 
 // user_info.cpp:404
-void FrUserInfoForm::OnTitleSeasonBtnInit(int param) {
+void FrUserInfoForm::OnTitleSeasonBtnInit(PG_MSGARG param) {
 	m_pCurSeasonBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_seasonTab == SEASON_CURRENT) {
@@ -491,7 +491,7 @@ void FrUserInfoForm::OnTitleSeasonBtnUp(void) {
 }
 
 // user_info.cpp:423
-void FrUserInfoForm::OnTitleTotalBtnInit(int param) {
+void FrUserInfoForm::OnTitleTotalBtnInit(PG_MSGARG param) {
 	m_pTotalSeasonBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_seasonTab == SEASON_TOTAL) {
@@ -535,7 +535,7 @@ void FrUserInfoForm::SetTrophyStatic(void) {
 }
 
 // user_info.cpp:471
-void FrUserInfoForm::OnGeneralInfoInit(int param) {
+void FrUserInfoForm::OnGeneralInfoInit(PG_MSGARG param) {
 	m_pTabBtn[TAB_GENERAL_INFO] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -545,7 +545,7 @@ void FrUserInfoForm::OnGeneralInfoDown(void) {
 }
 
 // user_info.cpp:481
-void FrUserInfoForm::OnSpecialInfoInit(int param) {
+void FrUserInfoForm::OnSpecialInfoInit(PG_MSGARG param) {
 	m_pTabBtn[TAB_SPECIAL_INFO] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -555,7 +555,7 @@ void FrUserInfoForm::OnSpecialInfoDown(void) {
 }
 
 // user_info.cpp:491
-void FrUserInfoForm::OnRecordInfoInit(int param) {
+void FrUserInfoForm::OnRecordInfoInit(PG_MSGARG param) {
 	m_pTabBtn[TAB_RECORD_INFO] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -565,7 +565,7 @@ void FrUserInfoForm::OnRecordInfoDown(void) {
 }
 
 // user_info.cpp:501
-void FrUserInfoForm::OnTrophyInfoInit(int param) {
+void FrUserInfoForm::OnTrophyInfoInit(PG_MSGARG param) {
 	m_pTabBtn[TAB_TROPHY_INFO] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -575,7 +575,7 @@ void FrUserInfoForm::OnTrophyInfoDown(void) {
 }
 
 // user_info.cpp:511
-void FrUserInfoForm::OnGuildInfoInit(int param) {
+void FrUserInfoForm::OnGuildInfoInit(PG_MSGARG param) {
 	m_pTabBtn[TAB_GUILD_INFO] = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -585,143 +585,143 @@ void FrUserInfoForm::OnGuildInfoDown(void) {
 }
 
 // user_info.cpp:545
-void FrUserInfoForm::OnGeneralBackInit(int param) {
+void FrUserInfoForm::OnGeneralBackInit(PG_MSGARG param) {
 	m_pGeneralBack = DYNAMIC_CAST(FrArea, param);
 }
 
 // user_info.cpp:550
-void FrUserInfoForm::OnRecCourseBackInit(int param) {
+void FrUserInfoForm::OnRecCourseBackInit(PG_MSGARG param) {
 	m_pRecCourseBack = DYNAMIC_CAST(FrArea, param);
 }
 
 // user_info.cpp:555
-void FrUserInfoForm::OnTroNormalBackInit(int param) {
+void FrUserInfoForm::OnTroNormalBackInit(PG_MSGARG param) {
 	m_pTroNormalBack = DYNAMIC_CAST(FrArea, param);
 }
 
 // user_info.cpp:560
-void FrUserInfoForm::OnTroSpecialBackInit(int param) {
+void FrUserInfoForm::OnTroSpecialBackInit(PG_MSGARG param) {
 	m_pTroSpecialBack = DYNAMIC_CAST(FrArea, param);
 }
 
 // user_info.cpp:565
-void FrUserInfoForm::OnGuildBackInit(int param) {
+void FrUserInfoForm::OnGuildBackInit(PG_MSGARG param) {
 	m_pGuildBack = DYNAMIC_CAST(FrArea, param);
 }
 
 // user_info.cpp:607
-void FrUserInfoForm::OnEditInit_GI_ID(int param) { m_pIdEdit = DYNAMIC_CAST(FrEdit, param); m_pIdEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GI_ID(PG_MSGARG param) { m_pIdEdit = DYNAMIC_CAST(FrEdit, param); m_pIdEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:608
-void FrUserInfoForm::OnEditInit_GI_SCHOOL(int param) { m_pSchoolEdit = DYNAMIC_CAST(FrEdit, param); m_pSchoolEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GI_SCHOOL(PG_MSGARG param) { m_pSchoolEdit = DYNAMIC_CAST(FrEdit, param); m_pSchoolEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:609
-void FrUserInfoForm::OnEditInit_GI_CLUB(int param) { m_pClubEdit = DYNAMIC_CAST(FrEdit, param); m_pClubEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GI_CLUB(PG_MSGARG param) { m_pClubEdit = DYNAMIC_CAST(FrEdit, param); m_pClubEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:610
-void FrUserInfoForm::OnEditInit_GI_EXP(int param) { m_pExpEdit = DYNAMIC_CAST(FrEdit, param); m_pExpEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GI_EXP(PG_MSGARG param) { m_pExpEdit = DYNAMIC_CAST(FrEdit, param); m_pExpEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:611
-void FrUserInfoForm::OnEditInit_GI_CONNSTATUS(int param) { m_pConnStatusEdit = DYNAMIC_CAST(FrEdit, param); m_pConnStatusEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GI_CONNSTATUS(PG_MSGARG param) { m_pConnStatusEdit = DYNAMIC_CAST(FrEdit, param); m_pConnStatusEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:615
-void FrUserInfoForm::OnEditInit_GI_DISCONN(int param) { m_pDisconnEdit = DYNAMIC_CAST(FrEdit, param); m_pDisconnEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GI_DISCONN(PG_MSGARG param) { m_pDisconnEdit = DYNAMIC_CAST(FrEdit, param); m_pDisconnEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:617
-void FrUserInfoForm::OnEditInit_GI_COMBO(int param) { m_pComboEdit = DYNAMIC_CAST(FrEdit, param); m_pComboEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GI_COMBO(PG_MSGARG param) { m_pComboEdit = DYNAMIC_CAST(FrEdit, param); m_pComboEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:621
 void FrUserInfoForm::OnEditInit_GI_QUIZLEVEL(int param) { m_pQuizLevelEdit = DYNAMIC_CAST(FrEdit, param); m_pQuizLevelEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:623
-void FrUserInfoForm::OnEditInit_SI_TROPHY_GOLD(int param) { m_pTrophyGoldEdit = DYNAMIC_CAST(FrEdit, param); m_pTrophyGoldEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_TROPHY_GOLD(PG_MSGARG param) { m_pTrophyGoldEdit = DYNAMIC_CAST(FrEdit, param); m_pTrophyGoldEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:624
-void FrUserInfoForm::OnEditInit_SI_TROPHY_SILVER(int param) { m_pTrophySilverEdit = DYNAMIC_CAST(FrEdit, param); m_pTrophySilverEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_TROPHY_SILVER(PG_MSGARG param) { m_pTrophySilverEdit = DYNAMIC_CAST(FrEdit, param); m_pTrophySilverEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:625
-void FrUserInfoForm::OnEditInit_SI_TROPHY_BRONZE(int param) { m_pTrophyBronzeEdit = DYNAMIC_CAST(FrEdit, param); m_pTrophyBronzeEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_TROPHY_BRONZE(PG_MSGARG param) { m_pTrophyBronzeEdit = DYNAMIC_CAST(FrEdit, param); m_pTrophyBronzeEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:626
-void FrUserInfoForm::OnEditInit_SI_MATCH_WIN_PERCENTAGE(int param) { m_pMatchWinPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pMatchWinPercentEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_MATCH_WIN_PERCENTAGE(PG_MSGARG param) { m_pMatchWinPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pMatchWinPercentEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:627
-void FrUserInfoForm::OnEditInit_SI_AVG_SCORE(int param) { m_pAvgScoreEdit = DYNAMIC_CAST(FrEdit, param); m_pAvgScoreEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_AVG_SCORE(PG_MSGARG param) { m_pAvgScoreEdit = DYNAMIC_CAST(FrEdit, param); m_pAvgScoreEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:628
-void FrUserInfoForm::OnEditInit_SI_MEAN_SHOTTIME(int param) { m_pMeanShotTimeEdit = DYNAMIC_CAST(FrEdit, param); m_pMeanShotTimeEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_MEAN_SHOTTIME(PG_MSGARG param) { m_pMeanShotTimeEdit = DYNAMIC_CAST(FrEdit, param); m_pMeanShotTimeEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:629
-void FrUserInfoForm::OnEditInit_SI_PANGYA_PERCENTAGE(int param) { m_pPangyaPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pPangyaPercentEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_PANGYA_PERCENTAGE(PG_MSGARG param) { m_pPangyaPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pPangyaPercentEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:630
-void FrUserInfoForm::OnEditInit_SI_FAIRWAY_PERCENTAGE(int param) { m_pFairwayPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pFairwayPercentEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_FAIRWAY_PERCENTAGE(PG_MSGARG param) { m_pFairwayPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pFairwayPercentEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:631
-void FrUserInfoForm::OnEditInit_SI_PUTT_PERCENTAGE(int param) { m_pPuttPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pPuttPercentEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_PUTT_PERCENTAGE(PG_MSGARG param) { m_pPuttPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pPuttPercentEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:632
-void FrUserInfoForm::OnEditInit_SI_OB_PERCENTAGE(int param) { m_pObPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pObPercentEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_OB_PERCENTAGE(PG_MSGARG param) { m_pObPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pObPercentEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:633
-void FrUserInfoForm::OnEditInit_SI_TOTAL_SKINS_PANG(int param) { m_pTotalSkinsPangEdit = DYNAMIC_CAST(FrEdit, param); m_pTotalSkinsPangEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_TOTAL_SKINS_PANG(PG_MSGARG param) { m_pTotalSkinsPangEdit = DYNAMIC_CAST(FrEdit, param); m_pTotalSkinsPangEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:644
-void FrUserInfoForm::OnEditInit_RI_TOT_PLAYTIME(int param) { m_pRecordEdit[0] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[0]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_TOT_PLAYTIME(PG_MSGARG param) { m_pRecordEdit[0] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[0]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:645
-void FrUserInfoForm::OnEditInit_RI_TOT_SHOTS(int param) { m_pRecordEdit[1] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[1]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_TOT_SHOTS(PG_MSGARG param) { m_pRecordEdit[1] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[1]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:646
-void FrUserInfoForm::OnEditInit_RI_TOT_HOLES(int param) { m_pRecordEdit[2] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[2]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_TOT_HOLES(PG_MSGARG param) { m_pRecordEdit[2] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[2]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:647
-void FrUserInfoForm::OnEditInit_RI_TOT_DRIVE(int param) { m_pRecordEdit[4] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[4]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_TOT_DRIVE(PG_MSGARG param) { m_pRecordEdit[4] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[4]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:648
-void FrUserInfoForm::OnEditInit_RI_EARTH_ROUND(int param) { m_pRecordEdit[3] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[3]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_EARTH_ROUND(PG_MSGARG param) { m_pRecordEdit[3] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[3]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:649
-void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_5(int param) { m_pRecordEdit[5] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[5]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_5(PG_MSGARG param) { m_pRecordEdit[5] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[5]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:650
-void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_4(int param) { m_pRecordEdit[6] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[6]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_4(PG_MSGARG param) { m_pRecordEdit[6] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[6]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:651
-void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_3(int param) { m_pRecordEdit[7] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[7]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_3(PG_MSGARG param) { m_pRecordEdit[7] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[7]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:652
-void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_2(int param) { m_pRecordEdit[8] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[8]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_2(PG_MSGARG param) { m_pRecordEdit[8] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[8]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:653
-void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_1(int param) { m_pRecordEdit[9] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[9]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_BEST_SCORE_1(PG_MSGARG param) { m_pRecordEdit[9] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[9]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:654
-void FrUserInfoForm::OnEditInit_RI_TOT_HOLEINONES(int param) { m_pRecordEdit[10] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[10]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_TOT_HOLEINONES(PG_MSGARG param) { m_pRecordEdit[10] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[10]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:655
-void FrUserInfoForm::OnEditInit_RI_TOT_ALBATROSS(int param) { m_pRecordEdit[11] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[11]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_TOT_ALBATROSS(PG_MSGARG param) { m_pRecordEdit[11] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[11]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:656
-void FrUserInfoForm::OnEditInit_RI_LONGEST_DRIVE(int param) { m_pRecordEdit[12] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[12]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_LONGEST_DRIVE(PG_MSGARG param) { m_pRecordEdit[12] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[12]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:657
-void FrUserInfoForm::OnEditInit_RI_LONGEST_PUTT(int param) { m_pRecordEdit[13] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[13]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_LONGEST_PUTT(PG_MSGARG param) { m_pRecordEdit[13] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[13]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:658
-void FrUserInfoForm::OnEditInit_RI_LONGEST_CHIPIN(int param) { m_pRecordEdit[14] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[14]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_RI_LONGEST_CHIPIN(PG_MSGARG param) { m_pRecordEdit[14] = DYNAMIC_CAST(FrEdit, param); m_pRecordEdit[14]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:660
-void FrUserInfoForm::OnEditInit_GUILD_NAME(int param) { m_pGuildNameEdit = DYNAMIC_CAST(FrEdit, param); m_pGuildNameEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GUILD_NAME(PG_MSGARG param) { m_pGuildNameEdit = DYNAMIC_CAST(FrEdit, param); m_pGuildNameEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:661
-void FrUserInfoForm::OnEditInit_GUILD_PANG(int param) { m_pGuildPangEdit = DYNAMIC_CAST(FrEdit, param); m_pGuildPangEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GUILD_PANG(PG_MSGARG param) { m_pGuildPangEdit = DYNAMIC_CAST(FrEdit, param); m_pGuildPangEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:662
-void FrUserInfoForm::OnEditInit_GUILD_MYPERCENT(int param) { m_pGuildMyPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pGuildMyPercentEdit->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_GUILD_MYPERCENT(PG_MSGARG param) { m_pGuildMyPercentEdit = DYNAMIC_CAST(FrEdit, param); m_pGuildMyPercentEdit->EnableHover(true, 0.0f); }
 
 // user_info.cpp:668
-void FrUserInfoForm::OnAreaInit_GI_Level(int param) {
+void FrUserInfoForm::OnAreaInit_GI_Level(PG_MSGARG param) {
 	m_pLevelArea = DYNAMIC_CAST(FrArea, param);
 	if (m_pLevelArea) {
 		m_pLevelArea->SetVisible(false);
@@ -729,7 +729,7 @@ void FrUserInfoForm::OnAreaInit_GI_Level(int param) {
 }
 
 // user_info.cpp:675
-void FrUserInfoForm::OnAreaInit_GI_ClUB(int param) {
+void FrUserInfoForm::OnAreaInit_GI_ClUB(PG_MSGARG param) {
 	m_pClubArea = DYNAMIC_CAST(FrArea, param);
 	if (m_pClubArea) {
 		m_pClubArea->SetVisible(false);
@@ -737,7 +737,7 @@ void FrUserInfoForm::OnAreaInit_GI_ClUB(int param) {
 }
 
 // user_info.cpp:682
-void FrUserInfoForm::OnAreaInit_Question_mark(int param) {
+void FrUserInfoForm::OnAreaInit_Question_mark(PG_MSGARG param) {
 	m_pDisconnQuestionMark = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pDisconnQuestionMark) {
@@ -754,7 +754,7 @@ void FrUserInfoForm::OnAreaInit_Question_mark(int param) {
 }
 
 // user_info.cpp:700
-void FrUserInfoForm::OnAreaDraw_GI_ClUB(int param) {
+void FrUserInfoForm::OnAreaDraw_GI_ClUB(PG_MSGARG param) {
 	if (m_userInfo.m_guildUID == 0 || (m_userInfo.m_identity & 0x14))
 		return;
 
@@ -773,7 +773,7 @@ void FrUserInfoForm::OnAreaDraw_GI_ClUB(int param) {
 }
 
 // user_info.cpp:729
-void FrUserInfoForm::OnRecordNormalBtnInit(int param) {
+void FrUserInfoForm::OnRecordNormalBtnInit(PG_MSGARG param) {
 	m_pRecordNormalBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_recordType == 0) {
@@ -794,7 +794,7 @@ void FrUserInfoForm::OnRecordNormalBtnUp(void) {
 }
 
 // user_info.cpp:778
-void FrUserInfoForm::OnRecordCourseBtnInit(int param) {
+void FrUserInfoForm::OnRecordCourseBtnInit(PG_MSGARG param) {
 	m_pRecordCourseBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_recordType == 2) {
@@ -816,7 +816,7 @@ void FrUserInfoForm::OnRecordCourseBtnUp(void) {
 }
 
 // user_info.cpp:804
-void FrUserInfoForm::OnRecordClassicBtnInit(int param) {
+void FrUserInfoForm::OnRecordClassicBtnInit(PG_MSGARG param) {
 	m_pRecordClassicBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_recordType == 3) {
@@ -838,22 +838,22 @@ void FrUserInfoForm::OnRecordClassicBtnUp(void) {
 }
 
 // user_info.cpp:838
-void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY1(int param) { m_pMatchHistoryEdit[0] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[0]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY1(PG_MSGARG param) { m_pMatchHistoryEdit[0] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[0]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:839
-void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY2(int param) { m_pMatchHistoryEdit[1] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[1]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY2(PG_MSGARG param) { m_pMatchHistoryEdit[1] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[1]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:840
-void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY3(int param) { m_pMatchHistoryEdit[2] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[2]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY3(PG_MSGARG param) { m_pMatchHistoryEdit[2] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[2]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:841
-void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY4(int param) { m_pMatchHistoryEdit[3] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[3]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY4(PG_MSGARG param) { m_pMatchHistoryEdit[3] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[3]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:842
-void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY5(int param) { m_pMatchHistoryEdit[4] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[4]->EnableHover(true, 0.0f); }
+void FrUserInfoForm::OnEditInit_SI_MATCH_HISTORY5(PG_MSGARG param) { m_pMatchHistoryEdit[4] = DYNAMIC_CAST(FrEdit, param); m_pMatchHistoryEdit[4]->EnableHover(true, 0.0f); }
 
 // user_info.cpp:845
-void FrUserInfoForm::OnSpecListboxInit(int param) {
+void FrUserInfoForm::OnSpecListboxInit(PG_MSGARG param) {
 	m_pSpecList = DYNAMIC_CAST(FrListBox, param);
 	m_pSpecList->SetVisible(false);
 
@@ -865,19 +865,19 @@ void FrUserInfoForm::OnSpecListboxInit(int param) {
 }
 
 // user_info.cpp:856
-void FrUserInfoForm::OnMatchHistoryBtn1Init(int param) { m_pMatchHistoryBtn[0] = DYNAMIC_CAST(FrButton, param); }
+void FrUserInfoForm::OnMatchHistoryBtn1Init(PG_MSGARG param) { m_pMatchHistoryBtn[0] = DYNAMIC_CAST(FrButton, param); }
 
 // user_info.cpp:857
-void FrUserInfoForm::OnMatchHistoryBtn2Init(int param) { m_pMatchHistoryBtn[1] = DYNAMIC_CAST(FrButton, param); }
+void FrUserInfoForm::OnMatchHistoryBtn2Init(PG_MSGARG param) { m_pMatchHistoryBtn[1] = DYNAMIC_CAST(FrButton, param); }
 
 // user_info.cpp:858
-void FrUserInfoForm::OnMatchHistoryBtn3Init(int param) { m_pMatchHistoryBtn[2] = DYNAMIC_CAST(FrButton, param); }
+void FrUserInfoForm::OnMatchHistoryBtn3Init(PG_MSGARG param) { m_pMatchHistoryBtn[2] = DYNAMIC_CAST(FrButton, param); }
 
 // user_info.cpp:859
-void FrUserInfoForm::OnMatchHistoryBtn4Init(int param) { m_pMatchHistoryBtn[3] = DYNAMIC_CAST(FrButton, param); }
+void FrUserInfoForm::OnMatchHistoryBtn4Init(PG_MSGARG param) { m_pMatchHistoryBtn[3] = DYNAMIC_CAST(FrButton, param); }
 
 // user_info.cpp:860
-void FrUserInfoForm::OnMatchHistoryBtn5Init(int param) { m_pMatchHistoryBtn[4] = DYNAMIC_CAST(FrButton, param); }
+void FrUserInfoForm::OnMatchHistoryBtn5Init(PG_MSGARG param) { m_pMatchHistoryBtn[4] = DYNAMIC_CAST(FrButton, param); }
 
 // user_info.cpp:862
 void FrUserInfoForm::OnMatchHistoryBtn1Up(void) { MatchHistoryUserBtnUp(0); }
@@ -966,7 +966,7 @@ void FrUserInfoForm::SetSpecListBoxItem(eSeasonType season) {
 }
 
 // user_info.cpp:1001
-void FrUserInfoForm::OnSpecListboxOwnerDraw(int param) {
+void FrUserInfoForm::OnSpecListboxOwnerDraw(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 
@@ -1120,7 +1120,7 @@ void FrUserInfoForm::UpdateEditUserLocation(void) {
 }
 
 // user_info.cpp:1216
-void FrUserInfoForm::OnRecTotalListboxInit(int param) {
+void FrUserInfoForm::OnRecTotalListboxInit(PG_MSGARG param) {
 	m_pRecTotalList = DYNAMIC_CAST(FrListBox, param);
 	m_pRecTotalList->SetVisible(false);
 
@@ -1135,7 +1135,7 @@ void FrUserInfoForm::OnRecTotalListboxInit(int param) {
 }
 
 // user_info.cpp:1231
-void FrUserInfoForm::OnRecTotalListboxOwnerDraw(int param) {
+void FrUserInfoForm::OnRecTotalListboxOwnerDraw(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == NULL)
 		return;
@@ -1241,19 +1241,19 @@ void FrUserInfoForm::OnRecTotalListboxOwnerDraw(int param) {
 }
 
 // user_info.cpp:1391
-void FrUserInfoForm::OnTrophyNormalNumInit(int param) {
+void FrUserInfoForm::OnTrophyNormalNumInit(PG_MSGARG param) {
 	m_pTrophyNormalNum = DYNAMIC_CAST(FrEdit, param);
 	m_pTrophyNormalNum->SetVisible(false);
 }
 
 // user_info.cpp:1397
-void FrUserInfoForm::OnTrophySpecialNumInit(int param) {
+void FrUserInfoForm::OnTrophySpecialNumInit(PG_MSGARG param) {
 	m_pTrophySpecialNum = DYNAMIC_CAST(FrEdit, param);
 	m_pTrophySpecialNum->SetVisible(false);
 }
 
 // user_info.cpp:1403
-void FrUserInfoForm::OnTrophyNormalBtnInit(int param) {
+void FrUserInfoForm::OnTrophyNormalBtnInit(PG_MSGARG param) {
 	m_pTrophyNormalBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_trophyType == 0) {
@@ -1273,7 +1273,7 @@ void FrUserInfoForm::OnTrophyNormalBtnUp(void) {
 }
 
 // user_info.cpp:1423
-void FrUserInfoForm::OnTrophySpecialBtnInit(int param) {
+void FrUserInfoForm::OnTrophySpecialBtnInit(PG_MSGARG param) {
 	m_pTrophySpecialBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_trophyType == 1) {
@@ -1380,12 +1380,12 @@ void FrUserInfoForm::ChangeTrophyType(void) {
 }
 
 // user_info.cpp:1538
-void FrUserInfoForm::OnListBoxInit_TRI_SPECIALBOX(int param) {
+void FrUserInfoForm::OnListBoxInit_TRI_SPECIALBOX(PG_MSGARG param) {
 	m_pTrophySpecialList = DYNAMIC_CAST(FrListBox, param);
 }
 
 // user_info.cpp:1545
-void FrUserInfoForm::OnListBoxOwnerDraw_TRI_SPECIALBOX(int param) {
+void FrUserInfoForm::OnListBoxOwnerDraw_TRI_SPECIALBOX(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == NULL)
 		return;
@@ -1441,12 +1441,12 @@ void FrUserInfoForm::OnListBoxOwnerDraw_TRI_SPECIALBOX(int param) {
 }
 
 // user_info.cpp:1609
-void FrUserInfoForm::OnListBoxInit_TRI_NORMALBOX(int param) {
+void FrUserInfoForm::OnListBoxInit_TRI_NORMALBOX(PG_MSGARG param) {
 	m_pTrophyNormalList = DYNAMIC_CAST(FrListBox, param);
 }
 
 // user_info.cpp:1616
-void FrUserInfoForm::OnListBoxOwnerDraw_TRI_NORMALBOX(int param) {
+void FrUserInfoForm::OnListBoxOwnerDraw_TRI_NORMALBOX(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == NULL)
 		return;
@@ -1505,7 +1505,7 @@ void FrUserInfoForm::OnListBoxOwnerDraw_TRI_NORMALBOX(int param) {
 }
 
 // user_info.cpp:1680
-void FrUserInfoForm::OnStaticInit_TRI_NOTROPHY(int param) {
+void FrUserInfoForm::OnStaticInit_TRI_NOTROPHY(PG_MSGARG param) {
 	m_pNoTrophyStatic = DYNAMIC_CAST(FrStatic, param);
 	if (m_pNoTrophyStatic) {
 		m_pNoTrophyStatic->SetVisible(false);
@@ -1513,7 +1513,7 @@ void FrUserInfoForm::OnStaticInit_TRI_NOTROPHY(int param) {
 }
 
 // user_info.cpp:1703
-void FrUserInfoForm::OnMyGuildInit(int param) {
+void FrUserInfoForm::OnMyGuildInit(PG_MSGARG param) {
 	m_pMyGuildArea = DYNAMIC_CAST(FrArea, param);
 	m_pGuildTrophyBmp = g_pFresh->GetManager()->GetBitmap("TROPHY", "guild");
 }
@@ -1542,7 +1542,7 @@ void FrUserInfoForm::OnMyGuildOwnerDraw(void) {
 }
 
 // user_info.cpp:1751
-void FrUserInfoForm::OnGuildTrophyListInit(int param) {
+void FrUserInfoForm::OnGuildTrophyListInit(PG_MSGARG param) {
 	m_pGuildTrophyList = DYNAMIC_CAST(FrListBox, param);
 	if (m_pGuildTrophyList) {
 		m_pGuildTrophyList->SetVisible(false);
@@ -1550,7 +1550,7 @@ void FrUserInfoForm::OnGuildTrophyListInit(int param) {
 }
 
 // user_info.cpp:1762
-void FrUserInfoForm::OnGuildTrophyListOwnerDraw(int param) {
+void FrUserInfoForm::OnGuildTrophyListOwnerDraw(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == NULL)
 		return;
@@ -1604,7 +1604,7 @@ void FrUserInfoForm::OnGuildTrophyListOwnerDraw(int param) {
 }
 
 // user_info.cpp:1830
-void FrUserInfoForm::OnStaticInit_GUILD_NOTROPHY(int param) {
+void FrUserInfoForm::OnStaticInit_GUILD_NOTROPHY(PG_MSGARG param) {
 	m_pGuildNoTrophyStatic = DYNAMIC_CAST(FrStatic, param);
 	if (m_pGuildNoTrophyStatic) {
 		m_pGuildNoTrophyStatic->SetVisible(false);
@@ -1612,7 +1612,7 @@ void FrUserInfoForm::OnStaticInit_GUILD_NOTROPHY(int param) {
 }
 
 // user_info.cpp:1842
-void FrUserInfoForm::OnWhisperInit(int param) {
+void FrUserInfoForm::OnWhisperInit(PG_MSGARG param) {
 	m_pWhisperBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1624,7 +1624,7 @@ void FrUserInfoForm::OnNickInit(intptr_t param) {
 }
 
 // user_info.cpp:1865
-void FrUserInfoForm::OnNickOwnerDraw(int param) {
+void FrUserInfoForm::OnNickOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI == NULL)
 		return;
@@ -1657,7 +1657,7 @@ void FrUserInfoForm::OnWhisperUp(void) {
 }
 
 // user_info.cpp:1934
-void FrUserInfoForm::OnFriendInit(int param) {
+void FrUserInfoForm::OnFriendInit(PG_MSGARG param) {
 	m_pFriendBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -2694,7 +2694,7 @@ unsigned long FrUserInfoForm::GetColor(eTabType tab, unsigned long index) {
 }
 
 // user_info.cpp:3487
-void FrUserInfoForm::OnPetInit(int param) {
+void FrUserInfoForm::OnPetInit(PG_MSGARG param) {
 	m_pPetArea = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -2796,7 +2796,7 @@ void FrUserInfoForm::OnPetOwnerDraw(void) {
 }
 
 // user_info.cpp:3604
-void FrUserInfoForm::OnPetLoadInit(int param) {
+void FrUserInfoForm::OnPetLoadInit(PG_MSGARG param) {
 	m_pPetLoadGauge = DYNAMIC_CAST(FrGaugeBar, param);
 	if (m_pPetLoadGauge) {
 		m_pPetLoadGauge->SetRange(0, 0x78, 0);
@@ -3008,7 +3008,7 @@ void FrUserInfoForm::SetVisible(eTabType tab, bool bVisible) {
 }
 
 // user_info.cpp:3895
-void FrUserInfoForm::OnCommentInit(int param) {
+void FrUserInfoForm::OnCommentInit(PG_MSGARG param) {
 	m_pCommentEdit = DYNAMIC_CAST(FrEdit, param);
 	if (m_pCommentEdit) {
 		m_pCommentEdit->SetVisible(false);
@@ -3016,7 +3016,7 @@ void FrUserInfoForm::OnCommentInit(int param) {
 }
 
 // user_info.cpp:3902
-void FrUserInfoForm::OnEditInit_HoverOn(int param) {
+void FrUserInfoForm::OnEditInit_HoverOn(PG_MSGARG param) {
 	if (!m_pCommentEdit)
 		return;
 
@@ -3035,7 +3035,7 @@ void FrUserInfoForm::OnEditInit_HoverOn(int param) {
 }
 
 // user_info.cpp:3942
-void FrUserInfoForm::OnEditInit_HoverOff(int param) {
+void FrUserInfoForm::OnEditInit_HoverOff(PG_MSGARG param) {
 	if (m_pCommentEdit) {
 		m_pCommentEdit->SetVisible(false);
 	}
@@ -3045,7 +3045,7 @@ void FrUserInfoForm::OnEditInit_HoverOff(int param) {
 static char* s_scoreFontFile = "[font_wind.jpg";
 
 // user_info.cpp:3948
-void FrUserInfoForm::OnScoreListInit(int param) {
+void FrUserInfoForm::OnScoreListInit(PG_MSGARG param) {
 	m_pScoreList = DYNAMIC_CAST(FrListBox, param);
 	if (m_pScoreList) {
 		m_pScoreList->SetVisible(false);
@@ -3065,7 +3065,7 @@ void FrUserInfoForm::OnScoreListInit(int param) {
 }
 
 // user_info.cpp:3972
-void FrUserInfoForm::OnScoreListOwnerDraw(int param) {
+void FrUserInfoForm::OnScoreListOwnerDraw(PG_MSGARG param) {
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == NULL)
 		return;
@@ -3302,7 +3302,7 @@ void FrUserInfoForm::OnRecAwardBackInit(int param) {
 }
 
 // user_info.cpp:4291
-void FrUserInfoForm::OnGhostInit(int param) {
+void FrUserInfoForm::OnGhostInit(PG_MSGARG param) {
 	m_pGhostBtn = (FrButton*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) ? (void*)param : 0) : 0);
 	m_pGhostBtn->Enable(false);
 
@@ -3327,7 +3327,7 @@ void FrUserInfoForm::OnGhostdUp(void) {
 }
 
 // user_info.cpp:4325
-void FrUserInfoForm::OnBtn_RmrVisitorInit(int param) {
+void FrUserInfoForm::OnBtn_RmrVisitorInit(PG_MSGARG param) {
 	m_pRmrVisitorBtn = DYNAMIC_CAST(FrButton, param);
 }
 

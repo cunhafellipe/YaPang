@@ -14,7 +14,7 @@ class FrListBox;
 class FrStatic;
 class WRect;
 class WOverlay;
-enum eDemonDlg;
+PG_ENUM_FWD(eDemonDlg)
 
 // Next-hole panel of the Demon Land mode; its size (0x148) is the `new` of
 // FrDemonNextHoleMakeInstance. Only the members this unit defines so far are
@@ -40,9 +40,9 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnAreaPattern_Init(intptr_t param);
-	void OnAreaPattern_OwnerDraw(int param);
+	void OnAreaPattern_OwnerDraw(PG_MSGARG param);
 	void OnAreaNextHole_Init(intptr_t param);
-	void OnAreaNextHole_OwnerDraw(int param);
+	void OnAreaNextHole_OwnerDraw(PG_MSGARG param);
 
 	FrArea* m_pPatternArea;    // 0x110
 	FrArea* m_pNextHoleArea;   // 0x114
@@ -91,9 +91,9 @@ protected:
 
 	void OnImageBarAttackPoint_Init(intptr_t param);
 	void OnAreaAttackMarker_Init(intptr_t param);
-	void OnAreaAttackMarker_OwnerDraw(int param);
+	void OnAreaAttackMarker_OwnerDraw(PG_MSGARG param);
 	void OnAreaBlingBar_Init(intptr_t param);
-	void OnAreaBlingBar_OwnerDraw(int param);
+	void OnAreaBlingBar_OwnerDraw(PG_MSGARG param);
 
 	FrGaugeBarImage* m_pAttackPointBar;      // 0x110
 	FrArea* m_pAttackMarkerArea;             // 0x114
@@ -133,9 +133,9 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnAreaLeaderPet_Init(intptr_t param);
-	void OnAreaLeaderPet_OwnerDraw(int);
+	void OnAreaLeaderPet_OwnerDraw(PG_MSGARG);
 	void OnListBoxUserInfoList_Init(intptr_t param);
-	void OnListBoxUserInfoList_OwnerDraw(int param);
+	void OnListBoxUserInfoList_OwnerDraw(PG_MSGARG param);
 
 	FrArea* m_pLeaderPetArea;       // 0x110
 	FrListBox* m_pUserInfoList;     // 0x114

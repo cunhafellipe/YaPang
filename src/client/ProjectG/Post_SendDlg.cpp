@@ -201,7 +201,7 @@ void CPost_SendDlg::OnPostReciveMsgInit(intptr_t param) {
 }
 
 // post_senddlg.cpp:182
-bool CPost_SendDlg::OnPostReciveMsgEnterKey(int) {
+bool CPost_SendDlg::OnPostReciveMsgEnterKey(PG_MSGARG) {
 	return true;
 }
 
@@ -216,7 +216,7 @@ void CPost_SendDlg::OnPostSearchUserInit(intptr_t param) {
 }
 
 // post_senddlg.cpp:196
-bool CPost_SendDlg::OnPostReceiveUserEnterKey(int) {
+bool CPost_SendDlg::OnPostReceiveUserEnterKey(PG_MSGARG) {
 	OnPostSearchUserBtnUp();
 	return false;
 }
@@ -1709,7 +1709,7 @@ unsigned long CPost_ItemCountDlg::GetSelectItem(void) {
 }
 
 // post_senddlg.cpp:2238
-bool CPost_ItemCountDlg::OnPostEditItemCountEnterKey(int) {
+bool CPost_ItemCountDlg::OnPostEditItemCountEnterKey(PG_MSGARG) {
 	OnOK();
 	return true;
 }

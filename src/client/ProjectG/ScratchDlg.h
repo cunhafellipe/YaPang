@@ -63,22 +63,22 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // scratchdlg.cpp:20
 
-	void OnScratchDlgInit(int);   // scratchdlg.cpp:135
-	void OnScratchBottomInit(int param);   // scratchdlg.cpp:140
-	void OnScratchCover01Init(int param);   // scratchdlg.cpp:153
-	void OnScratchCover02Init(int param);   // scratchdlg.cpp:171
-	void OnScratchCardInit(int param);   // scratchdlg.cpp:189
-	void OnScratchNextPageBnInit(int param);   // scratchdlg.cpp:201
+	void OnScratchDlgInit(PG_MSGARG);   // scratchdlg.cpp:135
+	void OnScratchBottomInit(PG_MSGARG param);   // scratchdlg.cpp:140
+	void OnScratchCover01Init(PG_MSGARG param);   // scratchdlg.cpp:153
+	void OnScratchCover02Init(PG_MSGARG param);   // scratchdlg.cpp:171
+	void OnScratchCardInit(PG_MSGARG param);   // scratchdlg.cpp:189
+	void OnScratchNextPageBnInit(PG_MSGARG param);   // scratchdlg.cpp:201
 	void OnScratchNextPageBnUp(void);   // scratchdlg.cpp:212
-	void OnSerialNumberInit(int param);   // scratchdlg.cpp:233
-	void OnSerialNumberBnInit(int param);   // scratchdlg.cpp:248
-	void OnAboutBnInit(int param);   // scratchdlg.cpp:267
+	void OnSerialNumberInit(PG_MSGARG param);   // scratchdlg.cpp:233
+	void OnSerialNumberBnInit(PG_MSGARG param);   // scratchdlg.cpp:248
+	void OnAboutBnInit(PG_MSGARG param);   // scratchdlg.cpp:267
 	void OnCloseBnInit(intptr_t param);   // scratchdlg.cpp:284
 	void OnScratchBottomOwnerDraw(void);   // scratchdlg.cpp:146
 	void OnScratchCover01OwnerDraw(void);   // scratchdlg.cpp:166
 	void OnScratchCover02OwnerDraw(void);   // scratchdlg.cpp:184
-	bool OnScratchCardEnterKey(int);   // scratchdlg.cpp:195
-	bool OnSerialNumberEnterKey(int);   // scratchdlg.cpp:242
+	bool OnScratchCardEnterKey(PG_MSGARG);   // scratchdlg.cpp:195
+	bool OnSerialNumberEnterKey(PG_MSGARG);   // scratchdlg.cpp:242
 	void OnSerialNumberBnUp(void);   // scratchdlg.cpp:257
 	void OnAboutBnUp(void);   // scratchdlg.cpp:273
 	void OnCloseBnUp(void);   // scratchdlg.cpp:290
@@ -178,7 +178,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // scratchdlg.cpp:1313
 
-	void OnScratchResultDlgInit(int);   // scratchdlg.cpp:1364
+	void OnScratchResultDlgInit(PG_MSGARG);   // scratchdlg.cpp:1364
 	void OnResultItemIconInit(intptr_t param);   // scratchdlg.cpp:1369
 	void OnResultItemIconOwnerDraw(void);   // scratchdlg.cpp:1375
 	void OnResultItemNameInit(intptr_t param);   // scratchdlg.cpp:1468

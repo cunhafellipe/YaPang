@@ -20,6 +20,12 @@ CHECK_SIZE(ConsoleKeyState, 0x2);
 // The in-game developer console. The layout up to 0x294 is reconstructed
 // from the constructor, Init and the backspace stack; the full size is not
 // known yet.
+#ifdef PG_PORT
+// clang rejects the later explicit specialization once WSingleton<CConsole>::
+// m_pInstance has been instantiated by the inline Print below; declare it first.
+class CConsole;
+template <> CConsole *WSingleton<CConsole>::m_pInstance;
+#endif
 class CConsole : public WSingleton<CConsole> {
 	LAYOUT_CHECK_FRIEND;
 public:

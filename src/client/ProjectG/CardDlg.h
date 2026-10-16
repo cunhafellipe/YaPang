@@ -305,23 +305,23 @@ protected:
 	virtual void OnProc(float fDelta);   // carddlg.cpp:1833
 
 	void initCardSlotBtnTxt(void);        // carddlg.cpp:1080
-	void OnAttachCardIconInit(int param);      // carddlg.cpp:1101
+	void OnAttachCardIconInit(PG_MSGARG param);      // carddlg.cpp:1101
 	void OnAttachCardIconOwnerDraw(void);      // carddlg.cpp:1106
-	void OnAttachCardNameInit(int param);      // carddlg.cpp:1117
-	void OnAttachCardAbilityInit(int param);   // carddlg.cpp:1123
-	void OnAttachItemIconInit(int param);      // carddlg.cpp:1128
+	void OnAttachCardNameInit(PG_MSGARG param);      // carddlg.cpp:1117
+	void OnAttachCardAbilityInit(PG_MSGARG param);   // carddlg.cpp:1123
+	void OnAttachItemIconInit(PG_MSGARG param);      // carddlg.cpp:1128
 	void OnAttachItemIconOwnerDraw(void);      // carddlg.cpp:1133
-	void OnAttachItemNameInit(int param);      // carddlg.cpp:1145
-	void OnAttachItemAbilityInit(int param);   // carddlg.cpp:1151
-	void OnAreaCharImgInit(int param);         // carddlg.cpp:1156
-	void OnItemListFoldInit(int param);        // carddlg.cpp:1161
-	void OnItemListUnfoldInit(int param);      // carddlg.cpp:1167
-	void OnDlgFrm_04Init(int param);           // carddlg.cpp:1203
-	void OnDlgFrm_05Init(int param);           // carddlg.cpp:1208
-	void OnDlgFrm_06Init(int param);           // carddlg.cpp:1213
-	void OnDlgFrm_07Init(int param);           // carddlg.cpp:1218
-	void OnDlgFrm_08Init(int param);           // carddlg.cpp:1223
-	void OnDlgFrm_09Init(int param);           // carddlg.cpp:1228
+	void OnAttachItemNameInit(PG_MSGARG param);      // carddlg.cpp:1145
+	void OnAttachItemAbilityInit(PG_MSGARG param);   // carddlg.cpp:1151
+	void OnAreaCharImgInit(PG_MSGARG param);         // carddlg.cpp:1156
+	void OnItemListFoldInit(PG_MSGARG param);        // carddlg.cpp:1161
+	void OnItemListUnfoldInit(PG_MSGARG param);      // carddlg.cpp:1167
+	void OnDlgFrm_04Init(PG_MSGARG param);           // carddlg.cpp:1203
+	void OnDlgFrm_05Init(PG_MSGARG param);           // carddlg.cpp:1208
+	void OnDlgFrm_06Init(PG_MSGARG param);           // carddlg.cpp:1213
+	void OnDlgFrm_07Init(PG_MSGARG param);           // carddlg.cpp:1218
+	void OnDlgFrm_08Init(PG_MSGARG param);           // carddlg.cpp:1223
+	void OnDlgFrm_09Init(PG_MSGARG param);           // carddlg.cpp:1228
 	void OnOpenAttachDlg(int charSlot, int caddieSlot);   // carddlg.cpp:1312
 	void SetCharacterAttatchBtnTxt(unsigned long typeId, char* text);   // carddlg.cpp:1331
 	void SetCaddieAttatchBtnTxt(unsigned long typeId, char* text);   // carddlg.cpp:1388
@@ -335,21 +335,21 @@ protected:
 	void OnCaddieSlotBtnOwnerDraw_2(void);     // carddlg.cpp:1716
 	void OnCaddieSlotBtnOwnerDraw_3(void);     // carddlg.cpp:1762
 	void OnCaddieSlotBtnOwnerDraw_4(void);     // carddlg.cpp:1809
-	void OnCharSlotBtnInit_1(int param);       // carddlg.cpp:1458
+	void OnCharSlotBtnInit_1(PG_MSGARG param);       // carddlg.cpp:1458
 	void OnCharSlotBtnDown_1(void);            // carddlg.cpp:1464
-	void OnCharSlotBtnInit_2(int param);       // carddlg.cpp:1505
+	void OnCharSlotBtnInit_2(PG_MSGARG param);       // carddlg.cpp:1505
 	void OnCharSlotBtnDown_2(void);            // carddlg.cpp:1511
-	void OnCharSlotBtnInit_3(int param);       // carddlg.cpp:1552
+	void OnCharSlotBtnInit_3(PG_MSGARG param);       // carddlg.cpp:1552
 	void OnCharSlotBtnDown_3(void);            // carddlg.cpp:1558
-	void OnCharSlotBtnInit_4(int param);       // carddlg.cpp:1599
+	void OnCharSlotBtnInit_4(PG_MSGARG param);       // carddlg.cpp:1599
 	void OnCharSlotBtnDown_4(void);            // carddlg.cpp:1605
-	void OnCaddieSlotBtnInit_1(int param);     // carddlg.cpp:1646
+	void OnCaddieSlotBtnInit_1(PG_MSGARG param);     // carddlg.cpp:1646
 	void OnCaddieSlotBtnDown_1(void);          // carddlg.cpp:1652
-	void OnCaddieSlotBtnInit_2(int param);     // carddlg.cpp:1692
+	void OnCaddieSlotBtnInit_2(PG_MSGARG param);     // carddlg.cpp:1692
 	void OnCaddieSlotBtnDown_2(void);          // carddlg.cpp:1698
-	void OnCaddieSlotBtnInit_3(int param);     // carddlg.cpp:1738
+	void OnCaddieSlotBtnInit_3(PG_MSGARG param);     // carddlg.cpp:1738
 	void OnCaddieSlotBtnDown_3(void);          // carddlg.cpp:1744
-	void OnCaddieSlotBtnInit_4(int param);     // carddlg.cpp:1785
+	void OnCaddieSlotBtnInit_4(PG_MSGARG param);     // carddlg.cpp:1785
 	void OnCaddieSlotBtnDown_4(void);          // carddlg.cpp:1791
 	void OnMyItemListInit(intptr_t param);          // carddlg.cpp:1855
 	void OnMyItemListOwnerDraw(intptr_t nIndex);    // carddlg.cpp:1900

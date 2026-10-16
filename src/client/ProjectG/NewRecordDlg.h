@@ -25,7 +25,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	void OnCourseListOwnerDraw(int);
+	void OnCourseListOwnerDraw(PG_MSGARG);
 	void OnCourseListInit(intptr_t);
 
 private:

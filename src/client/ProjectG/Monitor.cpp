@@ -13,7 +13,7 @@ CMonitor::~CMonitor(void) {
 }
 
 // monitor.cpp:31
-void CMonitor::Init(int count, int scale, WRect& rect) {
+void CMonitor::Init(int count, int scale, const WRect& rect) {
 	m_nCur = 0;
 	m_nCount = count;
 	m_nScale = scale;
