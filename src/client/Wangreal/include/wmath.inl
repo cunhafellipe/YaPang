@@ -91,10 +91,12 @@ GOLFRULE_WMATH_INLINE WVector RotVec(const WVector& v, const WMatrix& m) {
 }
 
 // wmath.inl:118
+#if !defined(__GNUC__) || defined(__clang__)
 inline WVector& WVector::operator=(const WVector& v) {
 	memcpy(this, &v, sizeof(WVector));
 	return *this;
 }
+#endif
 
 // wmath.inl:124
 inline void WVector::operator+=(const WVector& v) {
