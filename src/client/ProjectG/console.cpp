@@ -154,11 +154,13 @@ extern int causticAlpha;
 // The IME input device (public ?g_ime@@3PAVWInputDev@@A).
 extern WInputDev *g_ime;
 
-// The last IME composition InputProcess appended (no symbol).
-static int s_lastComposition;
+// The console's file-local state (no symbol; one .bss block at 0xaf2b28).
+struct ConsoleState {
+	tweaker *m_pTweaker;   // 0x0, the tweaker "tw using" selected, the target of the following commands
+	int m_lastComposition; // 0x4, the last IME composition InputProcess appended
+};
 
-// The tweaker "tw using" selected, the target of the following commands.
-static tweaker *s_pTweaker;
+static ConsoleState data_af2b28;
 
 // console.cpp:333
 int _POSTMSG(const void *pSender, const char *pTarget, int msg, int param1, int param2, int param3, unsigned long param4) {
@@ -218,6 +220,9 @@ void CConsole::Process(float elapsed) {
 	g_input->SetActive(!m_active);
 }
 
+template <class T> inline T MaxOf(T a, T b) { return a > b ? a : b; }
+template <class T> inline T MinOf(T a, T b) { return a > b ? b : a; }
+
 // console.cpp:453
 void CConsole::InputProcess(float elapsed) {
 	int key = 0;
@@ -267,8 +272,8 @@ void CConsole::InputProcess(float elapsed) {
 
 	int composition = g_ime->GetState(3, -2);
 	if (composition) {
-		if (composition != s_lastComposition) {
-			s_lastComposition = composition;
+		if (composition != data_af2b28.m_lastComposition) {
+			data_af2b28.m_lastComposition = composition;
 			text[0] = (char)composition;
 			text[1] = (char)(composition >> 8);
 			text[2] = 0;
@@ -310,13 +315,13 @@ void CConsole::InputProcess(float elapsed) {
 				strcpy(word, result);
 			}
 		} else {
+			char c;
 			char *end = strchr(word, 0);
 			if (isalnum(end[-1])) {
 				while ((*end = PopFromBsStack()) != 0) {
 					end++;
 				}
 			} else {
-				char c;
 				while ((c = PopFromBsStack()) != 0) {
 					if (isalnum(c)) {
 						*end = c;
@@ -343,8 +348,7 @@ void CConsole::InputProcess(float elapsed) {
 			}
 
 			m_inputLine[0] = 0;
-			int offset = m_lines.GetCount() - 19;
-			m_lineOffset = offset > 0 ? offset : 0;
+			m_lineOffset = MaxOf(m_lines.GetCount() - 19, 0);
 			m_historyPos = NULL;
 			m_historyEdge = 1;
 		}
@@ -383,7 +387,7 @@ void CConsole::InputProcess(float elapsed) {
 	case 8: {
 		int len = strlen(m_inputLine);
 		if (len > 0 && !m_inputLocked) {
-			if (len > 1 && m_inputLine[len - 1] < 0) {
+			if (len > 1 && (m_inputLine[len - 1] & 0x80)) {
 				PushIntoBsStack(m_inputLine[len - 1]);
 				PushIntoBsStack(m_inputLine[len - 2]);
 				m_inputLine[len - 2] = 0;
@@ -400,15 +404,12 @@ void CConsole::InputProcess(float elapsed) {
 	}
 	case 2:
 		if (m_lines.GetCount() > 19) {
-			int offset = m_lineOffset - 1;
-			m_lineOffset = offset > 0 ? offset : 0;
+			m_lineOffset = MaxOf(m_lineOffset - 1, 0);
 		}
 		break;
 	case 3:
 		if (m_lines.GetCount() > 19) {
-			int offset = m_lineOffset + 1;
-			int last = m_lines.GetCount() - 19;
-			m_lineOffset = offset > last ? last : offset;
+			m_lineOffset = MinOf(m_lineOffset + 1, m_lines.GetCount() - 19);
 		}
 		break;
 	}
@@ -638,12 +639,12 @@ int CConsole::TweakerCommandProc(const char *line) {
 		std::string fullName(name);
 		fullName += " ";
 		fullName += command;
-		s_pTweaker = tweaker_database::instance()->get_tweaker(fullName);
-		if (s_pTweaker) {
+		data_af2b28.m_pTweaker = tweaker_database::instance()->get_tweaker(fullName);
+		if (data_af2b28.m_pTweaker) {
 			// "입력된 트위커를 시작합니다. 다음은 예약된 명령어들 입니다."
 			AddText("\xC0\xD4\xB7\xC2\xB5\xC8 \xC6\xAE\xC0\xA7\xC4\xBF\xB8\xA6 \xBD\xC3\xC0\xDB\xC7\xD5\xB4\xCF\xB4\xD9. \xB4\xD9\xC0\xBD\xC0\xBA \xBF\xB9\xBE\xE0\xB5\xC8 \xB8\xED\xB7\xC9\xBE\xEE\xB5\xE9 \xC0\xD4\xB4\xCF\xB4\xD9.");
 			std::vector<std::string> list;
-			s_pTweaker->get_command_list(list, false);
+			data_af2b28.m_pTweaker->get_command_list(list, false);
 
 			for (std::vector<std::string>::iterator it = list.begin(); it != list.end(); ++it) {
 				AddText(it->c_str());
@@ -655,20 +656,20 @@ int CConsole::TweakerCommandProc(const char *line) {
 		return 1;
 	}
 
-	if (s_pTweaker) {
+	if (data_af2b28.m_pTweaker) {
 
-		if (tweaker_database::instance()->is_exist_tweaker(s_pTweaker)) {
+		if (tweaker_database::instance()->is_exist_tweaker(data_af2b28.m_pTweaker)) {
 
-			if (s_pTweaker->is_exist_command(std::string(line))) {
+			if (data_af2b28.m_pTweaker->is_exist_command(line)) {
 
-				std::string result = s_pTweaker->run_command(line);
+				std::string result = data_af2b28.m_pTweaker->run_command(line);
 				AddText(result.c_str());
 				return 1;
 			}
 		} else {
 			// "이전 사용을 선언한 트위커가 더이상 유효하지 않아서 자동 종료되었습니다."
 			AddText("\xC0\xCC\xC0\xFC \xBB\xE7\xBF\xEB\xC0\xBB \xBC\xB1\xBE\xF0\xC7\xD1 \xC6\xAE\xC0\xA7\xC4\xBF\xB0\xA1 \xB4\xF5\xC0\xCC\xBB\xF3 \xC0\xAF\xC8\xBF\xC7\xCF\xC1\xF6 \xBE\xCA\xBE\xC6\xBC\xAD \xC0\xDA\xB5\xBF \xC1\xBE\xB7\xE1\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9.");
-			s_pTweaker = NULL;
+			data_af2b28.m_pTweaker = NULL;
 		}
 	} else {
 
@@ -787,7 +788,7 @@ void CConsole::Command(const char *line) {
 				float slope = -1.0f;
 				sscanf(line + len + 1, "%f", &slope);
 
-				if (slope <= 0.0f) {
+				if (slope < 0.0f) {
 					BadArgument(59);
 					return;
 				}

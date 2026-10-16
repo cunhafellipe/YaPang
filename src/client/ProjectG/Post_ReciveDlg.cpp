@@ -1100,8 +1100,8 @@ void CPost_ReciveDlg::BuildIndexPage(int page) {
 	float startX = 243.0f - totalWidth * 0.5f;
 	if (m_pIndexRects) {
 		for (unsigned int i = 0; i < m_indexItemCount; i++) {
-			m_pIndexRects[i] = WRect(startX + i * 30.0f, 300.0f,
-				i * 30.0f + startX + 30.0f, 310.0f);
+			float offset = i * 30.0f;
+			m_pIndexRects[i] = WRect(startX + offset, 300.0f, i * 30.0f + startX + 30.0f, 310.0f);
 		}
 	}
 }
@@ -1133,7 +1133,7 @@ void CPost_ReciveDlg::OnIndexAreaOwnerDraw(void) {
 		return;
 
 	for (int i = 0; i < m_indexItemCount; i++) {
-		WPoint pos = m_rect.TopLeft();
+		WRect rc = m_rect;
 
 		if (i == m_indexSelected) {
 			pGI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
@@ -1146,13 +1146,13 @@ void CPost_ReciveDlg::OnIndexAreaOwnerDraw(void) {
 			pGI->SetTextStyle(0);
 		}
 
-		pGI->Print(WPoint(pos.x + m_pIndexRects[i].x + 15.0f, pos.y + m_pIndexRects[i].y), 1, "%d", m_indexPage * 5 + i + 1);
+		pGI->Print(WPoint(rc.x + m_pIndexRects[i].x + 15.0f, rc.y + m_pIndexRects[i].y), 1, "%d", m_indexPage * 5 + i + 1);
 
 		if (i != 0) {
 			pGI->SetTextColor(0xFFAAAAAA, 0xFFFFFFFF);
 			pGI->SetTextStyle(0);
 
-			pGI->Print(WPoint(pos.x + m_pIndexRects[i].x, pos.y + m_pIndexRects[i].y), 1, "|");
+			pGI->Print(WPoint(rc.x + m_pIndexRects[i].x, rc.y + m_pIndexRects[i].y), 1, "|");
 		}
 
 		pGI->SetTextColor(0xFF000000, 0xFFFFFFFF);

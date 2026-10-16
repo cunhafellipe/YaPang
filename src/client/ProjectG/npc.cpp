@@ -528,12 +528,9 @@ void CCreature::SetArea(const Waabb &area, unsigned long flags) {
 
 	m_matrix = RotMat(Random(-180.0f, 180.0f, -1) * data_9f0fc0, 1);
 
-	float *pivot = &m_matrix.pivot.x;
-	const float *lo = &m_area.min.x;
-	const float *hi = &m_area.max.x;
 	for (int i = 0; i < 3; i++) {
 		float r = Random(0, 1.0f, -1);
-		pivot[i] = (1.0f - r) * hi[i] + r * lo[i];
+		(&m_matrix.pivot.x)[i] = (1.0f - r) * (&m_area.max.x)[i] + r * (&m_area.min.x)[i];
 	}
 
 	if (flags & 1) {
@@ -2324,18 +2321,17 @@ bool ntNpc_PolaPenguin2::IsSlidable(void) {
 
 	w_motion_data *motion = m_pPet->FindMotionData("NPC_Default");
 
-	if (motion) {
-		WVector delta = m_pos - m_matrix.pivot;
-		WVector move;
-		move = m_pPet->GetDeltaVec("NPC_Default", motion->e);
+	if (!motion)
+		return false;
 
-		if (delta.Magnitude() < move.Magnitude())
-			return false;
+	WVector delta = m_pos - m_matrix.pivot;
+	WVector move;
+	move = m_pPet->GetDeltaVec("NPC_Default", motion->e);
 
-		return true;
-	}
+	if (delta.Magnitude() < move.Magnitude())
+		return false;
 
-	return false;
+	return true;
 }
 
 // npc.cpp:3104

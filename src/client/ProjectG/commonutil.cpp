@@ -389,6 +389,7 @@ template<> struct greater<PAKINFO> : public binary_function<PAKINFO, PAKINFO, bo
 
 // commonutil.cpp:604
 int __stdcall IntegrityPakCRC(std::list<PAKINFO>& pakList, const char* integratedName, std::string& errorFile) {
+	std::list<PAKINFO>::iterator it = pakList.begin();
 	SYSTEM_INFO systemInfo = { 0 };
 	GetSystemInfo(&systemInfo);
 	int multiProcessor = 0;
@@ -399,14 +400,14 @@ int __stdcall IntegrityPakCRC(std::list<PAKINFO>& pakList, const char* integrate
 	CRC_32 crc;
 	std::list<PAKINFO> checkList;
 
-	for (std::list<PAKINFO>::iterator it = pakList.begin(); it != pakList.end(); ++it) {
-		PAKINFO* info = &*it;
-		if (strcmpi("ProjectG_ReleaseQA.exe", info->m_name) == 0) {
+	for (; it != pakList.end(); ++it) {
+		PAKINFO& info = *it;
+		if (strcmpi("ProjectG_ReleaseQA.exe", info.m_name) == 0) {
 			char moduleName[0x104] = { 0 };
 			GetModuleName(moduleName);
-			if (strcmpi(moduleName, info->m_name) == 0) {
-				unsigned long value = crc.CalcCRC(info->m_name, NULL);
-				if (value == info->m_crc) {
+			if (strcmpi(moduleName, info.m_name) == 0) {
+				unsigned long value = crc.CalcCRC(info.m_name, NULL);
+				if (value == info.m_crc) {
 					continue;
 				}
 			}
@@ -417,7 +418,7 @@ int __stdcall IntegrityPakCRC(std::list<PAKINFO>& pakList, const char* integrate
 		}
 
 		char baseName[0x104] = { 0 };
-		strcpy(baseName, info->m_name);
+		strcpy(baseName, info.m_name);
 		char* ext = strrchr(baseName, '.');
 		if (ext) {
 			*ext = 0;
@@ -427,20 +428,20 @@ int __stdcall IntegrityPakCRC(std::list<PAKINFO>& pakList, const char* integrate
 			continue;
 		}
 
-		if (!multiProcessor || strstr(info->m_name, "_")) {
-			checkList.push_back(*info);
+		if (!multiProcessor || strstr(info.m_name, "_")) {
+			checkList.push_back(info);
 		}
 
-		HookPAKFile(info->m_name);
+		HookPAKFile(info.m_name);
 	}
 
 	float total = (float)checkList.size();
 	float checked = 0.0f;
 	checkList.sort(std::greater<PAKINFO>());
 	for (std::list<PAKINFO>::iterator it = checkList.begin(); it != checkList.end(); ++it) {
-		PAKINFO* info = &*it;
-		if (info->m_crc != crc.CalcCRC(info->m_name, NULL)) {
-			errorFile = info->m_name;
+		PAKINFO& info = *it;
+		if (info.m_crc != crc.CalcCRC(info.m_name, NULL)) {
+			errorFile = info.m_name;
 			return 0;
 		}
 
@@ -745,7 +746,7 @@ void RemakeNumber(int number, char* out) {
 	char buffer[32];
 	sprintf(buffer, "%d", number);
 	int len = strlen(buffer);
-	int i = 0, j = 0;
+	int j = 0, i = 0;
 	while (i < len) {
 		out[j++] = buffer[i++];
 		if (i < len && (len - i) % 3 == 0) {

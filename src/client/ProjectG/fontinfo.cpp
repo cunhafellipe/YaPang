@@ -46,11 +46,10 @@ union uFontInfoConst {
 extern "C" const uFontInfoConst data_9eb5b8[29];
 // A float with no symbol (a screen width, set elsewhere).
 extern "C" float data_af23d0;
-// Calipers key-repeat timer.
-extern "C" float data_af23d8;
-// Calipers key-driven cursor position and its move speed.
+// Calipers key-driven cursor position, key-repeat timer and cursor move speed.
 extern "C" {
 static float data_af23d4;
+static float data_af23d8;
 static float data_a7f8c0 = 1.0f;
 }
 extern WMatrix g_camera;
@@ -1884,8 +1883,7 @@ void CHoleInfo::Flicker(void) {
 void CHoleInfo::Reset(void) {
 	m_fTime = 0.0f;
 	m_nState = 0;
-	m_fAlpha[0] = 0.0f;
-	m_fAlpha[1] = 0.0f;
+	memset(m_fAlpha, 0, sizeof(m_fAlpha));
 
 	m_items[0].fixX = m_items[0].baseX;
 	m_items[0].fixY = m_items[0].baseY;
@@ -5179,23 +5177,21 @@ void CCalipers::ProcKeyState(float fDelta) {
 		m_keyFlags |= 2;
 	}
 
-	unsigned long flags = m_keyFlags;
 	int nAction = 0;
-	if (flags == 0) {
-		if (m_prevKeyFlags == 1 || m_prevKeyFlags == 2) {
-			data_af23d8 = 0;
-			m_fBarScale = 0.35f;
-		}
-	} else if (data_af23d8 > m_fBarScale && (flags == 1 || flags == 2)) {
+	if (m_keyFlags == 0 && (m_prevKeyFlags == 1 || m_prevKeyFlags == 2)) {
+		data_af23d8 = 0;
+		m_fBarScale = 0.35f;
+	} else if (data_af23d8 > m_fBarScale && (m_keyFlags == 1 || m_keyFlags == 2)) {
+		float fOver = data_af23d8 - m_fBarScale;
 		nAction = 2;
-		data_af23d8 = data_af23d8 - m_fBarScale;
 		m_fBarScale = 0.05f;
-	} else if (!((flags & 1) && (flags & 2)) && flags != 0) {
-		if (data_af23d8 > data_9eb5b8[7].f) {
+		data_af23d8 = fOver;
+	} else if (!((m_keyFlags & 1) && (m_keyFlags & 2))) {
+		if (m_keyFlags != 0 && data_af23d8 < data_9eb5b8[25].f) {
 			nAction = 1;
-			data_af23d8 = data_af23d8 + fDelta;
-		} else if (flags != 0 && !(data_af23d8 < data_9eb5b8[7].f)) {
-			data_af23d8 = data_af23d8 + fDelta;
+		}
+		if (nAction == 1 || (m_keyFlags != 0 && data_af23d8 >= data_9eb5b8[25].f)) {
+			data_af23d8 += fDelta;
 		}
 	}
 
@@ -5220,6 +5216,7 @@ void CCalipers::ProcKeyState(float fDelta) {
 
 		switch (state) {
 		case 0:
+			nAction = 0;
 			break;
 		case 1:
 			MoveLeft();

@@ -559,8 +559,7 @@ void CCamera::Rotate(float angle) {
 	if (GOLFDOC()->GameMode() & 0x8) {
 		mat.pivot = GOLFDOC()->GetCameraData().m_matrix.pivot;
 	} else {
-		CGolfDoc *doc = GOLFDOC();
-		mat.pivot = (g_camera.pivot - doc->GetCameraData().m_target) * RotMat(angle, 1) + doc->GetCameraData().m_target;
+		mat.pivot = (g_camera.pivot - GOLFDOC()->GetCameraData().m_target) * RotMat(angle, 1) + GOLFDOC()->GetCameraData().m_target;
 		mat.pivot = GetPVS().TestCameraCollision(mat.pivot);
 		if (GOLFDOC()->GameMode() & 0x200)
 			mat.pivot.y = g_camera.pivot.y;
@@ -577,6 +576,8 @@ void CCamera::Rotate(float angle) {
 
 // camera.cpp:780
 void CCamera::Translate(float dt) {
+	WVector move;
+
 	if (GOLFDOC()->GameMode() == 0x200) {
 		float rate = Between(0.1f, (g_camera.pivot.y - GetPVS().GetGroundPoint(g_camera.pivot, true, NULL, true).y) * 0.01f, 1.0f);
 
@@ -587,11 +588,11 @@ void CCamera::Translate(float dt) {
 
 	dt = dt * m_horizonAcc;
 
-	WVector pos = GetPVS().TestCameraCollision(g_camera.pivot + GOLFDOC()->GetCameraData().m_matrix.za * (dt * 400.0f));
+	WVector pos = GetPVS().TestCameraCollision(GOLFDOC()->GetCameraData().m_matrix.za * (dt * 400.0f) + g_camera.pivot);
 	float ground = Max(GetPVS().GetGroundPoint(pos, true, NULL, true).y, m_baseHeight);
 
 	pos.y = Between(ground + GOLFDOC()->GetCameraData().m_groundOffset, pos.y, m_maxHeight);
-	WVector move = pos - g_camera.pivot;
+	move = pos - g_camera.pivot;
 
 	m_pos += move;
 	m_at = GOLFDOC()->GetCameraData().m_matrix.za + m_pos;
@@ -609,7 +610,7 @@ void CCamera::Translate(float dt) {
 
 	if (GOLFDOC()->GameMode() == 0x100 && WDotProduct(after, GOLFDOC()->GetCameraData().m_matrix.za) * WDotProduct(before, GOLFDOC()->GetCameraData().m_matrix.za) < 0.0f && Abs(g_camera.pivot.y - GOLFDOC()->GetCameraData().m_matrix.pivot.y) < 3.2f) {
 		m_pos = GOLFDOC()->GetCameraData().m_matrix.pivot;
-		m_at = GOLFDOC()->GetCameraData().m_matrix.za + GOLFDOC()->GetCameraData().m_matrix.pivot;
+		m_at = GOLFDOC()->GetCameraData().m_matrix.pivot + GOLFDOC()->GetCameraData().m_matrix.za;
 		m_at.y += tan(GOLFDOC()->GetCameraData().m_pitch);
 
 		m_zoom = 0; m_unk50 = m_startHeightRate;
@@ -825,9 +826,9 @@ void CCamera::RotateEnvironment(float angle) {
 	GOLFDOC()->GetCameraData().m_yaw = GetBaseAngle(GOLFDOC()->GetCameraData().m_yaw + angle);
 	GOLFDOC()->GetCameraData().m_matrix = RotMat(GOLFDOC()->GetCameraData().m_yaw + (IsMyTurn(true) ? 0.0f : GOLFDOC()->GetCameraData().m_yaw2), 1);
 
-	CGolfDoc *doc = GOLFDOC();
-	float dist = doc->GetCameraData().m_distance * -1.0f;
-	doc->GetCameraData().m_matrix.pivot = GetPVS().TestCameraCollision(WVector(doc->GetCameraData().m_matrix.za.x * dist, doc->GetCameraData().m_height, doc->GetCameraData().m_matrix.za.z * dist) + doc->GetCameraData().m_target);
+	float dist = GOLFDOC()->GetCameraData().m_distance * -1.0f;
+	sCameraData &cam = GOLFDOC()->GetCameraData();
+	WVector pos = WVector(cam.m_matrix.za.x * dist, cam.m_height, cam.m_matrix.za.z * dist) + cam.m_target; cam.m_matrix.pivot = GetPVS().TestCameraCollision(pos);
 
 	m_heightRate = GetHeightRate(GOLFDOC()->GetCameraData().m_matrix.pivot.y);
 
@@ -855,8 +856,7 @@ void CCamera::RotateForGallery(float angle) {
 		if (GOLFDOC()->GameMode() & 0x8) {
 			mat.pivot = GOLFDOC()->GetCameraData().m_matrix.pivot;
 		} else {
-			CGolfDoc *doc = GOLFDOC();
-			mat.pivot = (g_camera.pivot - doc->GetCameraData().m_target) * RotMat(angle, 1) + doc->GetCameraData().m_target;
+			mat.pivot = (g_camera.pivot - GOLFDOC()->GetCameraData().m_target) * RotMat(angle, 1) + GOLFDOC()->GetCameraData().m_target;
 			mat.pivot = GetPVS().TestCameraCollision(mat.pivot);
 			if (GOLFDOC()->GameMode() & 0x200)
 				mat.pivot.y = g_camera.pivot.y;

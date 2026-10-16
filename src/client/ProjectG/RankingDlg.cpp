@@ -1458,10 +1458,9 @@ void FrRankingDlg::OnRankTypeViewerOwnerDraw(void) {
 
 			pGDI->DrawTexture(m_pRankTypeViewerImg[state], pViewer->GetRect(), 0xffffffff, 0);
 
-			WRect rc = m_pRankTypeViewer->GetRect();
-			FrLine* pLine = (FrLine*)m_pRankTypeList->GetSelected()->pData;
+			FrLine* pLine = (FrLine*)m_pRankTypeList->GetSelected()->pData; WRect rc = m_pRankTypeViewer->GetRect();
 
-			WOverlay::DrawBox(g_view, WRect(rc.x, rc.y, rc.w, rc.h), 0, 0x800E4F75, 0.0f);
+			WOverlay::DrawBox(g_view, WRect(rc.TopLeft(), rc.w, rc.h), 0, 0x800E4F75, 0.0f);
 			pGDI->SetTextStyle(1);
 
 			pGDI->SetTextColor(0xffffffff, 0xffffffff);
@@ -1568,10 +1567,9 @@ void FrRankingDlg::OnGeneralSubTypeViewerOwnerDraw(void) {
 
 			pGDI->DrawTexture(m_pGenSubTypeViewerImg[state], pViewer->GetRect(), 0xffffffff, 0);
 
-			WRect rc = m_pGenSubTypeViewer->GetRect();
-			FrLine* pLine = (FrLine*)m_pGenSubTypeList->GetSelected()->pData;
+			FrLine* pLine = (FrLine*)m_pGenSubTypeList->GetSelected()->pData; WRect rc = m_pGenSubTypeViewer->GetRect();
 
-			WOverlay::DrawBox(g_view, WRect(rc.x, rc.y, rc.w, rc.h), 0, 0x800E4F75, 0.0f);
+			WOverlay::DrawBox(g_view, WRect(rc.TopLeft(), rc.w, rc.h), 0, 0x800E4F75, 0.0f);
 			pGDI->SetTextStyle(1);
 
 			pGDI->SetTextColor(0xffffffff, 0xffffffff);
@@ -1685,10 +1683,9 @@ void FrRankingDlg::OnCourseTypeViewerOwnerDraw(void) {
 
 			pGDI->DrawTexture(m_pCourseTypeViewerImg[state], pViewer->GetRect(), 0xffffffff, 0);
 
-			WRect rc = m_pCourseTypeViewer->GetRect();
-			FrLine* pLine = (FrLine*)m_pCourseTypeList->GetSelected()->pData;
+			FrLine* pLine = (FrLine*)m_pCourseTypeList->GetSelected()->pData; WRect rc = m_pCourseTypeViewer->GetRect();
 
-			WOverlay::DrawBox(g_view, WRect(rc.x, rc.y, rc.w, rc.h), 0, 0x800E4F75, 0.0f);
+			WOverlay::DrawBox(g_view, WRect(rc.TopLeft(), rc.w, rc.h), 0, 0x800E4F75, 0.0f);
 			pGDI->SetTextStyle(1);
 
 			pGDI->SetTextColor(0xffffffff, 0xffffffff);
@@ -1795,10 +1792,9 @@ void FrRankingDlg::OnRecordTypeViewerOwnerDraw(void) {
 
 			pGDI->DrawTexture(m_pRecordTypeViewerImg[state], pViewer->GetRect(), 0xffffffff, 0);
 
-			WRect rc = m_pRecordTypeViewer->GetRect();
-			FrLine* pLine = (FrLine*)m_pRecordTypeList->GetSelected()->pData;
+			FrLine* pLine = (FrLine*)m_pRecordTypeList->GetSelected()->pData; WRect rc = m_pRecordTypeViewer->GetRect();
 
-			WOverlay::DrawBox(g_view, WRect(rc.x, rc.y, rc.w, rc.h), 0, 0x800E4F75, 0.0f);
+			WOverlay::DrawBox(g_view, WRect(rc.TopLeft(), rc.w, rc.h), 0, 0x800E4F75, 0.0f);
 			pGDI->SetTextStyle(1);
 
 			pGDI->SetTextColor(0xffffffff, 0xffffffff);
@@ -1897,10 +1893,9 @@ void FrRankingDlg::OnSearchTypeViewerOwnerDraw(void) {
 
 			pGDI->DrawTexture(m_pSearchTypeViewerImg[state], pViewer->GetRect(), 0xffffffff, 0);
 
-			WRect rc = m_pSearchTypeViewer->GetRect();
-			FrLine* pLine = (FrLine*)m_pSearchTypeList->GetSelected()->pData;
+			FrLine* pLine = (FrLine*)m_pSearchTypeList->GetSelected()->pData; WRect rc = m_pSearchTypeViewer->GetRect();
 
-			WOverlay::DrawBox(g_view, WRect(rc.x, rc.y, rc.w, rc.h), 0, 0x800E4F75, 0.0f);
+			WOverlay::DrawBox(g_view, WRect(rc.TopLeft(), rc.w, rc.h), 0, 0x000E4F75, 0.0f);
 			pGDI->SetTextStyle(1);
 
 			pGDI->SetTextColor(0xffffffff, 0xffffffff);

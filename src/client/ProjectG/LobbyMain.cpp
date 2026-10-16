@@ -6078,8 +6078,7 @@ bool CLobbyMain::OnRoomUseReportDlgResult(int ret, FrForm* pForm) {
 	if (ret == 1) {
 		std::list<sItemInfo>::iterator it;
 		for (it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
-			sItemInfo item = *it;
-			if (item.m_typeId == 0x1A000041) {
+			if (sItemInfo(*it).m_typeId == 0x1A000041) {
 				it->m_count--;
 				if (it->m_count < 1) {
 					WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
@@ -9436,15 +9435,21 @@ void CLobbyMain::OnRoomList_UserListInit(intptr_t param) {
 
 	for (std::map<unsigned long, sBriefUserInfo>::const_iterator it = CSharedDoc::Instance()->m_userMap.begin();
 		it != CSharedDoc::Instance()->m_userMap.end(); ++it) {
+		CSharedDoc* doc = CSharedDoc::Instance();
+
 		const sBriefUserInfo* user = &it->second;
 
 		// An administrator sees everyone; others see an administrator only
 		// while its invisible bit is set.
-		if (CSharedDoc::Instance()->m_userInfo.identityBits.administrator
-			|| !sBriefUserInfo(*user).identityBits.administrator
-			|| sBriefUserInfo(*user).invisible) {
-			m_userListBox->AddItem((void*)user);
+		if (!doc->m_userInfo.identityBits.administrator) {
+			if (sBriefUserInfo(*user).identityBits.administrator) {
+				if (!sBriefUserInfo(*user).invisible) {
+					continue;
+				}
+			}
 		}
+
+		m_userListBox->AddItem((void*)user);
 	}
 }
 
@@ -13725,11 +13730,12 @@ void CLobbyMain::CheckTikiReport(const char* layout) {
 		if (strcmp(layout, "GAMEROOM_EXTRES") == 0) {
 			CSharedDoc* doc = CSharedDoc::Instance();
 
-			if (doc->GetPangyaUserInfo().identity & 0x0E) {
+			if ((doc->GetPangyaUserInfo().identity & 2) || (doc->GetPangyaUserInfo().identity & 4)
+				|| (doc->GetPangyaUserInfo().identity & 8)) {
 				m_useReportEnabled = false;
 			} else {
-				std::list<sItemInfo>::iterator it;
-				for (it = doc->m_itemInfoList.begin(); it != CSharedDoc::Instance()->m_itemInfoList.end(); ++it) {
+				for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_itemInfoList.begin();
+					it != CSharedDoc::Instance()->m_itemInfoList.end(); ++it) {
 					sItemInfo item = *it;
 
 					if (item.m_typeId == 0x1A000041) {

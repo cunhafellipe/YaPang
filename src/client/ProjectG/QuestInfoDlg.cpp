@@ -655,28 +655,30 @@ void FrQuestGift::SetSize(void) {
 	int height = m_pGiftList->GetItemHeight();
 
 	WRect rect = m_rect;
-	float addHeight = (float)height;
-	rect.h = addHeight + m_rect.h;
+	rect.h += (float)height;
 	SetRect(rect);
 
 	rect = m_pGiftList->GetRect();
-	rect.h = rect.h + addHeight;
+	rect.h = (float)height + rect.h;
 	m_pGiftList->SetRect(rect);
 
+	WPoint pt;
 	rect = m_pOk->GetRect();
-	m_pOk->MoveWindow(WPoint(rect.x, rect.y + addHeight));
+	pt.x = rect.x;
+	pt.y = (float)height + rect.y;
+	m_pOk->MoveWindow(pt);
 
-	float backHeight = (float)(height + 10);
 	int i;
 	for (i = 0; i < 3; i++) {
 		rect = m_pItemBack[i]->GetRect();
-		rect.h = rect.h + backHeight;
+		rect.h = rect.h + (height + 10);
 		m_pItemBack[i]->SetRect(rect);
 	}
 
-	float backOffset = addHeight + 10.0f;
 	for (i = 3; i < 6; i++) {
 		rect = m_pItemBack[i]->GetRect();
-		m_pItemBack[i]->MoveWindow(WPoint(rect.x, rect.y + backOffset));
+		pt.x = rect.x;
+		pt.y = (float)height + 10.0f + rect.y;
+		m_pItemBack[i]->MoveWindow(pt);
 	}
 }

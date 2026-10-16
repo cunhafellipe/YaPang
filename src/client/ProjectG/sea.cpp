@@ -61,12 +61,9 @@ void CSea::SetArea(const std::vector<WVector>& points)
 		m_points[i].y = points[0].y;
 
 		// Grow the bounding box over the outline.
-		m_aabb.min.x = MinOf(m_aabb.min.x, m_points[i].x);
-		m_aabb.max.x = MaxOf(m_aabb.max.x, m_points[i].x);
-		m_aabb.min.y = MinOf(m_aabb.min.y, m_points[i].y);
-		m_aabb.max.y = MaxOf(m_aabb.max.y, m_points[i].y);
-		m_aabb.min.z = MinOf(m_aabb.min.z, m_points[i].z);
-		m_aabb.max.z = MaxOf(m_aabb.max.z, m_points[i].z);
+		for (int k = 0; k < 3; k++) {
+			m_aabb.min.p[k] = MinOf(m_aabb.min.p[k], m_points[i].p[k]); m_aabb.max.p[k] = MaxOf(m_aabb.max.p[k], m_points[i].p[k]);
+		}
 	}
 
 	m_aabb.max.y -= 1.0f;

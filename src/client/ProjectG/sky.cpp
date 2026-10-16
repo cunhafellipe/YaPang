@@ -289,7 +289,7 @@ void CSky::LoadSky(const char* name, float param) {
 		}
 		unsigned long colors[3];
 		colors[0] = color;
-		colors[1] = colors[2] = color | 0xFF000000;
+		colors[1] = colors[2] = colors[0] | 0xFF000000;
 
 		unsigned char* vtx = video->xLockVertexBuffer(vb, 0, 0);
 		float x, z, u;
@@ -298,12 +298,11 @@ void CSky::LoadSky(const char* name, float param) {
 				if (layer <= 1) {
 					int step = (cols - 1) * row + col;
 
-					int base = (row * cols + col) * stride;
 					float angle = (step * 0.03125f - turn[layer]) * 6.28318548f;
 					x = (float)(cos(angle) * radius);
 					z = (float)(sin(angle) * radius);
 					u = 1.0f - (rows * col) * 0.03125f;
-					int off = base;
+					int off = (row * cols + col) * stride;
 					memcpy(vtx + off, &x, 4); off += 4;
 					memcpy(vtx + off, &ys[0], 4); off += 4;
 					memcpy(vtx + off, &z, 4); off += 4;
@@ -311,7 +310,7 @@ void CSky::LoadSky(const char* name, float param) {
 					memcpy(vtx + off, &u, 4); off += 4;
 					memcpy(vtx + off, &vs[0], 4);
 
-					off = base + bandBytes;
+					off = (row * cols + col) * stride + bandBytes;
 					memcpy(vtx + off, &x, 4); off += 4;
 					memcpy(vtx + off, &ys[1], 4); off += 4;
 					memcpy(vtx + off, &z, 4); off += 4;
@@ -319,7 +318,7 @@ void CSky::LoadSky(const char* name, float param) {
 					memcpy(vtx + off, &u, 4); off += 4;
 					memcpy(vtx + off, &vs[1], 4);
 
-					off = base + bandBytes * 2;
+					off = (row * cols + col) * stride + bandBytes * 2;
 					memcpy(vtx + off, &x, 4); off += 4;
 					memcpy(vtx + off, &ys[2], 4); off += 4;
 					memcpy(vtx + off, &z, 4); off += 4;
@@ -327,14 +326,14 @@ void CSky::LoadSky(const char* name, float param) {
 					memcpy(vtx + off, &u, 4); off += 4;
 					memcpy(vtx + off, &vs[2], 4);
 				} else {
-					u = 0.0f;
-					if (col % 2 == 0) {
+					if (col % 2 != 0) {
+						u = 0.0f;
+					} else {
 						u = 1.0f;
 					}
 
-					int base = (row * cols + col) * stride;
 					for (int j = 0; j < 2; j++) {
-						int off = base + bandBytes * j;
+						int off = (row * cols + col) * stride + bandBytes * j;
 						x = (col ? 1.0f : -1.0f) * 500.0f;
 						z = j ? -500.0f : 500.0f;
 						memcpy(vtx + off, &x, 4); off += 4;
@@ -478,11 +477,7 @@ void CSky::GenerateStars(int count) {
 	if (map == -1) {
 		map = GetCurMap();
 	}
-	if (map > 0x7F && map != 0xFD) {
-		map -= 0x80;
-	}
-
-	IFF_STRUCT::sCourse* course = ItemManager()->FindCourse(0x28000000 | map);
+	IFF_STRUCT::sCourse* course = ItemManager()->FindCourse(0x28000000 | ((map > 0x7F && map != 0xFD) ? map - 0x80 : map));
 	if (!course || !course->m_skyEffectFile[0]) {
 		return;
 	}
@@ -513,13 +508,12 @@ void CSky::GenerateStars(int count) {
 		}
 
 		Attacher attacher;
+		WView* view = g_view;
 		pSpray->m_pAttacher = &attacher;
 		pSpray->m_fAttachLimitA = attacher.m_fLimitA;
-		pSpray->m_fAttachLimitB = attacher.m_fLimitB;
-		attacher.m_pMatrix[0] = NULL;
+		pSpray->m_fAttachLimitB = attacher.m_fLimitB; attacher.m_pMatrix[0] = NULL;
 		memcpy(pSpray->m_pMatrix, attacher.m_pMatrix, sizeof(pSpray->m_pMatrix));
-		attacher.m_pOffset[0] = &g_view->camera.pivot;
-		memcpy(pSpray->m_pOffset, attacher.m_pOffset, sizeof(pSpray->m_pOffset));
+		attacher.m_pOffset[0] = &view->camera.pivot; memcpy(pSpray->m_pOffset, attacher.m_pOffset, sizeof(pSpray->m_pOffset));
 		m_fxBox->AddSpray(pSpray);
 	} else if (stricmp(ext + 1, "seq") == 0) {
 		// sky.cpp:759
@@ -529,7 +523,8 @@ void CSky::GenerateStars(int count) {
 		}
 
 		Attacher attacher;
-		attacher.m_pOffset[0] = &g_view->camera.pivot;
+		WView* view = g_view;
+		attacher.m_pOffset[0] = &view->camera.pivot;
 
 		pSequence->m_pAttacher = &attacher;
 		pSequence->m_fDistLimitA = attacher.m_fLimitA;
@@ -591,7 +586,8 @@ void CSky::GenerateMoons(void) {
 			}
 
 			Attacher attacher;
-			attacher.m_pOffset[0] = &g_view->camera.pivot;
+			WView* view = g_view;
+			attacher.m_pOffset[0] = &view->camera.pivot;
 
 			pSpray->m_pAttacher = &attacher;
 			pSpray->m_fAttachLimitA = attacher.m_fLimitA;
@@ -609,7 +605,8 @@ void CSky::GenerateMoons(void) {
 			}
 
 			Attacher attacher;
-			attacher.m_pOffset[0] = &g_view->camera.pivot;
+			WView* view = g_view;
+			attacher.m_pOffset[0] = &view->camera.pivot;
 
 			pSequence->m_pAttacher = &attacher;
 			pSequence->m_fDistLimitA = attacher.m_fLimitA;

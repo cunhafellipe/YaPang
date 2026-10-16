@@ -487,10 +487,12 @@ static void RunMainLoop(HWND hWnd) {
 						break;
 					}
 
-					if (CBrowser::Instance()) {
-						if (CBrowser::Instance()->PreTranslateMessage(&msg))
-							continue;
-					}
+					BOOL handled = FALSE;
+					if (CBrowser::Instance())
+						handled = CBrowser::Instance()->PreTranslateMessage(&msg);
+
+					if (handled)
+						continue;
 
 					TranslateMessage(&msg);
 					DispatchMessageA(&msg);

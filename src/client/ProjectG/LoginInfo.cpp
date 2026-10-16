@@ -69,21 +69,21 @@ void NtreevLogin::SetNtreevUserIdentity(const char* text, _sNtreevUserIdentity& 
 			key.assign(token.begin(), token.begin() + equal);
 			value.assign(token.begin() + equal + 1, token.end());
 
-			if (_stricmp(key.c_str(), "LoginID") == 0) {
+			if (stricmp(key.c_str(), "LoginID") == 0) {
 				strncpy(identity.loginId, value.c_str(), 0x32);
-			} else if (_stricmp(key.c_str(), "AuthKey") == 0) {
+			} else if (stricmp(key.c_str(), "AuthKey") == 0) {
 				strncpy(identity.authKey, value.c_str(), 0x40);
-			} else if (_stricmp(key.c_str(), "Sex") == 0) {
-				identity.sex = value != "M";
-			} else if (_stricmp(key.c_str(), "MemberNo") == 0) {
+			} else if (stricmp(key.c_str(), "Sex") == 0) {
+				identity.sex = !(value == "M");
+			} else if (stricmp(key.c_str(), "MemberNo") == 0) {
 				identity.memberNo = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "Age") == 0) {
+			} else if (stricmp(key.c_str(), "Age") == 0) {
 				identity.age = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "WardNo") == 0) {
+			} else if (stricmp(key.c_str(), "WardNo") == 0) {
 				identity.wardNo = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "CityCode") == 0) {
+			} else if (stricmp(key.c_str(), "CityCode") == 0) {
 				identity.cityCode = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "PCBangNo") == 0) {
+			} else if (stricmp(key.c_str(), "PCBangNo") == 0) {
 				identity.pcBangNo = atoi(value.c_str());
 			}
 		}
@@ -149,33 +149,33 @@ void NhnLogin::SetNhnUserIdentity(const char* text, _sNhnUserIdentity& identity)
 			key.assign(token.begin(), token.begin() + equal);
 			value.assign(token.begin() + equal + 1, token.end());
 
-			if (_stricmp(key.c_str(), "LoginID") == 0) {
+			if (stricmp(key.c_str(), "LoginID") == 0) {
 				strncpy(identity.loginId, value.c_str(), 0x50);
-			} else if (_stricmp(key.c_str(), "AuthKey") == 0) {
+			} else if (stricmp(key.c_str(), "AuthKey") == 0) {
 				strncpy(identity.authKey, value.c_str(), 0x40);
-			} else if (_stricmp(key.c_str(), "SiteCookie") == 0) {
+			} else if (stricmp(key.c_str(), "SiteCookie") == 0) {
 				strncpy(identity.siteCookie, value.c_str(), 0x3FF);
-			} else if (_stricmp(key.c_str(), "Sex") == 0) {
-				identity.sex = value == "M";
-			} else if (_stricmp(key.c_str(), "MemberNo") == 0) {
+			} else if (stricmp(key.c_str(), "Sex") == 0) {
+				identity.sex = !(value == "M");
+			} else if (stricmp(key.c_str(), "MemberNo") == 0) {
 				identity.memberNo = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "Age") == 0) {
+			} else if (stricmp(key.c_str(), "Age") == 0) {
 				identity.age = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "WardNo") == 0) {
+			} else if (stricmp(key.c_str(), "WardNo") == 0) {
 				identity.wardNo = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "CityCode") == 0) {
+			} else if (stricmp(key.c_str(), "CityCode") == 0) {
 				identity.cityCode = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "PCBangNo") == 0) {
+			} else if (stricmp(key.c_str(), "PCBangNo") == 0) {
 				identity.pcBangNo = atoi(value.c_str());
-			} else if (_stricmp(key.c_str(), "SiteMemberNo") == 0) {
+			} else if (stricmp(key.c_str(), "SiteMemberNo") == 0) {
 				identity.siteMemberNo = _atoi64(value.c_str());
 			} else {
 				char siteCode[32] = { 0 };
-				if (_stricmp(key.c_str(), "SiteCode") == 0) {
+				if (stricmp(key.c_str(), "SiteCode") == 0) {
 					strncpy(siteCode, value.c_str(), 0x1F);
 				}
 
-				if (memcmp(siteCode, "NHN", 4) == 0) {
+				if (strcmp(siteCode, "NHN") == 0) {
 					identity.provType = 4;
 				}
 			}

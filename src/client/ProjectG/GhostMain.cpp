@@ -218,21 +218,6 @@ sFRESH_ENTRY CGhostMain::_MsgEntries[] = {
 	{ 0, FRCMD_NONE, FrFuncNone, 0 }
 };
 
-// ghostdocument.h:88
-int CGhostDocument::IsInvalidate(void) const {
-	return m_bInvalidate;
-}
-
-// ghostdocument.h:93
-struct GHOST_USER_DATA const *CGhostDocument::GetUserData(void) const {
-	return m_pUserData;
-}
-
-// ghostdocument.h:94
-struct GHOST_GAME_DATA const *CGhostDocument::GetGameData(void) const {
-	return m_pGameData;
-}
-
 // ghostmain.cpp:257
 std::string __stdcall GetIconName(const unsigned long &typeId) {
 	std::string name("w_");
@@ -665,7 +650,7 @@ void CGhostMain::OnDownStart(void) {
 		return;
 
 	CGhostDocument *doc = CGhostManager::Instance()->GetDocument();
-	if (doc->m_bInvalidate) {
+	if (doc->IsInvalidate()) {
 		CGhostHandler::Instance()->OpenNotifyDlg(8);
 		return;
 	}
@@ -684,10 +669,10 @@ void CGhostMain::OnDownStart(void) {
 	strcpy(mySlot.m_nickname, WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname);
 	players.push_back(mySlot);
 
-	type_convert(doc->m_pUserData, &ghostSlot);
+	type_convert(doc->GetUserData(), &ghostSlot);
 	players.push_back(ghostSlot);
 
-	GHOST_GAME_DATA *game = doc->m_pGameData;
+	const GHOST_GAME_DATA *game = doc->GetGameData();
 	SetCurMap(game->m_curMap);
 	WSingleton<CSharedDoc>::Instance()->m_roomType = 0; strcpy(WSingleton<CSharedDoc>::Instance()->m_roomName, WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[0].name);
 	WSingleton<CSharedDoc>::Instance()->m_gameKind = game->m_gameKind;

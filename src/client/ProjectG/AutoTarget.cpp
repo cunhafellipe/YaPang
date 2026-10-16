@@ -166,31 +166,31 @@ WVector CAutoTarget::SolveEquation(unsigned char index, float radius) {
 	WVector a, b, pos;
 	a = m_pointList[index] - GolfBall().m_pos;
 	b = m_pointList[index + 1] - GolfBall().m_pos;
-	float x1, z1, x2, z2;
+	float x[2], z[2];
 
 	if (WAbsBySign(a.x - b.x) < data_9eb410) {
-		x1 = x2 = a.x;
+		x[0] = x[1] = a.x;
 
-		z1 = sqrtf(radius * radius - a.x * a.x);
-		z2 = z1 * -1.0f;
+		z[0] = sqrtf(radius * radius - a.x * a.x);
+		z[1] = z[0] * -1.0f;
 	} else {
 		float slope = (b.z - a.z) / (b.x - a.x);
 		float intercept = a.z - slope * a.x;
 
 		float disc = (slope * slope + 1.0f) * radius * radius - intercept * intercept;
 
-		x1 = (sqrtf(disc) - slope * intercept) / (slope * slope + 1.0f);
-		x2 = (slope * intercept * -1.0f - sqrtf(disc)) / (slope * slope + 1.0f);
+		x[0] = (sqrtf(disc) - slope * intercept) / (slope * slope + 1.0f);
+		x[1] = (slope * intercept * -1.0f - sqrtf(disc)) / (slope * slope + 1.0f);
 
-		z1 = slope * x1 + intercept;
-		z2 = slope * x2 + intercept;
+		z[0] = slope * x[0] + intercept;
+		z[1] = slope * x[1] + intercept;
 	}
 
-	if (x1 >= (a.x > b.x ? b.x : a.x) && x1 <= (a.x < b.x ? b.x : a.x)) {
-		pos.x = x1;
-		pos.z = z1;
+	if (x[0] >= (a.x > b.x ? b.x : a.x) && x[0] <= (a.x < b.x ? b.x : a.x)) {
+		pos.x = x[0];
+		pos.z = z[0];
 	} else {
-		pos.x = x2; pos.z = z2;
+		pos.x = x[1]; pos.z = z[1];
 	}
 
 	return pos;

@@ -137,11 +137,11 @@ selectClub:
 
 	m_clubIndex = GolfClub().GetIndex();
 
+	int groundResult;
 	for (;;) {
 		m_pos = pGolfDoc->m_pAutoTarget->GetPoint(NULL);
 		m_pos = GolfBall().m_pos + (m_pos - GolfBall().m_pos) * (GolfClub().GetType() == 3 ? 1.0f : maxPower);
 
-		int groundResult;
 		GetPVS().GetGroundPoint(m_pos, true, &groundResult, true);
 
 		if (groundResult < 0)
@@ -185,13 +185,13 @@ aim:
 	dir.Normalize();
 
 	if (GolfClub().GetType() == 3) {
-		dir = GetGreenSlope() * 5.0f;
+		WVector slope = GetGreenSlope();
 
-		float angle = CalcDeltaAngle(m_pos - GolfBall().m_pos - dir, WVector::UNIT_POS_Z);
+		float angle = CalcDeltaAngle(m_pos - GolfBall().m_pos - slope * 5.0f, WVector::UNIT_POS_Z);
 		m_aimAngle = angle; m_pos = GolfBall().m_pos + WVector::UNIT_POS_Z * RotMat(angle, 1);
 
 		WVector cupPos = GOLFDOC()->GetHoleData().m_cupPos;
-		delta = cupPos - GolfBall().m_pos - dir;
+		delta = cupPos - GolfBall().m_pos - slope * 5.0f;
 		delta.y = 0;
 
 		float rate = sqrtf(delta.x * delta.x + delta.z * delta.z) / (GolfClub().GetRange(NULL) * 3.2f);
@@ -217,7 +217,7 @@ aim:
 	if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1) {
 		m_powerRate = 1.0f;
 	} else if (m_result == 3) {
-		if ((m_pos - GolfBall().m_pos).Magnitude() < (m_expectedPos - GolfBall().m_pos).Magnitude()) {
+		if ((m_expectedPos - GolfBall().m_pos).Magnitude() > (m_pos - GolfBall().m_pos).Magnitude()) {
 			m_powerRate = 0.9f;
 			GolfBall().m_lieAngle = 0;
 		} else {
@@ -282,8 +282,8 @@ aim:
 				return;
 
 			if (GetPVS().RayIntersectAll(GolfBall().m_pos, delta * RotMat(angle, 1), true) < 1.0f) {
-				m_pos = GolfBall().m_pos + maxPower * 0.8f * (m_pos - GolfBall().m_pos) * RotMat(-angle, 1);
-			} else if (GetPVS().RayIntersectAll(GolfBall().m_pos, delta * RotMat(-angle, 1), true) < 1.0f) {
+				m_pos = GolfBall().m_pos + maxPower * 0.8f * (m_pos - GolfBall().m_pos) * RotMat(angle * -1.0f, 1);
+			} else if (GetPVS().RayIntersectAll(GolfBall().m_pos, delta * RotMat(angle * -1.0f, 1), true) < 1.0f) {
 				m_pos = GolfBall().m_pos + maxPower * 0.8f * (m_pos - GolfBall().m_pos) * RotMat(angle, 1);
 			}
 		}

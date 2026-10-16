@@ -1244,9 +1244,10 @@ void CFxSpray::RevoluteGrand(float fTime, float fScale) {
 			m_spawnDir -= m_pos;
 
 			for (std::list<sNozzleRot>::iterator r = m_param.m_nozzleRots.begin(); r != m_param.m_nozzleRots.end(); ++r) {
-				r->axis += prev;
-				r->axis = (r->axis - it->center) * rot + it->center;
-				r->axis -= m_pos;
+				WVector& axis = r->axis;
+				axis += prev;
+				axis = (axis - it->center) * rot + it->center;
+				axis -= m_pos;
 			}
 
 			for (std::list<sRevol>::iterator v = m_param.m_revols.begin(); v != m_param.m_revols.end(); ++v) {

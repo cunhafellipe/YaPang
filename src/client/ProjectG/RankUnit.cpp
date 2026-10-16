@@ -45,8 +45,8 @@ bool RankUnit::Connect(void) {
 		setForceTransition(0);
 	} else {
 		m_socket.m_asyncMessage = 0x40E;
-		CSharedDoc *doc = WSingleton<CSharedDoc>::Instance();
-		if (m_socket.Connect(inet_addr(doc->m_rankServerAddress.c_str()), htons(doc->m_rankServerPort)) == 0) {
+		if (m_socket.Connect(inet_addr(WSingleton<CSharedDoc>::Instance()->m_rankServerAddress.c_str()),
+				htons(WSingleton<CSharedDoc>::Instance()->m_rankServerPort)) == 0) {
 			setForceTransition(1);
 			m_connectResult = 1;
 			return false;

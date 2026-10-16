@@ -67,8 +67,8 @@ bool LoginUnit::Connect(void) {
 		address = LSIP_ADDRESS[rand() % 1];
 		int port = LOGIN_PORT_LIST[rand() % 1];
 #endif
+		m_socket.SetEventMsg(0x40D);
 		char ip[21] = "\0";
-		m_socket.m_asyncMessage = 0x40D;
 		hostent *host = gethostbyname(address.c_str());
 		if (host != NULL) {
 			wsprintf(ip, "%s", inet_ntoa(*(in_addr *)host->h_addr_list[0]));
@@ -120,8 +120,7 @@ bool LoginUnit::Disconnecting(void) {
 int LoginUnit::OnConnect(WReceivedPacket &packet) {
 	packet.Decode1();
 
-	unsigned short result = packet.Decode2();
-	if (result != 0) {
+	if (packet.Decode2() != 0) {
 		return 0;
 	}
 

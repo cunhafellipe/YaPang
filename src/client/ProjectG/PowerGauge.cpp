@@ -190,10 +190,10 @@ float CPowerGauge::GetAddWingArea(void) {
 		return area;
 	}
 #endif
-	unsigned long partTypeId = pInfo->partTypeIds[kWingSlot[character]];
+	int slot = kWingSlot[character];
 
 	for (int i = 0; i < 6; i++) {
-		if (partTypeId == kWingParts[character][i]) {
+		if (pInfo->partTypeIds[slot] == kWingParts[character][i]) {
 			area = kHalfArea;
 			break;
 		}
@@ -227,9 +227,13 @@ float CPowerGauge::GetLuckyNecklaceArea(void) {
 
 // powergauge.cpp:478
 bool CPowerGauge::IsEquipSpecialAuxPart(unsigned long typeId) {
-	sCharacterInfo *pInfo = &MyRoomPlayer().m_characterInfo;
+	sCharacterInfo &info = MyRoomPlayer().m_characterInfo;
 
-	return pInfo->auxParts.tids[(typeId >> 21) & 0x1F] == typeId ? true : false;
+	if (info.auxParts.tids[(typeId >> 21) & 0x1F] == typeId) {
+		return true;
+	}
+
+	return false;
 }
 
 // powergauge.cpp:488

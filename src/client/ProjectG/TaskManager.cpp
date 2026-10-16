@@ -364,8 +364,8 @@ FrForm *CTask::LoadTipText(int, int) {
 		int len = 0;
 		for (int i = 0; line[i]; i++, len++) {
 			if (line[i] == '\\' && line[i + 1] == 'n') {
-				i++;
 				line[len] = '\n';
+				i++;
 			} else {
 				line[len] = line[i];
 			}
@@ -394,9 +394,11 @@ FrForm *CTask::LoadTipText(int, int) {
 	int index = rand() % tipList.size() + 1;
 	FrForm *pForm = CreateForm<FrForm>(m_pLoadingFresh->GetManager(), this, "TIP", NULL);
 	if (index && pForm) {
-		std::list<TIP_ITEM>::iterator it = tipList.begin();
-		while (it != tipList.end() && index > 1) {
-			++it;
+		std::list<TIP_ITEM>::iterator it;
+		for (it = tipList.begin(); it != tipList.end(); ++it) {
+			if (index <= 1) {
+				break;
+			}
 			index--;
 		}
 
@@ -10735,12 +10737,10 @@ void CTaskManager::NaviAddHistory(const char *taskName, const char *docName, con
 	history.m_taskName = taskName;
 
 	history.m_docName = docName;
-	history.m_actorName = actorName;
 	history.m_layoutName = layoutName;
+	history.m_actorName = actorName;
 
-	std::list<history_t>::iterator it = m_history.end();
-	m_history.insert(it, history);
-	m_curHistory = --it;
+	m_curHistory = m_history.insert(m_history.end(), history);
 }
 
 // taskmanager.cpp:14368

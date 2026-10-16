@@ -1355,11 +1355,12 @@ bool WPolySoup::DeleteDataStructure(sModel *pModel) {
 	int numObjects = m_numObjects;
 	int index = 0;
 	bool result;
+	const char *name;
 
 	if (IsLocalContent((localContentType_t)0x56)) {
-		const char *name = pModel->m_name;
 		std::vector<sModel*>::iterator it;
 		for (it = m_models.begin(); it != m_models.end(); ++it, ++index) {
+			name = pModel->m_name;
 			if (stricmp((*it)->m_name, name) == 0) {
 				break;
 			}
@@ -1592,7 +1593,7 @@ WVector WPolySoup::GetCameraPos(const WVector &pos, const WVector &dir) {
 	for (std::vector<CNodeContainer>::iterator it = m_boundAreas.begin(); it != m_boundAreas.end(); ++it) {
 		int type = it->m_type;
 
-		if (HaveCameraArea() ? type == 6 : type == 1) {
+		if ((HaveCameraArea() && type == 6) || (!HaveCameraArea() && type == 1)) {
 			if (!IsPointInPoly(it->m_points, pos)) {
 				result = PosInWorld(it->m_points, pos, dir);
 			}
@@ -1931,7 +1932,7 @@ extern "C" __declspec(dllimport) int __cdecl mkdir(const char *dirname);
 // statistics/<map>_<hole>_stat.txt.
 void WPolySoup::MakeStatistics(void) {
 	mkdir("statistics");
-	FILE *fp = fopen(MakeStr("statistics/%s_%02d_stat.txt", CSharedDoc::Instance()->m_pCurCourse ? CSharedDoc::Instance()->m_pCurCourse->m_mapName : 0, GOLFDOC()->m_currentHole), "wt");
+	FILE *fp = fopen(MakeStr("statistics/%s_%02d_stat.txt", GetCurMapName(), GOLFDOC()->m_currentHole), "wt");
 
 	if (fp == 0)
 		return;
@@ -1945,18 +1946,20 @@ void WPolySoup::MakeStatistics(void) {
 
 	int i;
 	for (i = 0; i < m_numObjects; i++) {
-		int faces = m_models[i]->m_pPuppet->GetFaceNum();
+		sModel *model = m_models[i];
+		int faces = model->m_pPuppet->GetFaceNum();
 		int slot = faces / 100;
 		if (slot > 10)
 			slot = 10;
-		counts[slot]++;
+		int &count = counts[slot];
+		count++;
 
-		total += m_models[i]->m_pPuppet->GetFaceNum();
-		if (m_models[i]->m_pPuppet->GetFaceNum() >= maxFaces) maxFaces = m_models[i]->m_pPuppet->GetFaceNum();
+		total += model->m_pPuppet->GetFaceNum();
+		if (model->m_pPuppet->GetFaceNum() >= maxFaces) maxFaces = model->m_pPuppet->GetFaceNum();
 		if (faces <= minFaces) minFaces = faces;
 	}
 
-	fprintf(fp, "*[%s_%02d]\xC0\xC7 \xBF\xC0\xBA\xEA\xC1\xA7\xC6\xAE \xB8\xDE\xBD\xAC \xBA\xD0\xC6\xF7\xB5\xB5\n\n", CSharedDoc::Instance()->m_pCurCourse ? CSharedDoc::Instance()->m_pCurCourse->m_mapName : 0, GOLFDOC()->m_currentHole);
+	fprintf(fp, "*[%s_%02d]\xC0\xC7 \xBF\xC0\xBA\xEA\xC1\xA7\xC6\xAE \xB8\xDE\xBD\xAC \xBA\xD0\xC6\xF7\xB5\xB5\n\n", GetCurMapName(), GOLFDOC()->m_currentHole);
 
 	for (i = 0; i < 11; i++) {
 		if (i == 10) {
@@ -3104,7 +3107,8 @@ void WPolySoup::GatherHolecupTris(std::vector<sHoleTri> &tris, std::vector<sCupV
 	std::vector<int> cupTextures;
 	sHoleTri holeTri;
 
-	for (int i = 0; i < m_numTextures; i++) {
+	int i;
+	for (i = 0; i < m_numTextures; i++) {
 		const sProperty &prop = GetProperty(m_pTextures[i].m_param);
 
 		if (prop.m_weatherBounceType == 2)
@@ -3125,10 +3129,10 @@ void WPolySoup::GatherHolecupTris(std::vector<sHoleTri> &tris, std::vector<sCupV
 					continue;
 			}
 
-			for (int j = 0; j < pMesh->indexNum; j += 3) {
-				holeTri.m_pVertex[0] = &pMesh->vecList[pMesh->indexList[j]];
-				holeTri.m_pVertex[1] = &pMesh->vecList[pMesh->indexList[j + 1]];
-				holeTri.m_pVertex[2] = &pMesh->vecList[pMesh->indexList[j + 2]];
+			for (i = 0; i < pMesh->indexNum; i += 3) {
+				holeTri.m_pVertex[0] = &pMesh->vecList[pMesh->indexList[i]];
+				holeTri.m_pVertex[1] = &pMesh->vecList[pMesh->indexList[i + 1]];
+				holeTri.m_pVertex[2] = &pMesh->vecList[pMesh->indexList[i + 2]];
 
 				WVector normal = WCrossProduct(*holeTri.m_pVertex[1] - *holeTri.m_pVertex[0], *holeTri.m_pVertex[2] - *holeTri.m_pVertex[0]).Normalize();
 
@@ -3138,7 +3142,7 @@ void WPolySoup::GatherHolecupTris(std::vector<sHoleTri> &tris, std::vector<sCupV
 				int k;
 				for (k = 0; k < (int)cupVtxs.size() - 1; k++) {
 					if (IsInTri(cupVtxs[k].m_pos, holeTri.m_pVertex)) {
-						GenHolecupTri(&holeTri, pMesh, j);
+						GenHolecupTri(&holeTri, pMesh, i);
 						tris.push_back(holeTri);
 						break;
 					}
@@ -3150,7 +3154,7 @@ void WPolySoup::GatherHolecupTris(std::vector<sHoleTri> &tris, std::vector<sCupV
 				int m;
 				for (m = 0; m < 3; m++) {
 					if (IsInPoly(*holeTri.m_pVertex[m], cupVtxs)) {
-						GenHolecupTri(&holeTri, pMesh, j);
+						GenHolecupTri(&holeTri, pMesh, i);
 						tris.push_back(holeTri);
 						break;
 					}
@@ -3164,7 +3168,7 @@ void WPolySoup::GatherHolecupTris(std::vector<sHoleTri> &tris, std::vector<sCupV
 
 					for (m = 0; m < 3; m++) {
 						if (AreCrossed(&pVtx[0].m_pos, &pVtx[1].m_pos, holeTri.m_pVertex[m], holeTri.m_pVertex[(m + 1) % 3])) {
-							GenHolecupTri(&holeTri, pMesh, j);
+							GenHolecupTri(&holeTri, pMesh, i);
 							tris.push_back(holeTri);
 							break;
 						}
@@ -3176,23 +3180,26 @@ void WPolySoup::GatherHolecupTris(std::vector<sHoleTri> &tris, std::vector<sCupV
 			}
 		}
 
-		int t;
-		for (t = 0; t < (int)tris.size(); t++) {
-			if ((tris[t].m_pMesh->drawFlag & 0x300000) != 0x100000)
+		bool bFound = false;
+		for (int t = 0; t < (int)tris.size(); t++) {
+			if ((tris[t].m_pMesh->drawFlag & 0x300000) != 0x100000) {
+				bFound = true;
 				break;
+			}
 		}
-		if (t < (int)tris.size())
+		if (bFound)
 			break;
 	}
 
-	for (int k = 0; k < (int)cupVtxs.size(); k++) {
-		sCupVtx &vtx = cupVtxs[k];
+	for (i = 0; i < (int)cupVtxs.size(); i++) {
+		sCupVtx &vtx = cupVtxs[i];
 
 		for (int t = 0; t < (int)tris.size(); t++) {
-			if (IsInTri(vtx.m_pos, tris[t].m_pVertex)) {
-				vtx.m_pMesh = tris[t].m_pMesh;
-				cupVtxs[k].m_pMesh = tris[t].m_pMesh;
-				cupVtxs[k].m_index = tris[t].m_index;
+			sHoleTri &tri = tris[t];
+			if (IsInTri(vtx.m_pos, tri.m_pVertex)) {
+				vtx.m_pMesh = tri.m_pMesh;
+				cupVtxs[i].m_pMesh = tris[t].m_pMesh;
+				cupVtxs[i].m_index = tris[t].m_index;
 				break;
 			}
 		}

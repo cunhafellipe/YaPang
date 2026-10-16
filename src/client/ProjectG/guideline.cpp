@@ -3,6 +3,7 @@
 #include "ObjectFactory.h"
 #include "fx.h"
 #include "fxsequence.h"
+#include "FxBox.h"
 #include "wresrcmng.h"
 #include "wview.h"
 #include "wutil.h"
@@ -231,14 +232,17 @@ void CGuideLine::CalcSegment(void) {
 	m_bDirty = false;
 }
 
+// The ground point raised by the y of an offset (CGuideLine::SetPoint).
+static inline WVector LiftedY(const WVector &pos, const WVector &offset) {
+	return WVector(pos.x, offset.y + pos.y, pos.z);
+}
+
 // guideline.cpp:243
 void CGuideLine::SetPoint(const WVector& dir) {
 	if (m_segmentCount == 0) {
 		m_road[m_segmentCount].m_point = GolfBall().m_pos;
 	} else {
-		float radius = GolfBall().m_radius;
-		WVector ground = GetPVS().GetGroundPoint(m_road[m_segmentCount - 1].m_point + dir, false, NULL, false);
-		m_road[m_segmentCount].m_point = WVector(ground.x, radius + ground.y, ground.z);
+		WVector lift(0, GolfBall().m_radius, 0); m_road[m_segmentCount].m_point = LiftedY(GetPVS().GetGroundPoint(m_road[m_segmentCount - 1].m_point + dir, false, NULL, false), lift);
 	}
 
 	WVector side = WCrossProduct(dir, WVector::UNIT_POS_Y).Normalize();
@@ -246,8 +250,10 @@ void CGuideLine::SetPoint(const WVector& dir) {
 
 	m_road[m_segmentCount].m_left = m_road[m_segmentCount].m_point + side;
 	m_road[m_segmentCount].m_right = m_road[m_segmentCount].m_point - side;
-	m_road[m_segmentCount].m_left.y -= GolfBall().m_radius;
-	m_road[m_segmentCount].m_right.y -= GolfBall().m_radius;
+	CGolfBall *ball = &GolfBall();
+	m_road[m_segmentCount].m_left.y -= ball->m_radius;
+	ball = &GolfBall();
+	m_road[m_segmentCount].m_right.y -= ball->m_radius;
 	m_road[m_segmentCount].m_pFx = CFx::Instance()->OpenSequence("TrackItem.seq", false);
 	m_road[m_segmentCount].m_pFx->Pos() = m_road[m_segmentCount].m_point;
 	if (m_bDirty) {
@@ -261,8 +267,6 @@ void CGuideLine::SetPoint(const WVector& dir) {
 void CFxSequence::SetDelay(float delay) {
 	m_delay = delay;
 	if (m_delay > 0.0f) {
-		if (m_bActive) {
-			m_bActive = false;
-		}
+		SetActive(false, false);
 	}
 }

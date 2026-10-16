@@ -1191,7 +1191,8 @@ void CSceneManager::DrawPuppet(WView* pView, WPuppet* pPuppet, Waabb* pBox) {
 			do {
 				Wobb obb(box->bone->GetMatrix());
 				obb *= (box->info->aabb.max - box->info->aabb.min) * 0.5f + WVector::ONE * 1.6f;
-				obb.center = box->bone->Transform(box->info->spherePivot);
+				const WMatrix& mat = box->bone->GetMatrix();
+				obb.center = box->info->spherePivot * mat;
 				pView->DrawOBB(obb, 0xFF00FF00);
 				++index;
 				box = pPuppet->m_bbList.Find(MakeStr("char%d", index));
@@ -1571,7 +1572,7 @@ void CSceneManager::DrawDebugLine(WView* pView) {
 			}
 
 			WVector top;
-			top = (it->m_pPuppet->GetBoundBox().min + it->m_pPuppet->GetBoundBox().max) * 0.5f;
+			top = (it->m_pPuppet->GetBoundBox().max + it->m_pPuppet->GetBoundBox().min) * 0.5f;
 			top.y = it->m_pPuppet->GetBoundBox().max.y;
 
 			if ((top - pView->camera.pivot).Magnitude() > 192.0f && pView->InFrustum(it->m_pPuppet->GetBoundBox())) {

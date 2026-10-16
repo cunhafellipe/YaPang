@@ -136,9 +136,9 @@ void FrNoticeDlg::LoadInitFile(const char* fileName) {
 	}
 
 	if (m_pNum && m_startPage == -1) {
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0, n = 10; n != 0; i++, n--) {
 			if (i >= 10 - m_images.size()) {
-				m_pNum->AddItem(num1[i + m_images.size() - 10]);
+				m_pNum->AddItem(num1[m_images.size() - n]);
 			} else {
 				m_pNum->AddItem(0);
 			}
@@ -199,8 +199,7 @@ void FrNoticeDlg::OnNextBtnUp(void) {
 // noticedlg.cpp:199
 bool FrNoticeDlg::OnInit(void) {
 	if (m_pView) {
-		bool bScroll = false;
-		float offset = (float)floor(m_pView->GetScrollBarOffset() * 0.5f);
+		bool bScroll = false; float offset = (float)floor(m_pView->GetScrollBarOffset() * 0.5f);
 
 		OpenImage();
 
@@ -212,27 +211,21 @@ bool FrNoticeDlg::OnInit(void) {
 
 		int height = m_pView->GetSrcHeight();
 		if (height > 400) {
-			m_bScroll = true;
-			height = 400;
-			bScroll = true;
-			m_pView->ShowScrollBar(true);
+			m_bScroll = true; height = 400; bScroll = true; m_pView->ShowScrollBar(true);
 		} else {
-			m_bScroll = false;
-			m_pView->ShowScrollBar(false);
+			m_bScroll = false; m_pView->ShowScrollBar(false);
 		}
 		height -= (int)m_pView->GetViewHeight();
 
 		WRect rect = m_pView->GetRect();
-		rect.w += width;
-		rect.h += height;
+		rect.w += width; rect.h += height;
 		if (bScroll) {
 			rect.w += offset * 2;
 		}
 		m_pView->SetRect(rect);
 
 		if (m_pCancel) {
-			rect = m_pCancel->GetRect();
-			rect.x += width;
+			rect = m_pCancel->GetRect(); rect.x += width;
 			if (bScroll) {
 				rect.x += offset * 2;
 			} else {
@@ -242,11 +235,9 @@ bool FrNoticeDlg::OnInit(void) {
 			m_pCancel->MoveWindow(WPoint(rect.x, rect.y));
 		}
 
-		rect = GetRect();
-		rect.x -= width >> 1;
+		rect = GetRect(); rect.x -= width >> 1;
 		rect.y -= height >> 1;
-		rect.w += width;
-		rect.h += height;
+		rect.w += width; rect.h += height;
 		if (bScroll) {
 			rect.w += offset * 2;
 		} else {

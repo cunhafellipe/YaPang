@@ -15,11 +15,6 @@
 
 float Random(float min, float max, int seed);
 
-// The original's min/max helper (compare shape `a < b ? b : a`, not wutil.h's
-// Max); its header is unknown, as for camerawork.cpp's MinOf.
-template <class T> T MinOf(T a, T b) { return a > b ? b : a; }
-template <class T> T MaxOf(T a, T b) { return a < b ? b : a; }
-
 WTVertex CRiver::vtr[4];
 WTVertex* CRiver::vtx[5] = { &vtr[0], &vtr[1], &vtr[3], &vtr[2], NULL };
 WTVertex ntRiver_Lava::vtr[4];
@@ -116,42 +111,44 @@ void CRiver::Setup(const std::vector<WVector>& points, const char* name) {
 
 	Waabb aabb;
 	WVector dir;
+	float height;
+	unsigned int i, n;
 	dir = points[1] - points[0];
-	dir = WCrossProduct(WVector(dir.x, 0.0f, dir.z), WVector::UNIT_POS_Y).Normalize();
+	dir.y = 0;
+	dir = WCrossProduct(dir, WVector::UNIT_POS_Y).Normalize();
 
 	m_width = 0.0f;
-	float height = GetPVS().GetLowestGround(points[1]) + MaxOf(m_layers[0].depth, m_layers[1].depth);
+	height = GetPVS().GetLowestGround(points[1]) + Max(m_layers[0].depth, m_layers[1].depth);
 
 	// Widen the strip until the ground rises above the surface.
 	do {
 		m_width += 3.2f;
-	} while (!(GetPVS().GetLowestGround(dir * m_width + points[1]) > height));
+	} while (!(GetPVS().GetLowestGround(m_width * dir + points[1]) > height));
 	m_width += 3.2f;
 
 	m_rivers.reserve(50);
 
-	unsigned int n = 0;
-	for (unsigned int i = 0; i < points.size() - 1; i++) {
+	for (i = 0, n = 0; i < points.size() - 1; i++) {
 		dir = points[i + 1] - points[i];
-		dir = WCrossProduct(WVector(dir.x, 0.0f, dir.z), WVector::UNIT_POS_Y).Normalize();
+		dir.y = 0;
+		dir = WCrossProduct(dir, WVector::UNIT_POS_Y).Normalize();
 		dir *= m_width;
 
 		// One segment per 1.6 units of height difference.
-		float count = MaxOf(1.0f, (float)ceil(Abs(GetPVS().GetLowestGround(points[i + 1]) - GetPVS().GetLowestGround(points[i])) * 0.625f));
+		float count = Max(1.0f, (float)ceil(Abs(GetPVS().GetLowestGround(points[i + 1]) - GetPVS().GetLowestGround(points[i])) * 0.625f));
 
-		float step = 1.0f / count;
-		float ground = 0.0f;
-		for (float t = 0.0f; t < 1.0f; t += step) {
-			float last = ground;
+		height = 0.0f;
+		for (float t = 0.0f; t < 1.0f; t += 1.0f / count) {
+			float last = height;
 			WVector pos;
 			pos = points[i] * (1.0f - t) + points[i + 1] * t;
-			ground = GetPVS().GetLowestGround(pos);
-			if (last + 1.6f < ground) continue;
+			height = GetPVS().GetLowestGround(pos);
+			if (last + 1.6f < height) continue;
 
 			sRiver river;
 			for (unsigned int j = 0; j < 2; j++) {
 				river.bank[j] = dir * ((j & 1) ? 1.0f : -1.0f) + pos;
-				river.bank[j].y = ground + m_layers[0].depth;
+				river.bank[j].y = height + m_layers[0].depth;
 				if (n == 0) {
 					river.texV[j] = 0.0f;
 				} else {
@@ -161,14 +158,13 @@ void CRiver::Setup(const std::vector<WVector>& points, const char* name) {
 			}
 
 			if (n > 0) {
-				const sRiver& prev = m_rivers[n - 1];
-				aabb.max.x = MaxOf(MaxOf(river.bank[0].x, river.bank[1].x), MaxOf(prev.bank[0].x, prev.bank[1].x));
-				aabb.max.y = MinOf(river.bank[0].y, prev.bank[0].y);
-				aabb.max.z = MaxOf(MaxOf(river.bank[0].z, river.bank[1].z), MaxOf(prev.bank[0].z, prev.bank[1].z));
+				aabb.max.x = Max(Max(river.bank[0].x, river.bank[1].x), Max(m_rivers[n - 1].bank[0].x, m_rivers[n - 1].bank[1].x));
+				aabb.max.y = Min(river.bank[0].y, m_rivers[n - 1].bank[0].y);
+				aabb.max.z = Max(Max(river.bank[0].z, river.bank[1].z), Max(m_rivers[n - 1].bank[0].z, m_rivers[n - 1].bank[1].z));
 
-				aabb.min.x = MinOf(MinOf(river.bank[0].x, river.bank[1].x), MinOf(prev.bank[0].x, prev.bank[1].x));
-				aabb.min.y = aabb.max.y - MaxOf(m_layers[0].depth, m_layers[1].depth);
-				aabb.min.z = MinOf(MinOf(river.bank[0].z, river.bank[1].z), MinOf(prev.bank[0].z, prev.bank[1].z));
+				aabb.min.x = Min(Min(river.bank[0].x, river.bank[1].x), Min(m_rivers[n - 1].bank[0].x, m_rivers[n - 1].bank[1].x));
+				aabb.min.y = aabb.max.y - Max(m_layers[0].depth, m_layers[1].depth);
+				aabb.min.z = Min(Min(river.bank[0].z, river.bank[1].z), Min(m_rivers[n - 1].bank[0].z, m_rivers[n - 1].bank[1].z));
 
 				GetPVS().AddWater(aabb, 2);
 			}
@@ -191,7 +187,7 @@ void CRiver::Process(float fDelta) {
 
 // river.cpp:244
 void CRiver::Render(void) {
-	for (int i = 0; i < 2; i++) {
+	for (unsigned char i = 0; i < 2; i++) {
 		if (m_layers[i].enabled) {
 			for (unsigned char j = 0; j < 4; j++) {
 				vtr[j].tu = (j & 1) ? 0.0f : m_layers[i].tileSide;
@@ -200,8 +196,7 @@ void CRiver::Render(void) {
 				for (unsigned char j = 0; j < 4; j++) {
 					unsigned char n = k + ((j >> 1) & 1);
 
-					const WVector& p = m_rivers[n].bank[j & 1];
-					vtr[j].x = p.x; vtr[j].y = p.y; vtr[j].z = p.z;
+					vtr[j].SetPosition(m_rivers[n].bank[j & 1]);
 
 					vtr[j].tv = m_rivers[n].texV[i] + m_layers[i].offset;
 
@@ -241,16 +236,17 @@ ntRiver_Lava::~ntRiver_Lava(void) {
 void ntRiver_Lava::Setup(const std::vector<WVector>& points, const char* name) {
 	ReadAttribute(name);
 
+	Waabb aabb;
 	WVector dir;
 	float height;
 	float widths[256] = { 0.0f };
-	Waabb aabb;
-	unsigned int i;
+	unsigned int i, n;
 	for (i = 0; i < points.size() - 1; i++) {
 		dir = points[i + 1] - points[i];
-		dir = WCrossProduct(WVector(dir.x, 0.0f, dir.z), WVector::UNIT_POS_Y).Normalize();
+		dir.y = 0;
+		dir = WCrossProduct(dir, WVector::UNIT_POS_Y).Normalize();
 
-		height = GetPVS().GetLowestGround(points[i]) + MaxOf(m_layers[0].depth, m_layers[1].depth);
+		height = GetPVS().GetLowestGround(points[i]) + Max(m_layers[0].depth, m_layers[1].depth);
 
 		// Widen the strip until the ground rises above the surface.
 		for (;;) {
@@ -265,10 +261,10 @@ void ntRiver_Lava::Setup(const std::vector<WVector>& points, const char* name) {
 
 	m_rivers.reserve(50);
 
-	unsigned int n = 0;
-	for (i = 0; i < points.size() - 1; i++) {
+	for (i = 0, n = 0; i < points.size() - 1; i++) {
 		dir = points[i + 1] - points[i];
-		dir = WCrossProduct(WVector(dir.x, 0.0f, dir.z), WVector::UNIT_POS_Y).Normalize();
+		dir.y = 0;
+		dir = WCrossProduct(dir, WVector::UNIT_POS_Y).Normalize();
 		dir *= widths[i];
 
 		sRiver river;
@@ -287,14 +283,13 @@ void ntRiver_Lava::Setup(const std::vector<WVector>& points, const char* name) {
 		}
 
 		if (n > 0) {
-			const sRiver& prev = m_rivers[n - 1];
-			aabb.max.x = MaxOf(MaxOf(river.bank[0].x, river.bank[1].x), MaxOf(prev.bank[0].x, prev.bank[1].x));
-			aabb.max.y = MinOf(river.bank[0].y, prev.bank[0].y);
-			aabb.max.z = MaxOf(MaxOf(river.bank[0].z, river.bank[1].z), MaxOf(prev.bank[0].z, prev.bank[1].z));
+			aabb.max.x = Max(Max(river.bank[0].x, river.bank[1].x), Max(m_rivers[n - 1].bank[0].x, m_rivers[n - 1].bank[1].x));
+			aabb.max.y = Min(river.bank[0].y, m_rivers[n - 1].bank[0].y);
+			aabb.max.z = Max(Max(river.bank[0].z, river.bank[1].z), Max(m_rivers[n - 1].bank[0].z, m_rivers[n - 1].bank[1].z));
 
-			aabb.min.x = MinOf(MinOf(river.bank[0].x, river.bank[1].x), MinOf(prev.bank[0].x, prev.bank[1].x));
-			aabb.min.y = aabb.max.y - MaxOf(m_layers[0].depth, m_layers[1].depth);
-			aabb.min.z = MinOf(MinOf(river.bank[0].z, river.bank[1].z), MinOf(prev.bank[0].z, prev.bank[1].z));
+			aabb.min.x = Min(Min(river.bank[0].x, river.bank[1].x), Min(m_rivers[n - 1].bank[0].x, m_rivers[n - 1].bank[1].x));
+			aabb.min.y = aabb.max.y - Max(m_layers[0].depth, m_layers[1].depth);
+			aabb.min.z = Min(Min(river.bank[0].z, river.bank[1].z), Min(m_rivers[n - 1].bank[0].z, m_rivers[n - 1].bank[1].z));
 
 			GetPVS().AddWater(aabb, 2);
 		}
@@ -316,7 +311,7 @@ void ntRiver_Lava::Process(float fDelta) {
 
 // river.cpp:429
 void ntRiver_Lava::Render(void) {
-	for (int i = 0; i < 2; i++) {
+	for (unsigned char i = 0; i < 2; i++) {
 		if (m_layers[i].enabled) {
 			for (unsigned char j = 0; j < 4; j++) {
 				vtr[j].tu = (j & 1) ? 0.0f : 1.0f;
@@ -325,8 +320,7 @@ void ntRiver_Lava::Render(void) {
 				for (unsigned char j = 0; j < 4; j++) {
 					unsigned char n = k + ((j >> 1) & 1);
 
-					const WVector& p = m_rivers[n].bank[j & 1];
-					vtr[j].x = p.x; vtr[j].y = p.y; vtr[j].z = p.z;
+					vtr[j].SetPosition(m_rivers[n].bank[j & 1]);
 
 					vtr[j].tv = m_rivers[n].texV[i] + m_layers[i].offset;
 
@@ -484,8 +478,7 @@ void CRiver_ex::Setup(const std::vector<WVector>& points, const char* name) {
 	Waabb aabb;
 	m_rivers.reserve(50);
 
-	unsigned int n = 0;
-	for (unsigned int i = 0; i < points.size() - 1; i += 2) {
+	for (unsigned int i = 0, n = 0; i < points.size() - 1; i += 2) {
 		sRiver river;
 		memset(&river, 0, sizeof(river));
 
@@ -495,45 +488,44 @@ void CRiver_ex::Setup(const std::vector<WVector>& points, const char* name) {
 		}
 
 		if (n > 0) {
-			WVector d = river.bank[1] - river.bank[0];
-			float width = d.Magnitude();
+			float width = (river.bank[1] - river.bank[0]).Magnitude();
 			if (width != 0.0f) {
 				WVector a = river.bank[0] - m_rivers[n - 1].bank[0];
 				WVector b = river.bank[1] - m_rivers[n - 1].bank[1];
 				float inv = 1.0f / width;
-				river.texV[0] = a.Magnitude() * inv * m_layers[0].tileHead + m_rivers[n - 1].texV[0];
-				river.texV[1] = b.Magnitude() * inv * m_layers[1].tileHead + m_rivers[n - 1].texV[1];
+				river.texV[0] = m_layers[0].tileHead * (a.Magnitude() * inv) + m_rivers[n - 1].texV[0];
+				river.texV[1] = m_layers[1].tileHead * (b.Magnitude() * inv) + m_rivers[n - 1].texV[1];
 			}
 
-			aabb.max.x = MaxOf(MaxOf(river.bank[0].x, river.bank[1].x), MaxOf(m_rivers[n - 1].bank[0].x, m_rivers[n - 1].bank[1].x));
-			aabb.max.y = MaxOf(MaxOf(river.bank[0].y, river.bank[1].y), MaxOf(m_rivers[n - 1].bank[0].y, m_rivers[n - 1].bank[1].y));
-			aabb.max.z = MaxOf(MaxOf(river.bank[0].z, river.bank[1].z), MaxOf(m_rivers[n - 1].bank[0].z, m_rivers[n - 1].bank[1].z));
+			aabb.max.x = Max(Max(river.bank[0].x, river.bank[1].x), Max(m_rivers[n - 1].bank[0].x, m_rivers[n - 1].bank[1].x));
+			aabb.max.y = Max(Max(river.bank[0].y, river.bank[1].y), Max(m_rivers[n - 1].bank[0].y, m_rivers[n - 1].bank[1].y));
+			aabb.max.z = Max(Max(river.bank[0].z, river.bank[1].z), Max(m_rivers[n - 1].bank[0].z, m_rivers[n - 1].bank[1].z));
 
-			aabb.min.x = MinOf(MinOf(river.bank[0].x, river.bank[1].x), MinOf(m_rivers[n - 1].bank[0].x, m_rivers[n - 1].bank[1].x));
-			aabb.min.y = MinOf(MinOf(river.bank[0].y, river.bank[1].y), MinOf(m_rivers[n - 1].bank[0].y, m_rivers[n - 1].bank[1].y));
-			aabb.min.z = MinOf(MinOf(river.bank[0].z, river.bank[1].z), MinOf(m_rivers[n - 1].bank[0].z, m_rivers[n - 1].bank[1].z));
+			aabb.min.x = Min(Min(river.bank[0].x, river.bank[1].x), Min(m_rivers[n - 1].bank[0].x, m_rivers[n - 1].bank[1].x));
+			aabb.min.y = Min(Min(river.bank[0].y, river.bank[1].y), Min(m_rivers[n - 1].bank[0].y, m_rivers[n - 1].bank[1].y));
+			aabb.min.z = Min(Min(river.bank[0].z, river.bank[1].z), Min(m_rivers[n - 1].bank[0].z, m_rivers[n - 1].bank[1].z));
 
 			float height = aabb.max.y - aabb.min.y;
 
 			if (abs(height) > 8.0f) {
 				// A steep segment: register it as four water boxes.
-				WVector step = d * 0.25f;
+				WVector step = (river.bank[1] - river.bank[0]) * 0.25f;
 				WVector cur = river.bank[0];
-				WVector last = m_rivers[n - 1].bank[0];
 				WVector lastStep = (m_rivers[n - 1].bank[1] - m_rivers[n - 1].bank[0]) * 0.25f;
+				WVector last = m_rivers[n - 1].bank[0];
 
 				for (int k = 0; k < 4; k++) {
-					WVector cur0 = cur; cur = cur + step;
-					WVector last0 = last; last = last + lastStep;
+					WVector cur0 = cur; cur = cur0 + step;
+					WVector last0 = last; last = last0 + lastStep;
 
 					Waabb box;
-					box.max.x = MaxOf(MaxOf(cur0.x, cur.x), MaxOf(last0.x, last.x));
-					box.max.y = MaxOf(MaxOf(cur0.y, cur.y), MaxOf(last0.y, last.y));
-					box.max.z = MaxOf(MaxOf(cur0.z, cur.z), MaxOf(last0.z, last.z));
+					box.max.x = Max(Max(cur0.x, cur.x), Max(last0.x, last.x));
+					box.max.y = Max(Max(cur0.y, cur.y), Max(last0.y, last.y));
+					box.max.z = Max(Max(cur0.z, cur.z), Max(last0.z, last.z));
 
-					box.min.x = MinOf(MinOf(cur0.x, cur.x), MinOf(last0.x, last.x));
-					box.min.y = MinOf(MinOf(cur0.y, cur.y), MinOf(last0.y, last.y));
-					box.min.z = MinOf(MinOf(cur0.z, cur.z), MinOf(last0.z, last.z));
+					box.min.x = Min(Min(cur0.x, cur.x), Min(last0.x, last.x));
+					box.min.y = Min(Min(cur0.y, cur.y), Min(last0.y, last.y));
+					box.min.z = Min(Min(cur0.z, cur.z), Min(last0.z, last.z));
 
 					GetPVS().AddWater(box, 2);
 				}
@@ -562,7 +554,7 @@ void CRiver_ex::Render(void) {
 	unsigned int count = m_rivers.size();
 	if (count < 3) return;
 
-	for (int i = 0; i < 2; i++) {
+	for (unsigned char i = 0; i < 2; i++) {
 		if (m_layers[i].enabled) {
 			for (unsigned char j = 0; j < 4; j++) {
 				vtr[j].tu = (j & 2) ? 1.0f : 0.0f;
@@ -571,8 +563,7 @@ void CRiver_ex::Render(void) {
 				for (unsigned int j = 0; j < 4; j++) {
 					unsigned char n = k + (j & 1);
 
-					const WVector& p = m_rivers[n].bank[(j >> 1) & 1];
-					vtr[j].x = p.x; vtr[j].y = p.y; vtr[j].z = p.z;
+					vtr[j].SetPosition(m_rivers[n].bank[(j >> 1) & 1]);
 					vtr[j].tv = m_rivers[n].texV[i] + m_layers[i].offset;
 
 					if ((k < 1 && !(j & 1)) || (k > count - 3 && (j & 1))) {

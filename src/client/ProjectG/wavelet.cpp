@@ -92,10 +92,11 @@ void CWavelet::SetWavelet(const std::vector<WVector>& points, const char* attrib
 		} else {
 			wavelet.dir = points[i + 1] - points[i];
 
-			wavelet.dir = WCrossProduct(WVector(wavelet.dir.x, 0, wavelet.dir.z), WVector::UNIT_POS_Y).Normalize();
+			wavelet.dir.y = 0;
+			wavelet.dir = WCrossProduct(wavelet.dir, WVector::UNIT_POS_Y).Normalize();
 		}
 
-		wavelet.pos[1] = wavelet.pos[0] + wavelet.dir * m_range;
+		wavelet.pos[1] = wavelet.pos[0] + m_range * wavelet.dir;
 
 		m_wavelets.push_back(wavelet);
 	}
@@ -162,7 +163,7 @@ void CWavelet::Render(void) {
 				unsigned char index = ((k >> 1) & 1) + j;
 				bool edge = index == 0 || index == m_wavelets.size() - 1;
 
-				WVector dir = m_wavelets[index].dir * (((k & 1) ? 0.1f : (edge ? 0.5f : 1.0f)) * m_layers[i].m_offset);
+				WVector dir = ((k & 1) ? 0.1f : (edge ? 0.5f : 1.0f)) * m_layers[i].m_offset * m_wavelets[index].dir;
 				pos = GetPVS().GetGroundPoint(m_wavelets[index].pos[k & 1] - dir, true, NULL, true);
 
 				vtr[k].SetPosition(pos);

@@ -1030,7 +1030,7 @@ void FrItemCounter::OnOwnerDrawDrawArea(intptr_t id) {
 	if (pGDI) {
 		WRect rc = GetRect();
 
-		IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(m_storedItemInfo.item.typeId);
+		unsigned long typeId = m_storedItemInfo.item.typeId; IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(typeId);
 
 		if (pCommon) {
 			const Bitmap* pIcon = g_pFresh->GetBitmap(pCommon->m_icon);
@@ -1967,11 +1967,12 @@ void CItemStorage::DrawStoredItemInfo(const FrListBox*& pListBox, const FrListIt
 		const sStoredItemInfo* pInfo = (const sStoredItemInfo*)item.pData;
 
 		if (pInfo) {
-			IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(pInfo->item.typeId);
+			unsigned long typeId = pInfo->item.typeId; IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(typeId);
 
 			if (pCommon) {
 				// The character the item belongs to.
-				IFF_ITEM_COMMON* pChar = ItemManager()->FindCommonItem(((pInfo->item.typeId >> 18) & 0xFF) | 0x04000000);
+				unsigned long charTypeId = ((pInfo->item.typeId >> 18) & 0xFF) | 0x04000000;
+				IFF_ITEM_COMMON* pChar = ItemManager()->FindCommonItem(charTypeId);
 
 				if (pChar) {
 					const Bitmap* pCharIcon = g_pFresh->GetBitmap(MakeStr("s_%s", pChar->m_icon));
@@ -1981,13 +1982,13 @@ void CItemStorage::DrawStoredItemInfo(const FrListBox*& pListBox, const FrListIt
 					}
 				}
 
-				const Bitmap* pIcon = g_pFresh->GetBitmap(pCommon->m_icon);
+				const Bitmap* pItemIcon = g_pFresh->GetBitmap(pCommon->m_icon);
 
-				if (IsLocalContent((localContentType_t)0x57) && IsUccClothes(pInfo->item.typeId) && (pInfo->item.uccStatus & 1)) {
-					pIcon = GetUccItemIcon(pInfo->item.typeId, pInfo->item.uccIdx);
-				}
+				const Bitmap* pIcon = (IsLocalContent((localContentType_t)0x57) && IsUccClothes(pInfo->item.typeId) && (pInfo->item.uccStatus & 1))
+					? GetUccItemIcon(pInfo->item.typeId, pInfo->item.uccIdx)
+					: pItemIcon;
 
-				unsigned long dragIndex = (m_dragDrop.mode == sStoredItemDragDrop::MODE_POP) ? m_dragDrop.index : (unsigned long)-1;
+				unsigned long dragIndex = (unsigned long)-1; if (m_dragDrop.mode == sStoredItemDragDrop::MODE_POP) dragIndex = m_dragDrop.index;
 
 				if (dragIndex != (unsigned long)item.idx && pIcon) {
 					pGDI->DrawTexture(pIcon, WRect(item.pos.x + 30.0f, item.pos.y + 1.0f, 34.0f * ((float)pIcon->Width() * 0.01f), 34.0f * ((float)pIcon->Height() * 0.01f)), 0xFFFFFFFF, 0);
@@ -2007,8 +2008,12 @@ void CItemStorage::DrawStoredItemInfo(const FrListBox*& pListBox, const FrListIt
 					pGDI->Print(WPoint(item.pos.x + 61.0f, item.pos.y + 10.0f), 0, pCommon->m_name);
 				}
 
-				if ((pInfo->item.typeId >> 26) != 2) {
+				switch (pInfo->item.typeId >> 26) {
+				case 2:
+					break;
+				default:
 					pGDI->Print(WPoint(item.pos.x + 220.0f, item.pos.y + 10.0f), 0, "%d\xb0\xb3", pInfo->item.count);
+					break;
 				}
 
 				pGDI->SetTextStyle(0);
@@ -2283,7 +2288,7 @@ void CItemStorage::DragDropItemDraw(void) {
 	if (CheckDrag()) {
 		if (m_dragDrop.mode != sStoredItemDragDrop::MODE_NONE) {
 			FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
-			IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(m_dragDrop.slot.item.typeId);
+			unsigned long typeId = m_dragDrop.slot.item.typeId; IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(typeId);
 
 			if (pGDI && pCommon) {
 				const Bitmap* pIcon = g_pFresh->GetBitmap(pCommon->m_icon);

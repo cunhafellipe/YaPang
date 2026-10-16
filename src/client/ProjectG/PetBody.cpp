@@ -47,13 +47,11 @@ extern WMatrix data_a7fb50;
 // commonutil.cpp
 const char *GetStrConst(const char *pSrc, char *pDest);
 
-// One degree in radians: this unit's .rdata copy of wmath.h's g_DEGTORAD
-// (followed by g_HUGE and g_EPSILON at +4/+8). The split names the block
-// _data_9ed708, so a reference to g_DEGTORAD itself does not pair; same
-// stand-in as npc.cpp's data_9f0fc0.
-extern "C" {
-static float data_9ed708 = 0.017453292f;
-}
+// This unit's .rdata copies of wmath.h's g_DEGTORAD, g_HUGE and g_EPSILON
+// ([0], [1], [2]). The split names the block _data_9ed708, so a reference to
+// the constants themselves (or to an equal literal) does not pair; same
+// stand-in as golfcadie.cpp's data_9eee9c.
+extern "C" const float data_9ed708[3];
 
 // The commands ParsePuppetScript recognizes, by switch index (.data
 // 0xa7fb30). *lookup and *dontlookup have no case.
@@ -395,8 +393,9 @@ void CPetBody::SetRotateSlope(float angle, WVector normal) {
 	WMatrix rot;
 	WVector pivot = m_rotMatrix.pivot;
 	WVector axis = normal;
+	axis.y = 0.0f;
 
-	normal = WCrossProduct(axis, WVector(normal.x, 0.0f, normal.z));
+	normal = WCrossProduct(normal, axis);
 	normal.y *= -1.0f;
 
 	rot = m_rotMatrix;
@@ -426,7 +425,7 @@ void CPetBody::MultRotate(WMatrix *rot) {
 // petbody.cpp:398
 void CPetBody::Rotate(float angle) {
 	m_rotation.y += angle;
-	m_rotMatrix = m_rotMatrix * RotMat(angle, 1);
+	m_rotMatrix *= RotMat(angle, 1);
 	m_rotMatrix.pivot = m_pos;
 	m_matrix = m_rotMatrix;
 
@@ -898,14 +897,14 @@ void CPetBody::LookUpProcess(float delta) {
 	WVector2D diff = m_lookAngleTarget - m_lookAngle;
 
 
-	if (Abs(diff.x) > data_9ed708) {
+	if (Abs(diff.x) > data_9ed708[0]) {
 
 
 		m_flags.Enable(0x20);
 		m_lookAngle.x += MinOf(delta / diff.Magnitude() * 1.5707964f, 1.0f) * diff.x;
 	}
 
-	if (Abs(diff.y) > data_9ed708) {
+	if (Abs(diff.y) > data_9ed708[0]) {
 
 
 		m_flags.Enable(0x20);
@@ -921,13 +920,13 @@ void CPetBody::FlightProcess(float delta) {
 
 	WVector pos = m_pos;
 	float takeOffDist = (m_takeOffDir - m_takeOffPos).Magnitude();
-	float dist = (m_takeOffDir - pos).Magnitude();
+	float dist = (m_takeOffDir - WVector(pos.x, 0.0f, pos.z)).Magnitude();
 
 	switch (m_flightState) {
 	case 0:
 		if (m_bFlying) {
 
-			if (!(WAbsBySign(m_takeOffAngle) < 1e-5f)) {
+			if (!(WAbsBySign(m_takeOffAngle) < data_9ed708[2])) {
 
 				float angle = m_takeOffAngle + delta * 0.4f;
 				if (angle < 0.0f) {
@@ -980,14 +979,14 @@ void CPetBody::FlightProcess(float delta) {
 				Waabb aabb = box->info->aabb;
 				aabb.min = aabb.min * box->bone->GetMatrix();
 				aabb.max = aabb.max * box->bone->GetMatrix();
-				aabb.min.x = (aabb.max.x + aabb.min.x) * 0.5f;
-				aabb.min.z = (aabb.max.z + aabb.min.z) * 0.5f;
+				aabb.min.x = (aabb.min.x + aabb.max.x) * 0.5f;
+				aabb.min.z = (aabb.min.z + aabb.max.z) * 0.5f;
 				height = aabb.min.y - GetPVS().GetGroundPoint(aabb.min, true, NULL, true).y;
 			}
 		}
 
 		if (m_bFlying) {
-			if (!(WAbsBySign(m_takeOffAngle - -0.39269908f) < 1e-5f)) {
+			if (!(WAbsBySign(m_takeOffAngle - -0.39269908f) < data_9ed708[2])) {
 				float angle = m_takeOffAngle - delta * 0.3f;
 				if (angle > -0.39269908f) {
 					m_takeOffAngle = angle;
@@ -1011,7 +1010,7 @@ void CPetBody::FlightProcess(float delta) {
 	}
 	}
 
-	if (m_bFlying && !(WAbsBySign(ball.m_lieSlope) < 1e-5f)) {
+	if (m_bFlying && !(WAbsBySign(ball.m_lieSlope) < data_9ed708[2])) {
 		WVector side = WCrossProduct(WVector::UNIT_POS_Y, m_moveDelta);
 		side.Normalize();
 

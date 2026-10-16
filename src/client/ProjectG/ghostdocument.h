@@ -130,9 +130,12 @@ public:
 
 	// ghostdocument.h:87
 	void SetInvalidate(void) { m_bInvalidate = 1; }
-	int IsInvalidate(void) const; // ghostdocument.h:88
-	struct GHOST_USER_DATA const *GetUserData(void) const; // ghostdocument.h:93
-	struct GHOST_GAME_DATA const *GetGameData(void) const; // ghostdocument.h:94
+	// ghostdocument.h:88
+	int IsInvalidate(void) const { return m_bInvalidate; }
+	// ghostdocument.h:93
+	struct GHOST_USER_DATA const *GetUserData(void) const { return m_pUserData; }
+	// ghostdocument.h:94
+	struct GHOST_GAME_DATA const *GetGameData(void) const { return m_pGameData; }
 
 	struct GHOST_GAME_DATA *m_pGameData; // 0x00
 	struct GHOST_USER_DATA *m_pUserData; // 0x04

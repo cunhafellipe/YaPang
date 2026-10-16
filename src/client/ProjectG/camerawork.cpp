@@ -28,7 +28,7 @@
 // Nameless data: the name ParsePuppetScript cuts out of a script, and the
 // name it is compared with (a char * of another unit; size not established).
 static char data_af1f60[256];
-extern char *data_a7ee68;
+extern "C" char *data_a7ee68;
 
 extern WMatrix g_camera;
 
@@ -317,8 +317,7 @@ void CCameraWork::SetCaddieCamera(const WMatrix &matrix, const WVector &target) 
 	WVector toTarget;
 	toTarget = target - GolfBall().m_pos;
 	m_swingAngle = CalcDeltaAngle(toTarget, dir);
-	WVector mid = toTarget * 0.5f + GolfBall().m_pos;
-	m_sourceCamera = WVector(mid.x, mid.y + 10.0f, mid.z);
+	m_sourceCamera = toTarget * 0.5f + GolfBall().m_pos + WVector(0.0f, 10.0f, 0.0f);
 	m_introFrom = m_sourceCamera;
 	m_introTo = matrix.pivot;
 	m_baseMatrixCopy = m_baseMatrix;
@@ -1345,7 +1344,7 @@ void CCameraWork::InputProcess(float elapsed) {
 
 	if (!g_input->Get("LSHIFT", true) && !g_input->Get("RSHIFT", true)) {
 		if (g_input->Get("\xbb\xf3", true)) {
-			if (m_inputMode == 1 || m_freePitch)
+			if (m_inputMode == 1 || !m_freePitch)
 				m_input.m_pitch += speed * elapsed;
 		}
 
@@ -1389,8 +1388,8 @@ void CCameraWork::InputProcess(float elapsed) {
 	}
 
 	if (m_inputMode != 2)
-		m_input.m_zoom = CAMERA_CLAMP(m_input.m_zoom, -1.0471976f, 1.0471976f);
-	m_input.m_pitch = CAMERA_CLAMP(m_input.m_pitch, -0.52359879f, 0.52359879f);
+		m_input.m_zoom = Between(-1.0471976f, m_input.m_zoom, 1.0471976f);
+	m_input.m_pitch = Between(-0.52359879f, m_input.m_pitch, 0.52359879f);
 
 	if (!m_input.m_used) {
 		m_input.m_yaw = 0.0f;
@@ -1399,11 +1398,7 @@ void CCameraWork::InputProcess(float elapsed) {
 
 	if (m_keepInputOffsets) {
 		float fov = m_input.m_yaw + 0.95993108f;
-		if (fov < 0.17453292f)
-			fov = 0.17453292f;
-		else if (fov > data_9eb420[1])
-			fov = 1.5707964f;
-		g_view->SetFOV(fov);
+		g_view->SetFOV(fov < 0.17453292f ? 0.17453292f : (fov > data_9eb420[1] ? 1.5707964f : fov));
 
 		if (WAbsBySign(m_input.m_zoom) < data_9eb420[4] && WAbsBySign(m_input.m_pitch) < data_9eb420[4]) {
 			g_camera = m_baseMatrixCopy;
@@ -1415,11 +1410,7 @@ void CCameraWork::InputProcess(float elapsed) {
 	}
 
 	float fov = m_zoomAngle + m_input.m_yaw;
-	if (fov < 0.17453292f)
-		fov = 0.17453292f;
-	else if (fov > data_9eb420[1])
-		fov = 1.5707964f;
-	g_view->SetFOV(fov);
+	g_view->SetFOV(fov < 0.17453292f ? 0.17453292f : (fov > data_9eb420[1] ? 1.5707964f : fov));
 
 	m_baseMatrixCopy = GetCameraMatrix(m_sourceCamera, m_destCamera, m_bankAngle);
 
@@ -1427,7 +1418,7 @@ void CCameraWork::InputProcess(float elapsed) {
 		g_camera = m_baseMatrixCopy;
 	} else if (m_inputMode == 2) {
 		WVector dir = m_baseMatrixCopy.pivot - *m_pTarget;
-		float distance = MaxOf(10.0f, (1.0f - (m_input.m_zoom > 0.0f ? m_input.m_zoom : -m_input.m_zoom) * 0.47746483f) * dir.Magnitude());
+		float distance = MaxOf(10.0f, (1.0f - Abs(m_input.m_zoom) * 0.47746483f) * dir.Magnitude());
 
 		dir.Normalize();
 		dir *= distance;
@@ -1439,6 +1430,9 @@ void CCameraWork::InputProcess(float elapsed) {
 	} else {
 		g_camera = GetCameraMatrix(m_baseMatrixCopy.pivot, WVector(sinf(m_input.m_zoom) * cosf(m_input.m_pitch), sinf(m_input.m_pitch), cosf(m_input.m_zoom) * cosf(m_input.m_pitch)) * m_baseMatrixCopy, m_bankAngle);
 	}
+
+	if (GolfBall().m_preDataIndex > 0)
+		ProcessBallSound();
 }
 
 // camerawork.cpp:1679
@@ -2494,7 +2488,7 @@ void CCameraWork::StillFrameCamera(float elapsed, float time) {
 
 // camerawork.cpp:3128
 void CCameraWork::CaddieChanceCamera(float elapsed, float time) {
-	float t = CAMERA_CLAMP(1.0f - m_cameraTime * 0.33333334f, 0.0f, 1.0f);
+	float t = Between(0.0f, 1.0f - m_cameraTime * 0.33333334f, 1.0f);
 	WVector offset = WVector::UNIT_POS_Z * m_baseRotation; offset = offset * RotMat(t * m_swingAngle, 1);
 
 	m_sourceCamera = (m_introFrom - m_introTo) * CAMERA_CLAMP(t, 0.0f, 1.0f) + m_introTo;

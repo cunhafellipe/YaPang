@@ -149,7 +149,7 @@ void FrSpCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 
 		pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 		pGDI->SetTextStyle(1);
-		pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + 50.0f), 0, "%s", pOldCard->m_name);
+		pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, 50.0f), 0, "%s", pOldCard->m_name);
 		pGDI->SetTextStyle(0);
 
 		IFF_STRUCT::sDesc* pOldDesc = ItemManager()->FindDesc(m_overlappedCard);
@@ -163,7 +163,7 @@ void FrSpCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 				}
 			}
 
-			pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + 70.0f), 0, "%s", desc);
+			pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, 70.0f), 0, "%s", desc);
 		}
 
 		IFF_STRUCT::sCard* pNewCard = ItemManager()->FindCard(m_spCardTid);
@@ -173,7 +173,7 @@ void FrSpCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 
 		pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 		pGDI->SetTextStyle(1);
-		pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + 110.0f), 0, "%s", pNewCard->m_name);
+		pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, 110.0f), 0, "%s", pNewCard->m_name);
 		pGDI->SetTextStyle(0);
 
 		IFF_STRUCT::sDesc* pNewDesc = ItemManager()->FindDesc(m_spCardTid);
@@ -187,7 +187,7 @@ void FrSpCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 				}
 			}
 
-			pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + 130.0f), 0, "%s", desc);
+			pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, 130.0f), 0, "%s", desc);
 		}
 
 		const Bitmap* pArrow = g_pFresh->GetBitmap("Overlapping_Arrow");
@@ -213,7 +213,7 @@ void FrSpCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 
 		pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 		pGDI->SetTextStyle(1);
-		pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + 50.0f), 0, "%s", pCard->m_name);
+		pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, 50.0f), 0, "%s", pCard->m_name);
 		pGDI->SetTextStyle(0);
 
 		pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -230,7 +230,7 @@ void FrSpCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 				}
 			}
 
-			pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + 70.0f), 0, "%s", desc);
+			pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, 70.0f), 0, "%s", desc);
 		}
 	}
 
@@ -318,7 +318,7 @@ void FrCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 
 	pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 	pGDI->SetTextStyle(1);
-	pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + 50.0f), 0, "%s", pCard->m_name);
+	pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, 50.0f), 0, "%s", pCard->m_name);
 	pGDI->SetTextStyle(0);
 
 	pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -339,7 +339,7 @@ void FrCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 			}
 		}
 
-		pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + 70.0f), 0, "%s", desc);
+		pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, 70.0f), 0, "%s", desc);
 	} else if (cardType == 0) {
 		float offset = 0.0f;
 		for (int i = 0; i < 5; i++) {
@@ -356,7 +356,7 @@ void FrCardUseDlg::OnItemOwnerDraw(intptr_t nIndex) {
 					sprintf(desc, "%s + %d", "\xc4\xbf\xba\xea\xbd\xbd\xb7\xd4", pCard->m_stat[4]);
 				}
 
-				pGDI->Print(WPoint(m_pItem->GetRect().x + 20.0f, m_pItem->GetRect().y + (offset + 70.0f)), 0, "%s", desc);
+				pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(20.0f, offset + 70.0f), 0, "%s", desc);
 				offset += 15.0f;
 			}
 		}
@@ -438,12 +438,12 @@ void FrOpenCardPackDlg::OnItemOwnerDraw(intptr_t nIndex) {
 
 	pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 	pGDI->SetTextStyle(1);
-	pGDI->Print(WPoint(m_pItem->GetRect().x + 210.0f, m_pItem->GetRect().y + 55.0f), 0, "%s", pCard->m_name);
+	pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(210.0f, 55.0f), 0, "%s", pCard->m_name);
 	pGDI->SetTextStyle(0);
 
 	pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 	pGDI->SetTextStyle(1);
-	pGDI->Print(WPoint(m_pItem->GetRect().x + 160.0f, m_pItem->GetRect().y + 55.0f), 0, "%s", "\xC0\xCC\xB8\xA7: ");
+	pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(160.0f, 55.0f), 0, "%s", "\xC0\xCC\xB8\xA7: ");
 	pGDI->SetTextStyle(0);
 
 	char text[100] = { 0 };
@@ -459,7 +459,7 @@ void FrOpenCardPackDlg::OnItemOwnerDraw(intptr_t nIndex) {
 
 	pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 	pGDI->SetTextStyle(1);
-	pGDI->Print(WPoint(m_pItem->GetRect().x + 160.0f, m_pItem->GetRect().y + 75.0f), 0, "%s", text);
+	pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(160.0f, 75.0f), 0, "%s", text);
 	pGDI->SetTextStyle(0);
 
 	if (m_pLevelImg != 0) {
@@ -484,7 +484,7 @@ void FrOpenCardPackDlg::OnItemOwnerDraw(intptr_t nIndex) {
 			}
 		}
 
-		pGDI->Print(WPoint(m_pItem->GetRect().x + 25.0f, m_pItem->GetRect().y + 155.0f), 0, "%s", desc);
+		pGDI->Print(WPoint(m_pItem->GetRect().x, m_pItem->GetRect().y) + WPoint(25.0f, 155.0f), 0, "%s", desc);
 	}
 }
 
@@ -2007,7 +2007,7 @@ void FrItemAttachCardDlg::SetSelectMyItem(sItemAttachCard* pItem) {
 			memcpy(slotStat, pPart->m_slotStat, sizeof(slotStat));
 
 			const char* statName = "";
-			for (int i = 0; i < 5; i++) {
+			for (short i = 0; i < 5; i++) {
 				if (baseStat[i] != 0 || slotStat[i] != 0) {
 					switch (i) {
 					case 0: statName = "\xC6\xC4\xBF\xF6"; break;
@@ -2236,9 +2236,9 @@ void FrItemAttachCardDlg::DrawPartsLine(void) {
 
 // carddlg.cpp:2593
 void FrItemAttachCardDlg::AgreeAttaching(void) {
-	int nIndex = (m_selectedSlot > 4) ? m_selectedSlot - 5 : m_selectedSlot - 1;
+	int nIndex = (m_selectedSlot > 4) ? m_selectedSlot - 1 : m_selectedSlot - 5;
 
-	unsigned long cardTypeId = (m_selectedSlot > 4) ? m_caddieSlotCard[nIndex] : m_charSlotCard[nIndex];
+	unsigned long cardTypeId = (m_selectedSlot > 4) ? m_charSlotCard[nIndex] : m_caddieSlotCard[nIndex];
 
 	FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify_yesno", 0);
 
@@ -2251,9 +2251,9 @@ void FrItemAttachCardDlg::AgreeAttaching(void) {
 // carddlg.cpp:2607
 bool FrItemAttachCardDlg::OnAgreeAttachingResult(int ret, FrForm* pForm) {
 	if (ret == FrOK) {
-		int nIndex = (m_selectedSlot > 4) ? m_selectedSlot - 5 : m_selectedSlot - 1;
+		int nIndex = (m_selectedSlot > 4) ? m_selectedSlot - 1 : m_selectedSlot - 5;
 
-		bool bAttached = (m_selectedSlot > 4) ? m_caddieSlotAttached[nIndex] : m_charSlotAttached[nIndex];
+		bool bAttached = (m_selectedSlot > 4) ? m_charSlotAttached[nIndex] : m_caddieSlotAttached[nIndex];
 
 		if (bAttached) {
 			AgreeAttaching();
@@ -2566,7 +2566,7 @@ int FrSPCardBuffDlg::GetRemainedSec(const sSCardAvilityPeriodInfo* pInfo) {
 
 	if (!bSPCard) {
 		remain = MAKELONG(pInfo->endTime.wMilliseconds, pInfo->endTime.wSecond);
-		elapsed = g_CurrentTime - MAKELONG(pInfo->startTime.wMilliseconds, pInfo->startTime.wSecond);
+		elapsed = (g_CurrentTime - MAKELONG(pInfo->startTime.wMilliseconds, pInfo->startTime.wSecond)) / 1000;
 	} else {
 		_SYSTEMTIME serverTime = WSingleton<CSharedDoc>::Instance()->GetServerTime();
 
@@ -2614,10 +2614,10 @@ int FrSPCardBuffDlg::GetRemainedSec(const sSCardAvilityPeriodInfo* pInfo) {
 		}
 
 		remain = (hour * 60 + minute) * 60 + second;
-		elapsed = g_CurrentTime - m_SpecialBuffStartTick;
+		elapsed = (g_CurrentTime - m_SpecialBuffStartTick) / 1000;
 	}
 
-	return remain - elapsed / 1000;
+	return remain - elapsed;
 }
 
 // The special buff dialog's position (x < 0: not placed yet, GetPosition

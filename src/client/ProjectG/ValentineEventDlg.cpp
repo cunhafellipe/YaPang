@@ -235,9 +235,9 @@ void FrValEventDlg::DrawGauge(WPoint& pt, unsigned char count) {
 		float x = m_rect.x;
 		float y = m_rect.y;
 
-		WRect rc(x + 2.0f, y + 23.0f, bmp->Width(), bmp->Height());
+		WRect rc(x, y + 23.0f, bmp->Width(), bmp->Height());
 		float offset = (10 - count) * rc.h * 0.1f;
-		pGDI->DrawTexture(bmp, WRect(rc.TopLeft() + WPoint(pt.x, offset + pt.y), (float)bmp->Width(), (float)bmp->Height() - offset), 0xFFFFFFFF, 0);
+		pGDI->DrawTexture(bmp, WRect(rc.x + 2.0f + pt.x, rc.y + (offset + pt.y), (float)bmp->Width(), (float)bmp->Height() - offset), 0xFFFFFFFF, 0);
 	}
 }
 

@@ -177,9 +177,9 @@ FrRecentMatch::FrRecentMatch(void)
 	tagWTITLEFONT info;
 	memset(&info, 0, sizeof(info));
 	info.filename = data_a91de0;
-	info.numPages = 1;
 	info.fontw = 16;
 	info.fonth = 16;
+	info.numPages = 1;
 	info.texw = 128;
 	info.texh = 64;
 	info.pCharSet = "1234567890ymP-.?/:";
@@ -697,8 +697,7 @@ void FrGhostGameMapDlg::OnDrawSelMapList(intptr_t param) {
 				info.m_flag18 = true;
 				info.m_y = pItem->pos.x;
 
-				WRect rect(info.m_x, pItem->pos.y + 6.0f, (float)pBitmap->Width(), (float)pBitmap->Height());
-				pGDI->DrawTexture(pBitmap, rect, ((unsigned char)info.m_unknown08 << 24) | 0xffffff, 0);
+				pGDI->DrawTexture(pBitmap, WRect(info.m_x, pItem->pos.y + 6.0f, (float)pBitmap->Width(), (float)pBitmap->Height()), ((unsigned char)info.m_unknown08 << 24) | 0xffffff, 0);
 
 				if (m_selectId == index) {
 
@@ -772,7 +771,8 @@ void FrGhostGameMapDlg::OnDrawChoiceMap(int param) {
 
 		if (tag.m_pEndBitmap) {
 
-			WRect rect(tag.m_current, tag.m_endRect.y, tag.m_endRect.w, tag.m_endRect.h);
+			WRect rect = tag.m_endRect;
+			rect.x = tag.m_current;
 			float left = rect.w + tag.m_rect.x + 1.0f;
 			if (rect.x < left) {
 
@@ -783,7 +783,8 @@ void FrGhostGameMapDlg::OnDrawChoiceMap(int param) {
 				std::list<GHOST_GAME_BRIEF>::iterator it = std::find(m_gameBriefs.begin(), m_gameBriefs.end(), m_selectId);
 				if (it != m_gameBriefs.end()) {
 
-					IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(0x4000000 | it->m_fileNameParts[0]);
+					GHOST_GAME_BRIEF& brief = *it;
+					IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(0x4000000 | brief.m_fileNameParts[0]);
 					const Bitmap* pItemBitmap = g_pFresh->GetBitmap(MakeStr("%s", pItem->m_icon));
 					if (pItemBitmap) {
 
@@ -797,8 +798,8 @@ void FrGhostGameMapDlg::OnDrawChoiceMap(int param) {
 						pGDI->SetTextColor(0xffffffff, 0xff000000);
 
 						g_pFresh->GetManager()->PrintText(WPoint(tag.m_rect.x + 108.0f, tag.m_rect.y + 19.0f), 0, m_ghostNick.c_str(), -1.0f, 0xffffffff);
-						pGDI->Print(WPoint(tag.m_rect.x + 108.0f, tag.m_rect.y + 37.0f), 0, "%d", -it->m_fileNameParts[1]);
-						float width = pGDI->Print(WPoint(tag.m_rect.x + 108.0f, tag.m_rect.y + 52.0f), 0, "%d", it->m_fileNameParts[2]);
+						pGDI->Print(WPoint(tag.m_rect.x + 108.0f, tag.m_rect.y + 37.0f), 0, "%d", -brief.m_fileNameParts[1]);
+						float width = pGDI->Print(WPoint(tag.m_rect.x + 108.0f, tag.m_rect.y + 52.0f), 0, "%d", brief.m_fileNameParts[2]);
 
 						const Bitmap* pPangBitmap = g_pFresh->GetBitmap("ghost_pang");
 						if (pPangBitmap) {
@@ -1075,9 +1076,9 @@ FrGhostAward::FrGhostAward(void)
 	tagWTITLEFONT info;
 	memset(&info, 0, sizeof(info));
 	info.filename = &data_a91de0[1];
-	info.numPages = 1;
 	info.fontw = 16;
 	info.fonth = 16;
+	info.numPages = 1;
 	info.texw = 128;
 	info.texh = 64;
 	info.pCharSet = "1234567890ym%-.?/:,";
@@ -1328,7 +1329,7 @@ void FrGhostAward::OnDrawScore(int param) {
 	if (pGDI) {
 
 		const WRect& rect = GetRect();
-		WPoint pos(rect.x + 2.0f, rect.y + 49.0f);
+		WPoint pos = rect.TopLeft() + WPoint(2.0f, 49.0f);
 
 		pGDI->SetTextStyle(1);
 
@@ -1349,15 +1350,13 @@ void FrGhostAward::OnDrawScore(int param) {
 		WRect myLevelRect(m_myResult.m_pos.x - (float)pMyLevel->Width() - 90.0f, m_myResult.m_pos.y - 2.0f, (float)pMyLevel->Width(), (float)pMyLevel->Height());
 		pGDI->DrawTexture(pMyLevel, myLevelRect, 0xffffffff, 0);
 		g_pFresh->GetManager()->PrintText(m_myResult.m_pos, 1, m_myResult.m_name.c_str(), -1.0f, 0xffffffff);
-		WPoint myScorePos(m_myResult.m_pos.x + 100.0f, m_myResult.m_pos.y);
-		g_pFresh->GetManager()->PrintText(myScorePos, 1, MakeStr("%d", m_myResult.m_gameResult), -1.0f, 0xffffffff);
+		g_pFresh->GetManager()->PrintText(m_myResult.m_pos + WPoint(100.0f, 0.0f), 1, MakeStr("%d", m_myResult.m_gameResult), -1.0f, 0xffffffff);
 
 		const Bitmap* pGhostLevel = g_pFresh->GetBitmap(m_ghostResult.m_levelImage.c_str());
 		WRect ghostLevelRect(m_ghostResult.m_pos.x - (float)pGhostLevel->Width() - 90.0f, m_ghostResult.m_pos.y - 2.0f, (float)pGhostLevel->Width(), (float)pGhostLevel->Height());
 		pGDI->DrawTexture(pGhostLevel, ghostLevelRect, 0xffffffff, 0);
 		g_pFresh->GetManager()->PrintText(m_ghostResult.m_pos, 1, m_ghostResult.m_name.c_str(), -1.0f, 0xffffffff);
-		WPoint ghostScorePos(m_ghostResult.m_pos.x + 100.0f, m_ghostResult.m_pos.y);
-		g_pFresh->GetManager()->PrintText(ghostScorePos, 1, MakeStr("%d", m_ghostResult.m_gameResult), -1.0f, 0xffffffff);
+		g_pFresh->GetManager()->PrintText(m_ghostResult.m_pos + WPoint(100.0f, 0.0f), 1, MakeStr("%d", m_ghostResult.m_gameResult), -1.0f, 0xffffffff);
 
 		pGDI->SetTextStyle(0);
 	}

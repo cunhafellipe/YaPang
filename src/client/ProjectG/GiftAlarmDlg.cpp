@@ -205,18 +205,18 @@ void FrGiftAlarmDlg::OnGiftListInit(intptr_t param) {
 
 
 				sGiftAlarmItem* pData = new sGiftAlarmItem;
-				pData->pGift = &*it;
-
-
+				sGiftInfo& gift = *it;
+				pData->pGift = &gift;
 				pData->pLines[0] = new char[0x50];
 				pData->pLines[1] = new char[0x50];
 
-				MakeSenderMsg(it->m_message, pData->pLines);
+				MakeSenderMsg(gift.m_message, pData->pLines);
 
 				m_pGiftList->AddItem(pData);
 			}
 			m_giftCount = (int)WSingleton<CSharedDoc>::Instance()->m_giftList2.size();
 		}
+	
 	}
 }
 
@@ -275,8 +275,8 @@ void FrGiftAlarmDlg::OnGiftListOwnerDraw(int param) {
 				wsprintfA(line1, "%s", pData->pLines[0]);
 				wsprintfA(line2, "%s", pData->pLines[1]);
 
-				timeUnit = pGift->m_timeUnit;
 				typeId = pGift->m_typeId;
+				timeUnit = pGift->m_timeUnit;
 				count = pGift->m_pang;
 			}
 

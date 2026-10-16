@@ -307,7 +307,7 @@ void CTransferableItem::SetTransferableItemList(void) {
 			tradeItem.period = 0;
 			memcpy(tradeItem.stats, itClub->second.m_clubStatLevel, sizeof(tradeItem.stats));
 
-			for (int stat = 0; stat < 5; stat++) {
+			for (short stat = 0; stat < 5; stat++) {
 				for (int level = 0; level < (short)tradeItem.stats[stat]; level++) {
 					IFF_STRUCT::sEnchant *pEnchant = ItemManager()->FindEnchant(((stat | 0x340) << 20) | level);
 
@@ -421,15 +421,15 @@ void CTransferableItem::SetTransferableEtcItemList(void) {
 				if (tradeKind == 1 || tradeKind == 3) {
 					memset(&tradeItem, 0, sizeof(tradeItem));
 
-					tradeItem.typeId = itItem->second.m_typeId;
 					tradeItem.guid = itItem->second.m_serial;
+					tradeItem.typeId = itItem->second.m_typeId;
 					tradeItem.count = 1;
 					tradeItem.price = 0;
 					tradeItem.period = 0;
 					memcpy(tradeItem.stats, itItem->second.m_clubStatLevel, sizeof(tradeItem.stats));
 
 					// Sum the enchant value of every upgrade level of the five stats.
-					for (int stat = 0; stat < 5; stat++) {
+					for (short stat = 0; stat < 5; stat++) {
 						for (int level = 0; level < (short)tradeItem.stats[stat]; level++) {
 							IFF_STRUCT::sEnchant *pEnchant = ItemManager()->FindEnchant(((stat | 0x340) << 20) | level);
 
@@ -551,7 +551,7 @@ bool CTransferableItem::IsTransferableItem(unsigned long guid, sTradeItem &trade
 	for (it = m_listTransferableItem.begin(); it != m_listTransferableItem.end(); ++it) {
 		if (it->guid == guid) {
 			if (count != 0) {
-				if ((int)it->count - count < 0)
+				if (it->count - count < 0)
 					return false;
 
 				it->count -= count;

@@ -11881,7 +11881,7 @@ bool CGolfRule::OnReplayModeDlgResult(int, FrForm *) {
 // The "record replay" button: checks the replay tape item and the count of
 // saved replays, then saves the shot data and asks the server to use a tape.
 void CGolfRule::ReplayTapeCheckAndUse(void) {
-	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 10 || WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomMode == 14) {
+	if (GetGameType() == 10 || WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomMode == 14) {
 		if (WSingleton<CHelpMsg>::IsInstantiated())
 			WSingleton<CHelpMsg>::Instance()->SetHelpMsg(0x19, 0);
 		return;
@@ -11890,7 +11890,7 @@ void CGolfRule::ReplayTapeCheckAndUse(void) {
 	unsigned long typeId;
 
 	if (IsLocalContent((localContentType_t)0x4F)) {
-		typeId = WSingleton<CSharedDoc>::Instance()->m_replayPlayType == 2 ? 0x1A00004F : 0;
+		typeId = WSingleton<CSharedDoc>::Instance()->GetReplayPlayType() == 2 ? 0x1A00004F : 0;
 	} else {
 		typeId = 0x1A000000;
 	}
@@ -11918,9 +11918,9 @@ void CGolfRule::ReplayTapeCheckAndUse(void) {
 		WSingleton<CChatMsg>::Instance()->AddChatMsg("\xB1\xE2\xB7\xCF\xB5\xC8 \xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB8\xA6 10\xB0\xB3 \xB3\xD1\xB0\xD4 \xBB\xFD\xBC\xBA \xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
 	} else if (OnlinePlay()) {
 		if (IsLocalContent((localContentType_t)0x4F)) {
-			int result = 0;
+			int result;
 
-			switch (WSingleton<CSharedDoc>::Instance()->m_roomType) {
+			switch (GetGameType()) {
 			case 0:
 			case 1:
 			case 4:
@@ -11928,6 +11928,9 @@ void CGolfRule::ReplayTapeCheckAndUse(void) {
 			case 6:
 			case 7:
 				result = ShotDataSave(0, false);
+				break;
+			default:
+				result = 0;
 				break;
 			}
 

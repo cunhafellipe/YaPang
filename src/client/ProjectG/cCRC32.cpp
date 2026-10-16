@@ -59,7 +59,7 @@ unsigned long __stdcall CRC_32::CRC32ThreadProc(void *param) {
 		for (unsigned int offset = 0; offset < p->m_size; offset += CRC_BLOCK_SIZE) {
 			p->m_crc32->Calculate(p->m_buffer + offset, p->m_size - offset > CRC_BLOCK_SIZE ? CRC_BLOCK_SIZE : p->m_size - offset, crc, 0);
 			if (IsWindow(hWnd)) {
-				WPARAM percent = offset > p->m_size ? 100 : (WPARAM)((double)offset / p->m_size * 100);
+				WPARAM percent = offset > p->m_size ? 100 : (WPARAM)(100 * ((double)offset / p->m_size));
 				PostMessage(hWnd, PBM_SETPOS, percent, 0);
 			}
 		}
@@ -245,7 +245,7 @@ int CRC_MT::AddWork(const char *fileName, unsigned long crc) {
 void CRC_MT::Reset(void) {
 	m_hThread = 0;
 	std::for_each(m_tasks.begin(), m_tasks.end(), _delete());
-	m_tasks.~vector();
+	m_tasks.clear();
 }
 
 // ccrc32.cpp:398
@@ -264,18 +264,18 @@ void CRC_MT::Terminate(void) {
 // ccrc32.cpp:413
 unsigned int __stdcall ThreadCRCCheckProc(void *param) {
 	CRC_MT *pThis = (CRC_MT *)param;
+	unsigned char buffer[CRC_BLOCK_SIZE];
 	std::vector<CRC_MT::sCRC_CHKTASK *> work;
 
 	pThis->GetWork(work);
 	DWORD startTick = GetTickCount();
-	unsigned long sleepTime = pThis->GetSleepTime(); // read but unused: Calculate gets 0
+	unsigned long sleepTime = pThis->GetSleepTime();
 
 	CRC_32 crc32;
-	std::vector<CRC_MT::sCRC_CHKTASK *>::iterator it;
-	for (it = work.begin(); it != work.end(); ++it) {
+	std::vector<CRC_MT::sCRC_CHKTASK *>::iterator it = work.begin();
+	while (it != work.end()) {
 		CRC_MT::sCRC_CHKTASK *task = *it;
 		unsigned long crc = 0xFFFFFFFF;
-		unsigned char buffer[CRC_BLOCK_SIZE];
 
 		int fd = _sopen(task->m_fileName, _O_BINARY | _O_SEQUENTIAL, _SH_DENYWR);
 		if (fd != -1) {
@@ -303,6 +303,8 @@ unsigned int __stdcall ThreadCRCCheckProc(void *param) {
 				return 0;
 			}
 		}
+
+		++it;
 	}
 
 	if (IsWindow(pThis->GetParentWnd())) {

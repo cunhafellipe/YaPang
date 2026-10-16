@@ -661,7 +661,7 @@ bool FrTreasureCourse::OnInit(void) {
 	m_gaugePos[21] = WPoint(490.0f, 362.0f);
 #endif
 
-	float x = m_rect.x, y = m_rect.y;
+	WRect rect = GetRect();
 #ifdef JP_PAKS
 	for (int i = 0; i < CMapTypeAdapter::MAP_INDEX_COUNT_JP; i++) {
 #else
@@ -671,8 +671,8 @@ bool FrTreasureCourse::OnInit(void) {
 			i == 17) {
 			continue;
 		}
-		m_gaugePos[i].x += x;
-		m_gaugePos[i].y += y;
+		m_gaugePos[i].x += rect.x;
+		m_gaugePos[i].y += rect.y;
 	}
 
 	m_randomMapBitmap = g_pFresh->RegisterBitmap("map_random_small");
@@ -763,10 +763,10 @@ void FrTreasureCourse::InitCloud(void) {
 
 // treasuredlg.cpp:830
 void FrTreasureCourse::ReInitCloud(int cloudIdx) {
-	float height = GetRect().h;
+	WRect wndRect = GetRect();
 	WRect areaRect = m_pCloudArea->GetRect();
 
-	float step = height / m_cloudCount;
+	float step = wndRect.h / m_cloudCount;
 	float minY = cloudIdx * step + areaRect.y;
 	float maxY = (areaRect.y + areaRect.h) - (areaRect.y + 20.0f);
 	float scales[3] = { 0.25f, 0.5f, 1.0f };
@@ -798,6 +798,7 @@ void FrTreasureCourse::ReInitCloud(int cloudIdx) {
 
 	rect.y = y; cloud.srcRect = rect;
 
+	cloud.alpha = 0;
 	if (m_pCloudArea->GetRect().x < rect.x) {
 		cloud.m_unknown1d = true;
 		cloud.alpha = 255;
@@ -1815,7 +1816,7 @@ void FrTreasureGift::OnOwnerDraw_GridArea(int param) {
 	}
 
 	// Vertical lines.
-	for (int i = 0; i < 8; ++i) {
+	for (int i = 0; i != 8; ++i) {
 		_WRECT line4 = { rect.x + i * 65.0f + 33.0f, rect.y + 35.0f, 1.0f, rect.h - 60.0f };
 		WOverlay::DrawBox(g_view, line4, 0, data_a94af8, 0.0f);
 	}

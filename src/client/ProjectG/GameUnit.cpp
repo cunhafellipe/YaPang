@@ -70,9 +70,7 @@ bool GameUnit::Connect(void) {
 		WSingleton<WNetworkSystem>::Instance()->ForceShutDown(WNetworkSystem::NET_UNIT_MSN);
 
 		if (IsLocalContent((localContentType_t)0x5A)) {
-			WSingleton<CProjectG>::Instance()->SetMoveLoginServer(
-				WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().id,
-				WSingleton<CSharedDoc>::Instance()->m_loginServerAddress.c_str());
+			WSingleton<CProjectG>::Instance()->SetMoveLoginServer(MyId(), WSingleton<CSharedDoc>::Instance()->m_loginServerAddress.c_str());
 
 			WSingleton<CTaskManager>::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"LOGIN", 0, 0, 0);
 		}
@@ -134,7 +132,7 @@ int GameUnit::OnConnect(WReceivedPacket &packet) {
 
 	WSingleton<WNetworkSystem>::Instance()->SetParseKey(WNetworkSystem::NET_UNIT_DEFAULT, true);
 
-	std::string id = WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().id;
+	std::string id = MyId();
 	std::string server = WSingleton<CSharedDoc>::Instance()->m_loginServerAddress;
 
 	unsigned long key = 0x77DEF61B;
@@ -142,7 +140,7 @@ int GameUnit::OnConnect(WReceivedPacket &packet) {
 
 	WSendPacket send(GCT_CONNECT);
 	send.EncodeStr(id);
-	send.Encode4(WSingleton<CSharedDoc>::Instance()->m_myUID);
+	send.Encode4(MyUID());
 	send.Encode4(CLoginInfo::Instance()->AuthUid());
 	send.Encode2(0x6696);
 	send.EncodeStr(WSingleton<CSharedDoc>::Instance()->GetLoginAuthKey());
