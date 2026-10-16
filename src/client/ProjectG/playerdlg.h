@@ -18,8 +18,8 @@ class FrGaugeBar;
 class Bitmap;
 class CExhibition;
 class CPartTidList;
-enum eLvlType;
-enum PANGYA_ITEM_GROUP;
+PG_ENUM_FWD(eLvlType)
+PG_ENUM_FWD(PANGYA_ITEM_GROUP)
 struct sUserEquip;
 
 // Status bar of the player dialog (one bar per level type). Only the members
@@ -121,8 +121,8 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // playerdlg.cpp:147
 
 	void OnInitSubEquipList(intptr_t param);
-	void OnDownSubEquipList(int param);
-	void OnDrawSubEquipList(int param);
+	void OnDownSubEquipList(PG_MSGARG param);
+	void OnDrawSubEquipList(PG_MSGARG param);
 
 	virtual void OnDraw(void);     // playerdlg.cpp:629
 	virtual void OnProc(const float dt);   // playerdlg.cpp:634
@@ -268,28 +268,28 @@ protected:
 	void OnImpactBarInit(intptr_t param);    // playerdlg.cpp:1967
 	void OnSpinBarInit(intptr_t param);      // playerdlg.cpp:1973
 	void OnCurveBarInit(intptr_t param);     // playerdlg.cpp:1979
-	void OnPowerEditInit(int param);    // playerdlg.cpp:1987
-	void OnControlEditInit(int param);  // playerdlg.cpp:1992
-	void OnImpactEditInit(int param);   // playerdlg.cpp:1997
-	void OnSpinEditInit(int param);     // playerdlg.cpp:2002
-	void OnCurveEditInit(int param);    // playerdlg.cpp:2007
-	void OnPetInit(int param);          // playerdlg.cpp:1236
-	void OnCharPrevInit(int param);     // playerdlg.cpp:1241
-	void OnCharNextInit(int param);     // playerdlg.cpp:1252
-	void OnCaddiePrevInit(int param);   // playerdlg.cpp:1273
-	void OnCaddieNextInit(int param);   // playerdlg.cpp:1284
-	void OnClubPrevInit(int param);     // playerdlg.cpp:1305
-	void OnClubNextInit(int param);     // playerdlg.cpp:1316
-	void OnBallPrevInit(int param);     // playerdlg.cpp:1332
-	void OnBallNextInit(int param);     // playerdlg.cpp:1343
-	void OnRemoveInit(int param);       // playerdlg.cpp:1354
+	void OnPowerEditInit(PG_MSGARG param);    // playerdlg.cpp:1987
+	void OnControlEditInit(PG_MSGARG param);  // playerdlg.cpp:1992
+	void OnImpactEditInit(PG_MSGARG param);   // playerdlg.cpp:1997
+	void OnSpinEditInit(PG_MSGARG param);     // playerdlg.cpp:2002
+	void OnCurveEditInit(PG_MSGARG param);    // playerdlg.cpp:2007
+	void OnPetInit(PG_MSGARG param);          // playerdlg.cpp:1236
+	void OnCharPrevInit(PG_MSGARG param);     // playerdlg.cpp:1241
+	void OnCharNextInit(PG_MSGARG param);     // playerdlg.cpp:1252
+	void OnCaddiePrevInit(PG_MSGARG param);   // playerdlg.cpp:1273
+	void OnCaddieNextInit(PG_MSGARG param);   // playerdlg.cpp:1284
+	void OnClubPrevInit(PG_MSGARG param);     // playerdlg.cpp:1305
+	void OnClubNextInit(PG_MSGARG param);     // playerdlg.cpp:1316
+	void OnBallPrevInit(PG_MSGARG param);     // playerdlg.cpp:1332
+	void OnBallNextInit(PG_MSGARG param);     // playerdlg.cpp:1343
+	void OnRemoveInit(PG_MSGARG param);       // playerdlg.cpp:1354
 	void OnRemoveBtnUp(void);           // playerdlg.cpp:1360
 	void SetClub(unsigned long typeId); // playerdlg.cpp:1926
-	void OnCaddieInit(int param);       // playerdlg.cpp:1263
-	void OnCaddieLimitInit(int param);  // playerdlg.cpp:1268
-	void OnClubInit(int param);         // playerdlg.cpp:1295
-	void OnClubLimitInit(int param);    // playerdlg.cpp:1300
-	void OnBallInit(int param);         // playerdlg.cpp:1327
+	void OnCaddieInit(PG_MSGARG param);       // playerdlg.cpp:1263
+	void OnCaddieLimitInit(PG_MSGARG param);  // playerdlg.cpp:1268
+	void OnClubInit(PG_MSGARG param);         // playerdlg.cpp:1295
+	void OnClubLimitInit(PG_MSGARG param);    // playerdlg.cpp:1300
+	void OnBallInit(PG_MSGARG param);         // playerdlg.cpp:1327
 	void OnNameInit(intptr_t param);         // playerdlg.cpp:1373
 	void SetCharacter(void);            // playerdlg.cpp:1849
 	void SetCaddie(unsigned long typeId);   // playerdlg.cpp:1860

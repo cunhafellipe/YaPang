@@ -164,7 +164,7 @@ void FrAddFriendDlg::OnEditNickDown(void) {
 }
 
 // addfrienddlg.cpp:158
-bool FrAddFriendDlg::OnEditNickEnterKey(int param) {
+bool FrAddFriendDlg::OnEditNickEnterKey(PG_MSGARG param) {
 	OnCheckBtnUp();
 	return false;
 }

@@ -693,47 +693,47 @@ void FrTicketExchangeDlg::onLBtnUp_Help(void) {
 }
 
 // frticketexchangedlg.cpp:613
-void FrTicketExchangeDlg::onInit_Icon_0(int wnd) {
+void FrTicketExchangeDlg::onInit_Icon_0(PG_MSGARG wnd) {
 	Auto_Initialize(3, 1, wnd, 0x10001);
 }
 
 // frticketexchangedlg.cpp:618
-void FrTicketExchangeDlg::onInit_Icon_1(int wnd) {
+void FrTicketExchangeDlg::onInit_Icon_1(PG_MSGARG wnd) {
 	Auto_Initialize(3, 2, wnd, 0x10002);
 }
 
 // frticketexchangedlg.cpp:623
-void FrTicketExchangeDlg::onInit_Icon_2(int wnd) {
+void FrTicketExchangeDlg::onInit_Icon_2(PG_MSGARG wnd) {
 	Auto_Initialize(3, 3, wnd, 0x100001);
 }
 
 // frticketexchangedlg.cpp:628
-void FrTicketExchangeDlg::onInit_Icon_3(int wnd) {
+void FrTicketExchangeDlg::onInit_Icon_3(PG_MSGARG wnd) {
 	Auto_Initialize(3, 4, wnd, 0x100002);
 }
 
 // frticketexchangedlg.cpp:633
-void FrTicketExchangeDlg::onInit_Icon_4(int wnd) {
+void FrTicketExchangeDlg::onInit_Icon_4(PG_MSGARG wnd) {
 	Auto_Initialize(3, 5, wnd, 0x100003);
 }
 
 // frticketexchangedlg.cpp:638
-void FrTicketExchangeDlg::onInit_Icon_5(int wnd) {
+void FrTicketExchangeDlg::onInit_Icon_5(PG_MSGARG wnd) {
 	Auto_Initialize(3, 6, wnd, 0x100004);
 }
 
 // frticketexchangedlg.cpp:643
-void FrTicketExchangeDlg::onInit_Icon_6(int wnd) {
+void FrTicketExchangeDlg::onInit_Icon_6(PG_MSGARG wnd) {
 	Auto_Initialize(3, 7, wnd, 0x1000001);
 }
 
 // frticketexchangedlg.cpp:648
-void FrTicketExchangeDlg::onInit_Icon_7(int wnd) {
+void FrTicketExchangeDlg::onInit_Icon_7(PG_MSGARG wnd) {
 	Auto_Initialize(3, 8, wnd, 0x1000002);
 }
 
 // frticketexchangedlg.cpp:656
-void FrTicketExchangeDlg::onInit_ItemE0(int wnd) {
+void FrTicketExchangeDlg::onInit_ItemE0(PG_MSGARG wnd) {
 	Auto_Initialize(0, 0, wnd, 0x10001);
 }
 
@@ -746,17 +746,17 @@ void FrTicketExchangeDlg::onLBtnUp_ItemE0(void) {
 }
 
 // frticketexchangedlg.cpp:671
-void FrTicketExchangeDlg::onInit_Edit0E0(int wnd) {
+void FrTicketExchangeDlg::onInit_Edit0E0(PG_MSGARG wnd) {
 	Auto_Initialize(1, 0, wnd, 0x10001);
 }
 
 // frticketexchangedlg.cpp:676
-void FrTicketExchangeDlg::onInit_Edit1E0(int wnd) {
+void FrTicketExchangeDlg::onInit_Edit1E0(PG_MSGARG wnd) {
 	Auto_Initialize(1, 1, wnd, 0x10001);
 }
 
 // frticketexchangedlg.cpp:683
-void FrTicketExchangeDlg::onInit_ItemE1(int wnd) {
+void FrTicketExchangeDlg::onInit_ItemE1(PG_MSGARG wnd) {
 	Auto_Initialize(0, 0, wnd, 0x10002);
 }
 
@@ -769,17 +769,17 @@ void FrTicketExchangeDlg::onLBtnUp_ItemE1(void) {
 }
 
 // frticketexchangedlg.cpp:698
-void FrTicketExchangeDlg::onInit_Edit0E1(int wnd) {
+void FrTicketExchangeDlg::onInit_Edit0E1(PG_MSGARG wnd) {
 	Auto_Initialize(1, 0, wnd, 0x10002);
 }
 
 // frticketexchangedlg.cpp:703
-void FrTicketExchangeDlg::onInit_Edit1E1(int wnd) {
+void FrTicketExchangeDlg::onInit_Edit1E1(PG_MSGARG wnd) {
 	Auto_Initialize(1, 1, wnd, 0x10002);
 }
 
 // frticketexchangedlg.cpp:711
-void FrTicketExchangeDlg::onInit_ItemG0(int wnd) {
+void FrTicketExchangeDlg::onInit_ItemG0(PG_MSGARG wnd) {
 	Auto_Initialize(0, 0, wnd, 0x100001);
 }
 
@@ -792,12 +792,12 @@ void FrTicketExchangeDlg::onLBtnUp_ItemG0(void) {
 }
 
 // frticketexchangedlg.cpp:726
-void FrTicketExchangeDlg::onInit_Edit0G0(int wnd) {
+void FrTicketExchangeDlg::onInit_Edit0G0(PG_MSGARG wnd) {
 	Auto_Initialize(1, 0, wnd, 0x100001);
 }
 
 // frticketexchangedlg.cpp:733
-void FrTicketExchangeDlg::onInit_ItemG1(int wnd) {
+void FrTicketExchangeDlg::onInit_ItemG1(PG_MSGARG wnd) {
 	Auto_Initialize(0, 0, wnd, 0x100002);
 }
 
@@ -810,12 +810,12 @@ void FrTicketExchangeDlg::onLBtnUp_ItemG1(void) {
 }
 
 // frticketexchangedlg.cpp:748
-void FrTicketExchangeDlg::onInit_Edit0G1(int wnd) {
+void FrTicketExchangeDlg::onInit_Edit0G1(PG_MSGARG wnd) {
 	Auto_Initialize(1, 0, wnd, 0x100002);
 }
 
 // frticketexchangedlg.cpp:755
-void FrTicketExchangeDlg::onInit_ItemG2(int wnd) {
+void FrTicketExchangeDlg::onInit_ItemG2(PG_MSGARG wnd) {
 	Auto_Initialize(0, 0, wnd, 0x100003);
 }
 
@@ -828,12 +828,12 @@ void FrTicketExchangeDlg::onLBtnUp_ItemG2(void) {
 }
 
 // frticketexchangedlg.cpp:770
-void FrTicketExchangeDlg::onInit_Edit0G2(int wnd) {
+void FrTicketExchangeDlg::onInit_Edit0G2(PG_MSGARG wnd) {
 	Auto_Initialize(1, 0, wnd, 0x100003);
 }
 
 // frticketexchangedlg.cpp:777
-void FrTicketExchangeDlg::onInit_ItemG3(int wnd) {
+void FrTicketExchangeDlg::onInit_ItemG3(PG_MSGARG wnd) {
 	Auto_Initialize(0, 0, wnd, 0x100004);
 }
 
@@ -846,12 +846,12 @@ void FrTicketExchangeDlg::onLBtnUp_ItemG3(void) {
 }
 
 // frticketexchangedlg.cpp:792
-void FrTicketExchangeDlg::onInit_Edit0G3(int wnd) {
+void FrTicketExchangeDlg::onInit_Edit0G3(PG_MSGARG wnd) {
 	Auto_Initialize(1, 0, wnd, 0x100004);
 }
 
 // frticketexchangedlg.cpp:800
-void FrTicketExchangeDlg::onInit_ItemI0(int wnd) {
+void FrTicketExchangeDlg::onInit_ItemI0(PG_MSGARG wnd) {
 	Auto_Initialize(0, 0, wnd, 0x1000001);
 }
 
@@ -864,7 +864,7 @@ void FrTicketExchangeDlg::onLBtnUp_ItemI0(void) {
 }
 
 // frticketexchangedlg.cpp:817
-void FrTicketExchangeDlg::onInit_Item_I1(int wnd) {
+void FrTicketExchangeDlg::onInit_Item_I1(PG_MSGARG wnd) {
 	Auto_Initialize(0, 0, wnd, 0x1000002);
 }
 
@@ -877,50 +877,50 @@ void FrTicketExchangeDlg::onLBtnUp_ItemI1(void) {
 }
 
 // frticketexchangedlg.cpp:834
-void FrTicketExchangeDlg::onInit_Number_0(int wnd) {
+void FrTicketExchangeDlg::onInit_Number_0(PG_MSGARG wnd) {
 	if (m_pNumber[0] == 0) {
 		m_pNumber[0] = DYNAMIC_CAST(FrViewer, wnd);
 	}
 }
 
 // frticketexchangedlg.cpp:840
-void FrTicketExchangeDlg::onInit_Number_1(int wnd) {
+void FrTicketExchangeDlg::onInit_Number_1(PG_MSGARG wnd) {
 	if (m_pNumber[1] == 0) {
 		m_pNumber[1] = DYNAMIC_CAST(FrViewer, wnd);
 	}
 }
 
 // frticketexchangedlg.cpp:846
-void FrTicketExchangeDlg::onInit_Number_2(int wnd) {
+void FrTicketExchangeDlg::onInit_Number_2(PG_MSGARG wnd) {
 	if (m_pNumber[2] == 0) {
 		m_pNumber[2] = DYNAMIC_CAST(FrViewer, wnd);
 	}
 }
 
 // frticketexchangedlg.cpp:852
-void FrTicketExchangeDlg::onInit_Number_3(int wnd) {
+void FrTicketExchangeDlg::onInit_Number_3(PG_MSGARG wnd) {
 	if (m_pNumber[3] == 0) {
 		m_pNumber[3] = DYNAMIC_CAST(FrViewer, wnd);
 	}
 }
 
 // frticketexchangedlg.cpp:860
-void FrTicketExchangeDlg::onInit_View0(int wnd) {
+void FrTicketExchangeDlg::onInit_View0(PG_MSGARG wnd) {
 	Auto_Initialize(2, 0, wnd, 0x100001);
 }
 
 // frticketexchangedlg.cpp:865
-void FrTicketExchangeDlg::onInit_View1(int wnd) {
+void FrTicketExchangeDlg::onInit_View1(PG_MSGARG wnd) {
 	Auto_Initialize(2, 0, wnd, 0x100002);
 }
 
 // frticketexchangedlg.cpp:870
-void FrTicketExchangeDlg::onInit_View2(int wnd) {
+void FrTicketExchangeDlg::onInit_View2(PG_MSGARG wnd) {
 	Auto_Initialize(2, 0, wnd, 0x100003);
 }
 
 // frticketexchangedlg.cpp:875
-void FrTicketExchangeDlg::onInit_View3(int wnd) {
+void FrTicketExchangeDlg::onInit_View3(PG_MSGARG wnd) {
 	Auto_Initialize(2, 0, wnd, 0x100004);
 }
 

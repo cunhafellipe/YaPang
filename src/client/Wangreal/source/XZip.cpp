@@ -450,8 +450,8 @@ class TTreeState
   int base_dist[D_CODES];
   // First normalized distance for each code (0 = distance of 1)
 
-  uch far l_buf[LIT_BUFSIZE];  // buffer for literals/lengths
-  ush far d_buf[DIST_BUFSIZE]; // buffer for distances
+  uch l_buf[LIT_BUFSIZE];  // buffer for literals/lengths
+  ush d_buf[DIST_BUFSIZE]; // buffer for distances
 
   uch flag_buf[(LIT_BUFSIZE/8)];
   // flag_buf is a bit array distinguishing literals from lengths in
@@ -596,7 +596,7 @@ typedef struct zlist {
   int mark;                     // Marker for files to operate on
   int trash;                    // Marker for files to delete
   int dosflag;                  // Set to force MSDOS file attributes
-  struct zlist far *nxt;        // Pointer to next header in list
+  struct zlist *nxt;        // Pointer to next header in list
 } TZipFileInfo;
 CHECK_SIZE(iztimes, 0xc);
 CHECK_SIZE(TZipFileInfo, 0x360);
@@ -1201,7 +1201,7 @@ void send_all_trees(TState &state,int lcodes, int dcodes, int blcodes)
 /* ===========================================================================
  * Determine the best encoding for the current block: dynamic trees, static
  * trees or store, and output the encoded block to the zip file. This function
- * returns the total compressed length (in bytes) for the file so far.
+ * returns the total compressed length (in bytes) for the file so .
  */
 // xzip.cpp:1200
 ulg flush_block(TState &state,char *buf, ulg stored_len, int eof)
@@ -1639,10 +1639,10 @@ void lm_init (TState &state, int pack_level, ush *flags)
 int longest_match(TState &state,IPos cur_match)
 {
     unsigned chain_length = state.ds.max_chain_length;   /* max hash chain length */
-    register uch far *scan = state.ds.window + state.ds.strstart; /* current string */
-    register uch far *match;                    /* matched string */
+    register uch *scan = state.ds.window + state.ds.strstart; /* current string */
+    register uch *match;                    /* matched string */
     register int len;                           /* length of current match */
-    int best_len = state.ds.prev_length;                 /* best match length so far */
+    int best_len = state.ds.prev_length;                 /* best match length so */
     IPos limit = state.ds.strstart > (IPos)MAX_DIST ? state.ds.strstart - (IPos)MAX_DIST : NIL;
     /* Stop when cur_match becomes <= limit. To simplify the code,
      * we prevent matches with the string of window index 0.
@@ -1654,7 +1654,7 @@ int longest_match(TState &state,IPos cur_match)
 
 
 
-    register uch far *strend = state.ds.window + state.ds.strstart + MAX_MATCH;
+    register uch *strend = state.ds.window + state.ds.strstart + MAX_MATCH;
     register uch scan_end1  = scan[best_len-1];
     register uch scan_end   = scan[best_len];
 
@@ -2000,7 +2000,7 @@ ulg deflate(TState &state)
             state.ds.strstart++;
             state.ds.lookahead--;
         }
-//        Assert(state,strstart <= isize && lookahead <= isize, "a bit too far");
+//        Assert(state,strstart <= isize && lookahead <= isize, "a bit too ");
 
         /* Make sure that we always have enough lookahead, except
          * at the end of the input file. We need MAX_MATCH bytes
@@ -2026,7 +2026,7 @@ ulg deflate(TState &state)
 
 
 // xzip.cpp:2008
-int putlocal(struct zlist far *z, WRITEFUNC wfunc,void *param)
+int putlocal(struct zlist *z, WRITEFUNC wfunc,void *param)
 { // Write a local header described by *z to file *f.  Return a ZE_ error code.
   PUTLG(LOCSIG, f);
   PUTSH(z->ver, f);
@@ -2048,7 +2048,7 @@ int putlocal(struct zlist far *z, WRITEFUNC wfunc,void *param)
 }
 
 // xzip.cpp:2029
-int putextended(struct zlist far *z, WRITEFUNC wfunc, void *param)
+int putextended(struct zlist *z, WRITEFUNC wfunc, void *param)
 { // Write an extended local header described by *z to file *f. Returns a ZE_ code
   PUTLG(EXTLOCSIG, f);
   PUTLG(z->crc, f);
@@ -2058,7 +2058,7 @@ int putextended(struct zlist far *z, WRITEFUNC wfunc, void *param)
 }
 
 // xzip.cpp:2038
-int putcentral(struct zlist far *z, WRITEFUNC wfunc, void *param)
+int putcentral(struct zlist *z, WRITEFUNC wfunc, void *param)
 { // Write a central header entry of *z to file *f. Returns a ZE_ code.
   PUTLG(CENSIG, f);
   PUTSH(z->vem, f);
@@ -2291,7 +2291,7 @@ class TZip
   HANDLE hmapout;           // otherwise, we'll write here (for memmap)
   unsigned ooffset;         // for hfout, this is where the pointer was initially
   ZRESULT oerr;             // did a write operation give rise to an error?
-  unsigned writ;            // how far have we written. This is maintained by Add, not write(), to avoid confusion over seeks
+  unsigned writ;            // how have we written. This is maintained by Add, not write(), to avoid confusion over seeks
   bool ocanseek;            // can we seek?
   char *obuf;               // this is where we've locked mmap to view.
   unsigned int opos;        // current pos in the mmap

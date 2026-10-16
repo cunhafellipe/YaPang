@@ -54,12 +54,12 @@ protected:
 	void OnCloseInit(intptr_t);   // equipdlg.cpp:300
 	void OnCloseBtnUp(void);   // equipdlg.cpp:304
 	void OnWarehouseInit(intptr_t);   // equipdlg.cpp:309
-	void OnWarehouseOwnerDraw(int);
+	void OnWarehouseOwnerDraw(PG_MSGARG);
 	void OnWarehouseBtnDown(void);   // equipdlg.cpp:405
 	void OnWarehouseRBtnDown(void);   // equipdlg.cpp:411
 	void OnWarehouseDblClick(void);   // equipdlg.cpp:426
 	void OnItemSlotInit(intptr_t);   // equipdlg.cpp:443
-	void OnItemSlotOwnerDraw(int);
+	void OnItemSlotOwnerDraw(PG_MSGARG);
 	void OnItemSlotDblClick(void);   // equipdlg.cpp:526
 	void OpenInformation(unsigned long typeId);
 	void EquipItem(FrListItem* pItem);

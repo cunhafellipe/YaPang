@@ -928,7 +928,7 @@ void CTutorialMain::DisableUnderBarButtons(void) {
 }
 
 // tutorialmain.cpp:1007
-void CTutorialMain::OnTutorialMainInit(int) {
+void CTutorialMain::OnTutorialMainInit(PG_MSGARG) {
 	SetTimeVariableBGM();
 	TurnOff3DBackground();
 }
@@ -944,12 +944,12 @@ void CTutorialMain::OnTutorialMainFinish(void) {
 }
 
 // tutorialmain.cpp:1024
-void CTutorialMain::OnTutorialAreaPipin(int param) {
+void CTutorialMain::OnTutorialAreaPipin(PG_MSGARG param) {
 	m_pipinArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // tutorialmain.cpp:1029
-void CTutorialMain::OnTutorialAreaPipinOwnerDraw(int) {
+void CTutorialMain::OnTutorialAreaPipinOwnerDraw(PG_MSGARG) {
 	if (!m_bongdariShop[2] && !WSingleton<CRankingInfo>::Instance()->GetDlg() && !USERINFODLG()) {
 		if (m_pet)
 			m_pet->Display(0.0f, 0.0f);
@@ -957,7 +957,7 @@ void CTutorialMain::OnTutorialAreaPipinOwnerDraw(int) {
 }
 
 // tutorialmain.cpp:1040
-void CTutorialMain::OnTutorialListInit(int param) {
+void CTutorialMain::OnTutorialListInit(PG_MSGARG param) {
 	m_tutorialListBox = DYNAMIC_CAST(FrListBox, param);
 	if (m_tutorialListBox == 0)
 		return;
@@ -976,7 +976,7 @@ void CTutorialMain::OnTutorialListInit(int param) {
 }
 
 // tutorialmain.cpp:1062
-void CTutorialMain::OnTutorialListOwnerDraw(int param) {
+void CTutorialMain::OnTutorialListOwnerDraw(PG_MSGARG param) {
 	FrListItem *item = (FrListItem *)param;
 	if (item == 0)
 		return;

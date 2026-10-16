@@ -413,13 +413,25 @@ void CGhostDocument::RecordHoleData(const MsgObject &msg) {
 
 	switch (msg.m_msg) {
 	case GHOST::CHANGE_WEATHER:
+#ifdef PG_PORT
+		{ int pg_params[1] = {(int)msg.m_param1}; pHoleData->RecordAct(GHOST::CHANGE_WEATHER, 0, pg_params, 1); }
+#else
 		pHoleData->RecordAct(GHOST::CHANGE_WEATHER, 0, &msg.m_param1, 1);
+#endif
 		break;
 	case GHOST::CHANGE_WIND:
+#ifdef PG_PORT
+		{ int pg_params[4] = {(int)msg.m_param1, (int)msg.m_param2, (int)msg.m_param3, (int)msg.m_param4}; pHoleData->RecordAct(GHOST::CHANGE_WIND, 0, pg_params, 4); }
+#else
 		pHoleData->RecordAct(GHOST::CHANGE_WIND, 0, &msg.m_param1, 4);
+#endif
 		break;
 	case GHOST::CHANGE_DIRECTION:
+#ifdef PG_PORT
+		{ int pg_params[1] = {(int)msg.m_param1}; pHoleData->RecordAct(GHOST::CHANGE_DIRECTION, 1, pg_params, 1); }
+#else
 		pHoleData->RecordAct(GHOST::CHANGE_DIRECTION, 1, &msg.m_param1, 1);
+#endif
 		break;
 	case GHOST::BALL_DROP: {
 		WVector *pPos = (WVector *)msg.m_param1;
@@ -432,7 +444,11 @@ void CGhostDocument::RecordHoleData(const MsgObject &msg) {
 		break;
 	}
 	case GHOST::USE_ITEM:
+#ifdef PG_PORT
+		{ int pg_params[2] = {(int)msg.m_param1, (int)msg.m_param2}; pHoleData->RecordAct(GHOST::USE_ITEM, 2, pg_params, 2); }
+#else
 		pHoleData->RecordAct(GHOST::USE_ITEM, 2, &msg.m_param1, 2);
+#endif
 		// Using this item takes the last shot back.
 		if (msg.m_param1 == 0x1800000E) {
 			pHoleData->RollBackShotData(1);
@@ -440,7 +456,11 @@ void CGhostDocument::RecordHoleData(const MsgObject &msg) {
 		}
 		break;
 	case 6: // the power shot action (no GHOST:: name known)
+#ifdef PG_PORT
+		{ int pg_params[1] = {(int)msg.m_param1}; pHoleData->RecordAct(6, 0, pg_params, 1); }
+#else
 		pHoleData->RecordAct(6, 0, &msg.m_param1, 1);
+#endif
 		break;
 	case GHOST::SAVE_SHOT_DATA: {
 		const sShotProtocol *pProtocol = (const sShotProtocol *)msg.m_param1;

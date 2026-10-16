@@ -31,7 +31,7 @@ public:
 
 protected:
 
-	void OnCurrentItemOwnerDraw(int param);
+	void OnCurrentItemOwnerDraw(PG_MSGARG param);
 
 private:
 	int m_itemCounts[4];        // 0x110 (OnInit: counts of items 0x1A000045, 0x1A000044, 0x1A000047, 0x1A000046)

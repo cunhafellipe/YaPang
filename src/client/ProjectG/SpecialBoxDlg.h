@@ -43,7 +43,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnNotifyAreaInit(intptr_t param);
-	void OnNotifyAreaOwnerdraw(int param);
+	void OnNotifyAreaOwnerdraw(PG_MSGARG param);
 	void OnExplaneEditInit(intptr_t param);
 	void OnProgressBarInit(intptr_t param);
 

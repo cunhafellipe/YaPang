@@ -150,7 +150,7 @@ FrQuestInfoDlg::~FrQuestInfoDlg(void) {
 }
 
 // questinfodlg.cpp:96
-void FrQuestInfoDlg::OnQuestInfoInit(int) {
+void FrQuestInfoDlg::OnQuestInfoInit(PG_MSGARG) {
 }
 
 // questinfodlg.cpp:101
@@ -166,7 +166,7 @@ void FrQuestInfoDlg::OnRewardItemListInit(intptr_t param) {
 }
 
 // questinfodlg.cpp:115
-void FrQuestInfoDlg::OnRewardItemListOwnerDraw(int param) {
+void FrQuestInfoDlg::OnRewardItemListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem) {
 
@@ -400,7 +400,7 @@ void FrQuestGift::OnGiftListInit(intptr_t param) {
 }
 
 // questinfodlg.cpp:338
-void FrQuestGift::OnGiftListOwnerDraw(int param) {
+void FrQuestGift::OnGiftListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem) {
 

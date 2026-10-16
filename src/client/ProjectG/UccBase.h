@@ -13,7 +13,7 @@
 
 class FrArea;
 class FrUccDrawDlg;
-enum eButton;   // declared with CInputManager (LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON)
+PG_ENUM_FWD(eButton)   // declared with CInputManager (LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON)
 
 // One undo step: the area a stroke changed, before and after it.
 struct sDrawHistory {

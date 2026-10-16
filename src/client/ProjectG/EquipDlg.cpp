@@ -293,7 +293,7 @@ void FrEquipDlg::OnWarehouseInit(intptr_t param) {
 }
 
 // equipdlg.cpp:320
-void FrEquipDlg::OnWarehouseOwnerDraw(int param) {
+void FrEquipDlg::OnWarehouseOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (!pItem)
 		return;
@@ -387,7 +387,7 @@ void FrEquipDlg::OnItemSlotInit(intptr_t param) {
 }
 
 // equipdlg.cpp:448
-void FrEquipDlg::OnItemSlotOwnerDraw(int param) {
+void FrEquipDlg::OnItemSlotOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (!pItem)
 		return;

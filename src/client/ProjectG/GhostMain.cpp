@@ -641,7 +641,7 @@ void CGhostMain::OnInitGhostFinish(void) {
 }
 
 // ghostmain.cpp:833
-void CGhostMain::OnInitStart(int) {
+void CGhostMain::OnInitStart(PG_MSGARG) {
 }
 
 // ghostmain.cpp:838
@@ -696,7 +696,7 @@ void CGhostMain::OnDownStart(void) {
 }
 
 // ghostmain.cpp:895
-void CGhostMain::OnInitPlayerZone(int param) {
+void CGhostMain::OnInitPlayerZone(PG_MSGARG param) {
 	m_areas[0] = DYNAMIC_CAST(FrArea, param);
 
 	FrArea *area = m_areas[0];
@@ -722,7 +722,7 @@ void CGhostMain::OnDrawPlayerZone(void) {
 }
 
 // ghostmain.cpp:922
-void CGhostMain::OnInitSelectCourse(int param) {
+void CGhostMain::OnInitSelectCourse(PG_MSGARG param) {
 	FrButton *button = DYNAMIC_CAST(FrButton, param);
 	CGhostDocument *doc = CGhostManager::Instance()->GetDocument();
 	if (doc == 0)
@@ -748,12 +748,12 @@ void CGhostMain::OnDownSelectCourse(void) {
 }
 
 // ghostmain.cpp:951
-void CGhostMain::OnInitUserEquip(int param) {
+void CGhostMain::OnInitUserEquip(PG_MSGARG param) {
 	m_userEquip = DYNAMIC_CAST(FrListBox, param);
 }
 
 // ghostmain.cpp:957
-void CGhostMain::OnDrawUserEquip(int param) {
+void CGhostMain::OnDrawUserEquip(PG_MSGARG param) {
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 	FrListItem *pItem = (FrListItem *)param;
 	if (pItem == 0 || pGDI == 0)
@@ -995,12 +995,12 @@ bool CGhostMain::IsFocusToMain(void) {
 }
 
 // ghostmain.cpp:1241
-void CGhostMain::OnInitGhostEquip(int param) {
+void CGhostMain::OnInitGhostEquip(PG_MSGARG param) {
 	m_ghostEquip = DYNAMIC_CAST(FrListBox, param);
 }
 
 // ghostmain.cpp:1247
-void CGhostMain::OnDrawGhostEquip(int param) {
+void CGhostMain::OnDrawGhostEquip(PG_MSGARG param) {
 	if (!m_showUserStat)
 		return;
 
@@ -1030,7 +1030,7 @@ void CGhostMain::OnDrawGhostEquip(int param) {
 }
 
 // ghostmain.cpp:1297
-void CGhostMain::OnInitGhostZone(int param) {
+void CGhostMain::OnInitGhostZone(PG_MSGARG param) {
 	m_areas[1] = DYNAMIC_CAST(FrArea, param);
 
 	FrArea *area = m_areas[1];
@@ -1058,7 +1058,7 @@ void CGhostMain::OnDrawGhostZone(void) {
 }
 
 // ghostmain.cpp:1336
-void CGhostMain::OnInitTipZone(int param) {
+void CGhostMain::OnInitTipZone(PG_MSGARG param) {
 	m_areas[4] = DYNAMIC_CAST(FrArea, param);
 
 	m_tipAlpha = 0.0f;
@@ -1105,7 +1105,7 @@ void CGhostMain::OnProcTip(float dt) {
 }
 
 // ghostmain.cpp:1399
-void CGhostMain::OnInitAreaUserStat(int param) {
+void CGhostMain::OnInitAreaUserStat(PG_MSGARG param) {
 	m_areas[2] = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -1141,7 +1141,7 @@ void CGhostMain::OnDrawAreaUserStat(void) {
 }
 
 // ghostmain.cpp:1435
-void CGhostMain::OnInitAreaGhostStat(int param) {
+void CGhostMain::OnInitAreaGhostStat(PG_MSGARG param) {
 	m_areas[3] = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -1179,7 +1179,7 @@ void CGhostMain::OnDrawAreaGhostStat(void) {
 }
 
 // ghostmain.cpp:1477
-void CGhostMain::OnInitGhostMain(int) {
+void CGhostMain::OnInitGhostMain(PG_MSGARG) {
 	SetTimeVariableBGM();
 	TurnOff3DBackground();
 }

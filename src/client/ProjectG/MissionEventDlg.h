@@ -42,9 +42,9 @@ protected:
 	void OnInitTermGiftButton(intptr_t param);
 	void OnLButtonDownTermGiftButton(void);
 	void OnInitMissionClearArea(intptr_t param);
-	void OnOwnerDrawMissionClearArea(int param);
+	void OnOwnerDrawMissionClearArea(PG_MSGARG param);
 	void OnInitCourseClearArea(intptr_t param);
-	void OnOwnerDrawCourseClearArea(int param);
+	void OnOwnerDrawCourseClearArea(PG_MSGARG param);
 	void OnHoverOnCourseClearArea(intptr_t param);
 	void OnHoverOffCourseClearArea(intptr_t param);
 

@@ -2278,7 +2278,7 @@ void FrAwardForm::OnUserListInit(intptr_t param) {
 // Draws a row of the award list: the player's name and scores, the team
 // totals in a team game, then the bonus icons (item boost, 20% bonus,
 // mascot bonus, or the "zero" mark when the row has none).
-void FrAwardForm::OnUserListOwnerDraw(int param) {
+void FrAwardForm::OnUserListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == 0)
 		return;
@@ -2439,13 +2439,13 @@ void FrAwardForm::OnUserListOwnerDraw(int param) {
 }
 
 // scoreboard.cpp:3054
-void FrAwardForm::OnTab0Init(int param) {
+void FrAwardForm::OnTab0Init(PG_MSGARG param) {
 	if ((__rtti_obj = (void*)param) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrArea::m_RTTI)) {
 	}
 }
 
 // scoreboard.cpp:3061
-void FrAwardForm::OnTab1Init(int param) {
+void FrAwardForm::OnTab1Init(PG_MSGARG param) {
 	if ((__rtti_obj = (void*)param) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&FrArea::m_RTTI)) {
 	}
 }
@@ -2609,7 +2609,7 @@ void FrAwardForm::OnLadderPoint1Init(intptr_t param) {
 }
 
 // scoreboard.cpp:3228
-void FrAwardForm::OnNextLevelTextInit(int param) {
+void FrAwardForm::OnNextLevelTextInit(PG_MSGARG param) {
 	if (!m_pNextLevelText) {
 		m_pNextLevelText = DYNAMIC_CAST(FrEdit, param);
 	}
@@ -3946,7 +3946,7 @@ void FrScoreForm::OnParListOwnerDraw(intptr_t param) {
 }
 
 // scoreboard.cpp:4984
-void FrScoreForm::OnPangListInit(int param) {
+void FrScoreForm::OnPangListInit(PG_MSGARG param) {
 	if (CSharedDoc::Instance()->m_roomType == 7) {
 		m_pPangList = DYNAMIC_CAST(FrListBox, param);
 		m_pPangList->AddItem(0);
@@ -3964,7 +3964,7 @@ void FrScoreForm::OnBlankPanel01Init(intptr_t param) {
 }
 
 // scoreboard.cpp:5018
-void FrScoreForm::OnBlankPanel01OwnerDraw(int param) {
+void FrScoreForm::OnBlankPanel01OwnerDraw(PG_MSGARG param) {
 	if (m_pBlankPanel01) {
 		m_pBlankPanel01->SetVisible(m_bShowBlankPanel);
 	}
@@ -3979,7 +3979,7 @@ void FrScoreForm::OnBlankPanel02Init(intptr_t param) {
 }
 
 // scoreboard.cpp:5036
-void FrScoreForm::OnBlankPanel02OwnerDraw(int param) {
+void FrScoreForm::OnBlankPanel02OwnerDraw(PG_MSGARG param) {
 	if (m_pBlankPanel02) {
 		m_pBlankPanel02->SetVisible(m_bShowBlankPanel);
 	}
@@ -3994,14 +3994,14 @@ void FrScoreForm::OnBlankPanel03Init(intptr_t param) {
 }
 
 // scoreboard.cpp:5054
-void FrScoreForm::OnBlankPanel03OwnerDraw(int param) {
+void FrScoreForm::OnBlankPanel03OwnerDraw(PG_MSGARG param) {
 	if (m_pBlankPanel03) {
 		m_pBlankPanel03->SetVisible(m_bShowBlankPanel);
 	}
 }
 
 // scoreboard.cpp:5074
-void FrScoreForm::OnPangListOwnerDraw(int param) {
+void FrScoreForm::OnPangListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == 0) {
 		return;
@@ -4336,7 +4336,7 @@ void FrScoreForm::OnTotalListInit(intptr_t param) {
 }
 
 // scoreboard.cpp:5649
-void FrScoreForm::OnTotalListOwnerDraw(int param) {
+void FrScoreForm::OnTotalListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == 0)
 		return;
@@ -5199,7 +5199,7 @@ void FrScoreForm::OnDrawLinesInit(intptr_t param) {
 }
 
 // scoreboard.cpp:6697
-void FrScoreForm::OnDrawLinesOwnerDraw(int param) {
+void FrScoreForm::OnDrawLinesOwnerDraw(PG_MSGARG param) {
 	WPoint a, b;
 
 	// The vertical lines between the hole columns
@@ -5521,7 +5521,7 @@ void FrMatchItems::OnViewInit(intptr_t param) {
 }
 
 // scoreboard.cpp:7092
-void FrMatchItems::OnViewOwnerDraw(int param) {
+void FrMatchItems::OnViewOwnerDraw(PG_MSGARG param) {
 	unsigned long* pItems = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[MyIndex()].m_equipItem;
 
 	WRect rect;

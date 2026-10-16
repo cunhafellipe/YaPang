@@ -93,7 +93,7 @@ sFRESH_ENTRY FrAwardDlg::_MsgEntries[] = {
 };
 
 // awarddlg.cpp:55
-void FrAwardDlg::OnGoldStaticInit(int param) {
+void FrAwardDlg::OnGoldStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 
 	if (pStatic) {
@@ -120,7 +120,7 @@ void FrAwardDlg::OnGoldStaticInit(int param) {
 }
 
 // awarddlg.cpp:84
-void FrAwardDlg::OnSilverStaticInit(int param) {
+void FrAwardDlg::OnSilverStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 
 	if (pStatic) {
@@ -159,7 +159,7 @@ void FrAwardDlg::OnSilverStaticInit(int param) {
 }
 
 // awarddlg.cpp:128
-void FrAwardDlg::OnBronzeStaticInit(int param) {
+void FrAwardDlg::OnBronzeStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 
 	if (pStatic) {
@@ -339,13 +339,13 @@ int FrAwardDlg::GetMedalIndex(unsigned long uid) {
 }
 
 // awarddlg.cpp:395
-void FrAwardDlg::OnWinner1Init(int param) {
+void FrAwardDlg::OnWinner1Init(PG_MSGARG param) {
 	m_pWinnerArea[0] = DYNAMIC_CAST(FrArea, param);
 	m_pWinnerArea[0]->m_nFlags.Enable(0x1000);
 }
 
 // awarddlg.cpp:401
-void FrAwardDlg::OnWinner1OwnerDraw(int param) {
+void FrAwardDlg::OnWinner1OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -374,13 +374,13 @@ void FrAwardDlg::OnWinner1OwnerDraw(int param) {
 }
 
 // awarddlg.cpp:441
-void FrAwardDlg::OnWinner2Init(int param) {
+void FrAwardDlg::OnWinner2Init(PG_MSGARG param) {
 	m_pWinnerArea[1] = DYNAMIC_CAST(FrArea, param);
 	m_pWinnerArea[1]->m_nFlags.Enable(0x1000);
 }
 
 // awarddlg.cpp:447
-void FrAwardDlg::OnWinner2OwnerDraw(int param) {
+void FrAwardDlg::OnWinner2OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -409,13 +409,13 @@ void FrAwardDlg::OnWinner2OwnerDraw(int param) {
 }
 
 // awarddlg.cpp:485
-void FrAwardDlg::OnWinner3Init(int param) {
+void FrAwardDlg::OnWinner3Init(PG_MSGARG param) {
 	m_pWinnerArea[2] = DYNAMIC_CAST(FrArea, param);
 	m_pWinnerArea[2]->m_nFlags.Enable(0x1000);
 }
 
 // awarddlg.cpp:491
-void FrAwardDlg::OnWinner3OwnerDraw(int param) {
+void FrAwardDlg::OnWinner3OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -444,13 +444,13 @@ void FrAwardDlg::OnWinner3OwnerDraw(int param) {
 }
 
 // awarddlg.cpp:529
-void FrAwardDlg::OnWinner4Init(int param) {
+void FrAwardDlg::OnWinner4Init(PG_MSGARG param) {
 	m_pWinnerArea[3] = DYNAMIC_CAST(FrArea, param);
 	m_pWinnerArea[3]->m_nFlags.Enable(0x1000);
 }
 
 // awarddlg.cpp:535
-void FrAwardDlg::OnWinner4OwnerDraw(int param) {
+void FrAwardDlg::OnWinner4OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -479,13 +479,13 @@ void FrAwardDlg::OnWinner4OwnerDraw(int param) {
 }
 
 // awarddlg.cpp:573
-void FrAwardDlg::OnWinner5Init(int param) {
+void FrAwardDlg::OnWinner5Init(PG_MSGARG param) {
 	m_pWinnerArea[4] = DYNAMIC_CAST(FrArea, param);
 	m_pWinnerArea[4]->m_nFlags.Enable(0x1000);
 }
 
 // awarddlg.cpp:579
-void FrAwardDlg::OnWinner5OwnerDraw(int param) {
+void FrAwardDlg::OnWinner5OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -514,13 +514,13 @@ void FrAwardDlg::OnWinner5OwnerDraw(int param) {
 }
 
 // awarddlg.cpp:617
-void FrAwardDlg::OnWinner6Init(int param) {
+void FrAwardDlg::OnWinner6Init(PG_MSGARG param) {
 	m_pWinnerArea[5] = DYNAMIC_CAST(FrArea, param);
 	m_pWinnerArea[5]->m_nFlags.Enable(0x1000);
 }
 
 // awarddlg.cpp:623
-void FrAwardDlg::OnWinner6OwnerDraw(int param) {
+void FrAwardDlg::OnWinner6OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -549,12 +549,12 @@ void FrAwardDlg::OnWinner6OwnerDraw(int param) {
 }
 
 // awarddlg.cpp:661
-void FrAwardDlg::OnLuckInit(int param) {
+void FrAwardDlg::OnLuckInit(PG_MSGARG param) {
 	m_pLuckArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // awarddlg.cpp:666
-void FrAwardDlg::OnLuckOwnerDraw(int param) {
+void FrAwardDlg::OnLuckOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -589,12 +589,12 @@ void FrAwardDlg::OnLuckOwnerDraw(int param) {
 }
 
 // awarddlg.cpp:725
-void FrAwardDlg::OnSpeederInit(int param) {
+void FrAwardDlg::OnSpeederInit(PG_MSGARG param) {
 	m_pSpeederArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // awarddlg.cpp:730
-void FrAwardDlg::OnSpeederOwnerDraw(int param) {
+void FrAwardDlg::OnSpeederOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -629,12 +629,12 @@ void FrAwardDlg::OnSpeederOwnerDraw(int param) {
 }
 
 // awarddlg.cpp:789
-void FrAwardDlg::OnRunnerInit(int param) {
+void FrAwardDlg::OnRunnerInit(PG_MSGARG param) {
 	m_pRunnerArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // awarddlg.cpp:794
-void FrAwardDlg::OnRunnerOwnerDraw(int param) {
+void FrAwardDlg::OnRunnerOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -669,12 +669,12 @@ void FrAwardDlg::OnRunnerOwnerDraw(int param) {
 }
 
 // awarddlg.cpp:854
-void FrAwardDlg::OnChipInInit(int param) {
+void FrAwardDlg::OnChipInInit(PG_MSGARG param) {
 	m_pChipInArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // awarddlg.cpp:859
-void FrAwardDlg::OnChipInOwnerDraw(int param) {
+void FrAwardDlg::OnChipInOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -709,12 +709,12 @@ void FrAwardDlg::OnChipInOwnerDraw(int param) {
 }
 
 // awarddlg.cpp:918
-void FrAwardDlg::OnLongPuttInit(int param) {
+void FrAwardDlg::OnLongPuttInit(PG_MSGARG param) {
 	m_pLongPuttArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // awarddlg.cpp:923
-void FrAwardDlg::OnLongPuttOwnerDraw(int param) {
+void FrAwardDlg::OnLongPuttOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -749,12 +749,12 @@ void FrAwardDlg::OnLongPuttOwnerDraw(int param) {
 }
 
 // awarddlg.cpp:983
-void FrAwardDlg::OnRecoveryInit(int param) {
+void FrAwardDlg::OnRecoveryInit(PG_MSGARG param) {
 	m_pRecoveryArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // awarddlg.cpp:988
-void FrAwardDlg::OnRecoveryOwnerDraw(int param) {
+void FrAwardDlg::OnRecoveryOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {

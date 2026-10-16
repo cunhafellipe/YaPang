@@ -1254,7 +1254,7 @@ void FrItemStoragePangBank::OnInitInput(intptr_t param) {
 }
 
 // itemstorage.cpp:1327
-bool FrItemStoragePangBank::OnInputEnterKey(int param) {
+bool FrItemStoragePangBank::OnInputEnterKey(PG_MSGARG param) {
 	OnLBDownConfirm();
 
 	return true;
@@ -1948,7 +1948,7 @@ void CItemStorage::MakeStoredItemInfo(FrListBox*& pListBox) {
 }
 
 // itemstorage.cpp:2226
-void CItemStorage::DrawStoredItemInfo(const FrListBox*& pListBox, const FrListItem& item) {
+void CItemStorage::DrawStoredItemInfo(FrListBox*& pListBox, const FrListItem& item) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI && pListBox) {

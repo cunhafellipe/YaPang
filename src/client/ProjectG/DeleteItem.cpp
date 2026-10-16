@@ -95,7 +95,7 @@ void FrDeleteItemDlg::OnItemInit(intptr_t param) {
 }
 
 // deleteitem.cpp:61
-void FrDeleteItemDlg::OnItemOwnerDraw(int param) {
+void FrDeleteItemDlg::OnItemOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI == 0) {
 		return;
@@ -159,7 +159,7 @@ void FrDeleteItemDlg::OnNumInit(intptr_t param) {
 }
 
 // deleteitem.cpp:124
-bool FrDeleteItemDlg::OnNumEnterKey(int param) {
+bool FrDeleteItemDlg::OnNumEnterKey(PG_MSGARG param) {
 	return false;
 }
 

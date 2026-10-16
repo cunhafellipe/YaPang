@@ -428,7 +428,7 @@ void FrHalloweenEventDlg::OnMapIconOwnerDraw(void) {
 }
 
 // frhalloweendlg.cpp:442
-void FrHalloweenEventDlg::OnCurrentItemOwnerDraw(int param) {
+void FrHalloweenEventDlg::OnCurrentItemOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pDevice = g_pFresh->GetManager()->GetGDI();
 
 	if (pDevice) {

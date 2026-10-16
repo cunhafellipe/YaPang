@@ -76,7 +76,7 @@ void FrRandomBoxProgress::OnProgressInit(intptr_t param) {
 }
 
 // frrandomboxprogress.cpp:58
-void FrRandomBoxProgress::OnCancelUp(int param) {
+void FrRandomBoxProgress::OnCancelUp(PG_MSGARG param) {
 	FrForm::OnCancel();
 }
 

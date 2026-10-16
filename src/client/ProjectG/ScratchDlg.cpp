@@ -173,11 +173,11 @@ FrScratchDlg::~FrScratchDlg(void) {
 }
 
 // scratchdlg.cpp:135
-void FrScratchDlg::OnScratchDlgInit(int) {
+void FrScratchDlg::OnScratchDlgInit(PG_MSGARG) {
 }
 
 // scratchdlg.cpp:140
-void FrScratchDlg::OnScratchBottomInit(int param) {
+void FrScratchDlg::OnScratchBottomInit(PG_MSGARG param) {
 	DYNAMIC_CAST(FrArea, param);
 }
 
@@ -188,7 +188,7 @@ void FrScratchDlg::OnScratchBottomOwnerDraw(void) {
 }
 
 // scratchdlg.cpp:153
-void FrScratchDlg::OnScratchCover01Init(int param) {
+void FrScratchDlg::OnScratchCover01Init(PG_MSGARG param) {
 	m_pScratchCover[0] = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pScratchCover[0]) {
@@ -203,7 +203,7 @@ void FrScratchDlg::OnScratchCover01OwnerDraw(void) {
 }
 
 // scratchdlg.cpp:171
-void FrScratchDlg::OnScratchCover02Init(int param) {
+void FrScratchDlg::OnScratchCover02Init(PG_MSGARG param) {
 	m_pScratchCover[1] = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pScratchCover[1]) {
@@ -218,17 +218,17 @@ void FrScratchDlg::OnScratchCover02OwnerDraw(void) {
 }
 
 // scratchdlg.cpp:189
-void FrScratchDlg::OnScratchCardInit(int param) {
+void FrScratchDlg::OnScratchCardInit(PG_MSGARG param) {
 	m_pScratchCardEdit = DYNAMIC_CAST(FrEdit, param);
 }
 
 // scratchdlg.cpp:195
-bool FrScratchDlg::OnScratchCardEnterKey(int) {
+bool FrScratchDlg::OnScratchCardEnterKey(PG_MSGARG) {
 	return false;
 }
 
 // scratchdlg.cpp:201
-void FrScratchDlg::OnScratchNextPageBnInit(int param) {
+void FrScratchDlg::OnScratchNextPageBnInit(PG_MSGARG param) {
 	m_pNextPageBn = DYNAMIC_CAST(FrButton, param);
 
 	if (m_pNextPageBn) {
@@ -268,17 +268,17 @@ void FrScratchDlg::OnScratchNextPageBnUp(void) {
 }
 
 // scratchdlg.cpp:233
-void FrScratchDlg::OnSerialNumberInit(int param) {
+void FrScratchDlg::OnSerialNumberInit(PG_MSGARG param) {
 	m_pSerialNumberEdit = DYNAMIC_CAST(FrEdit, param);
 }
 
 // scratchdlg.cpp:242
-bool FrScratchDlg::OnSerialNumberEnterKey(int) {
+bool FrScratchDlg::OnSerialNumberEnterKey(PG_MSGARG) {
 	return false;
 }
 
 // scratchdlg.cpp:248
-void FrScratchDlg::OnSerialNumberBnInit(int param) {
+void FrScratchDlg::OnSerialNumberBnInit(PG_MSGARG param) {
 	m_pSerialNumberBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -291,7 +291,7 @@ void FrScratchDlg::OnSerialNumberBnUp(void) {
 }
 
 // scratchdlg.cpp:267
-void FrScratchDlg::OnAboutBnInit(int param) {
+void FrScratchDlg::OnAboutBnInit(PG_MSGARG param) {
 	DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1279,7 +1279,7 @@ FrScratchResultDlg::~FrScratchResultDlg(void) {
 }
 
 // scratchdlg.cpp:1364
-void FrScratchResultDlg::OnScratchResultDlgInit(int) {
+void FrScratchResultDlg::OnScratchResultDlgInit(PG_MSGARG) {
 }
 
 // scratchdlg.cpp:1369

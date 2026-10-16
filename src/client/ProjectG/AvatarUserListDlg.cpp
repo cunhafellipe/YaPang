@@ -79,7 +79,7 @@ void FrAvatarUserListDlg::OnUserListInit(intptr_t param) {
 }
 
 // avataruserlistdlg.cpp:81
-void FrAvatarUserListDlg::OnUserListOwnerDraw(int param) {
+void FrAvatarUserListDlg::OnUserListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (pItem) {

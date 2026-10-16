@@ -8,7 +8,7 @@
 // numbers differently. Names are the shared packet.h names where the two
 // versions agree, and context-derived names where the client diverges.
 
-enum enumClientPacket {
+PG_ENUM_DEF(enumClientPacket)
 	GCT_TIMETOALIVE = 0x1,
 	GCT_CONNECT = 0x2,
 	GCT_CHATMSG = 0x3,

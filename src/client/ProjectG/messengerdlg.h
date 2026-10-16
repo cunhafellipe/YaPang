@@ -136,8 +136,8 @@ protected:
 	virtual bool OnLButtonDown(const WPoint& pt);
 	void RestoreOther(unsigned long);
 	void OnMessenger_FriendLBtnDown(void);
-	void OnMessenger_MyInfoInit(int param);
-	void OnMessenger_StateBtnInit(int param);
+	void OnMessenger_MyInfoInit(PG_MSGARG param);
+	void OnMessenger_StateBtnInit(PG_MSGARG param);
 	bool OnBlockFriendDlgResult(int ret, FrForm* pForm);
 	bool OnBlockCancelFriendDlgResult(int ret, FrForm* pForm);
 	void OnMessenger_FriendListDBtnDown(void);
@@ -161,12 +161,12 @@ protected:
 	void OnRemoveFriend(void);
 	void OnBlockFriend(void);
 	void OnBlockCancelFriend(void);
-	void OnMessenger_FriendBtnInit(int param);
+	void OnMessenger_FriendBtnInit(PG_MSGARG param);
 	bool OnMemoDlgResult(int ret, FrForm* pForm);
-	void OnMessenger_GuildBtnInit(int param);
-	void OnMessenger_RightMenuInit(int param);
-	void OnMessenger_StateMenuInit(int param);
-	void OnMessenger_GuildNoticeBtnInit(int param);
+	void OnMessenger_GuildBtnInit(PG_MSGARG param);
+	void OnMessenger_RightMenuInit(PG_MSGARG param);
+	void OnMessenger_StateMenuInit(PG_MSGARG param);
+	void OnMessenger_GuildNoticeBtnInit(PG_MSGARG param);
 	void OnAliasToFriend(void);
 	bool OnNoteDlgResult(int ret, FrForm* pForm);
 	void OnMessenger_FriendListLBtnDown(void);
@@ -175,14 +175,14 @@ protected:
 	void OnInviteFriend(void);
 	void OnMessenger_RightMenuLBtnDown(void);
 	void OnGoWithFriend(void);
-	void OnMessenger_MyInfoOwnerDraw(int param);
-	void OnMessenger_FriendListInit(int param);
-	void OnMessenger_GuildListInit(int param);
+	void OnMessenger_MyInfoOwnerDraw(PG_MSGARG param);
+	void OnMessenger_FriendListInit(PG_MSGARG param);
+	void OnMessenger_GuildListInit(PG_MSGARG param);
 	void OnMessenger_GuildNoticeLBtnDown(void);
 	void OnMessenger_GuildListRBtnDown(void);
-	void OnMessenger_FriendListOwnerDraw(int param);
+	void OnMessenger_FriendListOwnerDraw(PG_MSGARG param);
 	void OnMessenger_FriendListRBtnDown(void);
-	void OnMessenger_GuildListOwnerDraw(int param);
+	void OnMessenger_GuildListOwnerDraw(PG_MSGARG param);
 	void DrawFriendGroup(int param);
 	void DrawGuildGroup(int param);
 

@@ -1,7 +1,7 @@
 // Original: d:\build\custom\temp\code\client\projectg\realmyroommainui.cpp
 #define REALMYROOMMAINUI_EXHIBITION_INLINE
 #define REALMYROOMMAINUI_CCARDBOOK_INLINE
-#define REALMYROOMMAINUI_ITEMSTORAGE_INLINE
+#define REALMYROOMMAINUI_ITEMSTORAGE_INLINE inline
 #define REALMYROOMMAINUI_SHAREDDOC_INLINE
 #include "NetworkSystem.h"
 #include "RealMyRoomMain.h"
@@ -1101,7 +1101,7 @@ void CRealMyRoomMain::HidePet(bool bWait) {
 }
 
 // realmyroommainui.cpp:1456
-void CRealMyRoomMain::OnMyRoomInit(int param) {
+void CRealMyRoomMain::OnMyRoomInit(PG_MSGARG param) {
 	m_initList.clear();
 
 	SetConstantBGM("myroom.mp3", false, false);
@@ -1737,27 +1737,27 @@ void CRealMyRoomMain::CloseAllDialogs(void) {
 }
 
 // realmyroommainui.cpp:2189
-void CRealMyRoomMain::OnMiddleUIInit(int param) {
+void CRealMyRoomMain::OnMiddleUIInit(PG_MSGARG param) {
 	m_pMiddleUIWnd = DYNAMIC_CAST(FrGroupBox, param);
 }
 
 // realmyroommainui.cpp:2196
-void CRealMyRoomMain::OnTabTxt1Init(int param) {
+void CRealMyRoomMain::OnTabTxt1Init(PG_MSGARG param) {
 	m_pTabTxt[0] = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:2203
-void CRealMyRoomMain::OnTabTxt2Init(int param) {
+void CRealMyRoomMain::OnTabTxt2Init(PG_MSGARG param) {
 	m_pTabTxt[1] = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:2210
-void CRealMyRoomMain::OnTabTxt3Init(int param) {
+void CRealMyRoomMain::OnTabTxt3Init(PG_MSGARG param) {
 	m_pTabTxt[2] = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:2217
-void CRealMyRoomMain::OnSelectedNameInit(int param) {
+void CRealMyRoomMain::OnSelectedNameInit(PG_MSGARG param) {
 	m_pSelectedName = DYNAMIC_CAST(FrStatic, param);
 }
 
@@ -2918,17 +2918,17 @@ void CRealMyRoomMain::DrawClubList(FrGraphicInterface* pGI, unsigned long typeId
 }
 
 // realmyroommainui.cpp:3739
-void CRealMyRoomMain::OnPetInit(int param) {
+void CRealMyRoomMain::OnPetInit(PG_MSGARG param) {
 	m_pPetAreaWnd[2] = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:3744
-void CRealMyRoomMain::OnSkinPetInit(int param) {
+void CRealMyRoomMain::OnSkinPetInit(PG_MSGARG param) {
 	m_pPetAreaWnd[0] = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:3749
-void CRealMyRoomMain::OnSkinPet2Init(int param) {
+void CRealMyRoomMain::OnSkinPet2Init(PG_MSGARG param) {
 	m_pPetAreaWnd[1] = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -3090,7 +3090,7 @@ void CRealMyRoomMain::DrawSkinSlot(void) {
 }
 
 // realmyroommainui.cpp:3927
-void CRealMyRoomMain::OnPetOwnerDraw(int param) {
+void CRealMyRoomMain::OnPetOwnerDraw(PG_MSGARG param) {
 	if (m_mainTab == 4) {
 		switch (m_roomMode) {
 		case 13:
@@ -3145,7 +3145,7 @@ void CRealMyRoomMain::OnPetOwnerDraw(int param) {
 }
 
 // realmyroommainui.cpp:3985
-void CRealMyRoomMain::OnFurnitureArrangeInit(int param) {
+void CRealMyRoomMain::OnFurnitureArrangeInit(PG_MSGARG param) {
 	m_pFurnitureArrangeButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pFurnitureArrangeButton) {
 		m_pFurnitureArrangeButton->SetVisible(false);
@@ -3162,7 +3162,7 @@ void CRealMyRoomMain::OnFurnitureArrangeButtonUP(void) {
 }
 
 // realmyroommainui.cpp:4003
-void CRealMyRoomMain::OnItemDescBgInit2(int param) {
+void CRealMyRoomMain::OnItemDescBgInit2(PG_MSGARG param) {
 	m_pItemDescBg2 = DYNAMIC_CAST(FrViewer, param);
 	if (m_pItemDescBg2) {
 		m_pItemDescBg2->SetVisible(false);
@@ -3170,7 +3170,7 @@ void CRealMyRoomMain::OnItemDescBgInit2(int param) {
 }
 
 // realmyroommainui.cpp:4013
-void CRealMyRoomMain::OnItemDescBgOwnerDraw2(int param) {
+void CRealMyRoomMain::OnItemDescBgOwnerDraw2(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI == NULL) {
 		return;
@@ -3209,12 +3209,12 @@ void CRealMyRoomMain::OnItemDescBgOwnerDraw2(int param) {
 }
 
 // realmyroommainui.cpp:4058
-void CRealMyRoomMain::OnItemDescBgInit(int param) {
+void CRealMyRoomMain::OnItemDescBgInit(PG_MSGARG param) {
 	m_pItemDescBg = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:4065
-void CRealMyRoomMain::OnItemDescBgOwnerDraw(int param) {
+void CRealMyRoomMain::OnItemDescBgOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI == NULL) {
 		return;
@@ -3240,7 +3240,7 @@ void CRealMyRoomMain::OnItemDescBgOwnerDraw(int param) {
 }
 
 // realmyroommainui.cpp:4091
-void CRealMyRoomMain::OnItemDescInit2(int param) {
+void CRealMyRoomMain::OnItemDescInit2(PG_MSGARG param) {
 	m_pItemDescEdit2 = DYNAMIC_CAST(FrEdit, param);
 	if (m_pItemDescEdit2) {
 		m_pItemDescEdit2->SetVisible(false);
@@ -3250,7 +3250,7 @@ void CRealMyRoomMain::OnItemDescInit2(int param) {
 }
 
 // realmyroommainui.cpp:4103
-void CRealMyRoomMain::OnItemNameInit(int param) {
+void CRealMyRoomMain::OnItemNameInit(PG_MSGARG param) {
 	m_pItemNameEdit = DYNAMIC_CAST(FrEdit, param);
 	if (m_pItemNameEdit) {
 		m_pItemNameEdit->SetVisible(false);
@@ -3258,7 +3258,7 @@ void CRealMyRoomMain::OnItemNameInit(int param) {
 }
 
 // realmyroommainui.cpp:4113
-void CRealMyRoomMain::OnItemDescInit(int param) {
+void CRealMyRoomMain::OnItemDescInit(PG_MSGARG param) {
 	m_pItemDescEdit = DYNAMIC_CAST(FrEdit, param);
 	if (m_pItemDescEdit) {
 		m_pItemDescEdit->SetVisible(false);
@@ -3298,7 +3298,7 @@ void CRealMyRoomMain::SetItemDesc(void) {
 }
 
 // realmyroommainui.cpp:4160
-void CRealMyRoomMain::OnItemSlotBoxInit(int param) {
+void CRealMyRoomMain::OnItemSlotBoxInit(PG_MSGARG param) {
 	m_pItemSlotBox = DYNAMIC_CAST(FrGroupBox, param);
 	if (m_pItemSlotBox) {
 		m_pItemSlotBox->SetVisible(false);
@@ -3313,7 +3313,7 @@ void CRealMyRoomMain::OnItemSlotBoxInit(int param) {
 }
 
 // realmyroommainui.cpp:4178
-void CRealMyRoomMain::OnEquipCancelInit(int param) {
+void CRealMyRoomMain::OnEquipCancelInit(PG_MSGARG param) {
 	m_pEquipCancelButton = DYNAMIC_CAST(FrButton, param);
 	m_pEquipCancelButton->SetPushDelay(0.0f);
 	m_pEquipCancelButton->EnableHover(true, 0.0f);
@@ -3359,7 +3359,7 @@ void CRealMyRoomMain::OnEquipCancelUp(void) {
 }
 
 // realmyroommainui.cpp:4256
-void CRealMyRoomMain::OnEquipResetInit(int param) {
+void CRealMyRoomMain::OnEquipResetInit(PG_MSGARG param) {
 	m_pEquipResetButton = DYNAMIC_CAST(FrButton, param);
 	m_pEquipResetButton->SetPushDelay(0.0f);
 	m_pEquipResetButton->EnableHover(true, 0.0f);
@@ -3393,7 +3393,7 @@ void CRealMyRoomMain::OnItemSlotInit(intptr_t param) {
 }
 
 // realmyroommainui.cpp:4293
-void CRealMyRoomMain::OnItemSlotOwnerDraw(int param) {
+void CRealMyRoomMain::OnItemSlotOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem != NULL) {
 
@@ -3455,7 +3455,7 @@ void CRealMyRoomMain::OnItemSlotDClick(void) {
 }
 
 // realmyroommainui.cpp:4361
-void CRealMyRoomMain::OnGiftBgInit(int param) {
+void CRealMyRoomMain::OnGiftBgInit(PG_MSGARG param) {
 	m_pGiftBgViewer = DYNAMIC_CAST(FrViewer, param);
 	if (m_pGiftBgViewer) {
 		m_pGiftBgViewer->SetVisible(false);
@@ -3464,7 +3464,7 @@ void CRealMyRoomMain::OnGiftBgInit(int param) {
 }
 
 // realmyroommainui.cpp:4371
-void CRealMyRoomMain::OnGiftDescInit(int param) {
+void CRealMyRoomMain::OnGiftDescInit(PG_MSGARG param) {
 	m_pGiftDescEdit = DYNAMIC_CAST(FrEdit, param);
 	if (m_pGiftDescEdit) {
 		m_pGiftDescEdit->SetVisible(false);
@@ -3498,12 +3498,12 @@ void CRealMyRoomMain::SetGiftDescString(const char* pSender, const char* pMessag
 }
 
 // realmyroommainui.cpp:4414
-void CRealMyRoomMain::OnStatFrameInit(int param) {
+void CRealMyRoomMain::OnStatFrameInit(PG_MSGARG param) {
 	m_pStatFrame = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:4422
-void CRealMyRoomMain::OnStatTextInit(int param) {
+void CRealMyRoomMain::OnStatTextInit(PG_MSGARG param) {
 	m_pStatText = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -3562,22 +3562,22 @@ void CRealMyRoomMain::TurnOffStat(void) {
 }
 
 // realmyroommainui.cpp:4484
-void CRealMyRoomMain::OnSelFrameInit(int param) {
+void CRealMyRoomMain::OnSelFrameInit(PG_MSGARG param) {
 	m_pSelFrame = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:4491
-void CRealMyRoomMain::OnStatBoxInit(int param) {
+void CRealMyRoomMain::OnStatBoxInit(PG_MSGARG param) {
 	m_pStatWnd = DYNAMIC_CAST(FrGroupBox, param);
 }
 
 // realmyroommainui.cpp:4498
-void CRealMyRoomMain::OnSelItemIconInit(int param) {
+void CRealMyRoomMain::OnSelItemIconInit(PG_MSGARG param) {
 	m_pSelItemWnd = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:4505
-void CRealMyRoomMain::OnSelItemIconOwnerDraw(int param) {
+void CRealMyRoomMain::OnSelItemIconOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI == NULL) {
 		return;
@@ -3614,7 +3614,7 @@ void CRealMyRoomMain::OnSelItemIconOwnerDraw(int param) {
 }
 
 // realmyroommainui.cpp:4543
-void CRealMyRoomMain::OnSelItemInit(int param) {
+void CRealMyRoomMain::OnSelItemInit(PG_MSGARG param) {
 	m_pItemSelectWnd = DYNAMIC_CAST(FrButton, param);
 	if (m_pItemSelectWnd) {
 		m_pItemSelectWnd->EnableBlink(true);
@@ -3622,7 +3622,7 @@ void CRealMyRoomMain::OnSelItemInit(int param) {
 }
 
 // realmyroommainui.cpp:4558
-void CRealMyRoomMain::OnSelItemOwnerDraw(int param) {
+void CRealMyRoomMain::OnSelItemOwnerDraw(PG_MSGARG param) {
 }
 
 // realmyroommainui.cpp:4564
@@ -3631,7 +3631,7 @@ void CRealMyRoomMain::OnSelItemUp(void) {
 }
 
 // realmyroommainui.cpp:4574
-void CRealMyRoomMain::OnSelItemPrevInit(int param) {
+void CRealMyRoomMain::OnSelItemPrevInit(PG_MSGARG param) {
 	m_pSelItemPrevButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pSelItemPrevButton) {
 		m_pSelItemPrevButton->SetPushDelay(0.1f);
@@ -3719,7 +3719,7 @@ void CRealMyRoomMain::OnSelItemPrevUp(void) {
 }
 
 // realmyroommainui.cpp:4662
-void CRealMyRoomMain::OnSelItemNextInit(int param) {
+void CRealMyRoomMain::OnSelItemNextInit(PG_MSGARG param) {
 	m_pSelItemNextButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pSelItemNextButton) {
 		m_pSelItemNextButton->SetPushDelay(0.1f);
@@ -3807,7 +3807,7 @@ void CRealMyRoomMain::OnSelItemNextUp(void) {
 }
 
 // realmyroommainui.cpp:4750
-void CRealMyRoomMain::OnStatPartInit(int param) {
+void CRealMyRoomMain::OnStatPartInit(PG_MSGARG param) {
 	m_pItemStatusWnd = DYNAMIC_CAST(FrViewer, param);
 }
 
@@ -3817,7 +3817,7 @@ void CRealMyRoomMain::OnStatPartUp(void) {
 }
 
 // realmyroommainui.cpp:4762
-void CRealMyRoomMain::OnStatPartOwnerDraw(int param) {
+void CRealMyRoomMain::OnStatPartOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI == NULL) {
 		return;
@@ -3842,7 +3842,7 @@ void CRealMyRoomMain::OnStatPartOwnerDraw(int param) {
 }
 
 // realmyroommainui.cpp:4787
-void CRealMyRoomMain::OnStatAllInit(int param) {
+void CRealMyRoomMain::OnStatAllInit(PG_MSGARG param) {
 	m_pStatAllViewer = DYNAMIC_CAST(FrViewer, param);
 }
 
@@ -3852,7 +3852,7 @@ void CRealMyRoomMain::OnStatAllUp(void) {
 }
 
 // realmyroommainui.cpp:4799
-void CRealMyRoomMain::OnStatAllOwnerDraw(int param) {
+void CRealMyRoomMain::OnStatAllOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI == NULL) {
 		return;
@@ -3875,7 +3875,7 @@ void CRealMyRoomMain::OnStatAllOwnerDraw(int param) {
 }
 
 // realmyroommainui.cpp:4822
-void CRealMyRoomMain::OnTabMainInit(int param) {
+void CRealMyRoomMain::OnTabMainInit(PG_MSGARG param) {
 	m_pMainTab = (FrTabButton*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrTabButton::m_RTTI) ? (void*)param : 0) : 0);
 	if (m_pMainTab) {
 		// The normal, down and disabled images of each tab.
@@ -3955,7 +3955,7 @@ void CRealMyRoomMain::OnTabMainButtonUp(void) {
 }
 
 // realmyroommainui.cpp:4924
-void CRealMyRoomMain::OnTabSubInit(int param) {
+void CRealMyRoomMain::OnTabSubInit(PG_MSGARG param) {
 	m_pSubTab = DYNAMIC_CAST(FrTabButton, param);
 }
 
@@ -3970,7 +3970,7 @@ void CRealMyRoomMain::OnTabSubButtonUp(void) {
 }
 
 // realmyroommainui.cpp:4943
-void CRealMyRoomMain::OnGiftPageOwnerDraw(int param) {
+void CRealMyRoomMain::OnGiftPageOwnerDraw(PG_MSGARG param) {
 	if (m_roomMode != 0x11) {
 		return;
 	}
@@ -4231,7 +4231,7 @@ void CRealMyRoomMain::OnGiftPageLBDown(void) {
 }
 
 // realmyroommainui.cpp:5301
-void CRealMyRoomMain::OnCardBookInit(int param) {
+void CRealMyRoomMain::OnCardBookInit(PG_MSGARG param) {
 	FrArea* p = DYNAMIC_CAST(FrArea, param);
 
 	if (p != NULL && m_pCardBook != NULL) {
@@ -4240,7 +4240,7 @@ void CRealMyRoomMain::OnCardBookInit(int param) {
 }
 
 // realmyroommainui.cpp:5311
-void CRealMyRoomMain::OnCardBookOwnerDraw(int param) {
+void CRealMyRoomMain::OnCardBookOwnerDraw(PG_MSGARG param) {
 	if (m_pCardBook) {
 		m_pCardBook->Draw();
 	}
@@ -4292,7 +4292,7 @@ void CRealMyRoomMain::BuildCardPackList(void) {
 }
 
 // realmyroommainui.cpp:5374
-void CRealMyRoomMain::OnCardPackListInit(int param) {
+void CRealMyRoomMain::OnCardPackListInit(PG_MSGARG param) {
 	m_pCardPackListBox = DYNAMIC_CAST(FrListBox, param);
 	BuildCardPackList();
 
@@ -4302,7 +4302,7 @@ void CRealMyRoomMain::OnCardPackListInit(int param) {
 }
 
 // realmyroommainui.cpp:5385
-void CRealMyRoomMain::OnCardPackListDraw(int param) {
+void CRealMyRoomMain::OnCardPackListDraw(PG_MSGARG param) {
 	if (m_pCardPackListBox == NULL || m_roomMode != 27) {
 		return;
 	}
@@ -4421,7 +4421,7 @@ void CRealMyRoomMain::OnCardPackListRbUp(void) {
 }
 
 // realmyroommainui.cpp:5523
-void CRealMyRoomMain::OnCardBookIndexInit(int param) {
+void CRealMyRoomMain::OnCardBookIndexInit(PG_MSGARG param) {
 	FrListBox* p = DYNAMIC_CAST(FrListBox, param);
 
 	if (p != NULL && m_pCardBook != NULL) {
@@ -4446,7 +4446,7 @@ void CRealMyRoomMain::OnCardBookIndexMouseOver(void) {
 }
 
 // realmyroommainui.cpp:5553
-void CRealMyRoomMain::OnCardUseInit(int param) {
+void CRealMyRoomMain::OnCardUseInit(PG_MSGARG param) {
 	FrButton* p = DYNAMIC_CAST(FrButton, param);
 
 	if (p != NULL) {
@@ -4487,7 +4487,7 @@ bool CRealMyRoomMain::OnCardBoxDlgResult(int result, FrForm* pForm) {
 }
 
 // realmyroommainui.cpp:5604
-void CRealMyRoomMain::OnCardPropertyInit(int param) {
+void CRealMyRoomMain::OnCardPropertyInit(PG_MSGARG param) {
 	FrArea* p = DYNAMIC_CAST(FrArea, param);
 
 	if (p != NULL && m_pCardBook != NULL) {
@@ -4496,7 +4496,7 @@ void CRealMyRoomMain::OnCardPropertyInit(int param) {
 }
 
 // realmyroommainui.cpp:5614
-void CRealMyRoomMain::OnTabCardPackInit(int param) {
+void CRealMyRoomMain::OnTabCardPackInit(PG_MSGARG param) {
 	FrButton* pButton = DYNAMIC_CAST(FrButton, param);
 
 	if (pButton != NULL && m_pCardBook != NULL) {
@@ -4519,7 +4519,7 @@ void CRealMyRoomMain::OnTabCardPackLBDown(void) {
 }
 
 // realmyroommainui.cpp:5641
-void CRealMyRoomMain::OnTabCardVolume1Init(int param) {
+void CRealMyRoomMain::OnTabCardVolume1Init(PG_MSGARG param) {
 	FrButton* pButton = DYNAMIC_CAST(FrButton, param);
 
 	if (pButton != NULL && m_pCardBook != NULL) {
@@ -4543,7 +4543,7 @@ void CRealMyRoomMain::OnTabCardVolume1LBDown(void) {
 }
 
 // realmyroommainui.cpp:5667
-void CRealMyRoomMain::OnTabCardVolume2Init(int param) {
+void CRealMyRoomMain::OnTabCardVolume2Init(PG_MSGARG param) {
 	FrButton* pButton = DYNAMIC_CAST(FrButton, param);
 
 	if (pButton != NULL && m_pCardBook != NULL) {
@@ -4567,7 +4567,7 @@ void CRealMyRoomMain::OnTabCardVolume2LBDown(void) {
 }
 
 // realmyroommainui.cpp:5692
-void CRealMyRoomMain::OnTabCardVolume3Init(int param) {
+void CRealMyRoomMain::OnTabCardVolume3Init(PG_MSGARG param) {
 	FrButton* pButton = DYNAMIC_CAST(FrButton, param);
 
 	if (pButton != NULL && m_pCardBook != NULL) {
@@ -4591,7 +4591,7 @@ void CRealMyRoomMain::OnTabCardVolume3LBDown(void) {
 }
 
 // realmyroommainui.cpp:5717
-void CRealMyRoomMain::OnTabCardVolume4Init(int param) {
+void CRealMyRoomMain::OnTabCardVolume4Init(PG_MSGARG param) {
 	FrButton* pButton = DYNAMIC_CAST(FrButton, param);
 
 	if (pButton != NULL && m_pCardBook != NULL) {
@@ -4621,28 +4621,28 @@ void CRealMyRoomMain::BoundCardPackPage(FrButton* pButton, unsigned char slot) {
 }
 
 // realmyroommainui.cpp:5749
-void CRealMyRoomMain::OnCardPackInit1(int param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 0); }
+void CRealMyRoomMain::OnCardPackInit1(PG_MSGARG param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 0); }
 
 // realmyroommainui.cpp:5750
-void CRealMyRoomMain::OnCardPackInit2(int param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 1); }
+void CRealMyRoomMain::OnCardPackInit2(PG_MSGARG param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 1); }
 
 // realmyroommainui.cpp:5751
-void CRealMyRoomMain::OnCardPackInit3(int param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 2); }
+void CRealMyRoomMain::OnCardPackInit3(PG_MSGARG param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 2); }
 
 // realmyroommainui.cpp:5752
-void CRealMyRoomMain::OnCardPackInit4(int param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 3); }
+void CRealMyRoomMain::OnCardPackInit4(PG_MSGARG param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 3); }
 
 // realmyroommainui.cpp:5753
-void CRealMyRoomMain::OnCardPackInit5(int param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 4); }
+void CRealMyRoomMain::OnCardPackInit5(PG_MSGARG param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 4); }
 
 // realmyroommainui.cpp:5754
-void CRealMyRoomMain::OnCardPackInit6(int param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 5); }
+void CRealMyRoomMain::OnCardPackInit6(PG_MSGARG param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 5); }
 
 // realmyroommainui.cpp:5755
-void CRealMyRoomMain::OnCardPackInit7(int param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 6); }
+void CRealMyRoomMain::OnCardPackInit7(PG_MSGARG param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 6); }
 
 // realmyroommainui.cpp:5756
-void CRealMyRoomMain::OnCardPackInit8(int param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 7); }
+void CRealMyRoomMain::OnCardPackInit8(PG_MSGARG param) { BoundCardPackPage(DYNAMIC_CAST(FrButton, param), 7); }
 
 // realmyroommainui.cpp:5760
 void CRealMyRoomMain::CardPackBehavior(unsigned char slot, unsigned char button) {
@@ -4734,40 +4734,40 @@ void CRealMyRoomMain::BoundCardPage(FrButton* pButton, unsigned char slot) {
 }
 
 // realmyroommainui.cpp:5865
-void CRealMyRoomMain::OnCardInit1(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 0); }
+void CRealMyRoomMain::OnCardInit1(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 0); }
 
 // realmyroommainui.cpp:5866
-void CRealMyRoomMain::OnCardInit2(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 1); }
+void CRealMyRoomMain::OnCardInit2(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 1); }
 
 // realmyroommainui.cpp:5867
-void CRealMyRoomMain::OnCardInit3(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 2); }
+void CRealMyRoomMain::OnCardInit3(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 2); }
 
 // realmyroommainui.cpp:5868
-void CRealMyRoomMain::OnCardInit4(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 3); }
+void CRealMyRoomMain::OnCardInit4(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 3); }
 
 // realmyroommainui.cpp:5869
-void CRealMyRoomMain::OnCardInit5(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 4); }
+void CRealMyRoomMain::OnCardInit5(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 4); }
 
 // realmyroommainui.cpp:5870
-void CRealMyRoomMain::OnCardInit6(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 5); }
+void CRealMyRoomMain::OnCardInit6(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 5); }
 
 // realmyroommainui.cpp:5871
-void CRealMyRoomMain::OnCardInit7(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 6); }
+void CRealMyRoomMain::OnCardInit7(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 6); }
 
 // realmyroommainui.cpp:5872
-void CRealMyRoomMain::OnCardInit8(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 7); }
+void CRealMyRoomMain::OnCardInit8(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 7); }
 
 // realmyroommainui.cpp:5873
-void CRealMyRoomMain::OnCardInit9(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 8); }
+void CRealMyRoomMain::OnCardInit9(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 8); }
 
 // realmyroommainui.cpp:5874
-void CRealMyRoomMain::OnCardInit10(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 9); }
+void CRealMyRoomMain::OnCardInit10(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 9); }
 
 // realmyroommainui.cpp:5875
-void CRealMyRoomMain::OnCardInit11(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 10); }
+void CRealMyRoomMain::OnCardInit11(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 10); }
 
 // realmyroommainui.cpp:5876
-void CRealMyRoomMain::OnCardInit12(int param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 11); }
+void CRealMyRoomMain::OnCardInit12(PG_MSGARG param) { BoundCardPage(DYNAMIC_CAST(FrButton, param), 11); }
 
 // realmyroommainui.cpp:5879
 void CRealMyRoomMain::CardBehavior(unsigned char slot, unsigned char button) {
@@ -6839,32 +6839,32 @@ void CRealMyRoomMain::OnItemListDClick(void) {
 }
 
 // realmyroommainui.cpp:8261
-void CRealMyRoomMain::OnPowerEditInit(int param) {
+void CRealMyRoomMain::OnPowerEditInit(PG_MSGARG param) {
 	m_pPowerEdit = DYNAMIC_CAST(FrStatic, param);
 }
 
 // realmyroommainui.cpp:8266
-void CRealMyRoomMain::OnControlEditInit(int param) {
+void CRealMyRoomMain::OnControlEditInit(PG_MSGARG param) {
 	m_pControlEdit = DYNAMIC_CAST(FrStatic, param);
 }
 
 // realmyroommainui.cpp:8271
-void CRealMyRoomMain::OnImpactEditInit(int param) {
+void CRealMyRoomMain::OnImpactEditInit(PG_MSGARG param) {
 	m_pImpactEdit = DYNAMIC_CAST(FrStatic, param);
 }
 
 // realmyroommainui.cpp:8276
-void CRealMyRoomMain::OnSpinEditInit(int param) {
+void CRealMyRoomMain::OnSpinEditInit(PG_MSGARG param) {
 	m_pSpinEdit = DYNAMIC_CAST(FrStatic, param);
 }
 
 // realmyroommainui.cpp:8281
-void CRealMyRoomMain::OnCurveEditInit(int param) {
+void CRealMyRoomMain::OnCurveEditInit(PG_MSGARG param) {
 	m_pCurveEdit = DYNAMIC_CAST(FrStatic, param);
 }
 
 // realmyroommainui.cpp:8286
-void CRealMyRoomMain::OnUpgradeInit(int param) {
+void CRealMyRoomMain::OnUpgradeInit(PG_MSGARG param) {
 	m_pUpgradeButton = DYNAMIC_CAST(FrButton, param);
 	m_pUpgradeButton->SetVisible(false);
 
@@ -6897,7 +6897,7 @@ void CRealMyRoomMain::OnUpgradeUp(void) {
 }
 
 // realmyroommainui.cpp:8322
-void CRealMyRoomMain::OnDowngradeInit(int param) {
+void CRealMyRoomMain::OnDowngradeInit(PG_MSGARG param) {
 	m_pDowngradeButton = DYNAMIC_CAST(FrButton, param);
 	m_pDowngradeButton->SetVisible(false);
 
@@ -6930,7 +6930,7 @@ void CRealMyRoomMain::OnDowngradeUp(void) {
 }
 
 // realmyroommainui.cpp:8357
-void CRealMyRoomMain::OnTooltipHoverOn(int param) {
+void CRealMyRoomMain::OnTooltipHoverOn(PG_MSGARG param) {
 	FrButton* pButton = (FrButton*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) ? (void*)param : 0) : 0);
 	if (pButton == m_pUpgradeButton) {
 		CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x23);
@@ -6944,7 +6944,7 @@ void CRealMyRoomMain::OnTooltipHoverOn(int param) {
 }
 
 // realmyroommainui.cpp:8378
-void CRealMyRoomMain::OnTooltipHoverOff(int param) {
+void CRealMyRoomMain::OnTooltipHoverOff(PG_MSGARG param) {
 	FrButton* pButton = (FrButton*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) ? (void*)param : 0) : 0);
 	int tipIndex = CIconToolTip::GetInstance()->GetCurTipIndex();
 
@@ -11575,7 +11575,7 @@ bool CRealMyRoomMain::OnReplayDelOpenDlgResult(int result, FrForm* pForm) {
 }
 
 // realmyroommainui.cpp:14179
-void CRealMyRoomMain::OnFurniturePupInit(int param) {
+void CRealMyRoomMain::OnFurniturePupInit(PG_MSGARG param) {
 	m_pFurniturePageUpButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pFurniturePageUpButton) {
 		m_pFurniturePageUpButton->SetVisible(false);
@@ -11598,7 +11598,7 @@ void CRealMyRoomMain::OnFurniturePupButtonUp(void) {
 }
 
 // realmyroommainui.cpp:14205
-void CRealMyRoomMain::OnFurniturePdownInit(int param) {
+void CRealMyRoomMain::OnFurniturePdownInit(PG_MSGARG param) {
 	m_pFurniturePageDownButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pFurniturePageDownButton) {
 		m_pFurniturePageDownButton->SetVisible(false);
@@ -11621,7 +11621,7 @@ void CRealMyRoomMain::OnFurniturePdownButtonUp(void) {
 }
 
 // realmyroommainui.cpp:14230
-void CRealMyRoomMain::OnFurnitureListNumInit(int param) {
+void CRealMyRoomMain::OnFurnitureListNumInit(PG_MSGARG param) {
 	m_pFurnitureListNumWnd = DYNAMIC_CAST(FrEdit, param);
 	if (m_pFurnitureListNumWnd) {
 		m_pFurnitureListNumWnd->SetCharLimit(2, false);
@@ -11638,14 +11638,14 @@ void CRealMyRoomMain::OnFurnitureListNumBtnUp(void) {
 }
 
 // realmyroommainui.cpp:14252
-bool CRealMyRoomMain::OnFurnitureListEnterKey(int param) {
+bool CRealMyRoomMain::OnFurnitureListEnterKey(PG_MSGARG param) {
 	OnFurniture_BtnListNumBtnUp();
 
 	return false;
 }
 
 // realmyroommainui.cpp:14259
-void CRealMyRoomMain::OnFurnitureListMaxNumInit(int param) {
+void CRealMyRoomMain::OnFurnitureListMaxNumInit(PG_MSGARG param) {
 	m_pFurniturePageCountWnd = DYNAMIC_CAST(FrEdit, param);
 	if (m_pFurniturePageCountWnd) {
 		m_pFurniturePageCountWnd->SetVisible(false);
@@ -11653,7 +11653,7 @@ void CRealMyRoomMain::OnFurnitureListMaxNumInit(int param) {
 }
 
 // realmyroommainui.cpp:14268
-void CRealMyRoomMain::OnFurniture_BtnListNumInit(int param) {
+void CRealMyRoomMain::OnFurniture_BtnListNumInit(PG_MSGARG param) {
 	m_pFurnitureListNumButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pFurnitureListNumButton) {
 		m_pFurnitureListNumButton->SetVisible(false);
@@ -11678,7 +11678,7 @@ void CRealMyRoomMain::OnFurniture_BtnListNumBtnUp(void) {
 }
 
 // realmyroommainui.cpp:14319
-void CRealMyRoomMain::OnFurnitureResetInit(int param) {
+void CRealMyRoomMain::OnFurnitureResetInit(PG_MSGARG param) {
 	m_pFurnitureResetButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pFurnitureResetButton) {
 		m_pFurnitureResetButton->SetVisible(false);
@@ -11697,7 +11697,7 @@ void CRealMyRoomMain::OnFurnitureResetButtonUp(void) {
 }
 
 // realmyroommainui.cpp:14340
-void CRealMyRoomMain::OnFurnitureBackInit(int param) {
+void CRealMyRoomMain::OnFurnitureBackInit(PG_MSGARG param) {
 	m_pFurnitureBackButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pFurnitureBackButton) {
 		m_pFurnitureBackButton->SetVisible(false);
@@ -11718,7 +11718,7 @@ void CRealMyRoomMain::OnFurnitureBackButtonUp(void) {
 }
 
 // realmyroommainui.cpp:14364
-void CRealMyRoomMain::OnFurnitureSaveInit(int param) {
+void CRealMyRoomMain::OnFurnitureSaveInit(PG_MSGARG param) {
 	m_pFurnitureSaveButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pFurnitureSaveButton) {
 		m_pFurnitureSaveButton->SetVisible(false);
@@ -11749,7 +11749,7 @@ void CRealMyRoomMain::OnFurnitureSaveButtonUp(void) {
 }
 
 // realmyroommainui.cpp:14405
-void CRealMyRoomMain::OnFurnitureOutInit(int param) {
+void CRealMyRoomMain::OnFurnitureOutInit(PG_MSGARG param) {
 	m_pFurnitureOutButton = DYNAMIC_CAST(FrButton, param);
 	if (m_pFurnitureOutButton) {
 		m_pFurnitureOutButton->SetVisible(false);
@@ -11763,7 +11763,7 @@ void CRealMyRoomMain::OnFurnitureOutButtonUp(void) {
 }
 
 // realmyroommainui.cpp:14422
-void CRealMyRoomMain::OnFurnitureBackGroundInit1(int param) {
+void CRealMyRoomMain::OnFurnitureBackGroundInit1(PG_MSGARG param) {
 	m_pFurnitureBackGround[0] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureBackGround[0]) {
 		m_pFurnitureBackGround[0]->SetVisible(false);
@@ -11771,7 +11771,7 @@ void CRealMyRoomMain::OnFurnitureBackGroundInit1(int param) {
 }
 
 // realmyroommainui.cpp:14430
-void CRealMyRoomMain::OnFurnitureBackGroundInit2(int param) {
+void CRealMyRoomMain::OnFurnitureBackGroundInit2(PG_MSGARG param) {
 	m_pFurnitureBackGround[1] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureBackGround[1]) {
 		m_pFurnitureBackGround[1]->SetVisible(false);
@@ -11779,7 +11779,7 @@ void CRealMyRoomMain::OnFurnitureBackGroundInit2(int param) {
 }
 
 // realmyroommainui.cpp:14438
-void CRealMyRoomMain::OnFurnitureBackGroundInit3(int param) {
+void CRealMyRoomMain::OnFurnitureBackGroundInit3(PG_MSGARG param) {
 	m_pFurnitureBackGround[2] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureBackGround[2]) {
 		m_pFurnitureBackGround[2]->SetVisible(false);
@@ -11787,7 +11787,7 @@ void CRealMyRoomMain::OnFurnitureBackGroundInit3(int param) {
 }
 
 // realmyroommainui.cpp:14446
-void CRealMyRoomMain::OnFurnitureBackGroundInit4(int param) {
+void CRealMyRoomMain::OnFurnitureBackGroundInit4(PG_MSGARG param) {
 	m_pFurnitureBackGround[3] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureBackGround[3]) {
 		m_pFurnitureBackGround[3]->SetVisible(false);
@@ -11795,7 +11795,7 @@ void CRealMyRoomMain::OnFurnitureBackGroundInit4(int param) {
 }
 
 // realmyroommainui.cpp:14454
-void CRealMyRoomMain::OnFurnitureBackGroundInit5(int param) {
+void CRealMyRoomMain::OnFurnitureBackGroundInit5(PG_MSGARG param) {
 	m_pFurnitureBackGround[4] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureBackGround[4]) {
 		m_pFurnitureBackGround[4]->SetVisible(false);
@@ -11803,7 +11803,7 @@ void CRealMyRoomMain::OnFurnitureBackGroundInit5(int param) {
 }
 
 // realmyroommainui.cpp:14462
-void CRealMyRoomMain::OnFurnitureBackGroundInit6(int param) {
+void CRealMyRoomMain::OnFurnitureBackGroundInit6(PG_MSGARG param) {
 	m_pFurnitureBackGround[5] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureBackGround[5]) {
 		m_pFurnitureBackGround[5]->SetVisible(false);
@@ -11811,7 +11811,7 @@ void CRealMyRoomMain::OnFurnitureBackGroundInit6(int param) {
 }
 
 // realmyroommainui.cpp:14470
-void CRealMyRoomMain::OnFurnitureBackGroundInit7(int param) {
+void CRealMyRoomMain::OnFurnitureBackGroundInit7(PG_MSGARG param) {
 	m_pFurnitureBackGround[6] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureBackGround[6]) {
 		m_pFurnitureBackGround[6]->SetVisible(false);
@@ -11819,7 +11819,7 @@ void CRealMyRoomMain::OnFurnitureBackGroundInit7(int param) {
 }
 
 // realmyroommainui.cpp:14478
-void CRealMyRoomMain::OnFurnitureBackGroundInit8(int param) {
+void CRealMyRoomMain::OnFurnitureBackGroundInit8(PG_MSGARG param) {
 	m_pFurnitureBackGround[7] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureBackGround[7]) {
 		m_pFurnitureBackGround[7]->SetVisible(false);
@@ -11827,7 +11827,7 @@ void CRealMyRoomMain::OnFurnitureBackGroundInit8(int param) {
 }
 
 // realmyroommainui.cpp:14486
-void CRealMyRoomMain::OnFurnitureScrollInit1(int param) {
+void CRealMyRoomMain::OnFurnitureScrollInit1(PG_MSGARG param) {
 	m_pFurnitureScroll[0] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureScroll[0]) {
 		m_pFurnitureScroll[0]->SetVisible(false);
@@ -11835,7 +11835,7 @@ void CRealMyRoomMain::OnFurnitureScrollInit1(int param) {
 }
 
 // realmyroommainui.cpp:14494
-void CRealMyRoomMain::OnFurnitureScrollInit2(int param) {
+void CRealMyRoomMain::OnFurnitureScrollInit2(PG_MSGARG param) {
 	m_pFurnitureScroll[1] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureScroll[1]) {
 		m_pFurnitureScroll[1]->SetVisible(false);
@@ -11843,7 +11843,7 @@ void CRealMyRoomMain::OnFurnitureScrollInit2(int param) {
 }
 
 // realmyroommainui.cpp:14502
-void CRealMyRoomMain::OnFurnitureScrollInit3(int param) {
+void CRealMyRoomMain::OnFurnitureScrollInit3(PG_MSGARG param) {
 	m_pFurnitureScroll[2] = DYNAMIC_CAST(FrArea, param);
 	if (m_pFurnitureScroll[2]) {
 		m_pFurnitureScroll[2]->SetVisible(false);
@@ -11965,7 +11965,7 @@ void CRealMyRoomMain::BuildDisplayStandFurniture(void) {
 }
 
 // realmyroommainui.cpp:14688
-void CRealMyRoomMain::OnFurnitureTabMainInit(int param) {
+void CRealMyRoomMain::OnFurnitureTabMainInit(PG_MSGARG param) {
 	m_pFurnitureMainTab = DYNAMIC_CAST(FrTabButton, param);
 	if (m_pFurnitureMainTab) {
 		for (int i = 0; i < 5; i++) {
@@ -12002,7 +12002,7 @@ void CRealMyRoomMain::ChangeFMainTab(eFurniture_Tab tab, bool bForce) {
 }
 
 // realmyroommainui.cpp:14739
-void CRealMyRoomMain::OnFurnitureListInit(int param) {
+void CRealMyRoomMain::OnFurnitureListInit(PG_MSGARG param) {
 	m_pFurnitureList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pFurnitureList != NULL) {
@@ -12013,7 +12013,7 @@ void CRealMyRoomMain::OnFurnitureListInit(int param) {
 }
 
 // realmyroommainui.cpp:14752
-void CRealMyRoomMain::OnFurnitureListOwnerDraw(int param) {
+void CRealMyRoomMain::OnFurnitureListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	float offset = 0.0f;
@@ -12170,7 +12170,7 @@ void CRealMyRoomMain::OnFurnitureListBtnDown(void) {
 }
 
 // realmyroommainui.cpp:14981
-void CRealMyRoomMain::OnBtnMenuInit(int param) {
+void CRealMyRoomMain::OnBtnMenuInit(PG_MSGARG param) {
 	m_pBtnMenu = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -12180,7 +12180,7 @@ void CRealMyRoomMain::OOnBtnMenuButtonUP(void) {
 }
 
 // realmyroommainui.cpp:14993
-void CRealMyRoomMain::OnBtn_MenuListInit(int param) {
+void CRealMyRoomMain::OnBtn_MenuListInit(PG_MSGARG param) {
 	m_pMenuList = DYNAMIC_CAST(FrListBox, param);
 	if (m_pMenuList) {
 		m_pMenuList->SetVisible(false);
@@ -12271,7 +12271,7 @@ void CRealMyRoomMain::SetListMenu(void) {
 }
 
 // realmyroommainui.cpp:15105
-void CRealMyRoomMain::OnBtn_MenuListOwnerDraw(int param) {
+void CRealMyRoomMain::OnBtn_MenuListOwnerDraw(PG_MSGARG param) {
 	if (m_pMenuList == NULL) {
 		return;
 	}
@@ -12748,12 +12748,12 @@ void CRealMyRoomMain::Furniture_ShowUI_Left(bool bShow) {
 }
 
 // realmyroommainui.cpp:15978
-void CRealMyRoomMain::OnEffectViewInit(int param) {
+void CRealMyRoomMain::OnEffectViewInit(PG_MSGARG param) {
 	m_pEffectViewWnd = DYNAMIC_CAST(FrArea, param);
 }
 
 // realmyroommainui.cpp:15983
-void CRealMyRoomMain::OnEffectViewOnwnerDraw(int param) {
+void CRealMyRoomMain::OnEffectViewOnwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI == 0) {
 		return;
@@ -12763,7 +12763,7 @@ void CRealMyRoomMain::OnEffectViewOnwnerDraw(int param) {
 }
 
 // realmyroommainui.cpp:16026
-void CRealMyRoomMain::OnRightMenuInit(int param) {
+void CRealMyRoomMain::OnRightMenuInit(PG_MSGARG param) {
 	m_pRightMenuWnd = DYNAMIC_CAST(FrWnd, param);
 	if (m_pRightMenuWnd) {
 		m_pRightMenuWnd->SetVisible(false);
@@ -13774,7 +13774,7 @@ bool CRealMyRoomMain::OnResultItemStorageAccessPanel(int result, FrForm* pForm) 
 }
 
 // realmyroommainui.cpp:17631
-void CRealMyRoomMain::OnInitItemStorageBGI(int param) {
+void CRealMyRoomMain::OnInitItemStorageBGI(PG_MSGARG param) {
 	m_pItemStorageDlg = (FrForm*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrArea::m_RTTI) ? (void*)param : 0) : 0);
 
 	CItemStorage* pItemStorage = WSingleton<CItemStorage>::Instance();
@@ -13843,7 +13843,7 @@ void CRealMyRoomMain::OnInitItemStorageBGI(int param) {
 }
 
 // realmyroommainui.cpp:17728
-void CRealMyRoomMain::OnOwnerDrawItemStorageBGI(int param) {
+void CRealMyRoomMain::OnOwnerDrawItemStorageBGI(PG_MSGARG param) {
 	CItemStorage* pItemStorage = WSingleton<CItemStorage>::Instance();
 
 	if (pItemStorage != NULL) {
@@ -13852,7 +13852,7 @@ void CRealMyRoomMain::OnOwnerDrawItemStorageBGI(int param) {
 }
 
 // realmyroommainui.cpp:17740
-void CRealMyRoomMain::OnInitItemStoragePang(int param) {
+void CRealMyRoomMain::OnInitItemStoragePang(PG_MSGARG param) {
 	m_pItemStoragePang = DYNAMIC_CAST(FrArea, param);
 	CItemStorage* pItemStorage = WSingleton<CItemStorage>::Instance();
 	if (pItemStorage) {
@@ -13861,11 +13861,11 @@ void CRealMyRoomMain::OnInitItemStoragePang(int param) {
 }
 
 // realmyroommainui.cpp:17754
-void CRealMyRoomMain::OnOwnerDrawItemStoragePang(int param) {
+void CRealMyRoomMain::OnOwnerDrawItemStoragePang(PG_MSGARG param) {
 }
 
 // realmyroommainui.cpp:17760
-void CRealMyRoomMain::OnInitItemStoragePangMinus(int param) {
+void CRealMyRoomMain::OnInitItemStoragePangMinus(PG_MSGARG param) {
 	m_pItemStoragePangMinus = DYNAMIC_CAST(FrButton, param);
 	if (m_pItemStoragePangMinus) {
 		m_pItemStoragePangMinus->SetPushDelay(0.1f);
@@ -13888,7 +13888,7 @@ void CRealMyRoomMain::OnLBDownItemStoragePangMinus(void) {
 }
 
 // realmyroommainui.cpp:17791
-void CRealMyRoomMain::OnInitItemStoragePangPlus(int param) {
+void CRealMyRoomMain::OnInitItemStoragePangPlus(PG_MSGARG param) {
 	m_pItemStoragePangPlus = DYNAMIC_CAST(FrButton, param);
 	if (m_pItemStoragePangPlus) {
 		m_pItemStoragePangPlus->SetPushDelay(0.1f);
@@ -13911,7 +13911,7 @@ void CRealMyRoomMain::OnLBDownItemStoragePangPlus(void) {
 }
 
 // realmyroommainui.cpp:17822
-void CRealMyRoomMain::OnInitItemStorageList(int param) {
+void CRealMyRoomMain::OnInitItemStorageList(PG_MSGARG param) {
 	m_pItemStorageList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pItemStorageList) {
@@ -13927,7 +13927,7 @@ void CRealMyRoomMain::OnInitItemStorageList(int param) {
 }
 
 // realmyroommainui.cpp:17843
-void CRealMyRoomMain::OnOwnerDrawItemStorageList(int param) {
+void CRealMyRoomMain::OnOwnerDrawItemStorageList(PG_MSGARG param) {
 	CItemStorage* pItemStorage = WSingleton<CItemStorage>::Instance();
 
 	if (pItemStorage != NULL) {
@@ -14043,7 +14043,7 @@ void CRealMyRoomMain::OnMouseMoveItemStorageList(void) {
 }
 
 // realmyroommainui.cpp:17982
-void CRealMyRoomMain::OnInitItemStorageIndexMsg(int param) {
+void CRealMyRoomMain::OnInitItemStorageIndexMsg(PG_MSGARG param) {
 	m_pItemStorageIndexMsg = DYNAMIC_CAST(FrListBox, param);
 	CItemStorage* pItemStorage = WSingleton<CItemStorage>::Instance();
 	if (pItemStorage) {
@@ -14052,7 +14052,7 @@ void CRealMyRoomMain::OnInitItemStorageIndexMsg(int param) {
 }
 
 // realmyroommainui.cpp:17996
-void CRealMyRoomMain::OnOwnerDrawItemStorageIndexMsg(int param) {
+void CRealMyRoomMain::OnOwnerDrawItemStorageIndexMsg(PG_MSGARG param) {
 	CItemStorage* pItemStorage = WSingleton<CItemStorage>::Instance();
 
 	if (pItemStorage != NULL) {
@@ -14073,7 +14073,7 @@ void CRealMyRoomMain::OnLBDownItemStorageIndexMsg(void) {
 }
 
 // realmyroommainui.cpp:18022
-void CRealMyRoomMain::OnInitItemStoragePageNext(int param) {
+void CRealMyRoomMain::OnInitItemStoragePageNext(PG_MSGARG param) {
 	m_pItemStoragePageNext = DYNAMIC_CAST(FrButton, param);
 	if (m_pItemStoragePageNext) {
 		m_pItemStoragePageNext->SetPushDelay(0.1f);
@@ -14093,7 +14093,7 @@ void CRealMyRoomMain::OnLBDownItemStoragePageNext(void) {
 }
 
 // realmyroommainui.cpp:18049
-void CRealMyRoomMain::OnInitItemStoragePagePrev(int param) {
+void CRealMyRoomMain::OnInitItemStoragePagePrev(PG_MSGARG param) {
 	m_pItemStoragePagePrev = DYNAMIC_CAST(FrButton, param);
 	if (m_pItemStoragePagePrev) {
 		m_pItemStoragePagePrev->SetPushDelay(0.1f);
@@ -14113,7 +14113,7 @@ void CRealMyRoomMain::OnLBDownItemStoragePagePrev(void) {
 }
 
 // realmyroommainui.cpp:18076
-void CRealMyRoomMain::OnInitItemStorageClose(int param) {
+void CRealMyRoomMain::OnInitItemStorageClose(PG_MSGARG param) {
 	m_pItemStorageClose = DYNAMIC_CAST(FrButton, param);
 	if (m_pItemStorageClose) {
 		m_pItemStorageClose->SetPushDelay(0.1f);
@@ -14142,7 +14142,7 @@ void CRealMyRoomMain::OnLBDownItemStorageClose(void) {
 }
 
 // realmyroommainui.cpp:18116
-void CRealMyRoomMain::OnInitItemStorageDragDrop(int param) {
+void CRealMyRoomMain::OnInitItemStorageDragDrop(PG_MSGARG param) {
 	m_pItemStorageDragDrop = DYNAMIC_CAST(FrArea, param);
 	CItemStorage* pItemStorage = WSingleton<CItemStorage>::Instance();
 	if (pItemStorage) {
@@ -14151,7 +14151,7 @@ void CRealMyRoomMain::OnInitItemStorageDragDrop(int param) {
 }
 
 // realmyroommainui.cpp:18127
-void CRealMyRoomMain::OnOwnerDrawItemStorageDragDrop(int param) {
+void CRealMyRoomMain::OnOwnerDrawItemStorageDragDrop(PG_MSGARG param) {
 	CItemStorage* pItemStorage = WSingleton<CItemStorage>::Instance();
 	if (pItemStorage != NULL) {
 		pItemStorage->DragDropItemDraw();

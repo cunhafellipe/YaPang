@@ -68,7 +68,7 @@ public:
 	virtual ~CIconManager(void);
 
 	bool IsIncludedIcon(std::string name);
-	void InitalizeTopIcon(unsigned long slot, int param);
+	void InitalizeTopIcon(unsigned long slot, PG_PTRINT param);
 	void OnButtonDown(unsigned long slot);
 	void RegisterInstanceFunction(std::string name, CIconInterface* (*create)(void), void (*destroy)(CIconInterface*));
 	void AddTopIconFromOutSide(void);   // topiconmanager.h:77

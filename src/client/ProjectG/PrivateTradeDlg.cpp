@@ -1426,22 +1426,22 @@ void FrMyWareHouse::InitSortList(eSetItemButton button) {
 }
 
 // privatetradedlg.cpp:1585
-void FrMyWareHouse::OnPartBtnInit(int param) {
+void FrMyWareHouse::OnPartBtnInit(PG_MSGARG param) {
 	SetButtonStyle(param, SET_ITEM_BUTTON_PART);
 }
 
 // privatetradedlg.cpp:1586
-void FrMyWareHouse::OnClubBtnInit(int param) {
+void FrMyWareHouse::OnClubBtnInit(PG_MSGARG param) {
 	SetButtonStyle(param, SET_ITEM_BUTTON_CLUB);
 }
 
 // privatetradedlg.cpp:1587
-void FrMyWareHouse::OnItemBtnInit(int param) {
+void FrMyWareHouse::OnItemBtnInit(PG_MSGARG param) {
 	SetButtonStyle(param, SET_ITEM_BUTTON_ITEM);
 }
 
 // privatetradedlg.cpp:1588
-void FrMyWareHouse::OnCardBtnInit(int param) {
+void FrMyWareHouse::OnCardBtnInit(PG_MSGARG param) {
 	SetButtonStyle(param, SET_ITEM_BUTTON_CARD);
 }
 
@@ -1473,7 +1473,7 @@ void FrMyWareHouse::OnSortDraw(intptr_t param) {
 }
 
 // privatetradedlg.cpp:1619
-void FrMyWareHouse::OnSortDown(int param) {
+void FrMyWareHouse::OnSortDown(PG_MSGARG param) {
 	FrListItem* pItem = m_pSortList->GetSelected();
 	if (pItem == 0) {
 		return;

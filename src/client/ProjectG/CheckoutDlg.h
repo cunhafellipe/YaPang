@@ -101,7 +101,7 @@ protected:
 	bool OnConfirmResult(int ret, FrForm* pForm);
 	void OnCheckoutInit(intptr_t param);
 	void OnDaysInit(intptr_t param);
-	void OnDays2Init(int param);
+	void OnDays2Init(PG_MSGARG param);
 	void OnCartInit(intptr_t param);
 	void OnPriceInit(intptr_t param);
 	void OnMyMoneyInit(intptr_t param);
@@ -114,7 +114,7 @@ protected:
 	void OnNumInit(intptr_t param);
 	void OnNumPrevInit(intptr_t param);
 	void OnNumNextInit(intptr_t param);
-	void OnCartOwnerDraw(int param);
+	void OnCartOwnerDraw(PG_MSGARG param);
 	void OnCheckoutLBtnUp(void);
 	void OpenCaddieInfo(const sCaddieInfo& info);
 

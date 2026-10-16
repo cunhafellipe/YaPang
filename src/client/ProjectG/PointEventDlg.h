@@ -294,7 +294,7 @@ protected:
 	void OnInitBtnYes(intptr_t);
 	void OnInitBtnNo(intptr_t);
 	void OnInitDrawArea(intptr_t);
-	void OnOwnerDrawDrawArea(int);
+	void OnOwnerDrawDrawArea(PG_MSGARG);
 
 private:
 	FrButton* m_yesBtn;         // 0x110, OnInitBtnYes
@@ -383,7 +383,7 @@ protected:
 
 	void OnInitDescButton(intptr_t);
 	void OnLBDownDescButton(void);
-	void OnOwnerDrawCoverArea(int);
+	void OnOwnerDrawCoverArea(PG_MSGARG);
 	void OnInitBtnCommodity01(intptr_t);
 	void OnInitBtnCommodity02(intptr_t);
 	void OnInitBtnCommodity03(intptr_t);
@@ -402,8 +402,8 @@ protected:
 	void OnLBDownBtnCommodity07(void);
 	void OnLBDownBtnCommodity08(void);
 	void OnLBDownBtnCommodity09(void);
-	void OnOwnerDrawDataArea(int);
-	void OnOwnerDrawContribution(int);
+	void OnOwnerDrawDataArea(PG_MSGARG);
+	void OnOwnerDrawContribution(PG_MSGARG);
 	void OnInitBtnDescContribution(intptr_t);
 	void OnLBDownBtnDescContribution(void);
 	void OnInitBtnContribution(intptr_t);

@@ -808,7 +808,7 @@ sFRESH_ENTRY CGolfRule::_MsgEntries[] = {
 };
 
 // golfrule.cpp:960
-void CGolfRule::OnChatViewInit(int param) {
+void CGolfRule::OnChatViewInit(PG_MSGARG param) {
 	m_chatViewWnd = (FrEdit *)((__rtti_obj = (void *)param) != 0 ? (((IObject *)__rtti_obj)->IsKindOf(&FrEdit::m_RTTI) ? (void *)param : 0) : 0);
 	if (m_chatViewWnd) {
 		m_chatViewWnd->m_nFlags.Enable(0x1000);
@@ -860,7 +860,7 @@ void CGolfRule::OnEmoticonBtnUp(void) {
 }
 
 // golfrule.cpp:1044
-void CGolfRule::OnLanguageInit(int param) {
+void CGolfRule::OnLanguageInit(PG_MSGARG param) {
 	m_languageArea = DYNAMIC_CAST(FrArea, param);
 	if (m_languageArea) {
 		m_languageArea->SetVisible(false);
@@ -878,7 +878,7 @@ void CGolfRule::OnLanguageInit(int param) {
 }
 
 // golfrule.cpp:1076
-void CGolfRule::OnReportInit(int param) {
+void CGolfRule::OnReportInit(PG_MSGARG param) {
 	m_reportBtn = DYNAMIC_CAST(FrButton, param);
 	if (m_reportBtn) {
 		m_reportBtn->SetVisible(false);
@@ -927,13 +927,13 @@ void CGolfRule::OnChatTargetInit(intptr_t param) {
 }
 
 // golfrule.cpp:1131
-void CGolfRule::OnChatTargetBtnDown(int) {
+void CGolfRule::OnChatTargetBtnDown(PG_MSGARG) {
 	if (m_chatInput)
 		m_chatInput->SetKeyFocus(true);
 }
 
 // golfrule.cpp:1138
-bool CGolfRule::OnChatTargetEnterKey(int) {
+bool CGolfRule::OnChatTargetEnterKey(PG_MSGARG) {
 	if (m_chatEdit && strlen(m_chatEdit->GetLine(1, false)) == 0)
 		m_chatEdit->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0);
 
@@ -957,7 +957,7 @@ void CGolfRule::OnChatInputInit(intptr_t param) {
 }
 
 // golfrule.cpp:1175
-bool CGolfRule::OnChatInputEnterKey(int param) {
+bool CGolfRule::OnChatInputEnterKey(PG_MSGARG param) {
 	const char *text = (const char *)param;
 
 	if (strlen(text)) {
@@ -1006,7 +1006,7 @@ bool CGolfRule::OnChatInputEnterKey(int param) {
 }
 
 // golfrule.cpp:1240
-void CGolfRule::OnSpecialCardInit(int param) {
+void CGolfRule::OnSpecialCardInit(PG_MSGARG param) {
 	m_barButton[10] = DYNAMIC_CAST(FrButton, param);
 	if (m_barButton[10]) {
 		m_barButton[10]->SetVisible(false);
@@ -1026,7 +1026,7 @@ void CGolfRule::OnSpecialCardBtnUp(void) {
 }
 
 // golfrule.cpp:1261
-void CGolfRule::OnMyInfoInit(int param) {
+void CGolfRule::OnMyInfoInit(PG_MSGARG param) {
 	m_myInfoBtn = DYNAMIC_CAST(FrButton, param);
 	if (m_myInfoBtn) {
 		m_myInfoBtn->SetVisible(false);
@@ -1048,7 +1048,7 @@ void CGolfRule::OnMyInfoBtnUp(void) {
 }
 
 // golfrule.cpp:1286
-void CGolfRule::OnOptionInit(int param) {
+void CGolfRule::OnOptionInit(PG_MSGARG param) {
 	m_optionBtn = DYNAMIC_CAST(FrButton, param);
 	if (m_optionBtn) {
 		m_optionBtn->SetVisible(false);
@@ -1070,7 +1070,7 @@ void CGolfRule::OnOptionBtnUp(void) {
 }
 
 // golfrule.cpp:1311
-void CGolfRule::OnCaddieBookInit(int param) {
+void CGolfRule::OnCaddieBookInit(PG_MSGARG param) {
 	m_commandBtns[0] = DYNAMIC_CAST(FrButton, param);
 	if (m_commandBtns[0]) {
 		m_commandBtns[0]->SetVisible(false);
@@ -1090,7 +1090,7 @@ void CGolfRule::OnCaddieBookBtnUp(void) {
 }
 
 // golfrule.cpp:1332
-void CGolfRule::OnUnplayableInit(int param) {
+void CGolfRule::OnUnplayableInit(PG_MSGARG param) {
 	m_commandBtns[1] = DYNAMIC_CAST(FrButton, param);
 	if (m_commandBtns[1]) {
 		m_commandBtns[1]->SetVisible(false);
@@ -1115,7 +1115,7 @@ void CGolfRule::OnUnplayableBtnUp(void) {
 }
 
 // golfrule.cpp:1360
-void CGolfRule::OnPauseInit(int param) {
+void CGolfRule::OnPauseInit(PG_MSGARG param) {
 	m_commandBtns[2] = DYNAMIC_CAST(FrButton, param);
 	if (m_commandBtns[2]) {
 		m_commandBtns[2]->SetVisible(false);
@@ -1143,7 +1143,7 @@ void CGolfRule::OnPauseBtnUp(void) {
 }
 
 // golfrule.cpp:1388
-void CGolfRule::OnChatRecordInit(int param) {
+void CGolfRule::OnChatRecordInit(PG_MSGARG param) {
 	m_commandBtns[3] = DYNAMIC_CAST(FrButton, param);
 	if (m_commandBtns[3]) {
 		m_commandBtns[3]->SetVisible(false);
@@ -1161,7 +1161,7 @@ void CGolfRule::OnChatRecordBtnUp(void) {
 }
 
 // golfrule.cpp:1407
-void CGolfRule::OnOnelineViewInit(int param) {
+void CGolfRule::OnOnelineViewInit(PG_MSGARG param) {
 	m_onelineBoardWnd = DYNAMIC_CAST(FrArea, param);
 	m_onelineBoardWnd->SetVisible(false);
 
@@ -1170,12 +1170,12 @@ void CGolfRule::OnOnelineViewInit(int param) {
 }
 
 // golfrule.cpp:1417
-void CGolfRule::OnOnelineViewOwnerDraw(int) {
+void CGolfRule::OnOnelineViewOwnerDraw(PG_MSGARG) {
 	COneLineBoard::Instance()->Display();
 }
 
 // golfrule.cpp:1422
-void CGolfRule::OnOnelineBtnInit(int param) {
+void CGolfRule::OnOnelineBtnInit(PG_MSGARG param) {
 	m_boardWnd = (FrButton *)((__rtti_obj = (void *)param) != 0 ? (((IObject *)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) ? (void *)param : 0) : 0);
 
 	WRect rect = m_boardWnd->GetRect();
@@ -1255,7 +1255,7 @@ void CGolfRule::OnOnelineBtnUp(void) {
 }
 
 // golfrule.cpp:1519
-void CGolfRule::OnTopBarHoverOn(int param) {
+void CGolfRule::OnTopBarHoverOn(PG_MSGARG param) {
 	m_hoverButton = DYNAMIC_CAST(FrButton, param);
 
 	if (m_hoverButton) {
@@ -1271,7 +1271,7 @@ void CGolfRule::OnTopBarHoverOn(int param) {
 }
 
 // golfrule.cpp:1536
-void CGolfRule::OnTopBarHoverOff(int param) {
+void CGolfRule::OnTopBarHoverOff(PG_MSGARG param) {
 	FrButton *btn = DYNAMIC_CAST(FrButton, param);
 
 	if (btn == NULL || btn == m_hoverButton) {
@@ -1319,24 +1319,24 @@ void CGolfRule::UpdateRadioPredictShotButtonStatus(void) {
 }
 
 // golfrule.cpp:1596
-void CGolfRule::OnRadioPredictNormalShotInit(int wnd) {
+void CGolfRule::OnRadioPredictNormalShotInit(PG_MSGARG wnd) {
 	InitRadioPredictShotButton(&m_predictNormalShotBtn, wnd, 100.0f);
 	if (m_predictNormalShotBtn)
 		m_predictNormalShotBtn->SetStatus(FrButton::PRESSED);
 }
 
 // golfrule.cpp:1600
-void CGolfRule::OnRadioPredictTomahwakShotInit(int wnd) {
+void CGolfRule::OnRadioPredictTomahwakShotInit(PG_MSGARG wnd) {
 	InitRadioPredictShotButton(&m_predictTomahwakShotBtn, wnd, 80.0f);
 }
 
 // golfrule.cpp:1603
-void CGolfRule::OnRadioPredictCobraShotInit(int wnd) {
+void CGolfRule::OnRadioPredictCobraShotInit(PG_MSGARG wnd) {
 	InitRadioPredictShotButton(&m_predictCobraShotBtn, wnd, 60.0f);
 }
 
 // golfrule.cpp:1606
-void CGolfRule::OnRadioPredictSpikeShotInit(int wnd) {
+void CGolfRule::OnRadioPredictSpikeShotInit(PG_MSGARG wnd) {
 	InitRadioPredictShotButton(&m_predictSpikeShotBtn, wnd, 40.0f);
 }
 
@@ -1373,7 +1373,7 @@ void CGolfRule::OnRadioPredictSpikeShotDown(void) {
 }
 
 // golfrule.cpp:1638
-void CGolfRule::OnRadioPredictNormalShotDraw(int) {
+void CGolfRule::OnRadioPredictNormalShotDraw(PG_MSGARG) {
 	FrButton *button = m_predictNormalShotBtn;
 	if (button) {
 		button->MoveWindow(WPoint(g_view->GetWidth() - 180.0f, g_view->GetHeight() - 100.0f));
@@ -1390,7 +1390,7 @@ void CGolfRule::OnRadioPredictNormalShotDraw(int) {
 }
 
 // golfrule.cpp:1653
-void CGolfRule::OnRadioPredictTomahwakShotDraw(int) {
+void CGolfRule::OnRadioPredictTomahwakShotDraw(PG_MSGARG) {
 	FrButton *button = m_predictTomahwakShotBtn;
 	if (button) {
 		if (!GolfClub().PowerShotType())
@@ -1411,7 +1411,7 @@ void CGolfRule::OnRadioPredictTomahwakShotDraw(int) {
 }
 
 // golfrule.cpp:1671
-void CGolfRule::OnRadioPredictCobraShotDraw(int) {
+void CGolfRule::OnRadioPredictCobraShotDraw(PG_MSGARG) {
 	FrButton *button = m_predictCobraShotBtn;
 	if (button) {
 		if (!GolfClub().PowerShotType())
@@ -1432,7 +1432,7 @@ void CGolfRule::OnRadioPredictCobraShotDraw(int) {
 }
 
 // golfrule.cpp:1689
-void CGolfRule::OnRadioPredictSpikeShotDraw(int) {
+void CGolfRule::OnRadioPredictSpikeShotDraw(PG_MSGARG) {
 	FrButton *button = m_predictSpikeShotBtn;
 	if (button) {
 		if (!GolfClub().PowerShotType())
@@ -11655,7 +11655,7 @@ int CGolfRule::HoleReplay2(void) {
 }
 
 // golfrule.cpp:16359
-void CGolfRule::OnMessengerBtnInit(int param) {
+void CGolfRule::OnMessengerBtnInit(PG_MSGARG param) {
 	FrButton *button = (FrButton *)((__rtti_obj = (void *)param) != 0 ? (((IObject *)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) ? (void *)param : 0) : 0);
 	if ((m_messengerWnd = button) != 0) {
 		if (!WSingleton<CSharedDoc>::Instance()->m_value4DBE)
@@ -11681,7 +11681,7 @@ void CGolfRule::OnMessengerBtnUp(void) {
 }
 
 // golfrule.cpp:16390
-void CGolfRule::OnMessengerBubbleEditInit(int param) {
+void CGolfRule::OnMessengerBubbleEditInit(PG_MSGARG param) {
 	m_messengerBubbleEdit = (FrEdit *)((__rtti_obj = (void *)param) != 0 ? (((IObject *)__rtti_obj)->IsKindOf(&FrEdit::m_RTTI) ? (void *)param : 0) : 0);
 	if (m_messengerBubbleEdit) {
 		m_messengerBubbleEdit->SetVisible(false);
@@ -11694,7 +11694,7 @@ void CGolfRule::OnMessengerBubbleEditInit(int param) {
 }
 
 // golfrule.cpp:16404
-void CGolfRule::OnMessenger_AlarmBtnInit(int param) {
+void CGolfRule::OnMessenger_AlarmBtnInit(PG_MSGARG param) {
 	m_messengerAlarmBtn = DYNAMIC_CAST(FrButton, param);
 	if (m_messengerAlarmBtn) {
 		m_messengerAlarmBtn->SetTopmost(true);
@@ -11717,7 +11717,7 @@ void CGolfRule::OnMessenger_AlarmBtnUp(void) {
 }
 
 // golfrule.cpp:16430
-void CGolfRule::OnMessenger_GiftAlarmBtnInit(int param) {
+void CGolfRule::OnMessenger_GiftAlarmBtnInit(PG_MSGARG param) {
 	m_messengerGiftAlarmBtn = DYNAMIC_CAST(FrButton, param);
 	if (m_messengerGiftAlarmBtn) {
 		m_messengerGiftAlarmBtn->SetVisible(false);
@@ -11743,7 +11743,7 @@ void CGolfRule::OnMessenger_GiftAlarmBtnUp(void) {
 }
 
 // golfrule.cpp:16458
-void CGolfRule::OnReplayStatusInit(int param) {
+void CGolfRule::OnReplayStatusInit(PG_MSGARG param) {
 	m_replayBoxWnd = DYNAMIC_CAST(FrArea, param);
 
 	if (!IsLocalContent((localContentType_t)0x4F))

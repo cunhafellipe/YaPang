@@ -35,7 +35,7 @@ protected:
 	virtual bool OnInit(void);
 
 	void OnListInit(intptr_t param);
-	void OnListOwnerDraw(int param);
+	void OnListOwnerDraw(PG_MSGARG param);
 	void OnListBtnUp(void);
 
 private:

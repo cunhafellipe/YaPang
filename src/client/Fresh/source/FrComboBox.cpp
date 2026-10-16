@@ -251,7 +251,7 @@ void FrComboBox::OnUnfold(void) {
 }
 
 // frcombobox.cpp:291
-void FrComboBox::OnListOwnerDraw(int param) {
+void FrComboBox::OnListOwnerDraw(PG_MSGARG param) {
 	if (param == 0) {
 		const WRect& listRect = m_pListBox->GetRect();
 		GDI()->Box(listRect, m_bgColor, 0, 0.0f);
@@ -303,7 +303,7 @@ void FrComboBox::OnListBtnDown(void) {
 }
 
 // frcombobox.cpp:363
-void FrComboBox::OnListLostKeyFocus(int param) {
+void FrComboBox::OnListLostKeyFocus(PG_MSGARG param) {
 	WRect listRect = m_pListBox->GetRect();
 	WRect buttonRect = m_pButton->GetRect();
 
@@ -535,7 +535,7 @@ void FrComboCtlEx::AlignListItem(void) {
 }
 
 // frcombobox.cpp:631
-void FrComboCtlEx::OnListOwnerDraw(int param) {
+void FrComboCtlEx::OnListOwnerDraw(PG_MSGARG param) {
 	if (!param)
 		return;
 
@@ -622,7 +622,7 @@ void FrComboCtlEx::OnKeyFocus(CChatMsg* im) {
 }
 
 // frcombobox.cpp:730
-void FrComboCtlEx::OnListLostKeyFocus(int param) {
+void FrComboCtlEx::OnListLostKeyFocus(PG_MSGARG param) {
 	WRect listRect = m_pListBox->GetRect();
 	WRect buttonRect = m_pButton->GetRect();
 
@@ -647,7 +647,7 @@ void FrComboCtlEx::OnUnfold(void) {
 }
 
 // frcombobox.cpp:762
-void FrComboCtlEx::OnUnfoldOwnerDraw(int param) {
+void FrComboCtlEx::OnUnfoldOwnerDraw(PG_MSGARG param) {
 	if (m_eDrawStyle == IDS_IMG) {
 		if (m_pSelectItem) {
 			WRect rc = m_pButton->GetRect();

@@ -1091,7 +1091,7 @@ void FrServerDlg::DrawServerButton(const WPoint& pos, const sGameServerInfo* pSe
 }
 
 // serverdlg.cpp:1237
-void FrServerDlg::OnServerListOwnerDraw(int param) {
+void FrServerDlg::OnServerListOwnerDraw(PG_MSGARG param) {
 	if (!m_pServerList)
 		return;
 

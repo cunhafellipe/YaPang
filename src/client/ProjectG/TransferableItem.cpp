@@ -637,7 +637,7 @@ bool CTransferableItem::DelRegistrationItem(unsigned long guid) {
 // transferableitem.cpp:861
 std::list<sTradeItem>::iterator CTransferableItem::DelRegistrationItem_itor_return(unsigned long guid) {
 	if (m_listRegistrationItem.size() == 0)
-		return NULL;
+		return std::list<sTradeItem>::iterator();
 
 	std::list<sTradeItem>::iterator it;
 
@@ -656,7 +656,7 @@ std::list<sTradeItem>::iterator CTransferableItem::DelRegistrationItem_itor_retu
 		}
 	}
 
-	return NULL;
+	return std::list<sTradeItem>::iterator();
 }
 
 // transferableitem.cpp:888

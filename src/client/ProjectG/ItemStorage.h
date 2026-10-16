@@ -322,7 +322,7 @@ protected:
 	void OnInitDrawArea(intptr_t param);        // itemstorage.cpp:1196
 	void OnOwnerDrawDrawArea(intptr_t id);      // itemstorage.cpp:1200
 	void OnInitInput(intptr_t param);           // itemstorage.cpp:1321
-	bool OnInputEnterKey(int param);       // itemstorage.cpp:1327
+	bool OnInputEnterKey(PG_MSGARG param);       // itemstorage.cpp:1327
 	void OnInitConfirm(intptr_t param);         // itemstorage.cpp:1334
 	void OnLBDownConfirm(void);            // itemstorage.cpp:1342
 	void OnInitCancel(intptr_t param);          // itemstorage.cpp:1406
@@ -412,7 +412,7 @@ public:
 	void IndexControlClick(void);
 	void IndexControlNext(void);
 	void IndexControlPrev(void);
-	void DrawStoredItemInfo(const FrListBox*& pListBox, const FrListItem& item);
+	void DrawStoredItemInfo(FrListBox* & pListBox, const FrListItem& item);
 	void ReqPopStoredItemInfo(const sStoredItemInfo& info);
 	void ReqPopStoredItemInfo(const FrListItem& item);    // itemstorage.cpp:2018
 	bool CheckStoredItemInfo(sStoredItemInfo& stored, const sItemInfo& info);   // itemstorage.cpp (not yet transcribed)

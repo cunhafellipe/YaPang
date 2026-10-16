@@ -1077,7 +1077,7 @@ void FrItemAttachCardDlg::initCardSlotBtnTxt(void) {
 }
 
 // carddlg.cpp:1101
-void FrItemAttachCardDlg::OnAttachCardIconInit(int param) {
+void FrItemAttachCardDlg::OnAttachCardIconInit(PG_MSGARG param) {
 	m_pAttachCardIcon = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -1091,17 +1091,17 @@ void FrItemAttachCardDlg::OnAttachCardIconOwnerDraw(void) {
 }
 
 // carddlg.cpp:1117
-void FrItemAttachCardDlg::OnAttachCardNameInit(int param) {
+void FrItemAttachCardDlg::OnAttachCardNameInit(PG_MSGARG param) {
 	m_pAttachCardName = DYNAMIC_CAST(FrEdit, param);
 }
 
 // carddlg.cpp:1123
-void FrItemAttachCardDlg::OnAttachCardAbilityInit(int param) {
+void FrItemAttachCardDlg::OnAttachCardAbilityInit(PG_MSGARG param) {
 	m_pAttachCardAbility = DYNAMIC_CAST(FrEdit, param);
 }
 
 // carddlg.cpp:1128
-void FrItemAttachCardDlg::OnAttachItemIconInit(int param) {
+void FrItemAttachCardDlg::OnAttachItemIconInit(PG_MSGARG param) {
 	m_pAttachItemIcon = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -1116,28 +1116,28 @@ void FrItemAttachCardDlg::OnAttachItemIconOwnerDraw(void) {
 }
 
 // carddlg.cpp:1145
-void FrItemAttachCardDlg::OnAttachItemNameInit(int param) {
+void FrItemAttachCardDlg::OnAttachItemNameInit(PG_MSGARG param) {
 	m_pAttachItemName = DYNAMIC_CAST(FrEdit, param);
 }
 
 // carddlg.cpp:1151
-void FrItemAttachCardDlg::OnAttachItemAbilityInit(int param) {
+void FrItemAttachCardDlg::OnAttachItemAbilityInit(PG_MSGARG param) {
 	m_pAttachItemAbility = DYNAMIC_CAST(FrEdit, param);
 }
 
 // carddlg.cpp:1156
-void FrItemAttachCardDlg::OnAreaCharImgInit(int param) {
+void FrItemAttachCardDlg::OnAreaCharImgInit(PG_MSGARG param) {
 	m_pAreaCharImg = DYNAMIC_CAST(FrArea, param);
 }
 
 // carddlg.cpp:1161
-void FrItemAttachCardDlg::OnItemListFoldInit(int param) {
+void FrItemAttachCardDlg::OnItemListFoldInit(PG_MSGARG param) {
 	m_pItemListFold = DYNAMIC_CAST(FrButton, param);
 	m_pItemListFold->SetVisible(true);
 }
 
 // carddlg.cpp:1167
-void FrItemAttachCardDlg::OnItemListUnfoldInit(int param) {
+void FrItemAttachCardDlg::OnItemListUnfoldInit(PG_MSGARG param) {
 	m_pItemListUnfold = DYNAMIC_CAST(FrButton, param);
 
 	m_pItemListUnfold->SetVisible(false);
@@ -1174,32 +1174,32 @@ void FrItemAttachCardDlg::OnItemListUnfoldLClick(void) {
 }
 
 // carddlg.cpp:1203
-void FrItemAttachCardDlg::OnDlgFrm_04Init(int param) {
+void FrItemAttachCardDlg::OnDlgFrm_04Init(PG_MSGARG param) {
 	m_cardSlotMove.AddFrame(DYNAMIC_CAST(FrArea, param));
 }
 
 // carddlg.cpp:1208
-void FrItemAttachCardDlg::OnDlgFrm_05Init(int param) {
+void FrItemAttachCardDlg::OnDlgFrm_05Init(PG_MSGARG param) {
 	m_cardSlotMove.AddFrame(DYNAMIC_CAST(FrArea, param));
 }
 
 // carddlg.cpp:1213
-void FrItemAttachCardDlg::OnDlgFrm_06Init(int param) {
+void FrItemAttachCardDlg::OnDlgFrm_06Init(PG_MSGARG param) {
 	m_cardSlotMove.AddFrame(DYNAMIC_CAST(FrArea, param));
 }
 
 // carddlg.cpp:1218
-void FrItemAttachCardDlg::OnDlgFrm_07Init(int param) {
+void FrItemAttachCardDlg::OnDlgFrm_07Init(PG_MSGARG param) {
 	m_cardSlotMove.AddFrame(DYNAMIC_CAST(FrArea, param));
 }
 
 // carddlg.cpp:1223
-void FrItemAttachCardDlg::OnDlgFrm_08Init(int param) {
+void FrItemAttachCardDlg::OnDlgFrm_08Init(PG_MSGARG param) {
 	m_cardSlotMove.AddFrame(DYNAMIC_CAST(FrArea, param));
 }
 
 // carddlg.cpp:1228
-void FrItemAttachCardDlg::OnDlgFrm_09Init(int param) {
+void FrItemAttachCardDlg::OnDlgFrm_09Init(PG_MSGARG param) {
 	m_cardSlotMove.AddFrame(DYNAMIC_CAST(FrArea, param));
 }
 
@@ -1339,7 +1339,7 @@ void FrItemAttachCardDlg::DrawBtnCaddieSlotimg(float x, float y, unsigned long c
 }
 
 // carddlg.cpp:1458
-void FrItemAttachCardDlg::OnCharSlotBtnInit_1(int param) {
+void FrItemAttachCardDlg::OnCharSlotBtnInit_1(PG_MSGARG param) {
 	m_pCharSlotBtn[0] = DYNAMIC_CAST(FrButton, param);
 	m_pCharSlotBtn[0]->Enable(false);
 }
@@ -1378,7 +1378,7 @@ void FrItemAttachCardDlg::OnCharSlotBtnOwnerDraw_1(void) {
 }
 
 // carddlg.cpp:1505
-void FrItemAttachCardDlg::OnCharSlotBtnInit_2(int param) {
+void FrItemAttachCardDlg::OnCharSlotBtnInit_2(PG_MSGARG param) {
 	m_pCharSlotBtn[1] = DYNAMIC_CAST(FrButton, param);
 	m_pCharSlotBtn[1]->Enable(false);
 }
@@ -1417,7 +1417,7 @@ void FrItemAttachCardDlg::OnCharSlotBtnOwnerDraw_2(void) {
 }
 
 // carddlg.cpp:1552
-void FrItemAttachCardDlg::OnCharSlotBtnInit_3(int param) {
+void FrItemAttachCardDlg::OnCharSlotBtnInit_3(PG_MSGARG param) {
 	m_pCharSlotBtn[2] = DYNAMIC_CAST(FrButton, param);
 	m_pCharSlotBtn[2]->Enable(false);
 }
@@ -1456,7 +1456,7 @@ void FrItemAttachCardDlg::OnCharSlotBtnOwnerDraw_3(void) {
 }
 
 // carddlg.cpp:1599
-void FrItemAttachCardDlg::OnCharSlotBtnInit_4(int param) {
+void FrItemAttachCardDlg::OnCharSlotBtnInit_4(PG_MSGARG param) {
 	m_pCharSlotBtn[3] = DYNAMIC_CAST(FrButton, param);
 	m_pCharSlotBtn[3]->Enable(false);
 }
@@ -1495,7 +1495,7 @@ void FrItemAttachCardDlg::OnCharSlotBtnOwnerDraw_4(void) {
 }
 
 // carddlg.cpp:1646
-void FrItemAttachCardDlg::OnCaddieSlotBtnInit_1(int param) {
+void FrItemAttachCardDlg::OnCaddieSlotBtnInit_1(PG_MSGARG param) {
 	m_pCaddieSlotBtn[0] = DYNAMIC_CAST(FrButton, param);
 	m_pCaddieSlotBtn[0]->Enable(false);
 }
@@ -1534,7 +1534,7 @@ void FrItemAttachCardDlg::OnCaddieSlotBtnOwnerDraw_1(void) {
 }
 
 // carddlg.cpp:1692
-void FrItemAttachCardDlg::OnCaddieSlotBtnInit_2(int param) {
+void FrItemAttachCardDlg::OnCaddieSlotBtnInit_2(PG_MSGARG param) {
 	m_pCaddieSlotBtn[1] = DYNAMIC_CAST(FrButton, param);
 	m_pCaddieSlotBtn[1]->Enable(false);
 }
@@ -1573,7 +1573,7 @@ void FrItemAttachCardDlg::OnCaddieSlotBtnOwnerDraw_2(void) {
 }
 
 // carddlg.cpp:1738
-void FrItemAttachCardDlg::OnCaddieSlotBtnInit_3(int param) {
+void FrItemAttachCardDlg::OnCaddieSlotBtnInit_3(PG_MSGARG param) {
 	m_pCaddieSlotBtn[2] = DYNAMIC_CAST(FrButton, param);
 	m_pCaddieSlotBtn[2]->Enable(false);
 }
@@ -1612,7 +1612,7 @@ void FrItemAttachCardDlg::OnCaddieSlotBtnOwnerDraw_3(void) {
 }
 
 // carddlg.cpp:1785
-void FrItemAttachCardDlg::OnCaddieSlotBtnInit_4(int param) {
+void FrItemAttachCardDlg::OnCaddieSlotBtnInit_4(PG_MSGARG param) {
 	m_pCaddieSlotBtn[3] = DYNAMIC_CAST(FrButton, param);
 	m_pCaddieSlotBtn[3]->Enable(false);
 }

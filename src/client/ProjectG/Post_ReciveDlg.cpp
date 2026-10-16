@@ -854,7 +854,7 @@ void CPost_ReciveDlg::OnPostListDClick(void) {
 }
 
 // post_recivedlg.cpp:1129
-bool CPost_ReciveDlg::OnEditPageEndterKey(int) {
+bool CPost_ReciveDlg::OnEditPageEndterKey(PG_MSGARG) {
 	return true;
 }
 
@@ -1056,7 +1056,7 @@ void CPost_ReciveDlg::OnToolTipInit(intptr_t param) {
 }
 
 // post_recivedlg.cpp:1381
-void CPost_ReciveDlg::OnToolTipOnwerDraw(int param) {
+void CPost_ReciveDlg::OnToolTipOnwerDraw(PG_MSGARG param) {
 	m_toolTipManager.Process();
 
 	int tipIndex = CIconToolTip::GetInstance()->GetCurTipIndex();
@@ -1388,9 +1388,9 @@ void CPost_MessgeDlg::OnPostDescFrame(bool bShow) {
 
 // post_recivedlg.cpp:1951
 void CPost_MessgeDlg::SetGiftDescString(const char* pSender, const char* pContents, const char* pItemName, const char* pItemDesc) {
-	if (m_pReciveUserEdit->GetLine(1, false) > 0) m_pReciveUserEdit->ClearLine();
-	if (m_pLetterContentsEdit->GetLine(1, false) > 0) m_pLetterContentsEdit->ClearLine();
-	if (m_pLetterDateEdit->GetLine(1, false) > 0) m_pLetterDateEdit->ClearLine();
+	if (m_pReciveUserEdit->GetLine(1, false) != 0) m_pReciveUserEdit->ClearLine();
+	if (m_pLetterContentsEdit->GetLine(1, false) != 0) m_pLetterContentsEdit->ClearLine();
+	if (m_pLetterDateEdit->GetLine(1, false) != 0) m_pLetterDateEdit->ClearLine();
 
 	if (pSender == 0) {
 		// "There is no mail that has arrived."

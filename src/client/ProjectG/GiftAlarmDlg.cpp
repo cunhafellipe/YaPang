@@ -221,7 +221,7 @@ void FrGiftAlarmDlg::OnGiftListInit(intptr_t param) {
 }
 
 // giftalarmdlg.cpp:174
-void FrGiftAlarmDlg::OnGiftListOwnerDraw(int param) {
+void FrGiftAlarmDlg::OnGiftListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (pItem) {
@@ -488,7 +488,7 @@ CTreasureAlarmDlg::~CTreasureAlarmDlg(void) {
 }
 
 // giftalarmdlg.cpp:518
-void CTreasureAlarmDlg::OnListBox_Gift_Init(int param) {
+void CTreasureAlarmDlg::OnListBox_Gift_Init(PG_MSGARG param) {
 	m_pGiftList = DYNAMIC_CAST(FrListBox, param);
 	if (m_pGiftList) {
 
@@ -518,7 +518,7 @@ void CTreasureAlarmDlg::OnListBox_Gift_Init(int param) {
 }
 
 // giftalarmdlg.cpp:545
-void CTreasureAlarmDlg::OnListBox_Gift_OwnerDraw(int param) {
+void CTreasureAlarmDlg::OnListBox_Gift_OwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 
 	if (pItem) {

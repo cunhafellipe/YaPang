@@ -2,6 +2,13 @@
 #ifndef PG_SHARED_LUASYSTEM_LUA_TINKER_LUA_TINKER_H
 #define PG_SHARED_LUASYSTEM_LUA_TINKER_LUA_TINKER_H
 
+#ifdef PG_PORT
+// lua_tinker specialises its templates for `int` and `long` separately; the
+// port's 32-bit `long` (defines.h/PG_PTRINT) would make them the same type.
+#pragma push_macro("long")
+#undef long
+#endif
+
 extern "C" {
 #include "lua.h"
 #include "lualib.h"
@@ -324,4 +331,7 @@ public:
 CHECK_SIZE(table_obj_manager, 0x0C);
 CHECK_FIELD(table_obj_manager, m_objs, 0x00);
 
+#ifdef PG_PORT
+#pragma pop_macro("long")
+#endif
 #endif

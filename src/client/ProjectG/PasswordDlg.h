@@ -31,7 +31,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnPasswordInit(intptr_t param);
-	bool OnPasswordEnterKey(int param);
+	bool OnPasswordEnterKey(PG_MSGARG param);
 	void OnOkBtnUp(void);
 
 private:

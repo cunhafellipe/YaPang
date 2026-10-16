@@ -306,11 +306,11 @@ protected:
 	void OnListDblClick(void);
 	void OnSortInit(intptr_t param);
 	void OnSortDraw(intptr_t param);
-	void OnSortDown(int param);
-	void OnPartBtnInit(int param);
-	void OnClubBtnInit(int param);
-	void OnItemBtnInit(int param);
-	void OnCardBtnInit(int param);
+	void OnSortDown(PG_MSGARG param);
+	void OnPartBtnInit(PG_MSGARG param);
+	void OnClubBtnInit(PG_MSGARG param);
+	void OnItemBtnInit(PG_MSGARG param);
+	void OnCardBtnInit(PG_MSGARG param);
 	void OnPartBtnDown(void);
 	void OnClubBtnDown(void);
 	void OnItemBtnDown(void);

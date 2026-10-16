@@ -166,12 +166,12 @@ protected:
 	void LoadTutorialMainImages(void);     // tutorialmain.cpp:517
 	void DisableOverBarButtons(void);      // tutorialmain.cpp:914
 	void DisableUnderBarButtons(void);     // tutorialmain.cpp:953
-	void OnTutorialMainInit(int);          // tutorialmain.cpp:1007
+	void OnTutorialMainInit(PG_MSGARG);          // tutorialmain.cpp:1007
 	void OnTutorialMainFinish(void);       // tutorialmain.cpp:1013
-	void OnTutorialAreaPipin(int param);   // tutorialmain.cpp:1024
-	void OnTutorialAreaPipinOwnerDraw(int); // tutorialmain.cpp:1029
-	void OnTutorialListInit(int param);    // tutorialmain.cpp:1040
-	void OnTutorialListOwnerDraw(int param); // tutorialmain.cpp:1062
+	void OnTutorialAreaPipin(PG_MSGARG param);   // tutorialmain.cpp:1024
+	void OnTutorialAreaPipinOwnerDraw(PG_MSGARG); // tutorialmain.cpp:1029
+	void OnTutorialListInit(PG_MSGARG param);    // tutorialmain.cpp:1040
+	void OnTutorialListOwnerDraw(PG_MSGARG param); // tutorialmain.cpp:1062
 	void DrawCourseArrow(void);            // tutorialmain.cpp:1309
 	void OnTutorialListLBtnDown(void);     // tutorialmain.cpp:1368
 	void OnTutorialListLBtnUp(void);       // tutorialmain.cpp:1425

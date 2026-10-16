@@ -135,7 +135,7 @@ void CIconManager::Destory(void) {
 	std::vector<sTopIcon*>::iterator it = m_icons.begin();
 	for (; it != m_icons.end(); ++it) {
 
-		if (it != NULL) {
+		if (it != m_icons.end()) {
 
 			if ((*it)->m_icon)
 				m_instanceFunctions[(*it)->m_name].m_destroy((*it)->m_icon);
@@ -146,7 +146,7 @@ void CIconManager::Destory(void) {
 }
 
 // topiconmanager.cpp:160
-void CIconManager::InitalizeTopIcon(unsigned long slot, int param) {
+void CIconManager::InitalizeTopIcon(unsigned long slot, PG_PTRINT param) {
 	FrButton* pButton = DYNAMIC_CAST(FrButton, param);
 	if (!pButton)
 		return;
@@ -187,7 +187,7 @@ bool CIconManager::IsIncludedIcon(std::string name) {
 	std::vector<sTopIcon*>::iterator it = m_icons.begin();
 	for (; it != m_icons.end(); ++it) {
 
-		if (it != NULL) {
+		if (it != m_icons.end()) {
 
 			if (strcmp((*it)->m_name.c_str(), name.c_str()) == 0)
 				return true;

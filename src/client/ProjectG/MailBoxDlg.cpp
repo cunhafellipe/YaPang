@@ -68,7 +68,7 @@ void FrMailBoxDlg::OnNoteInit(intptr_t param) {
 }
 
 // mailboxdlg.cpp:48
-void FrMailBoxDlg::OnNoteOwnerDraw(int param) {
+void FrMailBoxDlg::OnNoteOwnerDraw(PG_MSGARG param) {
 	if (!m_noteList)
 		return;
 

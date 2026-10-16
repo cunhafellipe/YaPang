@@ -1064,7 +1064,7 @@ void FrGiftDlg::OnEdIdInit(intptr_t param) {
 }
 
 // giftdlg.cpp:1380
-bool FrGiftDlg::OnEdIdEnterKey(int) {
+bool FrGiftDlg::OnEdIdEnterKey(PG_MSGARG) {
 	return false;
 }
 
@@ -1100,7 +1100,7 @@ void FrGiftDlg::OnEdNickInit(intptr_t param) {
 }
 
 // giftdlg.cpp:1463
-bool FrGiftDlg::OnEdNickEnterKey(int) {
+bool FrGiftDlg::OnEdNickEnterKey(PG_MSGARG) {
 	OnBtNickCheckUp();
 	return false;
 }
@@ -1111,7 +1111,7 @@ void FrGiftDlg::OnMsgInit(intptr_t param) {
 }
 
 // giftdlg.cpp:1476
-bool FrGiftDlg::OnMsgEnterKey(int) {
+bool FrGiftDlg::OnMsgEnterKey(PG_MSGARG) {
 	OnCheckoutBtnUp();
 	return false;
 }

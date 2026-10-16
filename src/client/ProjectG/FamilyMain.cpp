@@ -767,7 +767,7 @@ sFRESH_ENTRY CFamilyMain::_MsgEntries[] = {
 };
 
 // familymain.cpp:634
-void CFamilyMain::OnInitFamilyMain(int param) {
+void CFamilyMain::OnInitFamilyMain(PG_MSGARG param) {
 	SetTimeVariableBGM();
 	TurnOff3DBackground();
 
@@ -876,27 +876,27 @@ void CFamilyMain::TurnOffControls(void) {
 }
 
 // familymain.cpp:766
-void CFamilyMain::OnInitAreaPet1(int param) {
+void CFamilyMain::OnInitAreaPet1(PG_MSGARG param) {
 	m_areas[0] = DYNAMIC_CAST(FrArea, param);
 }
 
 // familymain.cpp:770
-void CFamilyMain::OnInitAreaPet2(int param) {
+void CFamilyMain::OnInitAreaPet2(PG_MSGARG param) {
 	m_areas[1] = DYNAMIC_CAST(FrArea, param);
 }
 
 // familymain.cpp:774
-void CFamilyMain::OnInitAreaPet3(int param) {
+void CFamilyMain::OnInitAreaPet3(PG_MSGARG param) {
 	m_areas[2] = DYNAMIC_CAST(FrArea, param);
 }
 
 // familymain.cpp:778
-void CFamilyMain::OnInitAreaPet4(int param) {
+void CFamilyMain::OnInitAreaPet4(PG_MSGARG param) {
 	m_areas[3] = DYNAMIC_CAST(FrArea, param);
 }
 
 // familymain.cpp:782
-void CFamilyMain::OnInitAreaGlobal(int param) {
+void CFamilyMain::OnInitAreaGlobal(PG_MSGARG param) {
 	m_areas[4] = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -941,51 +941,51 @@ void CFamilyMain::OnDrawAreaGlobal(void) {
 }
 
 // familymain.cpp:831
-void CFamilyMain::OnInitBtnStart(int param) {
+void CFamilyMain::OnInitBtnStart(PG_MSGARG param) {
 	m_buttons[0] = DYNAMIC_CAST(FrButton, param);
 }
 
 // familymain.cpp:835
-void CFamilyMain::OnInitBtnSelMap(int param) {
+void CFamilyMain::OnInitBtnSelMap(PG_MSGARG param) {
 	m_buttons[1] = DYNAMIC_CAST(FrButton, param);
 }
 
 // familymain.cpp:839
-void CFamilyMain::OnInitBtnHoleType(int param) {
+void CFamilyMain::OnInitBtnHoleType(PG_MSGARG param) {
 	m_buttons[2] = DYNAMIC_CAST(FrButton, param);
 	m_buttons[2]->SetPushDelay(0.1f);
 }
 
 // familymain.cpp:844
-void CFamilyMain::OnInitBtnHoleNum(int param) {
+void CFamilyMain::OnInitBtnHoleNum(PG_MSGARG param) {
 	m_buttons[3] = DYNAMIC_CAST(FrButton, param);
 	m_buttons[3]->SetPushDelay(0.1f);
 }
 
 // familymain.cpp:849
-void CFamilyMain::OnInitBtnTimeLimit(int param) {
+void CFamilyMain::OnInitBtnTimeLimit(PG_MSGARG param) {
 	m_buttons[4] = DYNAMIC_CAST(FrButton, param);
 	m_buttons[4]->SetPushDelay(0.1f);
 }
 
 // familymain.cpp:855
-void CFamilyMain::OnInitCreatePet3(int param) {
+void CFamilyMain::OnInitCreatePet3(PG_MSGARG param) {
 	m_buttons[5] = DYNAMIC_CAST(FrButton, param);
 }
 
 // familymain.cpp:859
-void CFamilyMain::OnInitCreatePet4(int param) {
+void CFamilyMain::OnInitCreatePet4(PG_MSGARG param) {
 	m_buttons[6] = DYNAMIC_CAST(FrButton, param);
 }
 
 // familymain.cpp:863
-void CFamilyMain::OnInitDeletePet3(int param) {
+void CFamilyMain::OnInitDeletePet3(PG_MSGARG param) {
 	m_buttons[7] = DYNAMIC_CAST(FrButton, param);
 	m_buttons[7]->SetVisible(false);
 }
 
 // familymain.cpp:868
-void CFamilyMain::OnInitDeletePet4(int param) {
+void CFamilyMain::OnInitDeletePet4(PG_MSGARG param) {
 	m_buttons[8] = DYNAMIC_CAST(FrButton, param);
 	m_buttons[8]->SetVisible(false);
 }
@@ -1227,42 +1227,42 @@ void CFamilyMain::OnDrawBtnTimeLimit(void) {
 }
 
 // familymain.cpp:1118
-void CFamilyMain::OnInitListEquip1(int param) {
+void CFamilyMain::OnInitListEquip1(PG_MSGARG param) {
 	m_equipLists[0] = DYNAMIC_CAST(FrListBox, param);
 }
 
 // familymain.cpp:1122
-void CFamilyMain::OnInitListEquip2(int param) {
+void CFamilyMain::OnInitListEquip2(PG_MSGARG param) {
 	m_equipLists[1] = DYNAMIC_CAST(FrListBox, param);
 }
 
 // familymain.cpp:1126
-void CFamilyMain::OnInitListEquip3(int param) {
+void CFamilyMain::OnInitListEquip3(PG_MSGARG param) {
 	m_equipLists[2] = DYNAMIC_CAST(FrListBox, param);
 }
 
 // familymain.cpp:1130
-void CFamilyMain::OnInitListEquip4(int param) {
+void CFamilyMain::OnInitListEquip4(PG_MSGARG param) {
 	m_equipLists[3] = DYNAMIC_CAST(FrListBox, param);
 }
 
 // familymain.cpp:1135
-void CFamilyMain::OnDownListEquip1(int) {
+void CFamilyMain::OnDownListEquip1(PG_MSGARG) {
 	OnDownEquipListBox(0);
 }
 
 // familymain.cpp:1139
-void CFamilyMain::OnDownListEquip2(int) {
+void CFamilyMain::OnDownListEquip2(PG_MSGARG) {
 	OnDownEquipListBox(1);
 }
 
 // familymain.cpp:1143
-void CFamilyMain::OnDownListEquip3(int) {
+void CFamilyMain::OnDownListEquip3(PG_MSGARG) {
 	OnDownEquipListBox(2);
 }
 
 // familymain.cpp:1147
-void CFamilyMain::OnDownListEquip4(int) {
+void CFamilyMain::OnDownListEquip4(PG_MSGARG) {
 	OnDownEquipListBox(3);
 }
 
@@ -1372,22 +1372,22 @@ bool CFamilyMain::OnResultSubEquipBar(int result, FrForm* pForm) {
 }
 
 // familymain.cpp:1286
-void CFamilyMain::OnDrawListEquip1(int item) {
+void CFamilyMain::OnDrawListEquip1(PG_MSGARG item) {
 	OnDrawEquipListBox(reinterpret_cast<FrListItem*>(item));
 }
 
 // familymain.cpp:1290
-void CFamilyMain::OnDrawListEquip2(int item) {
+void CFamilyMain::OnDrawListEquip2(PG_MSGARG item) {
 	OnDrawEquipListBox(reinterpret_cast<FrListItem*>(item));
 }
 
 // familymain.cpp:1294
-void CFamilyMain::OnDrawListEquip3(int item) {
+void CFamilyMain::OnDrawListEquip3(PG_MSGARG item) {
 	OnDrawEquipListBox(reinterpret_cast<FrListItem*>(item));
 }
 
 // familymain.cpp:1298
-void CFamilyMain::OnDrawListEquip4(int item) {
+void CFamilyMain::OnDrawListEquip4(PG_MSGARG item) {
 	OnDrawEquipListBox(reinterpret_cast<FrListItem*>(item));
 }
 

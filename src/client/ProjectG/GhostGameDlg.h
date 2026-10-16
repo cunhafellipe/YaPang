@@ -159,14 +159,14 @@ protected:
 	void OnInitRecentMatch(intptr_t);
 	void OnDownRecentMatch(void);
 	void OnInitAreaBg(intptr_t);
-	void OnDrawAreaBg(int);
+	void OnDrawAreaBg(PG_MSGARG);
 	void OnInitSelMapList(intptr_t);
 	void OnDrawSelMapList(intptr_t);
 	void OnDownSelMapList(void);
 	void OnInitAreaSelecText(intptr_t);
 	void OnDrawSelecText(void);
 	void OnInitAreaMap(intptr_t);
-	void OnDrawChoiceMap(int);
+	void OnDrawChoiceMap(PG_MSGARG);
 
 private:
 	std::vector<sImgInfo> m_imgInfos;            // 0x110 (one per map of "map_select")
@@ -320,8 +320,8 @@ protected:
 	void OnInitGaugeBar(intptr_t);
 	void OnInitGaugeText(intptr_t);
 	void OnInitPouchArea(intptr_t);
-	void OnDrawScore(int);
-	void OnDrawPouch(int);
+	void OnDrawScore(PG_MSGARG);
+	void OnDrawPouch(PG_MSGARG);
 
 	void SetResultInfo(sResultInfo& info, int index);
 	void AwardProc(float dt);

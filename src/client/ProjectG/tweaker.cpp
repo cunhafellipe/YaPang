@@ -91,7 +91,7 @@ void tweaker::_regist_command(const char* name, const char* cmd, tweaker_cmd_inf
 }
 
 // tweaker.cpp:133
-std::string tweaker::_run_command(std::string& cmd, tweaker_param& param) {
+std::string tweaker::_run_command(std::string& cmd, const tweaker_param& param) {
 	command_map::iterator found = m_commands.find(cmd);
 	if (found == m_commands.end())
 		return "unknown command";

@@ -191,7 +191,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnAreaNextHole_Init(intptr_t param);
-	void OnAreaNextHole_OwnerDraw(int param);
+	void OnAreaNextHole_OwnerDraw(PG_MSGARG param);
 	void OnArea_OutFrame_Init(intptr_t param);
 
 private:
@@ -246,9 +246,9 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	void OnImageBarInit(int param);
-	void OnArea_Arrow_Init(int param);
-	void OnArea_Arrow_OwnerDraw(int param);
+	void OnImageBarInit(PG_MSGARG param);
+	void OnArea_Arrow_Init(PG_MSGARG param);
+	void OnArea_Arrow_OwnerDraw(PG_MSGARG param);
 	void OnArea_OutFrame_Init(intptr_t param);
 
 private:
@@ -346,42 +346,42 @@ protected:
 	void OnBtnMap_IceInferno_Down(void);
 	void OnBtnMap_AbbotMine_Down(void);
 	void OnBtnMap_Luna_Down(void);
-	void OnBtnMap_IceInferno_OwnerDraw(int);
-	void OnBtnMap_AbbotMine_OwnerDraw(int);
-	void OnBtnMap_Luna_OwnerDraw(int);
+	void OnBtnMap_IceInferno_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_AbbotMine_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Luna_OwnerDraw(PG_MSGARG);
 #endif
 
-	void OnAreaSelectMapInit(int param);
-	void OnBtnMap_ALL_Init(int param);
-	void OnBtnMap_Random_Init(int param);
-	void OnViewerF1(int param);
-	void OnViewerF2(int param);
-	void OnViewer_CurrMap_Init(int param);
-	void OnArea_Explane_Init(int param);
-	void OnArea_Explane_OwnerDraw(int param);
-	void OnImageBar(int param);
-	void OnGauge_SmallBar(int param);
-	void OnGauge_SmallBar_OwnerDraw(int param);
-	void OnInit_Cloud_Area(int param);
-	void OnOwnerDraw_Cloud_Area(int param);
+	void OnAreaSelectMapInit(PG_MSGARG param);
+	void OnBtnMap_ALL_Init(PG_MSGARG param);
+	void OnBtnMap_Random_Init(PG_MSGARG param);
+	void OnViewerF1(PG_MSGARG param);
+	void OnViewerF2(PG_MSGARG param);
+	void OnViewer_CurrMap_Init(PG_MSGARG param);
+	void OnArea_Explane_Init(PG_MSGARG param);
+	void OnArea_Explane_OwnerDraw(PG_MSGARG param);
+	void OnImageBar(PG_MSGARG param);
+	void OnGauge_SmallBar(PG_MSGARG param);
+	void OnGauge_SmallBar_OwnerDraw(PG_MSGARG param);
+	void OnInit_Cloud_Area(PG_MSGARG param);
+	void OnOwnerDraw_Cloud_Area(PG_MSGARG param);
 
-	void OnBtnMap_Lagoon_OwnerDraw(int);
-	void OnBtnMap_Water_OwnerDraw(int);
-	void OnBtnMap_Sepia_OwnerDraw(int);
-	void OnBtnMap_Hill_OwnerDraw(int);
-	void OnBtnMap_WizWiz_OwnerDraw(int);
-	void OnBtnMap_West_OwnerDraw(int);
-	void OnBtnMap_Moon_OwnerDraw(int);
-	void OnBtnMap_Silvia_OwnerDraw(int);
-	void OnBtnMap_Cannon_OwnerDraw(int);
-	void OnBtnMap_White_OwnerDraw(int);
-	void OnBtnMap_Shining_OwnerDraw(int);
-	void OnBtnMap_Pink_OwnerDraw(int);
-	void OnBtnMap_Inferno_OwnerDraw(int);
-	void OnBtnMap_IceSpa_OwnerDraw(int);
-	void OnBtnMap_SeaWay_OwnerDraw(int);
-	void OnBtnMap_Panda_OwnerDraw(int);
-	void OnBtnMap_Wizcity_OwnerDraw(int);
+	void OnBtnMap_Lagoon_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Water_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Sepia_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Hill_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_WizWiz_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_West_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Moon_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Silvia_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Cannon_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_White_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Shining_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Pink_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Inferno_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_IceSpa_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_SeaWay_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Panda_OwnerDraw(PG_MSGARG);
+	void OnBtnMap_Wizcity_OwnerDraw(PG_MSGARG);
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];
@@ -585,14 +585,14 @@ protected:
 	virtual bool OnInit(void);
 	virtual void OnProc(const float dt);
 
-	void OnInit_RangeArea_Out(int param);
-	void OnInit_RangeArea_In(int param);
+	void OnInit_RangeArea_Out(PG_MSGARG param);
+	void OnInit_RangeArea_In(PG_MSGARG param);
 	void OnInit_Gift_List(intptr_t param);
-	void OnInit_GridArea(int param);
-	void OnOwnerDraw_GridArea(int param);
-	void OnInit_Box_Area(int param);
+	void OnInit_GridArea(PG_MSGARG param);
+	void OnOwnerDraw_GridArea(PG_MSGARG param);
+	void OnInit_Box_Area(PG_MSGARG param);
 	void OnOwnerDraw_Gift_List(intptr_t param);
-	void OnOwnerDraw_Box_Area(int param);
+	void OnOwnerDraw_Box_Area(PG_MSGARG param);
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];

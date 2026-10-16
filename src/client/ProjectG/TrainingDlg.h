@@ -31,7 +31,7 @@ protected:
 
 	void OnTrainingInit(intptr_t param);
 	void OnTrainingBtnUp(void);
-	void OnTrainingOwnerDraw(int param);
+	void OnTrainingOwnerDraw(PG_MSGARG param);
 	void OnTrainingCloseBtnUp(void);
 	bool OnNewTrainingOptionDlgResult(int result, FrForm* pForm);
 

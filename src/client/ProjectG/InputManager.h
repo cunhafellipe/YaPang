@@ -12,7 +12,7 @@
 
 // The mouse buttons (`W4eButton@@`: a global enum). LEFT and RIGHT trade
 // places when the buttons are swapped.
-enum eButton {
+PG_ENUM_DEF(eButton)
 	LEFT_BUTTON,                   // 0
 	RIGHT_BUTTON,                  // 1
 	MIDDLE_BUTTON                  // 2

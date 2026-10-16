@@ -73,28 +73,28 @@ protected:
 	virtual const sFRESH_MSGMAP *GetMessageMap(void) const; // ghostmain.cpp:51
 
 	void OnInitGhostFinish(void); // ghostmain.cpp:795
-	void OnInitStart(int); // ghostmain.cpp:833
+	void OnInitStart(PG_MSGARG); // ghostmain.cpp:833
 	void OnDownStart(void);
 	CExhibition *MakePet(FrArea *area, CPartTidList *parts, int);
 	void OnExit(void); // ghostmain.cpp:758
 	void HidePet(bool wait); // ghostmain.cpp:606
-	void OnInitSelectCourse(int); // ghostmain.cpp:922
+	void OnInitSelectCourse(PG_MSGARG); // ghostmain.cpp:922
 	void OnDownSelectCourse(void); // ghostmain.cpp:945
 	void OnDrawTipZone(void); // ghostmain.cpp:1344
-	void OnInitGhostMain(int); // ghostmain.cpp:1477
-	void OnInitPlayerZone(int); // ghostmain.cpp:895
+	void OnInitGhostMain(PG_MSGARG); // ghostmain.cpp:1477
+	void OnInitPlayerZone(PG_MSGARG); // ghostmain.cpp:895
 	void OnDrawPlayerZone(void); // ghostmain.cpp:906
-	void OnInitUserEquip(int); // ghostmain.cpp:951
-	void OnDrawUserEquip(int); // ghostmain.cpp:957
+	void OnInitUserEquip(PG_MSGARG); // ghostmain.cpp:951
+	void OnDrawUserEquip(PG_MSGARG); // ghostmain.cpp:957
 	void OnDownUserEquip(void); // ghostmain.cpp:983
-	void OnInitGhostEquip(int); // ghostmain.cpp:1241
-	void OnDrawGhostEquip(int); // ghostmain.cpp:1247
-	void OnInitGhostZone(int); // ghostmain.cpp:1297
+	void OnInitGhostEquip(PG_MSGARG); // ghostmain.cpp:1241
+	void OnDrawGhostEquip(PG_MSGARG); // ghostmain.cpp:1247
+	void OnInitGhostZone(PG_MSGARG); // ghostmain.cpp:1297
 	void OnDrawGhostZone(void); // ghostmain.cpp:1308
-	void OnInitTipZone(int); // ghostmain.cpp:1336
-	void OnInitAreaUserStat(int); // ghostmain.cpp:1399
+	void OnInitTipZone(PG_MSGARG); // ghostmain.cpp:1336
+	void OnInitAreaUserStat(PG_MSGARG); // ghostmain.cpp:1399
 	void OnDrawAreaUserStat(void); // ghostmain.cpp:1405
-	void OnInitAreaGhostStat(int); // ghostmain.cpp:1435
+	void OnInitAreaGhostStat(PG_MSGARG); // ghostmain.cpp:1435
 	void OnDrawAreaGhostStat(void); // ghostmain.cpp:1441
 
 private:

@@ -52,12 +52,12 @@ extern int g_iRecvPacketType;
 extern bool g_SALoadingState;
 
 // avatar_avatar.h:53
-bool ntAvatarBurden::operator<(const ntAvatarBurden &other) {
+bool ntAvatarBurden::operator<(const ntAvatarBurden &other) const {
 	return m_key < other.m_key;
 }
 
 // avatar_avatar.h:58 (a burden whose pet frame is the -1 sentinel never matches)
-bool ntAvatarBurden::operator==(const ntAvatarBurden &other) {
+bool ntAvatarBurden::operator==(const ntAvatarBurden &other) const {
 	return m_key == other.m_key && m_pPetFrame != (CPetFrame *)-1 && other.m_pPetFrame != (CPetFrame *)-1;
 }
 

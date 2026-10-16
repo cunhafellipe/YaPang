@@ -32,13 +32,13 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnNameInit(intptr_t param);
-	bool OnNameEnterKey(int param);
+	bool OnNameEnterKey(PG_MSGARG param);
 	void OnOkBtnInit(intptr_t param);
 	void OnOkBtnUp(void);
 	void OnCancelBtnInit(intptr_t param);
 	void OnCancelBtnUp(void);
 	void OnIconAreaInit(intptr_t param);
-	void OnIconAreaOwnerDraw(int param);
+	void OnIconAreaOwnerDraw(PG_MSGARG param);
 
 	FrEdit* m_pName;              // 0x110
 	FrButton* m_pOkBtn;           // 0x114

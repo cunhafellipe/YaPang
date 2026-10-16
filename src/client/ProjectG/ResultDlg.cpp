@@ -320,7 +320,7 @@ void FrResultDlg::OnProc(const float dt) {
 }
 
 // resultdlg.cpp:300
-void FrResultDlg::OnStageInit(int param) {
+void FrResultDlg::OnStageInit(PG_MSGARG param) {
 	m_pStageArea = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pStageArea) {
@@ -370,7 +370,7 @@ void FrResultDlg::OnStageOwnerDraw(void) {
 }
 
 // resultdlg.cpp:346
-void FrResultDlg::OnTrophyInit(int param) {
+void FrResultDlg::OnTrophyInit(PG_MSGARG param) {
 	FrArea* pArea = DYNAMIC_CAST(FrArea, param);
 	if (pArea == 0)
 		return;
@@ -407,7 +407,7 @@ void FrResultDlg::OnTrophyInit(int param) {
 }
 
 // resultdlg.cpp:379
-void FrResultDlg::OnMatchStaticInit(int param) {
+void FrResultDlg::OnMatchStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -418,7 +418,7 @@ void FrResultDlg::OnMatchStaticInit(int param) {
 }
 
 // resultdlg.cpp:391
-void FrResultDlg::OnMatchInit(int param) {
+void FrResultDlg::OnMatchInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 
 	if (pStatic == 0)
@@ -469,7 +469,7 @@ void FrResultDlg::OnIdInit(intptr_t param) {
 }
 
 // resultdlg.cpp:441
-void FrResultDlg::OnIdOwnerDraw(int param) {
+void FrResultDlg::OnIdOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -494,7 +494,7 @@ void FrResultDlg::OnIdOwnerDraw(int param) {
 }
 
 // resultdlg.cpp:477
-void FrResultDlg::OnScoreStaticInit(int param) {
+void FrResultDlg::OnScoreStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -505,7 +505,7 @@ void FrResultDlg::OnScoreStaticInit(int param) {
 }
 
 // resultdlg.cpp:489
-void FrResultDlg::OnScoreInit(int param) {
+void FrResultDlg::OnScoreInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -526,7 +526,7 @@ void FrResultDlg::OnScoreInit(int param) {
 }
 
 // resultdlg.cpp:508
-void FrResultDlg::OnPangInit(int param) {
+void FrResultDlg::OnPangInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -551,7 +551,7 @@ void FrResultDlg::OnPangInit(int param) {
 }
 
 // resultdlg.cpp:532
-void FrResultDlg::OnBonusStaticInit(int param) {
+void FrResultDlg::OnBonusStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -562,7 +562,7 @@ void FrResultDlg::OnBonusStaticInit(int param) {
 }
 
 // resultdlg.cpp:545
-void FrResultDlg::OnBonusInit(int param) {
+void FrResultDlg::OnBonusInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 
 	if (pStatic == 0)
@@ -591,7 +591,7 @@ void FrResultDlg::OnBonusInit(int param) {
 }
 
 // resultdlg.cpp:572
-void FrResultDlg::OnGetItemInit(int param) {
+void FrResultDlg::OnGetItemInit(PG_MSGARG param) {
 	m_pGetItemArea = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -675,17 +675,17 @@ void FrResultDlg::OnLevelInit(intptr_t param) {
 }
 
 // resultdlg.cpp:679
-void FrResultDlg::OnExpInit(int param) {
+void FrResultDlg::OnExpInit(PG_MSGARG param) {
 	m_pExpStatic = DYNAMIC_CAST(FrStatic, param);
 }
 
 // resultdlg.cpp:684
-void FrResultDlg::OnExpGaugeBarInit(int param) {
+void FrResultDlg::OnExpGaugeBarInit(PG_MSGARG param) {
 	m_pExpGaugeBar = DYNAMIC_CAST(FrGaugeBar, param);
 }
 
 // resultdlg.cpp:689
-void FrResultDlg::OnLevelUpInit(int param) {
+void FrResultDlg::OnLevelUpInit(PG_MSGARG param) {
 	m_pLevelUpArea = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pLevelUpArea) {
@@ -835,7 +835,7 @@ sFRESH_ENTRY FrResultTeamDlg::_MsgEntries[] = {
 };
 
 // resultdlg.cpp:840
-void FrResultTeamDlg::OnStageInit(int param) {
+void FrResultTeamDlg::OnStageInit(PG_MSGARG param) {
 	FrResultDlg::OnStageInit(param);
 
 	m_pTrophyBitmap = 0;
@@ -944,12 +944,12 @@ void FrResultTeamDlg::OnStageOwnerDraw(void) {
 }
 
 // resultdlg.cpp:959
-void FrResultTeamDlg::OnTrophyInit(int param) {
+void FrResultTeamDlg::OnTrophyInit(PG_MSGARG param) {
 	FrResultDlg::OnTrophyInit(param);
 }
 
 // resultdlg.cpp:974
-void FrResultTeamDlg::OnMatchTypeInit(int param) {
+void FrResultTeamDlg::OnMatchTypeInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
@@ -960,7 +960,7 @@ void FrResultTeamDlg::OnMatchTypeInit(int param) {
 }
 
 // resultdlg.cpp:998
-void FrResultTeamDlg::OnMatchInit(int param) {
+void FrResultTeamDlg::OnMatchInit(PG_MSGARG param) {
 	FrStatic* pStatic = (FrStatic*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrStatic::m_RTTI) ? (void*)param : 0) : 0);
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
@@ -984,7 +984,7 @@ void FrResultTeamDlg::OnIdInit(intptr_t param) {
 }
 
 // resultdlg.cpp:1025
-void FrResultTeamDlg::OnIdOwnerDraw(int param) {
+void FrResultTeamDlg::OnIdOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi) {
@@ -1009,17 +1009,17 @@ void FrResultTeamDlg::OnIdOwnerDraw(int param) {
 }
 
 // resultdlg.cpp:1061
-void FrResultTeamDlg::OnScoreInit(int param) {
+void FrResultTeamDlg::OnScoreInit(PG_MSGARG param) {
 	FrResultDlg::OnScoreInit(param);
 }
 
 // resultdlg.cpp:1066
-void FrResultTeamDlg::OnPangInit(int param) {
+void FrResultTeamDlg::OnPangInit(PG_MSGARG param) {
 	FrResultDlg::OnPangInit(param);
 }
 
 // resultdlg.cpp:1081
-void FrResultTeamDlg::OnBonusStaticInit(int param) {
+void FrResultTeamDlg::OnBonusStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
@@ -1030,7 +1030,7 @@ void FrResultTeamDlg::OnBonusStaticInit(int param) {
 }
 
 // resultdlg.cpp:1105
-void FrResultTeamDlg::OnBonusInit(int param) {
+void FrResultTeamDlg::OnBonusInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 
 	if (pStatic == 0)
@@ -1066,7 +1066,7 @@ void FrResultTeamDlg::OnBonusInit(int param) {
 }
 
 // resultdlg.cpp:1139
-void FrResultTeamDlg::OnGetItemInit(int param) {
+void FrResultTeamDlg::OnGetItemInit(PG_MSGARG param) {
 	FrResultDlg::OnGetItemInit(param);
 }
 
@@ -1081,22 +1081,22 @@ void FrResultTeamDlg::OnLevelInit(intptr_t param) {
 }
 
 // resultdlg.cpp:1154
-void FrResultTeamDlg::OnExpInit(int param) {
+void FrResultTeamDlg::OnExpInit(PG_MSGARG param) {
 	FrResultDlg::OnExpInit(param);
 }
 
 // resultdlg.cpp:1159
-void FrResultTeamDlg::OnExpGaugeBarInit(int param) {
+void FrResultTeamDlg::OnExpGaugeBarInit(PG_MSGARG param) {
 	FrResultDlg::OnExpGaugeBarInit(param);
 }
 
 // resultdlg.cpp:1164
-void FrResultTeamDlg::OnLevelUpInit(int param) {
+void FrResultTeamDlg::OnLevelUpInit(PG_MSGARG param) {
 	FrResultDlg::OnLevelUpInit(param);
 }
 
 // resultdlg.cpp:1170
-void FrResultTeamDlg::OnRankStaticInit(int param) {
+void FrResultTeamDlg::OnRankStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -1106,7 +1106,7 @@ void FrResultTeamDlg::OnRankStaticInit(int param) {
 }
 
 // resultdlg.cpp:1181
-void FrResultTeamDlg::OnResultStaticInit(int param) {
+void FrResultTeamDlg::OnResultStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -1116,7 +1116,7 @@ void FrResultTeamDlg::OnResultStaticInit(int param) {
 }
 
 // resultdlg.cpp:1191
-void FrResultTeamDlg::OnRedInit(int param) {
+void FrResultTeamDlg::OnRedInit(PG_MSGARG param) {
 	m_pRedArea = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pRedArea) {
@@ -1142,7 +1142,7 @@ void FrResultTeamDlg::OnRedOwnerDraw(void) {
 }
 
 // resultdlg.cpp:1234
-void FrResultTeamDlg::OnBlueInit(int param) {
+void FrResultTeamDlg::OnBlueInit(PG_MSGARG param) {
 	m_pBlueArea = DYNAMIC_CAST(FrArea, param);
 
 	if (m_pBlueArea) {
@@ -1168,7 +1168,7 @@ void FrResultTeamDlg::OnBlueOwnerDraw(void) {
 }
 
 // resultdlg.cpp:1277
-void FrResultTeamDlg::OnRedScoreInit(int param) {
+void FrResultTeamDlg::OnRedScoreInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -1180,7 +1180,7 @@ void FrResultTeamDlg::OnRedScoreInit(int param) {
 }
 
 // resultdlg.cpp:1289
-void FrResultTeamDlg::OnBlueScoreInit(int param) {
+void FrResultTeamDlg::OnBlueScoreInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -1192,7 +1192,7 @@ void FrResultTeamDlg::OnBlueScoreInit(int param) {
 }
 
 // resultdlg.cpp:1301
-void FrResultTeamDlg::OnRedPangInit(int param) {
+void FrResultTeamDlg::OnRedPangInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -1200,7 +1200,7 @@ void FrResultTeamDlg::OnRedPangInit(int param) {
 }
 
 // resultdlg.cpp:1308
-void FrResultTeamDlg::OnBluePangInit(int param) {
+void FrResultTeamDlg::OnBluePangInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (pStatic == 0)
 		return;
@@ -1208,7 +1208,7 @@ void FrResultTeamDlg::OnBluePangInit(int param) {
 }
 
 // resultdlg.cpp:1315
-void FrResultTeamDlg::OnResultInit(int param) {
+void FrResultTeamDlg::OnResultInit(PG_MSGARG param) {
 	FrArea* pArea = (FrArea*)((__rtti_obj = (void*)param) != 0 ? (((IObject*)__rtti_obj)->IsKindOf(&FrArea::m_RTTI) ? (void*)param : 0) : 0);
 	if (pArea == 0)
 		return;
@@ -1249,7 +1249,7 @@ void FrResultTeamDlg::OnResultInit(int param) {
 }
 
 // resultdlg.cpp:1355
-void FrResultTeamDlg::OnWinLoseInit(int param) {
+void FrResultTeamDlg::OnWinLoseInit(PG_MSGARG param) {
 	FrArea* pArea = DYNAMIC_CAST(FrArea, param);
 	if (pArea == 0)
 		return;
@@ -1453,14 +1453,14 @@ sFRESH_ENTRY FrUniteResultDlg::_MsgEntries[] = {
 };
 
 // resultdlg.cpp:1532
-void FrUniteResultDlg::OnCancelButtonInit(int param) {
+void FrUniteResultDlg::OnCancelButtonInit(PG_MSGARG param) {
 	if (m_pCancelButton == 0) {
 		m_pCancelButton = DYNAMIC_CAST(FrButton, param);
 	}
 }
 
 // resultdlg.cpp:1542
-void FrUniteResultDlg::OnAwardInfoInit(int param) {
+void FrUniteResultDlg::OnAwardInfoInit(PG_MSGARG param) {
 	if (m_pAwardInfoButton == 0) {
 		m_pAwardInfoButton = DYNAMIC_CAST(FrButton, param);
 	}
@@ -1475,14 +1475,14 @@ void FrUniteResultDlg::OnAwardInfoClick(void) {
 }
 
 // resultdlg.cpp:1565
-void FrUniteResultDlg::OnMyInfoAreaInit(int param) {
+void FrUniteResultDlg::OnMyInfoAreaInit(PG_MSGARG param) {
 	if (m_pMyInfoArea == 0) {
 		m_pMyInfoArea = DYNAMIC_CAST(FrArea, param);
 	}
 }
 
 // resultdlg.cpp:1577
-void FrUniteResultDlg::OnMyInfoAreaDraw(int param) {
+void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi == 0)
@@ -1674,21 +1674,21 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(int param) {
 }
 
 // resultdlg.cpp:1921
-void FrUniteResultDlg::OnExpGaugeBarInit(int param) {
+void FrUniteResultDlg::OnExpGaugeBarInit(PG_MSGARG param) {
 	if (m_pExpGaugeBar == 0) {
 		m_pExpGaugeBar = DYNAMIC_CAST(FrGaugeBar, param);
 	}
 }
 
 // resultdlg.cpp:1931
-void FrUniteResultDlg::OnExpAreaInit(int param) {
+void FrUniteResultDlg::OnExpAreaInit(PG_MSGARG param) {
 	if (m_pExpArea == 0) {
 		m_pExpArea = DYNAMIC_CAST(FrArea, param);
 	}
 }
 
 // resultdlg.cpp:1941
-void FrUniteResultDlg::OnExpAreaOwnerDraw(int param) {
+void FrUniteResultDlg::OnExpAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi) {
 		int space = gdi->SetSpace(0);
@@ -1717,7 +1717,7 @@ void FrUniteResultDlg::OnExpAreaOwnerDraw(int param) {
 }
 
 // resultdlg.cpp:1988
-void FrUniteResultDlg::OnRankListBoxInit(int param) {
+void FrUniteResultDlg::OnRankListBoxInit(PG_MSGARG param) {
 	if (m_pRankListBox == 0) {
 		m_pRankListBox = DYNAMIC_CAST(FrListBox, param);
 	}
@@ -1726,7 +1726,7 @@ void FrUniteResultDlg::OnRankListBoxInit(int param) {
 }
 
 // resultdlg.cpp:2001
-void FrUniteResultDlg::OnRankListOwnerDraw(int param) {
+void FrUniteResultDlg::OnRankListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == 0)
 		return;
@@ -2047,14 +2047,14 @@ void FrUniteResultDlg::OnRankListRBtnUp(void) {
 }
 
 // resultdlg.cpp:2580
-void FrUniteResultDlg::OnDescAreaInit(int param) {
+void FrUniteResultDlg::OnDescAreaInit(PG_MSGARG param) {
 	if (m_pDescArea == 0) {
 		m_pDescArea = DYNAMIC_CAST(FrArea, param);
 	}
 }
 
 // resultdlg.cpp:2590
-void FrUniteResultDlg::OnDescAreaOwnerDraw(int param) {
+void FrUniteResultDlg::OnDescAreaOwnerDraw(PG_MSGARG param) {
 	WPoint pos = m_pDescArea->GetRect().TopLeft();
 
 	pos.x += 15.0f;
@@ -2082,14 +2082,14 @@ void FrUniteResultDlg::OnDescAreaOwnerDraw(int param) {
 }
 
 // resultdlg.cpp:2630
-void FrUniteResultDlg::OnAwardAreaInit(int param) {
+void FrUniteResultDlg::OnAwardAreaInit(PG_MSGARG param) {
 	if (m_pAwardArea == 0) {
 		m_pAwardArea = DYNAMIC_CAST(FrArea, param);
 	}
 }
 
 // resultdlg.cpp:2640
-void FrUniteResultDlg::OnAwardAreaOwnerDraw(int param) {
+void FrUniteResultDlg::OnAwardAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi == 0)
 		return;
@@ -2163,14 +2163,14 @@ void FrUniteResultDlg::OnAwardAreaOwnerDraw(int param) {
 }
 
 // resultdlg.cpp:2802
-void FrUniteResultDlg::OnItemAreaInit(int param) {
+void FrUniteResultDlg::OnItemAreaInit(PG_MSGARG param) {
 	if (m_pItemArea == 0) {
 		m_pItemArea = DYNAMIC_CAST(FrArea, param);
 	}
 }
 
 // resultdlg.cpp:2812
-void FrUniteResultDlg::OnItemAreaOwnerDraw(int param) {
+void FrUniteResultDlg::OnItemAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi == 0)
@@ -2247,14 +2247,14 @@ void FrUniteResultDlg::OnItemAreaOwnerDraw(int param) {
 }
 
 // resultdlg.cpp:2960
-void FrUniteResultDlg::OnTeamResultInit(int param) {
+void FrUniteResultDlg::OnTeamResultInit(PG_MSGARG param) {
 	if (m_pTeamResultArea == 0) {
 		m_pTeamResultArea = DYNAMIC_CAST(FrArea, param);
 	}
 }
 
 // resultdlg.cpp:2970
-void FrUniteResultDlg::OnTeamResultOwnerDraw(int param) {
+void FrUniteResultDlg::OnTeamResultOwnerDraw(PG_MSGARG param) {
 	if (m_resultDlgType == 0)
 		return;
 
@@ -2334,7 +2334,7 @@ void FrUniteResultDlg::OnTeamResultOwnerDraw(int param) {
 }
 
 // resultdlg.cpp:3121
-void FrUniteResultDlg::OnTooltipOwnerDraw(int param) {
+void FrUniteResultDlg::OnTooltipOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI == 0)
@@ -2358,7 +2358,7 @@ void FrUniteResultDlg::OnTooltipOwnerDraw(int param) {
 }
 
 // resultdlg.cpp:3147
-void FrUniteResultDlg::OnNextLevelTextInit(int param) {
+void FrUniteResultDlg::OnNextLevelTextInit(PG_MSGARG param) {
 	if (m_pNextLevelText == 0) {
 		m_pNextLevelText = DYNAMIC_CAST(FrEdit, param);
 	}

@@ -581,11 +581,11 @@ FrTradeDlg::~FrTradeDlg(void) {
 }
 
 // tradedlg.cpp:513
-void FrTradeDlg::OnTradeDlgInit(int) {
+void FrTradeDlg::OnTradeDlgInit(PG_MSGARG) {
 }
 
 // tradedlg.cpp:518
-void FrTradeDlg::OnVisitorBackInit(int param) {
+void FrTradeDlg::OnVisitorBackInit(PG_MSGARG param) {
 	m_pVisitorBack = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -604,7 +604,7 @@ void FrTradeDlg::OnMyPangOwnerDraw(void) {
 }
 
 // tradedlg.cpp:541
-void FrTradeDlg::OnTradeItemListInit(int param) {
+void FrTradeDlg::OnTradeItemListInit(PG_MSGARG param) {
 	m_pTradeItemList = DYNAMIC_CAST(FrListBox, param);
 
 	if (m_pTradeItemList) {
@@ -738,7 +738,7 @@ void FrTradeDlg::OnTradeItemListRClick(void) {
 }
 
 // tradedlg.cpp:722
-void FrTradeDlg::OnTradeItemListOwnerDraw(int param) {
+void FrTradeDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pListItem = (FrListItem*)param;
 
 	if (pListItem == 0) {
@@ -901,7 +901,7 @@ void FrTradeDlg::OnTradeItemListOwnerDraw(int param) {
 }
 
 // tradedlg.cpp:962
-void FrTradeDlg::OnNoItem01Init(int param) {
+void FrTradeDlg::OnNoItem01Init(PG_MSGARG param) {
 	m_pNoItem01 = DYNAMIC_CAST(FrStatic, param);
 
 	if (m_pNoItem01) {
@@ -910,7 +910,7 @@ void FrTradeDlg::OnNoItem01Init(int param) {
 }
 
 // tradedlg.cpp:973
-void FrTradeDlg::OnNoItem02Init(int param) {
+void FrTradeDlg::OnNoItem02Init(PG_MSGARG param) {
 	m_pNoItem02 = DYNAMIC_CAST(FrStatic, param);
 
 	if (m_pNoItem02) {
@@ -919,13 +919,13 @@ void FrTradeDlg::OnNoItem02Init(int param) {
 }
 
 // tradedlg.cpp:984
-void FrTradeDlg::OnVisitorInit(int param) {
+void FrTradeDlg::OnVisitorInit(PG_MSGARG param) {
 	m_pCountVisitor = DYNAMIC_CAST(FrEdit, param);
 	UpdateCountVisitor();
 }
 
 // tradedlg.cpp:992
-void FrTradeDlg::OnUserIdInit(int param) {
+void FrTradeDlg::OnUserIdInit(PG_MSGARG param) {
 	m_pUserId = DYNAMIC_CAST(FrEdit, param);
 }
 
@@ -936,7 +936,7 @@ void FrTradeDlg::OnTitleInit(intptr_t param) {
 }
 
 // tradedlg.cpp:1006
-void FrTradeDlg::OnEditBnInit(int param) {
+void FrTradeDlg::OnEditBnInit(PG_MSGARG param) {
 	m_pEditBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -976,7 +976,7 @@ void FrTradeDlg::OnCloseBnUp(void) {
 }
 
 // tradedlg.cpp:1060
-void FrTradeDlg::OnHideBnInit(int param) {
+void FrTradeDlg::OnHideBnInit(PG_MSGARG param) {
 	m_pHideBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -991,7 +991,7 @@ void FrTradeDlg::OnHideBnUp(void) {
 }
 
 // tradedlg.cpp:1080
-void FrTradeDlg::OnExitBnInit(int param) {
+void FrTradeDlg::OnExitBnInit(PG_MSGARG param) {
 	m_pExitBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1006,7 +1006,7 @@ void FrTradeDlg::OnExitBnUp(void) {
 }
 
 // tradedlg.cpp:1099
-void FrTradeDlg::OnPackagePurchaseButtonInit(int param) {
+void FrTradeDlg::OnPackagePurchaseButtonInit(PG_MSGARG param) {
 	m_pPackagePurchaseButton = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1374,7 +1374,7 @@ FrTradeBuyDlg::~FrTradeBuyDlg(void) {
 }
 
 // tradedlg.cpp:1526
-void FrTradeBuyDlg::OnTradeBuyDlgInit(int) {
+void FrTradeBuyDlg::OnTradeBuyDlgInit(PG_MSGARG) {
 }
 
 // tradedlg.cpp:1531
@@ -1547,7 +1547,7 @@ bool FrTradeBuyDlg::OnConfirmResult(int ret, FrForm* pForm) {
 }
 
 // tradedlg.cpp:1738
-void FrTradeBuyDlg::OnBuyItemIconInit(int param) {
+void FrTradeBuyDlg::OnBuyItemIconInit(PG_MSGARG param) {
 	m_pBuyItemIcon = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -1634,12 +1634,12 @@ void FrTradeBuyDlg::OnBuyItemIconOwnerDraw(void) {
 }
 
 // tradedlg.cpp:1853
-void FrTradeBuyDlg::OnBuyItemNameInit(int param) {
+void FrTradeBuyDlg::OnBuyItemNameInit(PG_MSGARG param) {
 	m_pBuyItemName = DYNAMIC_CAST(FrEdit, param);
 }
 
 // tradedlg.cpp:1859
-void FrTradeBuyDlg::OnBuyItemAbilityInit(int param) {
+void FrTradeBuyDlg::OnBuyItemAbilityInit(PG_MSGARG param) {
 	m_pBuyItemAbility = DYNAMIC_CAST(FrEdit, param);
 }
 
@@ -1661,17 +1661,17 @@ void FrTradeBuyDlg::OnPriceInit(intptr_t param) {
 }
 
 // tradedlg.cpp:1886
-void FrTradeBuyDlg::OnPangLeftInit(int param) {
+void FrTradeBuyDlg::OnPangLeftInit(PG_MSGARG param) {
 	m_pPangLeft = DYNAMIC_CAST(FrEdit, param);
 }
 
 // tradedlg.cpp:1892
-void FrTradeBuyDlg::OnNumberInit(int param) {
+void FrTradeBuyDlg::OnNumberInit(PG_MSGARG param) {
 	m_pNumber = DYNAMIC_CAST(FrEdit, param);
 }
 
 // tradedlg.cpp:1898
-void FrTradeBuyDlg::OnNumberNextBnInit(int param) {
+void FrTradeBuyDlg::OnNumberNextBnInit(PG_MSGARG param) {
 	m_pNumberNextBn = DYNAMIC_CAST(FrButton, param);
 	if (m_pNumberNextBn) {
 		m_pNumberNextBn->SetPushDelay(0.0f);
@@ -1699,7 +1699,7 @@ void FrTradeBuyDlg::OnNumberNextBnUp(void) {
 }
 
 // tradedlg.cpp:1933
-void FrTradeBuyDlg::OnNumberPrevBnInit(int param) {
+void FrTradeBuyDlg::OnNumberPrevBnInit(PG_MSGARG param) {
 	m_pNumberPrevBn = DYNAMIC_CAST(FrButton, param);
 	if (m_pNumberPrevBn) {
 		m_pNumberPrevBn->SetPushDelay(0.0f);
@@ -1729,12 +1729,12 @@ void FrTradeBuyDlg::OnNumberPrevBnUp(void) {
 }
 
 // tradedlg.cpp:1968
-void FrTradeBuyDlg::OnPurchaseListInit(int param) {
+void FrTradeBuyDlg::OnPurchaseListInit(PG_MSGARG param) {
 	m_pPurchaseList = DYNAMIC_CAST(FrListBox, param);
 }
 
 // tradedlg.cpp:1973
-void FrTradeBuyDlg::OnPurchaseListOwnerdraw(int param) {
+void FrTradeBuyDlg::OnPurchaseListOwnerdraw(PG_MSGARG param) {
 	FrListItem* pListItem = (FrListItem*)param;
 
 	if (pListItem == 0) {
@@ -2140,7 +2140,7 @@ FrTradeResultDlg::~FrTradeResultDlg(void) {
 }
 
 // tradedlg.cpp:2441
-void FrTradeResultDlg::OnTradeResultDlgInit(int) {
+void FrTradeResultDlg::OnTradeResultDlgInit(PG_MSGARG) {
 }
 
 // tradedlg.cpp:2446
@@ -2244,12 +2244,12 @@ void FrTradeResultDlg::OnResultItemAbilityInit(intptr_t param) {
 }
 
 // tradedlg.cpp:2564
-void FrTradeResultDlg::OnPurchaseListInit(int param) {
+void FrTradeResultDlg::OnPurchaseListInit(PG_MSGARG param) {
 	m_pPurchaseList = DYNAMIC_CAST(FrListBox, param);
 }
 
 // tradedlg.cpp:2569
-void FrTradeResultDlg::OnPurchaseListOwnerdraw(int param) {
+void FrTradeResultDlg::OnPurchaseListOwnerdraw(PG_MSGARG param) {
 	FrListItem* pListItem = (FrListItem*)param;
 
 	if (pListItem == 0) {
@@ -2682,7 +2682,7 @@ FrTradeEditDlg::~FrTradeEditDlg(void) {
 }
 
 // tradedlg.cpp:3029
-void FrTradeEditDlg::OnTradeEditDlgInit(int) {
+void FrTradeEditDlg::OnTradeEditDlgInit(PG_MSGARG) {
 }
 
 // tradedlg.cpp:3034
@@ -2785,7 +2785,7 @@ void FrTradeEditDlg::OnMyItemListRClick(void) {
 }
 
 // tradedlg.cpp:3164
-void FrTradeEditDlg::OnMyItemListOwnerDraw(int param) {
+void FrTradeEditDlg::OnMyItemListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI == 0) {
 		return;
@@ -2837,7 +2837,7 @@ void FrTradeEditDlg::OnMyItemListOwnerDraw(int param) {
 }
 
 // tradedlg.cpp:3234
-void FrTradeEditDlg::OnTradeItemListInit(int param) {
+void FrTradeEditDlg::OnTradeItemListInit(PG_MSGARG param) {
 	m_pTradeItemList = DYNAMIC_CAST(FrListBox, param);
 }
 
@@ -2873,7 +2873,7 @@ void FrTradeEditDlg::OnTradeItemListLClick(void) {
 }
 
 // tradedlg.cpp:3279
-void FrTradeEditDlg::OnTradeItemListOwnerDraw(int param) {
+void FrTradeEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI == 0) {
@@ -2922,7 +2922,7 @@ void FrTradeEditDlg::OnTradeItemListOwnerDraw(int param) {
 }
 
 // tradedlg.cpp:3342
-void FrTradeEditDlg::OnVisitorInit(int param) {
+void FrTradeEditDlg::OnVisitorInit(PG_MSGARG param) {
 	m_pVisitor = DYNAMIC_CAST(FrEdit, param);
 
 	if (m_pVisitor) {
@@ -2933,7 +2933,7 @@ void FrTradeEditDlg::OnVisitorInit(int param) {
 }
 
 // tradedlg.cpp:3357
-void FrTradeEditDlg::OnUserIdInit(int param) {
+void FrTradeEditDlg::OnUserIdInit(PG_MSGARG param) {
 	m_pUserId = DYNAMIC_CAST(FrEdit, param);
 
 	if (m_pUserId) {
@@ -2951,12 +2951,12 @@ void FrTradeEditDlg::OnTitleInit(intptr_t param) {
 }
 
 // tradedlg.cpp:3377
-void FrTradeEditDlg::OnTitleEditInit(int param) {
+void FrTradeEditDlg::OnTitleEditInit(PG_MSGARG param) {
 	m_pTitleEdit = DYNAMIC_CAST(FrEdit, param);
 }
 
 // tradedlg.cpp:3383
-bool FrTradeEditDlg::OnTitleEditEnterKey(int) {
+bool FrTradeEditDlg::OnTitleEditEnterKey(PG_MSGARG) {
 	eResultTrade ret = SendTradeTitle();
 	if (ret != RESULT_TRADE_OK) {
 		SetTradeResultCode(ret, 225, 0);
@@ -2966,7 +2966,7 @@ bool FrTradeEditDlg::OnTitleEditEnterKey(int) {
 }
 
 // tradedlg.cpp:3395
-void FrTradeEditDlg::OnTitleEditBnInit(int param) {
+void FrTradeEditDlg::OnTitleEditBnInit(PG_MSGARG param) {
 	FrButton* pButton = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -2979,7 +2979,7 @@ void FrTradeEditDlg::OnTitleEditBnUp(void) {
 }
 
 // tradedlg.cpp:3411
-void FrTradeEditDlg::OnTradeMyItemIconInit(int param) {
+void FrTradeEditDlg::OnTradeMyItemIconInit(PG_MSGARG param) {
 	m_pTradeMyItemIcon = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -3000,22 +3000,22 @@ void FrTradeEditDlg::OnTradeMyItemIconOwnerDraw(void) {
 }
 
 // tradedlg.cpp:3438
-void FrTradeEditDlg::OnTradeMyItemNameInit(int param) {
+void FrTradeEditDlg::OnTradeMyItemNameInit(PG_MSGARG param) {
 	m_pTradeMyItemName = DYNAMIC_CAST(FrEdit, param);
 }
 
 // tradedlg.cpp:3444
-void FrTradeEditDlg::OnTradeMyItemAbilityInit(int param) {
+void FrTradeEditDlg::OnTradeMyItemAbilityInit(PG_MSGARG param) {
 	m_pTradeMyItemAbility = DYNAMIC_CAST(FrEdit, param);
 }
 
 // tradedlg.cpp:3450
-void FrTradeEditDlg::OnTradeMyItemNumberInit(int param) {
+void FrTradeEditDlg::OnTradeMyItemNumberInit(PG_MSGARG param) {
 	m_pTradeMyItemNumber = DYNAMIC_CAST(FrEdit, param);
 }
 
 // tradedlg.cpp:3456
-void FrTradeEditDlg::OnTradeMyItemPriceInit(int param) {
+void FrTradeEditDlg::OnTradeMyItemPriceInit(PG_MSGARG param) {
 	m_pTradeMyItemPrice = DYNAMIC_CAST(FrEdit, param);
 	if (m_pTradeMyItemPrice) {
 		m_pTradeMyItemPrice->SetCharLimit(8, false);
@@ -3030,7 +3030,7 @@ void FrTradeEditDlg::OnTradeMyItemPriceClick(void) {
 }
 
 // tradedlg.cpp:3475
-void FrTradeEditDlg::OnTradeMyItemOkBnInit(int param) {
+void FrTradeEditDlg::OnTradeMyItemOkBnInit(PG_MSGARG param) {
 	m_pTradeMyItemOkBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -3127,7 +3127,7 @@ void FrTradeEditDlg::OnTradeMyItemOkBnUp(void) {
 }
 
 // tradedlg.cpp:3619
-void FrTradeEditDlg::OnTradeMyItemCancelBnInit(int param) {
+void FrTradeEditDlg::OnTradeMyItemCancelBnInit(PG_MSGARG param) {
 	m_pTradeMyItemCancelBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -3147,7 +3147,7 @@ void FrTradeEditDlg::OnTradeMyItemCancelBnUp(void) {
 }
 
 // tradedlg.cpp:3632
-void FrTradeEditDlg::OnOpenBnInit(int param) {
+void FrTradeEditDlg::OnOpenBnInit(PG_MSGARG param) {
 	m_pOpenBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -3183,7 +3183,7 @@ void FrTradeEditDlg::OnCloseBnUp(void) {
 }
 
 // tradedlg.cpp:3677
-void FrTradeEditDlg::OnExitBnInit(int param) {
+void FrTradeEditDlg::OnExitBnInit(PG_MSGARG param) {
 	m_pExitBn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -3199,7 +3199,7 @@ void FrTradeEditDlg::OnExitBnUp(void) {
 }
 
 // tradedlg.cpp:3698
-void FrTradeEditDlg::OnPackageSaleInit(int param) {
+void FrTradeEditDlg::OnPackageSaleInit(PG_MSGARG param) {
 	m_pPackageSaleBtn = DYNAMIC_CAST(FrButton, param);
 	if (m_pPackageSaleBtn) {
 		m_toolTipManager.Add((FrWnd**)&m_pPackageSaleBtn, (eBarButton)0x47);
@@ -3211,12 +3211,12 @@ void FrTradeEditDlg::OnPackageSaleButtonUp(void) {
 }
 
 // tradedlg.cpp:3717
-void FrTradeEditDlg::OnTooltipAreaInit(int param) {
+void FrTradeEditDlg::OnTooltipAreaInit(PG_MSGARG param) {
 	m_pTooltipArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // tradedlg.cpp:3722
-void FrTradeEditDlg::OnTooltipAreaOwnerDraw(int) {
+void FrTradeEditDlg::OnTooltipAreaOwnerDraw(PG_MSGARG) {
 	m_toolTipManager.Process();
 }
 
@@ -4229,11 +4229,11 @@ FrTradeFinishEditDlg::~FrTradeFinishEditDlg(void) {
 }
 
 // tradedlg.cpp:4898
-void FrTradeFinishEditDlg::OnTradeFinishEditDlgInit(int) {
+void FrTradeFinishEditDlg::OnTradeFinishEditDlgInit(PG_MSGARG) {
 }
 
 // tradedlg.cpp:4903
-void FrTradeFinishEditDlg::OnUserIdInit(int param) {
+void FrTradeFinishEditDlg::OnUserIdInit(PG_MSGARG param) {
 	m_pUserId = DYNAMIC_CAST(FrEdit, param);
 }
 
@@ -4290,12 +4290,12 @@ bool FrTradeFinishEditDlg::OnInit(void) {
 }
 
 // tradedlg.cpp:4979
-void FrTradeFinishEditDlg::OnTradeItemListInit(int param) {
+void FrTradeFinishEditDlg::OnTradeItemListInit(PG_MSGARG param) {
 	m_pTradeItemList = DYNAMIC_CAST(FrListBox, param);
 }
 
 // tradedlg.cpp:4985
-void FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(int param) {
+void FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pListItem = (FrListItem*)param;
 
 	if (pListItem == 0) {
@@ -4547,16 +4547,16 @@ FrTradeWarningDlg::~FrTradeWarningDlg(void) {
 }
 
 // tradedlg.cpp:5291
-void FrTradeWarningDlg::OnTradeWarningDlgInit(int) {
+void FrTradeWarningDlg::OnTradeWarningDlgInit(PG_MSGARG) {
 }
 
 // tradedlg.cpp:5296
-void FrTradeWarningDlg::OnMsg01Init(int param) {
+void FrTradeWarningDlg::OnMsg01Init(PG_MSGARG param) {
 	m_pMsg01 = DYNAMIC_CAST(FrStatic, param);
 }
 
 // tradedlg.cpp:5302
-void FrTradeWarningDlg::OnMsg02Init(int param) {
+void FrTradeWarningDlg::OnMsg02Init(PG_MSGARG param) {
 	m_pMsg02 = DYNAMIC_CAST(FrStatic, param);
 }
 
@@ -4592,7 +4592,7 @@ void FrTradeWarningDlg::OnOkBnUp(void) {
 }
 
 // tradedlg.cpp:5355
-void FrTradeWarningDlg::OnCancelBnInit(int param) {
+void FrTradeWarningDlg::OnCancelBnInit(PG_MSGARG param) {
 	m_pCancelBn = DYNAMIC_CAST(FrButton, param);
 }
 

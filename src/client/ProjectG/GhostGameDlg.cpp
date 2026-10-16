@@ -760,7 +760,7 @@ void FrGhostGameMapDlg::OnInitAreaMap(intptr_t param) {
 }
 
 // ghostgamedlg.cpp:656
-void FrGhostGameMapDlg::OnDrawChoiceMap(int param) {
+void FrGhostGameMapDlg::OnDrawChoiceMap(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -818,7 +818,7 @@ void FrGhostGameMapDlg::OnDrawChoiceMap(int param) {
 }
 
 // ghostgamedlg.cpp:720
-void FrGhostGameMapDlg::OnDrawAreaBg(int param) {
+void FrGhostGameMapDlg::OnDrawAreaBg(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -1324,7 +1324,7 @@ void FrGhostAward::OnInitPouchArea(intptr_t param) {
 }
 
 // ghostgamedlg.cpp:1247
-void FrGhostAward::OnDrawScore(int param) {
+void FrGhostAward::OnDrawScore(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -1363,7 +1363,7 @@ void FrGhostAward::OnDrawScore(int param) {
 }
 
 // ghostgamedlg.cpp:1292
-void FrGhostAward::OnDrawPouch(int param) {
+void FrGhostAward::OnDrawPouch(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 

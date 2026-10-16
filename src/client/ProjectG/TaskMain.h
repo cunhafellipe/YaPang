@@ -29,7 +29,7 @@ class WPoint;
 class WRect;
 class FrGraphicInterface;
 class MsgObject;
-enum PANGYA_ITEM_GROUP;
+PG_ENUM_FWD(PANGYA_ITEM_GROUP)
 class Bitmap;
 class WRTTI;
 struct sFRESH_ENTRY;
@@ -67,7 +67,7 @@ public:
 private:
 	static sFRESH_ENTRY _MsgEntries[];
 
-protected:
+public:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP *GetMessageMap(void) const;
 
@@ -84,7 +84,7 @@ protected:
 	void InitMessenger(void);
 	void InitBongdariShop(void);
 	void InitUnderBar(void);
-	void OnUnderBar_TikiMagicBoxInit(int);
+	void OnUnderBar_TikiMagicBoxInit(PG_MSGARG);
 	void EnableUnderBar(bool enable);
 	void EnableOverAndUnderBar(bool enable);
 	void ShowAllSubSelection(void);
@@ -95,8 +95,8 @@ protected:
 	void OnOverBar_ClubDown(void);
 	void OnOverBar_AztecDown(void);
 	void OnOverBar_MascotDown(void);
-	void OnOverBar_OneLineViewOwnerDraw(int);
-	void OnBarTooltipOwnerDraw(int);
+	void OnOverBar_OneLineViewOwnerDraw(PG_MSGARG);
+	void OnBarTooltipOwnerDraw(PG_MSGARG);
 	void OnMessengerAlarmBtnUp(void);
 	bool OnQuitDlgResult(int, FrForm *);
 	bool OnOptionDlgResult(int, FrForm *);
@@ -162,9 +162,9 @@ protected:
 	void OnUnderBar_ScratchInit(intptr_t);
 	void OnUnderBar_RankingInit(intptr_t);
 	void OnUnderBar_NoticeInit(intptr_t);
-	void OnOverBar_Bar1Init(int);
-	void OnOverBar_Bar3Init(int);
-	void OnOverBar_Bar2Init(int);
+	void OnOverBar_Bar1Init(PG_MSGARG);
+	void OnOverBar_Bar3Init(PG_MSGARG);
+	void OnOverBar_Bar2Init(PG_MSGARG);
 	void OnOverBar_OptionInit(intptr_t);
 	void OnOverBar_MyInfoInit(intptr_t);
 	void OnUnderBar_TabBtnInit(intptr_t);
@@ -181,12 +181,12 @@ protected:
 	void OnBarHoverOn(intptr_t);
 	void OnOverBar_SpecialCardInit(intptr_t);
 	void OnMessengerBubbleInit(intptr_t);
-	void OnOverBar_CharOwnerDraw(int);
-	void OnOverBar_AztecOwnerDraw(int);
-	void OnOverBar_ClubOwnerDraw(int);
-	void OnOverBar_Frame1Init(int);
-	void OnOverBar_Frame2Init(int);
-	void OnOverBar_Frame3Init(int);
+	void OnOverBar_CharOwnerDraw(PG_MSGARG);
+	void OnOverBar_AztecOwnerDraw(PG_MSGARG);
+	void OnOverBar_ClubOwnerDraw(PG_MSGARG);
+	void OnOverBar_Frame1Init(PG_MSGARG);
+	void OnOverBar_Frame2Init(PG_MSGARG);
+	void OnOverBar_Frame3Init(PG_MSGARG);
 	void OnOverBar_TabInit(int);
 	void OnOverBar_OneLineReqBtnInit(intptr_t);
 	// Message-map handlers named by CLobbyMain::_MsgEntries.
@@ -204,28 +204,28 @@ protected:
 	void OnUnderBar_MaketUp(void);
 	void OnOverBar_CharInit(intptr_t);
 	void OnOverBar_CaddieInit(intptr_t);
-	void OnOverBar_CaddieOwnerDraw(int);
+	void OnOverBar_CaddieOwnerDraw(PG_MSGARG);
 	void OnOverBar_ClubInit(intptr_t);
 	void OnOverBar_AztecInit(intptr_t);
 	void OnOverBar_MascotInit(intptr_t);
-	void OnOverBar_MascotOwnerDraw(int);
+	void OnOverBar_MascotOwnerDraw(PG_MSGARG);
 	void OnOverBar_CharSelInit(intptr_t);
-	void OnOverBar_CharSelOwnerDraw(int);
+	void OnOverBar_CharSelOwnerDraw(PG_MSGARG);
 	void OnOverBar_CaddieSelInit(intptr_t);
-	void OnOverBar_CaddieSelOwnerDraw(int);
+	void OnOverBar_CaddieSelOwnerDraw(PG_MSGARG);
 	void OnOverBar_ClubSelInit(intptr_t);
-	void OnOverBar_ClubSelOwnerDraw(int);
+	void OnOverBar_ClubSelOwnerDraw(PG_MSGARG);
 	void OnOverBar_AztecSelInit(intptr_t);
-	void OnOverBar_AztecSelOwnerDraw(int);
+	void OnOverBar_AztecSelOwnerDraw(PG_MSGARG);
 	void OnOverBar_MascotSelInit(intptr_t);
-	void OnOverBar_MascotSelOwnerDraw(int);
+	void OnOverBar_MascotSelOwnerDraw(PG_MSGARG);
 	void OnOverBar_PangCookieInit(intptr_t);
-	void OnOverBar_PangCookieOwnerDraw(int);
+	void OnOverBar_PangCookieOwnerDraw(PG_MSGARG);
 	float Print(float x, float y, const char *text, float space, int align, float scale, unsigned long color);
 	void OnOverBar_OneLineReqBtnUp(void);
 	void OnOverBar_OneLineViewInit(intptr_t);
 	void OnOverBar_MessengerInit(intptr_t);
-	void OnMessengerBubbleOwnerDraw(int);
+	void OnMessengerBubbleOwnerDraw(PG_MSGARG);
 	void OnMessengerAlarmBtnInit(intptr_t);
 	void OnUnderBar_ItemStorageInit(intptr_t);
 
@@ -246,20 +246,20 @@ public:
 private:
 	CRealMyRoom_EnterSetting *m_rmrSettingDlg;    // 0x1C, cleared by OnRMR_ResultSetting
 
-protected:
+public:
 	FrButton *m_barButton[0x15]; // 0x20, indexed by eBarButton (10: the special card button)
 
 	// 0x74: [0] the over bar's group box (OnOverBar_Init), [1] the under
 	// tab (OnUnderTab_Init), [2] the under bar (OnUnderBarInit).
 	FrGroupBox *m_barFrame[3];
 
-protected:
+public:
 	FrButton *m_underBar;       // 0x80, cleared by InitUnderBar; blinks while the under tab is shown
 
 private:
 	FrWnd *m_underTab;          // 0x84, cleared by InitUnderBar
 
-protected:
+public:
 	FrButton *m_oneLineReqBtn;  // 0x88, OnOverBar_OneLineReqBtnInit
 
 private:
@@ -267,13 +267,13 @@ private:
 	FrArea *m_overBarArea[3];   // 0x90, OnOverBar_Bar1Init..Bar3Init
 	FrArea *m_overBarFrame[3];  // 0x9C, OnOverBar_Frame1Init..Frame3Init (moved left by 140 below 800 wide)
 
-protected:
+public:
 	FrArea *m_titleArea;        // 0xA8, the over bar's title (OnOverBar_TitleInit)
 
 private:
 	FrWnd *m_overBarTab;        // 0xAC, OnOverBar_TabInit
 
-protected:
+public:
 	FrViewer *m_charViewer;     // 0xB0, OnOverBar_CharInit
 	FrViewer *m_caddieViewer;   // 0xB4, OnOverBar_CaddieInit
 	FrViewer *m_aztecViewer;    // 0xB8, OnOverBar_AztecInit
@@ -285,7 +285,7 @@ protected:
 private:
 	FrStatic *m_siteWnd;                // 0xD8, OnOverBar_SiteInit; UpdateSiteInfo sets its caption
 
-protected:
+public:
 	FrWnd *m_pangCookieWnd;             // 0xDC, OnOverBar_PangCookieInit; CGhostMain hides it
 
 private:
@@ -294,21 +294,21 @@ private:
 	const Bitmap *m_hanCoinBitmap;      // 0xE8, "pang_bar_hancoin"
 	const Bitmap *m_hanFrameBitmap;     // 0xEC, "pang_bar_frame_han"
 
-protected:
+public:
 	bool m_overBarButtonDown;           // 0xF0, set while ProcessOverBar sees button 0 pressed; cleared by CLobbyMain's constructor
 	bool m_subSelectionPending;         // 0xF1, ProcessOverBar sends the sub selection on release
 
 private:
 	PADDING(0xF2, 0xF4);
 
-protected:
+public:
 	FrWnd *m_messengerBubbleEdit;       // 0xF4, OnMessengerBubbleEditInit (CGolfRule's too)
 
 private:
 	FrArea *m_messengerBubble;          // 0xF8, OnMessengerBubbleInit
 	const Bitmap *m_bubbleBitmap[3];    // 0xFC, "login_%02d"
 
-protected:
+public:
 	FrWnd *m_messengerWnd;              // 0x108, cleared by InitMessenger; CGolfRule::SetVisibleUpperBtns shows/hides it
 
 	FrWnd *m_messengerAlarmBtn;         // 0x10C, OnMessengerAlarmBtnInit (CGolfRule's too)
@@ -318,13 +318,13 @@ private:
 	FrWnd *m_treasureAlarm;             // 0x114, OnTreasureAlarmInit
 	PADDING(0x118, 0x120);
 
-protected:
+public:
 	bool m_bongdariShop[3];     // 0x120, cleared by InitBongdariShop
 
 private:
 	PADDING(0x123, 0x124);
 
-protected:
+public:
 	FrGiftDlg *m_giftDlg;       // 0x124, CShopMain::SendGift creates it
 	FrOptionDlg *m_optionDlg;   // 0x128, OnOverBar_OptionUp; CShopMain::InitShopDialogs clears it
 	FrForm *m_kbdManualDlg;     // 0x12C, CShopMain::InitShopDialogs clears it
@@ -336,29 +336,29 @@ private:
 	FrForm *m_tikiMagicBoxDlg;  // 0x13C, cleared by OnTikiMagicBoxDlgResult
 	FrForm *m_scratchDlg;       // 0x140
 
-protected:
+public:
 	FrForm *m_onelineReqDlg;    // 0x144, opened with OnOnelineReqDlgResult; CLobbyMain::ResetControl clears it
 
-protected:
+public:
 	FrForm *m_waitDlg;          // 0x148, the "wait" form OnProcess opens
 	FrNoticeDlg *m_noticeDlg;   // 0x14C, created by OnUnderBar_NoticeUp
 
 	FrForm *m_popupDlg;         // 0x150, opened by a derived task; CloseAllDialogs closes it, CLobbyMain::ResetControl clears it
 
-protected:
+public:
 	FrForm *m_notifyOneDlg;     // 0x154, CShopMain::InitShopDialogs clears it
 
 private:
 	FrForm *m_quitDlg;          // 0x158
 
-protected:
+public:
 	FrSPCardBuffDlg *m_specialCardForm;  // 0x15C, CRealMyRoomMain::HandleMsg 0x219 blinks the bar button while it is closed
 
 private:
 	FrForm *m_maketListDlg;     // 0x160
 	FrForm *m_completedMissionDlgs[5];  // 0x164
 
-protected:
+public:
 	std::vector<FrLevelupItemForm *> m_levelupForms;   // 0x178, CloseAllDialogs closes them, OnLevelupFormResult drops the last
 	float m_waitDlgTime;        // 0x188, OnProcess opens m_waitDlg past 0.5s, -10 when idle
 
@@ -368,7 +368,7 @@ private:
 	bool m_showSubSelection;    // 0x190
 	PADDING(0x191, 0x194);
 
-protected:
+public:
 	int m_subSelection;         // 0x194, CLobbyMain::InitControlsSelectedUserInfo clears it
 	int m_subSelectionTab;      // 0x198
 
@@ -376,7 +376,7 @@ private:
 	bool m_underBarEnabled;     // 0x19C, cleared by InitUnderBar
 	PADDING(0x19D, 0x1A0);
 
-protected:
+public:
 	WTitleFont *m_titleFont;    // 0x1A0, released by OnDestroy/OnPreserveBack
 
 	float m_uiOffsetX;          // 0x1A4, CalcUIOffset: centres the 800x600 UI
@@ -390,7 +390,7 @@ private:
 	bool m_itemStorageOpen;     // 0x1D4, cleared by OnUnderBar_ItemStorageInit
 	PADDING(0x1D5, 0x1DC);
 
-protected:
+public:
 	FrSubEquipBar *m_subEquipBar;       // 0x1DC, OpenSubEquipBar creates it ("EQUIPBAR_SUB")
 };
 CHECK_SIZE(CTaskMain, 0x1E0);

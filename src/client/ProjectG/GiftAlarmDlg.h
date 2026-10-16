@@ -33,7 +33,7 @@ protected:
 
 	void MakeSenderMsg(const char* pSender, char* pLines[]);
 	void OnInfoMsgInit(intptr_t param);
-	void OnGiftListOwnerDraw(int param);
+	void OnGiftListOwnerDraw(PG_MSGARG param);
 	void OnGiftListInit(intptr_t param);
 
 	std::map<unsigned long, const Bitmap*> m_bitmapMap;   // 0x110
@@ -78,8 +78,8 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
-	void OnListBox_Gift_Init(int param);
-	void OnListBox_Gift_OwnerDraw(int param);
+	void OnListBox_Gift_Init(PG_MSGARG param);
+	void OnListBox_Gift_OwnerDraw(PG_MSGARG param);
 	void OnStatic_Msg_Init(intptr_t param);
 
 	FrListBox* m_pGiftList;   // 0x110 ("giftlist")

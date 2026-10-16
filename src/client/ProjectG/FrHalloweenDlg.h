@@ -115,7 +115,7 @@ protected:
 	void OnInitDescButton(intptr_t param);
 	void OnLBDownDescButton(void);
 	void OnMapIconOwnerDraw(void);
-	void OnCurrentItemOwnerDraw(int param);
+	void OnCurrentItemOwnerDraw(PG_MSGARG param);
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];

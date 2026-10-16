@@ -76,7 +76,7 @@ protected:
 	void OnFriendBtnUp(void);   // giftdlg.cpp:869
 	void OnSxIdInit(intptr_t param);   // giftdlg.cpp:1353
 	void OnEdIdInit(intptr_t param);   // giftdlg.cpp:1365
-	bool OnEdIdEnterKey(int);   // giftdlg.cpp:1380
+	bool OnEdIdEnterKey(PG_MSGARG);   // giftdlg.cpp:1380
 	void OnEdIdDown(void);   // giftdlg.cpp:1387
 	void OnEdNickDown(void);   // giftdlg.cpp:1394
 	void OnBtIdCheckInit(intptr_t param);   // giftdlg.cpp:1401
@@ -84,10 +84,10 @@ protected:
 	void OnSxNickInit(intptr_t param);   // giftdlg.cpp:1446
 	void OnEdNickInit(intptr_t param);   // giftdlg.cpp:1451
 	void OnBtNickCheckUp(void);
-	bool OnEdNickEnterKey(int);   // giftdlg.cpp:1463
+	bool OnEdNickEnterKey(PG_MSGARG);   // giftdlg.cpp:1463
 	void OnCheckoutBtnUp(void);
 	void OnMsgInit(intptr_t param);   // giftdlg.cpp:1470
-	bool OnMsgEnterKey(int);   // giftdlg.cpp:1476
+	bool OnMsgEnterKey(PG_MSGARG);   // giftdlg.cpp:1476
 	void OnEdConfirmInit(intptr_t param);   // giftdlg.cpp:1483
 	void OnBtNickCheckInit(intptr_t param);   // giftdlg.cpp:1492
 	void OnPriceInit(intptr_t param);   // giftdlg.cpp:1552

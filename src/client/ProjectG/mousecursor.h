@@ -12,7 +12,7 @@ class WRect;
 class CSimpleUI;
 class FrWnd;
 class WOverlay;
-enum eButton;   // InputManager.h (LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON)
+PG_ENUM_FWD(eButton)   // InputManager.h (LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON)
 
 // Ground-type tooltip of the cursor (mousecursor.h, mousecursor.cpp:1201).
 class CGroundPropt {

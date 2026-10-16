@@ -59,7 +59,7 @@ protected:
 	void OnGuildBtnUp(void);
 	void OnIdBtnUp(void);
 	void OnUserListInit(intptr_t param);
-	void OnUserListOwnerDraw(int param);
+	void OnUserListOwnerDraw(PG_MSGARG param);
 	void OnUserListLBtnDown(void);
 	void OnUserListRBtnUp(void);
 	void OnUserListDClick(void);

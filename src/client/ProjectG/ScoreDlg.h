@@ -82,17 +82,17 @@ protected:
 	void OnRecordListInit(intptr_t param);
 	void OnRecordListOwnerDraw(intptr_t param);
 	void OnTotalListInit(intptr_t param);
-	void OnTotalListOwnerDraw(int param);
+	void OnTotalListOwnerDraw(PG_MSGARG param);
 	void OnCancelBtnInit(intptr_t param);
 	void OnCancelBtnUp(void);
 	void OnCloseBtnInit(intptr_t param);
 	void OnCloseBtnUp(void);
 	void OnBlankPanel01Init(intptr_t param);
-	void OnBlankPanel01OwnerDraw(int param);
+	void OnBlankPanel01OwnerDraw(PG_MSGARG param);
 	void OnBlankPanel02Init(intptr_t param);
-	void OnBlankPanel02OwnerDraw(int param);
+	void OnBlankPanel02OwnerDraw(PG_MSGARG param);
 	void OnBlankPanel03Init(intptr_t param);
-	void OnBlankPanel03OwnerDraw(int param);
+	void OnBlankPanel03OwnerDraw(PG_MSGARG param);
 
 private:
 	FrArea* m_pBar2;                      // 0x110 (OnBar2Init)

@@ -32,12 +32,12 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnItemInit(intptr_t param);
-	void OnItemOwnerDraw(int param);
+	void OnItemOwnerDraw(PG_MSGARG param);
 	void OnDescInit(intptr_t param);
 	void OnWarnInit(intptr_t param);
 	void OnItemNumInit(intptr_t param);
 	void OnNumInit(intptr_t param);
-	bool OnNumEnterKey(int param);
+	bool OnNumEnterKey(PG_MSGARG param);
 	void OnNumPrevInit(intptr_t param);
 	void OnNumPrevBtnUp(void);
 	void OnNumNextInit(intptr_t param);

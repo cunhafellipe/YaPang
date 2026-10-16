@@ -710,7 +710,7 @@ void FrDtRoomDlg::OnUserListInit(intptr_t param) {
 }
 
 // detailedroominfodlg.cpp:647
-void FrDtRoomDlg::OnUserListOwnerDraw(int param) {
+void FrDtRoomDlg::OnUserListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == 0)
 		return;

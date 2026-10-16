@@ -747,12 +747,12 @@ void FrUccDrawDlg::SetUccDrawInfo(eDrawMode mode, sItemInfo* pItemInfo, bool b) 
 }
 
 // uccdrawdlg.cpp:815
-void FrUccDrawDlg::OnUccCanvasInit(int param) {
+void FrUccDrawDlg::OnUccCanvasInit(PG_MSGARG param) {
 	m_pCanvasWnd = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:820
-void FrUccDrawDlg::OnUndoBtnInit(int param) {
+void FrUccDrawDlg::OnUndoBtnInit(PG_MSGARG param) {
 	m_pUndoBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -764,7 +764,7 @@ void FrUccDrawDlg::OnUndoBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:833
-void FrUccDrawDlg::OnRedoBtnInit(int param) {
+void FrUccDrawDlg::OnRedoBtnInit(PG_MSGARG param) {
 	m_pRedoBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -776,12 +776,12 @@ void FrUccDrawDlg::OnRedoBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:846
-void FrUccDrawDlg::OnFlipBtnInit(int param) {
+void FrUccDrawDlg::OnFlipBtnInit(PG_MSGARG param) {
 	m_pFlipBtn = DYNAMIC_CAST(FrButton, param);
 }
 
 // uccdrawdlg.cpp:851
-void FrUccDrawDlg::OnFlipBtnOwnerDraw(int param) {
+void FrUccDrawDlg::OnFlipBtnOwnerDraw(PG_MSGARG param) {
 	WRect rect = m_pFlipBtn->GetRect();
 
 	FrGraphicInterface* pGDI = GetGDI();
@@ -823,7 +823,7 @@ void FrUccDrawDlg::OnFlipBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:902
-void FrUccDrawDlg::OnResetBtnInit(int param) {
+void FrUccDrawDlg::OnResetBtnInit(PG_MSGARG param) {
 	m_pResetBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -837,7 +837,7 @@ void FrUccDrawDlg::OnResetBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:917
-void FrUccDrawDlg::OnGridBtnInit(int param) {
+void FrUccDrawDlg::OnGridBtnInit(PG_MSGARG param) {
 	m_pGridBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -847,7 +847,7 @@ void FrUccDrawDlg::OnGridBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:927
-void FrUccDrawDlg::OnDragBtnInit(int param) {
+void FrUccDrawDlg::OnDragBtnInit(PG_MSGARG param) {
 	m_pDragBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -865,7 +865,7 @@ void FrUccDrawDlg::OnDragBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:948
-void FrUccDrawDlg::OnZoomInBtnInit(int param) {
+void FrUccDrawDlg::OnZoomInBtnInit(PG_MSGARG param) {
 	m_pZoomInBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -877,7 +877,7 @@ void FrUccDrawDlg::OnZoomInBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:962
-void FrUccDrawDlg::OnZoomOutBtnInit(int param) {
+void FrUccDrawDlg::OnZoomOutBtnInit(PG_MSGARG param) {
 	m_pZoomOutBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -915,17 +915,17 @@ void FrUccDrawDlg::SetSaved(bool bSaved) {
 }
 
 // uccdrawdlg.cpp:1006
-void FrUccDrawDlg::OnSide1AreaInit(int param) {
+void FrUccDrawDlg::OnSide1AreaInit(PG_MSGARG param) {
 	m_pSide1Area = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:1011
-void FrUccDrawDlg::OnSide2AreaInit(int param) {
+void FrUccDrawDlg::OnSide2AreaInit(PG_MSGARG param) {
 	m_pSide2Area = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:1016
-void FrUccDrawDlg::OnTempSaveBtnInit(int param) {
+void FrUccDrawDlg::OnTempSaveBtnInit(PG_MSGARG param) {
 	m_pTempSaveBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -936,7 +936,7 @@ void FrUccDrawDlg::OnTempSaveBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1030
-void FrUccDrawDlg::OnTabDrawBtnInit(int param) {
+void FrUccDrawDlg::OnTabDrawBtnInit(PG_MSGARG param) {
 	m_pDrawBtn = DYNAMIC_CAST(FrButton, param);
 	m_pDrawBtn->SetStatus(FrButton::PRESSED);
 }
@@ -950,7 +950,7 @@ void FrUccDrawDlg::OnTabDrawBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1045
-void FrUccDrawDlg::OnTabPatternBtnInit(int param) {
+void FrUccDrawDlg::OnTabPatternBtnInit(PG_MSGARG param) {
 	m_pTabPatternBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -964,7 +964,7 @@ void FrUccDrawDlg::OnTabPatternBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1059
-void FrUccDrawDlg::OnTabEmoticonBtnInit(int param) {
+void FrUccDrawDlg::OnTabEmoticonBtnInit(PG_MSGARG param) {
 	m_pTabEmoticonBtn = DYNAMIC_CAST(FrButton, param);
 	m_pTabEmoticonBtn->Enable(false);
 }
@@ -974,7 +974,7 @@ void FrUccDrawDlg::OnTabEmoticonBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1070
-void FrUccDrawDlg::OnTabTextBtnInit(int param) {
+void FrUccDrawDlg::OnTabTextBtnInit(PG_MSGARG param) {
 	m_pTabTextBtn = DYNAMIC_CAST(FrButton, param);
 	m_pTabTextBtn->Enable(false);
 }
@@ -984,7 +984,7 @@ void FrUccDrawDlg::OnTabTextBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1082
-void FrUccDrawDlg::OnFinishBtnInit(int param) {
+void FrUccDrawDlg::OnFinishBtnInit(PG_MSGARG param) {
 	m_pFinishBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1062,7 +1062,7 @@ void FrUccDrawDlg::OnCloseBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1210
-void FrUccDrawDlg::OnPaintBtnInit(int param) {
+void FrUccDrawDlg::OnPaintBtnInit(PG_MSGARG param) {
 	m_pPaintBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1074,7 +1074,7 @@ void FrUccDrawDlg::OnPaintBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1223
-void FrUccDrawDlg::OnPickColorBtnInit(int param) {
+void FrUccDrawDlg::OnPickColorBtnInit(PG_MSGARG param) {
 	m_pPickColorBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1086,7 +1086,7 @@ void FrUccDrawDlg::OnPickColorBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1236
-void FrUccDrawDlg::OnCurrentColorBtnInit(int param) {
+void FrUccDrawDlg::OnCurrentColorBtnInit(PG_MSGARG param) {
 	m_pCurrentColorBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1107,7 +1107,7 @@ bool FrUccDrawDlg::OnUccPickColorDlgResult(int ret, FrForm* pForm) {
 }
 
 // uccdrawdlg.cpp:1259
-void FrUccDrawDlg::OnCurrentColorAreaInit(int param) {
+void FrUccDrawDlg::OnCurrentColorAreaInit(PG_MSGARG param) {
 	m_pCurrentColorArea = DYNAMIC_CAST(FrArea, param);
 
 	m_currentColor.Create(1, 1, 32);
@@ -1169,14 +1169,14 @@ void FrUccDrawDlg::OnColorListBtnDown(void) {
 }
 
 // uccdrawdlg.cpp:1325
-void FrUccDrawDlg::OnEraserListInit(int param) {
+void FrUccDrawDlg::OnEraserListInit(PG_MSGARG param) {
 	m_pEraserList = DYNAMIC_CAST(FrListBox, param);
 
 	BuildEraserList();
 }
 
 // uccdrawdlg.cpp:1331
-void FrUccDrawDlg::OnEraserListOwnerDraw(int param) {
+void FrUccDrawDlg::OnEraserListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == NULL) {
 		return;
@@ -1238,29 +1238,29 @@ void FrUccDrawDlg::OnEraserListBtnDown(void) {
 }
 
 // uccdrawdlg.cpp:1397
-void FrUccDrawDlg::OnToolInfoEraserAreaInit(int param) {
+void FrUccDrawDlg::OnToolInfoEraserAreaInit(PG_MSGARG param) {
 	m_pToolInfoEraserArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:1402
-void FrUccDrawDlg::OnBaseColorListInit(int param) {
+void FrUccDrawDlg::OnBaseColorListInit(PG_MSGARG param) {
 	m_pBaseColorListArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:1407
-void FrUccDrawDlg::OnExtendedBasePatternListInit(int param) {
+void FrUccDrawDlg::OnExtendedBasePatternListInit(PG_MSGARG param) {
 	m_pExtendedBasePatternListArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:1414
-void FrUccDrawDlg::OnBrushListInit(int param) {
+void FrUccDrawDlg::OnBrushListInit(PG_MSGARG param) {
 	m_pBrushList = DYNAMIC_CAST(FrListBox, param);
 
 	BuildBrushList();
 }
 
 // uccdrawdlg.cpp:1420
-void FrUccDrawDlg::OnBrushListOwnerDraw(int param) {
+void FrUccDrawDlg::OnBrushListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == NULL) {
 		return;
@@ -1310,14 +1310,14 @@ void FrUccDrawDlg::OnBrushListBtnDown(void) {
 }
 
 // uccdrawdlg.cpp:1475
-void FrUccDrawDlg::OnPenListInit(int param) {
+void FrUccDrawDlg::OnPenListInit(PG_MSGARG param) {
 	m_pPenList = DYNAMIC_CAST(FrListBox, param);
 
 	BuildPenList();
 }
 
 // uccdrawdlg.cpp:1481
-void FrUccDrawDlg::OnPenListOwnerDraw(int param) {
+void FrUccDrawDlg::OnPenListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == NULL) {
 		return;
@@ -1367,22 +1367,22 @@ void FrUccDrawDlg::OnPenListBtnDown(void) {
 }
 
 // uccdrawdlg.cpp:1536
-void FrUccDrawDlg::OnToolInfoPenAreaInit(int param) {
+void FrUccDrawDlg::OnToolInfoPenAreaInit(PG_MSGARG param) {
 	m_pToolInfoPenArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:1541
-void FrUccDrawDlg::OnToolInfoBrushAreaInit(int param) {
+void FrUccDrawDlg::OnToolInfoBrushAreaInit(PG_MSGARG param) {
 	m_pToolInfoBrushArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:1546
-void FrUccDrawDlg::OnColorListsAreaInit(int param) {
+void FrUccDrawDlg::OnColorListsAreaInit(PG_MSGARG param) {
 	m_pColorListsArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // uccdrawdlg.cpp:1553
-void FrUccDrawDlg::OnArrowDownBtnInit(int param) {
+void FrUccDrawDlg::OnArrowDownBtnInit(PG_MSGARG param) {
 	m_pArrowDownBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1426,7 +1426,7 @@ void FrUccDrawDlg::OnArrowDownBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1600
-void FrUccDrawDlg::OnArrowRightBtnInit(int param) {
+void FrUccDrawDlg::OnArrowRightBtnInit(PG_MSGARG param) {
 	m_pPatternRightBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1451,7 +1451,7 @@ void FrUccDrawDlg::OnArrowRightBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1629
-void FrUccDrawDlg::OnArrowLeftBtnInit(int param) {
+void FrUccDrawDlg::OnArrowLeftBtnInit(PG_MSGARG param) {
 	m_pPatternLeftBtn = DYNAMIC_CAST(FrButton, param);
 	m_pPatternLeftBtn->Enable(false);
 }
@@ -1477,7 +1477,7 @@ void FrUccDrawDlg::OnArrowLeftBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1659
-void FrUccDrawDlg::OnDeleteBtnInit(int param) {
+void FrUccDrawDlg::OnDeleteBtnInit(PG_MSGARG param) {
 	m_pDeleteBtn = DYNAMIC_CAST(FrButton, param);
 	m_pDeleteBtn->Enable(false);
 }
@@ -1487,7 +1487,7 @@ void FrUccDrawDlg::OnDeleteBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1669
-void FrUccDrawDlg::OnModifyBtnInit(int param) {
+void FrUccDrawDlg::OnModifyBtnInit(PG_MSGARG param) {
 	m_pModifyBtn = DYNAMIC_CAST(FrButton, param);
 	m_pModifyBtn->Enable(false);
 }
@@ -1497,7 +1497,7 @@ void FrUccDrawDlg::OnModifyBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1679
-void FrUccDrawDlg::OnMakeBtnInit(int param) {
+void FrUccDrawDlg::OnMakeBtnInit(PG_MSGARG param) {
 	m_pMakeBtn = DYNAMIC_CAST(FrButton, param);
 	m_pMakeBtn->Enable(false);
 }
@@ -1507,7 +1507,7 @@ void FrUccDrawDlg::OnMakeBtnUp(void) {
 }
 
 // uccdrawdlg.cpp:1689
-void FrUccDrawDlg::OnRateListInit(int param) {
+void FrUccDrawDlg::OnRateListInit(PG_MSGARG param) {
 	m_pRateList = DYNAMIC_CAST(FrListBox, param);
 	m_pRateList->AddItem((void*)-1);
 	m_pRateList->AddItem((void*)-1);
@@ -1516,7 +1516,7 @@ void FrUccDrawDlg::OnRateListInit(int param) {
 }
 
 // uccdrawdlg.cpp:1698
-void FrUccDrawDlg::OnRateListOwnerDraw(int param) {
+void FrUccDrawDlg::OnRateListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == NULL) {
 		return;
@@ -1554,14 +1554,14 @@ void FrUccDrawDlg::OnRateListBtnDown(void) {
 }
 
 // uccdrawdlg.cpp:1746
-void FrUccDrawDlg::OnPatternListInit(int param) {
+void FrUccDrawDlg::OnPatternListInit(PG_MSGARG param) {
 	m_pPatternList = DYNAMIC_CAST(FrListBox, param);
 
 	BuildPatternList(0, true);
 }
 
 // uccdrawdlg.cpp:1753
-void FrUccDrawDlg::OnPatternListOwnerDraw(int param) {
+void FrUccDrawDlg::OnPatternListOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == NULL) {
 		return;
@@ -1614,13 +1614,13 @@ void FrUccDrawDlg::OnPatternListBtnDown(void) {
 }
 
 // uccdrawdlg.cpp:1816
-void FrUccDrawDlg::OnEtcInit(int param) {
+void FrUccDrawDlg::OnEtcInit(PG_MSGARG param) {
 	m_pEtcArea = DYNAMIC_CAST(FrArea, param);
 	ChangeTab(UCC_TAB_DRAW);
 }
 
 // uccdrawdlg.cpp:1822
-void FrUccDrawDlg::OnEtcOwnerDraw(int param) {
+void FrUccDrawDlg::OnEtcOwnerDraw(PG_MSGARG param) {
 	// The canvas frame, around the texture of the current side.
 	WRect rect = m_pCanvasWnd->GetRect();
 
@@ -1679,7 +1679,7 @@ void FrUccDrawDlg::OnToolTipInit(intptr_t param) {
 }
 
 // uccdrawdlg.cpp:1910
-void FrUccDrawDlg::OnToolTipOnwerDraw(int param) {
+void FrUccDrawDlg::OnToolTipOnwerDraw(PG_MSGARG param) {
 	m_toolTipManager.Process();
 }
 

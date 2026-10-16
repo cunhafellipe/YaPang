@@ -25,7 +25,7 @@ struct sSlotInfo;
 struct sTexturePart;
 struct w_motion_data;
 
-enum eSPAVILITYTYPE {
+PG_ENUM_DEF(eSPAVILITYTYPE)
 };
 
 class ntAvatarBurden {
@@ -34,8 +34,8 @@ public:
 	ntAvatarBurden(unsigned long first, unsigned long key, const sCharacterInfo &charInfo, CPetFrame *pPetFrame);
 	~ntAvatarBurden();
 	bool Load();
-	bool operator<(const ntAvatarBurden &);
-	bool operator==(const ntAvatarBurden &);
+	bool operator<(const ntAvatarBurden &) const;
+	bool operator==(const ntAvatarBurden &) const;
 
 	unsigned long m_first;      // 0x0, the value ctor's first argument
 	unsigned long m_key;        // 0x4, the value ctor's second argument; the sort key

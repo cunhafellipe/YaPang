@@ -36,7 +36,7 @@ protected:
 	void OpenChapter(int chapter);
 
 	void OnContentInit(intptr_t param);
-	void OnContentOwnerDraw(int param);
+	void OnContentOwnerDraw(PG_MSGARG param);
 	void OnPrevInit(intptr_t param);
 	void OnPrevBtnUp(void);
 	void OnNextInit(intptr_t param);

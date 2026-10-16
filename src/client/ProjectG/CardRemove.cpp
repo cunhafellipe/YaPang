@@ -365,7 +365,7 @@ void FrCardRemove::OnDrawAreaInit(intptr_t param) {
 }
 
 // cardremove.cpp:379
-void FrCardRemove::OnDrawAreaOwnerDraw(int param) {
+void FrCardRemove::OnDrawAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI == 0)
 		return;
@@ -787,7 +787,7 @@ sFRESH_ENTRY FrCardRemoveConfirm::_MsgEntries[] = {
 };
 
 // cardremove.cpp:815
-void FrCardRemoveConfirm::OnDrawAreaOwnerDraw(int param) {
+void FrCardRemoveConfirm::OnDrawAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -953,7 +953,7 @@ void FrCardRemoveResult::OnProc(float dt) {
 }
 
 // cardremove.cpp:987
-void FrCardRemoveResult::OnDrawAreaOwnerDraw(int param) {
+void FrCardRemoveResult::OnDrawAreaOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI == 0)
 		return;

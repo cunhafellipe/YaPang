@@ -322,7 +322,7 @@ FrChangeNickDlg::FrChangeNickDlg(void) : m_szNick(0) {
 }
 
 // optiondlg.cpp:414
-void FrChangeNickDlg::OnPriceStaticInit(int param) {
+void FrChangeNickDlg::OnPriceStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (!pStatic) {
 		return;
@@ -353,7 +353,7 @@ void FrChangeNickDlg::OnPriceInit(intptr_t param) {
 }
 
 // optiondlg.cpp:454
-void FrChangeNickDlg::OnMyCookieStaticInit(int param) {
+void FrChangeNickDlg::OnMyCookieStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (!pStatic) {
 		return;
@@ -365,7 +365,7 @@ void FrChangeNickDlg::OnMyCookieStaticInit(int param) {
 }
 
 // optiondlg.cpp:470
-void FrChangeNickDlg::OnMyCookieInit(int param) {
+void FrChangeNickDlg::OnMyCookieInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (!pStatic) {
 		return;
@@ -383,7 +383,7 @@ void FrChangeNickDlg::OnMyCookieInit(int param) {
 }
 
 // optiondlg.cpp:495
-void FrChangeNickDlg::OnRemainCookieStaticInit(int param) {
+void FrChangeNickDlg::OnRemainCookieStaticInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (!pStatic) {
 		return;
@@ -395,7 +395,7 @@ void FrChangeNickDlg::OnRemainCookieStaticInit(int param) {
 }
 
 // optiondlg.cpp:511
-void FrChangeNickDlg::OnRemainCookieInit(int param) {
+void FrChangeNickDlg::OnRemainCookieInit(PG_MSGARG param) {
 	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, param);
 	if (!pStatic) {
 		return;
@@ -860,7 +860,7 @@ void FrOptionDlg::OnOkBtnInit(intptr_t param) {
 }
 
 // optiondlg.cpp:967
-void FrOptionDlg::OnGameTabInit(int param) {
+void FrOptionDlg::OnGameTabInit(PG_MSGARG param) {
 	m_pTabs[TAB_GAME]->m_pTabBtn = DYNAMIC_CAST(FrButton, param);
 	m_pTabs[TAB_GAME]->Init();
 }
@@ -871,7 +871,7 @@ void FrOptionDlg::OnGameTabUp(void) {
 }
 
 // optiondlg.cpp:978
-void FrOptionDlg::OnVideoTabInit(int param) {
+void FrOptionDlg::OnVideoTabInit(PG_MSGARG param) {
 	m_pTabs[TAB_VIDEO]->m_pTabBtn = DYNAMIC_CAST(FrButton, param);
 	m_pTabs[TAB_VIDEO]->Init();
 }
@@ -882,7 +882,7 @@ void FrOptionDlg::OnVideoTabUp(void) {
 }
 
 // optiondlg.cpp:989
-void FrOptionDlg::OnAudioTabInit(int param) {
+void FrOptionDlg::OnAudioTabInit(PG_MSGARG param) {
 	m_pTabs[TAB_AUDIO]->m_pTabBtn = DYNAMIC_CAST(FrButton, param);
 	m_pTabs[TAB_AUDIO]->Init();
 }
@@ -893,7 +893,7 @@ void FrOptionDlg::OnAudioTabUp(void) {
 }
 
 // optiondlg.cpp:1000
-void FrOptionDlg::OnMacroTabInit(int param) {
+void FrOptionDlg::OnMacroTabInit(PG_MSGARG param) {
 	m_pTabs[TAB_MACRO]->m_pTabBtn = DYNAMIC_CAST(FrButton, param);
 	m_pTabs[TAB_MACRO]->Init();
 }
@@ -904,17 +904,17 @@ void FrOptionDlg::OnMacroTabUp(void) {
 }
 
 // optiondlg.cpp:1011
-void FrOptionDlg::gOnMsSensiStaticInit(int param) {
+void FrOptionDlg::gOnMsSensiStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[0] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1016
-void FrOptionDlg::gOnMsSensiGaugeInit(int param) {
+void FrOptionDlg::gOnMsSensiGaugeInit(PG_MSGARG param) {
 	m_gameTab.m_pMsSensiGauge = DYNAMIC_CAST(FrGaugeBarEx, param);
 }
 
 // optiondlg.cpp:1021
-void FrOptionDlg::gOnWhisperStaticInit(int param) {
+void FrOptionDlg::gOnWhisperStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[1] = DYNAMIC_CAST(FrStatic, param);
 }
 
@@ -929,12 +929,12 @@ void FrOptionDlg::gOnWhisperBtnUp(void) {
 }
 
 // optiondlg.cpp:1036
-void FrOptionDlg::gOnInvitationStaticInit(int param) {
+void FrOptionDlg::gOnInvitationStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[2] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1041
-void FrOptionDlg::gOnInvitationBtnInit(int param) {
+void FrOptionDlg::gOnInvitationBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pInvitationBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -944,12 +944,12 @@ void FrOptionDlg::gOnInvitationBtnUp(void) {
 }
 
 // optiondlg.cpp:1051
-void FrOptionDlg::gOnFriendConfirmStaticInit(int param) {
+void FrOptionDlg::gOnFriendConfirmStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[3] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1056
-void FrOptionDlg::gOnFriendConfirmBtnInit(int param) {
+void FrOptionDlg::gOnFriendConfirmBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pFriendConfirmBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -959,12 +959,12 @@ void FrOptionDlg::gOnFriendConfirmBtnUp(void) {
 }
 
 // optiondlg.cpp:1066
-void FrOptionDlg::gOnTransChatWinStaticInit(int param) {
+void FrOptionDlg::gOnTransChatWinStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[4] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1071
-void FrOptionDlg::gOnTransChatWinBtnInit(int param) {
+void FrOptionDlg::gOnTransChatWinBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pTransChatWinBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -974,17 +974,17 @@ void FrOptionDlg::gOnTransChatWinBtnUp(void) {
 }
 
 // optiondlg.cpp:1081
-void FrOptionDlg::gOnUiEffectStaticInit(int param) {
+void FrOptionDlg::gOnUiEffectStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[5] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1086
-void FrOptionDlg::gOnTerrainTooltipStaticInit(int param) {
+void FrOptionDlg::gOnTerrainTooltipStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[11] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1091
-void FrOptionDlg::gOnUiEffectBtnInit(int param) {
+void FrOptionDlg::gOnUiEffectBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pUiEffectBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -999,7 +999,7 @@ void FrOptionDlg::gOnNickStaticInit(intptr_t param) {
 }
 
 // optiondlg.cpp:1106
-void FrOptionDlg::gOnNickEditInit(int param) {
+void FrOptionDlg::gOnNickEditInit(PG_MSGARG param) {
 	m_gameTab.m_pNickEdit = DYNAMIC_CAST(FrEdit, param);
 	m_gameTab.m_pNickEdit->HidePrivacy(true);
 
@@ -1010,7 +1010,7 @@ void FrOptionDlg::gOnNickEditInit(int param) {
 }
 
 // optiondlg.cpp:1119
-void FrOptionDlg::gOnChangeNickBtnInit(int param) {
+void FrOptionDlg::gOnChangeNickBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pChangeNickBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1084,23 +1084,23 @@ void FrOptionDlg::gOnChangeNickBtnUp(void) {
 }
 
 // optiondlg.cpp:1237
-bool FrOptionDlg::gOnNickEditEnterKey(int key) {
+bool FrOptionDlg::gOnNickEditEnterKey(PG_MSGARG key) {
 	return false;
 }
 
 // optiondlg.cpp:1242
-void FrOptionDlg::gOnSchoolStaticInit(int param) {
+void FrOptionDlg::gOnSchoolStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[7] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1247
-void FrOptionDlg::gOnSchoolEditInit(int param) {
+void FrOptionDlg::gOnSchoolEditInit(PG_MSGARG param) {
 	m_gameTab.m_pSchoolEdit = DYNAMIC_CAST(FrEdit, param);
 	m_gameTab.m_pSchoolEdit->SetReadOnly(true);
 }
 
 // optiondlg.cpp:1253
-void FrOptionDlg::gOnChangeSchoolBtnInit(int param) {
+void FrOptionDlg::gOnChangeSchoolBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pChangeSchoolBtn = DYNAMIC_CAST(FrButton, param);
 
 	// The school can only be changed from the lobby, online.
@@ -1121,17 +1121,17 @@ void FrOptionDlg::gOnChangeSchoolBtnUp(void) {
 }
 
 // optiondlg.cpp:1276
-bool FrOptionDlg::gOnSchoolEditEnterKey(int key) {
+bool FrOptionDlg::gOnSchoolEditEnterKey(PG_MSGARG key) {
 	return false;
 }
 
 // optiondlg.cpp:1282
-void FrOptionDlg::gOnPowerGaugeStaticInit(int param) {
+void FrOptionDlg::gOnPowerGaugeStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[8] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1288
-void FrOptionDlg::gOnPowerGaugeBtnInit(int param) {
+void FrOptionDlg::gOnPowerGaugeBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pPowerGaugeBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1141,12 +1141,12 @@ void FrOptionDlg::gOnPowerGaugeBtnUp(void) {
 }
 
 // optiondlg.cpp:1299
-void FrOptionDlg::gOnHideGUIStaticInit(int param) {
+void FrOptionDlg::gOnHideGUIStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[9] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1304
-void FrOptionDlg::gOnHideGUIBtnInit(int param) {
+void FrOptionDlg::gOnHideGUIBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pHideGUIBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1157,17 +1157,17 @@ void FrOptionDlg::gOnHideGUIBtnUp(void) {
 }
 
 // optiondlg.cpp:1315
-void FrOptionDlg::gOnHidePIStaticInit(int param) {
+void FrOptionDlg::gOnHidePIStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[10] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1320
-void FrOptionDlg::gOnHidePIBtnInit(int param) {
+void FrOptionDlg::gOnHidePIBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pHidePIBtn = DYNAMIC_CAST(FrButton, param);
 }
 
 // optiondlg.cpp:1325
-void FrOptionDlg::gOnTerrainBtnInit(int param) {
+void FrOptionDlg::gOnTerrainBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pTerrainBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (COption::Instance()->gGetTerrainTooltip()) {
@@ -1180,12 +1180,12 @@ void FrOptionDlg::gOnTerrainBtnUp(void) {
 }
 
 // optiondlg.cpp:1341
-void FrOptionDlg::gOnCutinDisplayStaticInit(int param) {
+void FrOptionDlg::gOnCutinDisplayStaticInit(PG_MSGARG param) {
 	m_gameTab.m_pStatics[12] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1347
-void FrOptionDlg::gOnCutinDisplayBtnInit(int param) {
+void FrOptionDlg::gOnCutinDisplayBtnInit(PG_MSGARG param) {
 	m_gameTab.m_pCutinDisplayBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1201,12 +1201,12 @@ void FrOptionDlg::gOnHidePIBtnUp(void) {
 }
 
 // optiondlg.cpp:1365
-void FrOptionDlg::vOnFullScreenStaticInit(int param) {
+void FrOptionDlg::vOnFullScreenStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[0] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1370
-void FrOptionDlg::vOnFullScreenBtnInit(int param) {
+void FrOptionDlg::vOnFullScreenBtnInit(PG_MSGARG param) {
 	m_videoTab.m_pFullScreenBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1241,12 +1241,12 @@ void FrOptionDlg::vOnFullScreenBtnUp(void) {
 }
 
 // optiondlg.cpp:1409
-void FrOptionDlg::vOnFillScreenStaticInit(int param) {
+void FrOptionDlg::vOnFillScreenStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[1] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1414
-void FrOptionDlg::vOnFillScreenBtnInit(int param) {
+void FrOptionDlg::vOnFillScreenBtnInit(PG_MSGARG param) {
 	m_videoTab.m_pFillScreenBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1259,12 +1259,12 @@ void FrOptionDlg::vOnFillScreenBtnUp(void) {
 }
 
 // optiondlg.cpp:1428
-void FrOptionDlg::vOnWideModeStaticInit(int param) {
+void FrOptionDlg::vOnWideModeStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[2] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1433
-void FrOptionDlg::vOnWideModeBtnInit(int param) {
+void FrOptionDlg::vOnWideModeBtnInit(PG_MSGARG param) {
 	m_videoTab.m_pWideModeBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1299,47 +1299,47 @@ void FrOptionDlg::vOnWideModeBtnUp(void) {
 }
 
 // optiondlg.cpp:1472
-void FrOptionDlg::vOnOverallStaticInit(int param) {
+void FrOptionDlg::vOnOverallStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[3] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1477
-void FrOptionDlg::vOnOverallCmbInit(int param) {
+void FrOptionDlg::vOnOverallCmbInit(PG_MSGARG param) {
 	m_videoTab.m_pOverallCmb = DYNAMIC_CAST(FrComboBox, param);
 }
 
 // optiondlg.cpp:1482
-void FrOptionDlg::vOnScrResStaticInit(int param) {
+void FrOptionDlg::vOnScrResStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[4] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1487
-void FrOptionDlg::vOnScrResCmbInit(int param) {
+void FrOptionDlg::vOnScrResCmbInit(PG_MSGARG param) {
 	m_videoTab.m_pScrResCmb = DYNAMIC_CAST(FrComboBox, param);
 }
 
 // optiondlg.cpp:1498
-void FrOptionDlg::vOnTnlStaticInit(int param) {
+void FrOptionDlg::vOnTnlStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[5] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1503
-void FrOptionDlg::vOnTnlCmbInit(int param) {
+void FrOptionDlg::vOnTnlCmbInit(PG_MSGARG param) {
 	m_videoTab.m_pTnlCmb = DYNAMIC_CAST(FrComboBox, param);
 }
 
 // optiondlg.cpp:1509
-void FrOptionDlg::vOnTexResStaticInit(int param) {
+void FrOptionDlg::vOnTexResStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[6] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1514
-void FrOptionDlg::vOnTexResCmbInit(int param) {
+void FrOptionDlg::vOnTexResCmbInit(PG_MSGARG param) {
 	m_videoTab.m_pTexResCmb = DYNAMIC_CAST(FrComboBox, param);
 }
 
 // optiondlg.cpp:1519
-void FrOptionDlg::vOnShadowStaticInit(int param) {
+void FrOptionDlg::vOnShadowStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[7] = DYNAMIC_CAST(FrStatic, param);
 
 	if (!sOption::IsSupportShadow()) {
@@ -1348,7 +1348,7 @@ void FrOptionDlg::vOnShadowStaticInit(int param) {
 }
 
 // optiondlg.cpp:1527
-void FrOptionDlg::vOnShadowBtnInit(int param) {
+void FrOptionDlg::vOnShadowBtnInit(PG_MSGARG param) {
 	m_videoTab.m_pShadowBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (!sOption::IsSupportShadow()) {
@@ -1364,12 +1364,12 @@ void FrOptionDlg::vOnShadowBtnUp(void) {
 }
 
 // optiondlg.cpp:1542
-void FrOptionDlg::vOnShadowmapStaticInit(int param) {
+void FrOptionDlg::vOnShadowmapStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[8] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1547
-void FrOptionDlg::vOnShadowmapBtnInit(int param) {
+void FrOptionDlg::vOnShadowmapBtnInit(PG_MSGARG param) {
 	m_videoTab.m_pShadowmapBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1381,7 +1381,7 @@ void FrOptionDlg::vOnShadowmapBtnUp(void) {
 }
 
 // optiondlg.cpp:1559
-void FrOptionDlg::vOnReflectionStaticInit(int param) {
+void FrOptionDlg::vOnReflectionStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[9] = DYNAMIC_CAST(FrStatic, param);
 
 	if (!sOption::IsSupportReflection()) {
@@ -1390,7 +1390,7 @@ void FrOptionDlg::vOnReflectionStaticInit(int param) {
 }
 
 // optiondlg.cpp:1567
-void FrOptionDlg::vOnReflectionBtnInit(int param) {
+void FrOptionDlg::vOnReflectionBtnInit(PG_MSGARG param) {
 	m_videoTab.m_pReflectionBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (!sOption::IsSupportReflection()) {
@@ -1406,7 +1406,7 @@ void FrOptionDlg::vOnReflectionBtnUp(void) {
 }
 
 // optiondlg.cpp:1588
-void FrOptionDlg::vOnLodStaticInit(int param) {
+void FrOptionDlg::vOnLodStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[10] = DYNAMIC_CAST(FrStatic, param);
 
 	if (!sOption::IsSupportLod()) {
@@ -1415,7 +1415,7 @@ void FrOptionDlg::vOnLodStaticInit(int param) {
 }
 
 // optiondlg.cpp:1596
-void FrOptionDlg::vOnLodBtnInit(int param) {
+void FrOptionDlg::vOnLodBtnInit(PG_MSGARG param) {
 	m_videoTab.m_pLodBtn = DYNAMIC_CAST(FrButton, param);
 
 	if (!sOption::IsSupportLod()) {
@@ -1431,12 +1431,12 @@ void FrOptionDlg::vOnLodBtnUp(void) {
 }
 
 // optiondlg.cpp:1612
-void FrOptionDlg::vOnNpcStaticInit(int param) {
+void FrOptionDlg::vOnNpcStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[11] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1617
-void FrOptionDlg::vOnNpcBtnInit(int param) {
+void FrOptionDlg::vOnNpcBtnInit(PG_MSGARG param) {
 	m_videoTab.m_pNpcBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1448,22 +1448,22 @@ void FrOptionDlg::vOnNpcBtnUp(void) {
 }
 
 // optiondlg.cpp:1629
-void FrOptionDlg::vOnParticleStaticInit(int param) {
+void FrOptionDlg::vOnParticleStaticInit(PG_MSGARG param) {
 	m_videoTab.m_pStatics[12] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1634
-void FrOptionDlg::vOnParticleCmbInit(int param) {
+void FrOptionDlg::vOnParticleCmbInit(PG_MSGARG param) {
 	m_videoTab.m_pParticleCmb = DYNAMIC_CAST(FrComboBox, param);
 }
 
 // optiondlg.cpp:1639
-void FrOptionDlg::aOnEnableStaticInit(int param) {
+void FrOptionDlg::aOnEnableStaticInit(PG_MSGARG param) {
 	m_audioTab.m_pStatics[0] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1644
-void FrOptionDlg::aOnEnableBtnInit(int param) {
+void FrOptionDlg::aOnEnableBtnInit(PG_MSGARG param) {
 	m_audioTab.m_pEnableBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1481,57 +1481,57 @@ void FrOptionDlg::aOnEnableBtnUp(void) {
 }
 
 // optiondlg.cpp:1665
-void FrOptionDlg::aOnOverallStaticInit(int param) {
+void FrOptionDlg::aOnOverallStaticInit(PG_MSGARG param) {
 	m_audioTab.m_pStatics[1] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1670
-void FrOptionDlg::aOnOverallCmbInit(int param) {
+void FrOptionDlg::aOnOverallCmbInit(PG_MSGARG param) {
 	m_audioTab.m_pOverallCmb = DYNAMIC_CAST(FrComboBox, param);
 }
 
 // optiondlg.cpp:1675
-void FrOptionDlg::aOnSfxStaticInit(int param) {
+void FrOptionDlg::aOnSfxStaticInit(PG_MSGARG param) {
 	m_audioTab.m_pStatics[2] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1680
-void FrOptionDlg::aOnSfxGaugeInit(int param) {
+void FrOptionDlg::aOnSfxGaugeInit(PG_MSGARG param) {
 	m_audioTab.m_pSfxGauge = DYNAMIC_CAST(FrGaugeBarEx, param);
 }
 
 // optiondlg.cpp:1685
-void FrOptionDlg::aOnBgmStaticInit(int param) {
+void FrOptionDlg::aOnBgmStaticInit(PG_MSGARG param) {
 	m_audioTab.m_pStatics[3] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1690
-void FrOptionDlg::aOnBgmGaugeInit(int param) {
+void FrOptionDlg::aOnBgmGaugeInit(PG_MSGARG param) {
 	m_audioTab.m_pBgmGauge = DYNAMIC_CAST(FrGaugeBarEx, param);
 }
 
 // optiondlg.cpp:1695
-void FrOptionDlg::aOnSpeakerStaticInit(int param) {
+void FrOptionDlg::aOnSpeakerStaticInit(PG_MSGARG param) {
 	m_audioTab.m_pStatics[4] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1700
-void FrOptionDlg::aOnSpeakerCmbInit(int param) {
+void FrOptionDlg::aOnSpeakerCmbInit(PG_MSGARG param) {
 	m_audioTab.m_pSpeakerCmb = DYNAMIC_CAST(FrComboBox, param);
 }
 
 // optiondlg.cpp:1705
-void FrOptionDlg::mOnMacroStatic1Init(int param) {
+void FrOptionDlg::mOnMacroStatic1Init(PG_MSGARG param) {
 	m_macroTab.m_pStatics[0] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1710
-void FrOptionDlg::mOnMacroStatic2Init(int param) {
+void FrOptionDlg::mOnMacroStatic2Init(PG_MSGARG param) {
 	m_macroTab.m_pStatics[1] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1715
-bool FrOptionDlg::mOnMacroEnterKey(int key) {
+bool FrOptionDlg::mOnMacroEnterKey(PG_MSGARG key) {
 	OnOK();
 	Close(FrOK, true);
 	return false;
@@ -1542,72 +1542,72 @@ void FrOptionDlg::mOnMacroEnterKeyLBtnDown(void) {
 }
 
 // optiondlg.cpp:1727
-void FrOptionDlg::mOnMacroStatic3Init(int param) {
+void FrOptionDlg::mOnMacroStatic3Init(PG_MSGARG param) {
 	m_macroTab.m_pStatics[2] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1732
-void FrOptionDlg::mOnMacroStatic4Init(int param) {
+void FrOptionDlg::mOnMacroStatic4Init(PG_MSGARG param) {
 	m_macroTab.m_pStatics[3] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1737
-void FrOptionDlg::mOnMacroStatic5Init(int param) {
+void FrOptionDlg::mOnMacroStatic5Init(PG_MSGARG param) {
 	m_macroTab.m_pStatics[4] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1742
-void FrOptionDlg::mOnMacroStatic6Init(int param) {
+void FrOptionDlg::mOnMacroStatic6Init(PG_MSGARG param) {
 	m_macroTab.m_pStatics[5] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1747
-void FrOptionDlg::mOnMacroStatic7Init(int param) {
+void FrOptionDlg::mOnMacroStatic7Init(PG_MSGARG param) {
 	m_macroTab.m_pStatics[6] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1752
-void FrOptionDlg::mOnMacroStatic8Init(int param) {
+void FrOptionDlg::mOnMacroStatic8Init(PG_MSGARG param) {
 	m_macroTab.m_pStatics[7] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // optiondlg.cpp:1757
-void FrOptionDlg::mOnMacro1Init(int param) {
+void FrOptionDlg::mOnMacro1Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[0] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // optiondlg.cpp:1762
-void FrOptionDlg::mOnMacro2Init(int param) {
+void FrOptionDlg::mOnMacro2Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[1] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // optiondlg.cpp:1767
-void FrOptionDlg::mOnMacro3Init(int param) {
+void FrOptionDlg::mOnMacro3Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[2] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // optiondlg.cpp:1772
-void FrOptionDlg::mOnMacro4Init(int param) {
+void FrOptionDlg::mOnMacro4Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[3] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // optiondlg.cpp:1777
-void FrOptionDlg::mOnMacro5Init(int param) {
+void FrOptionDlg::mOnMacro5Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[4] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // optiondlg.cpp:1782
-void FrOptionDlg::mOnMacro6Init(int param) {
+void FrOptionDlg::mOnMacro6Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[5] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // optiondlg.cpp:1787
-void FrOptionDlg::mOnMacro7Init(int param) {
+void FrOptionDlg::mOnMacro7Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[6] = DYNAMIC_CAST(FrEdit, param);
 }
 
 // optiondlg.cpp:1792
-void FrOptionDlg::mOnMacro8Init(int param) {
+void FrOptionDlg::mOnMacro8Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[7] = DYNAMIC_CAST(FrEdit, param);
 }
 
@@ -2060,7 +2060,7 @@ void FrOptionDlg::EnableChangeNickControls(bool bEnable) {
 }
 
 // optiondlg.cpp:2413
-void FrOptionDlg::tOnHintInit(int param) {
+void FrOptionDlg::tOnHintInit(PG_MSGARG param) {
 	m_pHintEdit = DYNAMIC_CAST(FrEdit, param);
 	m_pHintEdit->SetVisible(false);
 }
@@ -2174,13 +2174,13 @@ void FrOptionDlg::ProcessHoverMessage(FrWnd* pWnd) {
 }
 
 // optiondlg.cpp:2567
-void FrOptionDlg::OnHoverOn(int param) {
+void FrOptionDlg::OnHoverOn(PG_MSGARG param) {
 	m_hoverCount++;
 	ProcessHoverMessage(DYNAMIC_CAST(FrWnd, param));
 }
 
 // optiondlg.cpp:2573
-void FrOptionDlg::OnHoverOff(int param) {
+void FrOptionDlg::OnHoverOff(PG_MSGARG param) {
 	m_hoverCount--;
 	ProcessHoverMessage(0);
 }

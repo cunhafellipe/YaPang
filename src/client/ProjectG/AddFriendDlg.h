@@ -52,7 +52,7 @@ protected:
 	void OnEditNickDown(void);
 	void OnCheckBtnUp(void);
 	void OnOKBtnUp(void);
-	bool OnEditNickEnterKey(int param);
+	bool OnEditNickEnterKey(PG_MSGARG param);
 
 private:
 	FrEdit* m_pIdEdit;                   // 0x110 ("id", the nickname to look up)

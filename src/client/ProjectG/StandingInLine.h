@@ -57,7 +57,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnView_TotalInit(intptr_t param);
-	void OnView_TotalOwnerDraw(int param);
+	void OnView_TotalOwnerDraw(PG_MSGARG param);
 	void OnView_TotalButtonUp(void);
 	void OnArrayListInit(intptr_t param);
 	void OnArrayListOwnerDraw(intptr_t param);

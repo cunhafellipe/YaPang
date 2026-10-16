@@ -286,7 +286,7 @@ void ntAvatarChatMain::ResetFrWndPointers(void) {
 }
 
 // avatar_mainui.cpp:323
-void ntAvatarChatMain::OnAvatarChatMainInit(int) {
+void ntAvatarChatMain::OnAvatarChatMainInit(PG_MSGARG) {
 }
 
 // avatar_mainui.cpp:327
@@ -311,7 +311,7 @@ void ntAvatarChatMain::OnPortraitInit(intptr_t param) {
 }
 
 // avatar_mainui.cpp:347
-void ntAvatarChatMain::OnPortraitMaskAreaInit(int param) {
+void ntAvatarChatMain::OnPortraitMaskAreaInit(PG_MSGARG param) {
 	FrArea* pArea = DYNAMIC_CAST(FrArea, param);
 	if (pArea) {
 		pArea->SetVisible(true);
@@ -321,7 +321,7 @@ void ntAvatarChatMain::OnPortraitMaskAreaInit(int param) {
 }
 
 // avatar_mainui.cpp:358
-void ntAvatarChatMain::OnPortraitMaskInit(int param) {
+void ntAvatarChatMain::OnPortraitMaskInit(PG_MSGARG param) {
 	m_portraitMask = DYNAMIC_CAST(FrButton, param);
 	if (m_portraitMask) {
 		m_portraitMask->SetVisible(true);
@@ -340,7 +340,7 @@ void ntAvatarChatMain::OnPortraitMaskBtnUp(void) {
 }
 
 // avatar_mainui.cpp:378
-void ntAvatarChatMain::OnPortraitTipButtonInit(int param) {
+void ntAvatarChatMain::OnPortraitTipButtonInit(PG_MSGARG param) {
 	m_tipButton = DYNAMIC_CAST(FrButton, param);
 	if (m_tipButton) {
 		WRect rect = m_tipButton->GetRect();
@@ -384,7 +384,7 @@ void ntAvatarChatMain::OnPortraitTipButtonBtnUp(void) {
 }
 
 // avatar_mainui.cpp:429
-void ntAvatarChatMain::OnPortraitJukeBoxButtonAreaInit(int param) {
+void ntAvatarChatMain::OnPortraitJukeBoxButtonAreaInit(PG_MSGARG param) {
 	FrArea* pArea = DYNAMIC_CAST(FrArea, param);
 	if (pArea) {
 		pArea->SetVisible(true);
@@ -394,7 +394,7 @@ void ntAvatarChatMain::OnPortraitJukeBoxButtonAreaInit(int param) {
 }
 
 // avatar_mainui.cpp:441
-void ntAvatarChatMain::OnPortraitJukeBoxButtonInit(int param) {
+void ntAvatarChatMain::OnPortraitJukeBoxButtonInit(PG_MSGARG param) {
 	m_jukeBoxButton = DYNAMIC_CAST(FrButton, param);
 	if (m_jukeBoxButton) {
 		WRect rect = m_jukeBoxButton->GetRect();
@@ -435,7 +435,7 @@ void ntAvatarChatMain::ToggleJukeBox(void) {
 }
 
 // avatar_mainui.cpp:490
-void ntAvatarChatMain::OnPortraitChatLogButtonInit(int param) {
+void ntAvatarChatMain::OnPortraitChatLogButtonInit(PG_MSGARG param) {
 	m_chatLogButton = DYNAMIC_CAST(FrButton, param);
 	if (m_chatLogButton) {
 		WRect rect = m_chatLogButton->GetRect();
@@ -478,7 +478,7 @@ void ntAvatarChatMain::ToggleAvatarChatLog(void) {
 }
 
 // avatar_mainui.cpp:542
-void ntAvatarChatMain::OnAvatarUserListButtonInit(int param) {
+void ntAvatarChatMain::OnAvatarUserListButtonInit(PG_MSGARG param) {
 	m_userListButton = DYNAMIC_CAST(FrButton, param);
 	if (m_userListButton) {
 		WRect rect = m_userListButton->GetRect();
@@ -522,7 +522,7 @@ void ntAvatarChatMain::ToggleAvatarUserList(void) {
 }
 
 // avatar_mainui.cpp:595
-void ntAvatarChatMain::OnChatFrameInit(int param) {
+void ntAvatarChatMain::OnChatFrameInit(PG_MSGARG param) {
 	m_chatFrame = DYNAMIC_CAST(FrFrame, param);
 	if (m_chatFrame) {
 		m_chatFrame->SetVisible(WSingleton<CChatMsg>::Instance()->IsOpened());
@@ -561,14 +561,14 @@ void ntAvatarChatMain::OnChatTargetInit(intptr_t param) {
 }
 
 // avatar_mainui.cpp:642
-void ntAvatarChatMain::OnChatTargetBtnDown(int) {
+void ntAvatarChatMain::OnChatTargetBtnDown(PG_MSGARG) {
 	if (m_chatInput) {
 		m_chatInput->SetKeyFocus(true);
 	}
 }
 
 // avatar_mainui.cpp:648
-bool ntAvatarChatMain::OnChatTargetEnterKey(int) {
+bool ntAvatarChatMain::OnChatTargetEnterKey(PG_MSGARG) {
 	if (m_chatTarget && strlen(m_chatTarget->GetLine(1, false)) == 0) {
 		m_chatTarget->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0); // "to everyone"
 	}
@@ -716,7 +716,7 @@ void ntAvatarChatMain::OnLanguageInit(intptr_t param) {
 }
 
 // avatar_mainui.cpp:816
-void ntAvatarChatMain::OnReportInit(int param) {
+void ntAvatarChatMain::OnReportInit(PG_MSGARG param) {
 	m_reportButton = DYNAMIC_CAST(FrButton, param);
 	if (m_reportButton) {
 		m_reportButton->SetVisible(WSingleton<CChatMsg>::Instance()->IsOpened());
@@ -746,7 +746,7 @@ bool ntAvatarChatMain::OnReportResult(int, FrForm*) {
 }
 
 // avatar_mainui.cpp:849
-void ntAvatarChatMain::OnRightMenuInit(int param) {
+void ntAvatarChatMain::OnRightMenuInit(PG_MSGARG param) {
 	m_rightMenu = DYNAMIC_CAST(FrContextMenuCtrl, param);
 	if (m_rightMenu) {
 		m_rightMenu->SetVisible(false);

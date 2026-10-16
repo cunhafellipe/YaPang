@@ -72,7 +72,7 @@ public:
 	~CBingoLine(void);
 
 	CBingoLine& operator=(const CBingoLine& other);
-	bool operator+=(CBingoPoint& point);
+	bool operator+=(const CBingoPoint& point);
 
 	int operator[](int index);
 	const int operator[](int index) const;
@@ -186,7 +186,7 @@ protected:
 	void OnInitEventDetail(intptr_t param);
 	void OnLButtonDownEventDetail(void);
 	void OnInitBoardNumberArea(intptr_t param);
-	void OnOwnerDrawBoardNumberArea(int param);
+	void OnOwnerDrawBoardNumberArea(PG_MSGARG param);
 
 private:
 	void LoadBingoImage(void);
@@ -312,7 +312,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 
 	void OnInitGiftArea(intptr_t param);
-	void OnOwnerDrawGiftArea(int param);
+	void OnOwnerDrawGiftArea(PG_MSGARG param);
 
 private:
 	std::vector<unsigned long> m_gifts;   // 0x110 (gift item ids, SetGiftData)

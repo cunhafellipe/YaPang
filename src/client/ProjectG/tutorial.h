@@ -103,8 +103,8 @@ struct sMacro {
 typedef int sMacroParam;
 #else
 #define PG_MACRO_PTR "%lld"
-#define PG_MACRO_PTRARG(p) ((long long)(intptr_t)(p))
-typedef long long sMacroParam;
+#define PG_MACRO_PTRARG(p) ((__int64)(intptr_t)(p))
+typedef __int64 sMacroParam;
 #endif
 CHECK_SIZE(sMacro, 0x28);
 CHECK_FIELD(sMacro, m_text, 0x04);

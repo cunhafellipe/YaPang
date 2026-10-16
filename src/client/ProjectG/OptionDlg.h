@@ -40,12 +40,12 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // optiondlg.cpp:383
 
-	void OnPriceStaticInit(int param);          // optiondlg.cpp:414
+	void OnPriceStaticInit(PG_MSGARG param);          // optiondlg.cpp:414
 	void OnPriceInit(intptr_t param);                // optiondlg.cpp:430
-	void OnMyCookieStaticInit(int param);       // optiondlg.cpp:454
-	void OnMyCookieInit(int param);             // optiondlg.cpp:470
-	void OnRemainCookieStaticInit(int param);   // optiondlg.cpp:495
-	void OnRemainCookieInit(int param);         // optiondlg.cpp:511
+	void OnMyCookieStaticInit(PG_MSGARG param);       // optiondlg.cpp:454
+	void OnMyCookieInit(PG_MSGARG param);             // optiondlg.cpp:470
+	void OnRemainCookieStaticInit(PG_MSGARG param);   // optiondlg.cpp:495
+	void OnRemainCookieInit(PG_MSGARG param);         // optiondlg.cpp:511
 	void OnCheckoutInit(intptr_t param);             // optiondlg.cpp:545
 	void OnCheckoutBtnUp(void);                 // optiondlg.cpp:561
 	bool OnChangeNickConfirmDlgResult(int result, FrForm* pForm);
@@ -216,122 +216,122 @@ protected:
 	void OnVideoTabUp(void);               // optiondlg.cpp:984
 	void OnAudioTabUp(void);               // optiondlg.cpp:995
 	void OnMacroTabUp(void);               // optiondlg.cpp:1006
-	bool gOnNickEditEnterKey(int key);    // optiondlg.cpp:1237
-	bool gOnSchoolEditEnterKey(int key);  // optiondlg.cpp:1276
+	bool gOnNickEditEnterKey(PG_MSGARG key);    // optiondlg.cpp:1237
+	bool gOnSchoolEditEnterKey(PG_MSGARG key);  // optiondlg.cpp:1276
 	void gOnTerrainBtnUp(void);            // optiondlg.cpp:1335
-	bool mOnMacroEnterKey(int key);        // optiondlg.cpp:1715
+	bool mOnMacroEnterKey(PG_MSGARG key);        // optiondlg.cpp:1715
 
 	void OnOkBtnInit(intptr_t param);
-	void OnGameTabInit(int param);
-	void OnVideoTabInit(int param);
-	void OnAudioTabInit(int param);
-	void OnMacroTabInit(int param);
-	void gOnMsSensiStaticInit(int param);
-	void gOnMsSensiGaugeInit(int param);
-	void gOnWhisperStaticInit(int param);
+	void OnGameTabInit(PG_MSGARG param);
+	void OnVideoTabInit(PG_MSGARG param);
+	void OnAudioTabInit(PG_MSGARG param);
+	void OnMacroTabInit(PG_MSGARG param);
+	void gOnMsSensiStaticInit(PG_MSGARG param);
+	void gOnMsSensiGaugeInit(PG_MSGARG param);
+	void gOnWhisperStaticInit(PG_MSGARG param);
 	void gOnWhisperBtnInit(intptr_t param);
 	void gOnWhisperBtnUp(void);
-	void gOnInvitationStaticInit(int param);
-	void gOnInvitationBtnInit(int param);
+	void gOnInvitationStaticInit(PG_MSGARG param);
+	void gOnInvitationBtnInit(PG_MSGARG param);
 	void gOnInvitationBtnUp(void);
-	void gOnFriendConfirmStaticInit(int param);
-	void gOnFriendConfirmBtnInit(int param);
+	void gOnFriendConfirmStaticInit(PG_MSGARG param);
+	void gOnFriendConfirmBtnInit(PG_MSGARG param);
 	void gOnFriendConfirmBtnUp(void);
-	void gOnTransChatWinStaticInit(int param);
-	void gOnTransChatWinBtnInit(int param);
+	void gOnTransChatWinStaticInit(PG_MSGARG param);
+	void gOnTransChatWinBtnInit(PG_MSGARG param);
 	void gOnTransChatWinBtnUp(void);
-	void gOnUiEffectStaticInit(int param);
-	void gOnTerrainTooltipStaticInit(int param);
-	void gOnUiEffectBtnInit(int param);
+	void gOnUiEffectStaticInit(PG_MSGARG param);
+	void gOnTerrainTooltipStaticInit(PG_MSGARG param);
+	void gOnUiEffectBtnInit(PG_MSGARG param);
 	void gOnUiEffectBtnUp(void);
 	void gOnNickStaticInit(intptr_t param);
-	void gOnNickEditInit(int param);
-	void gOnChangeNickBtnInit(int param);
+	void gOnNickEditInit(PG_MSGARG param);
+	void gOnChangeNickBtnInit(PG_MSGARG param);
 	void gOnChangeNickBtnUp(void);         // optiondlg.cpp:1124
-	void gOnSchoolStaticInit(int param);
-	void gOnSchoolEditInit(int param);
-	void gOnChangeSchoolBtnInit(int param);
+	void gOnSchoolStaticInit(PG_MSGARG param);
+	void gOnSchoolEditInit(PG_MSGARG param);
+	void gOnChangeSchoolBtnInit(PG_MSGARG param);
 	void gOnChangeSchoolBtnUp(void);
-	void gOnPowerGaugeStaticInit(int param);
-	void gOnPowerGaugeBtnInit(int param);
+	void gOnPowerGaugeStaticInit(PG_MSGARG param);
+	void gOnPowerGaugeBtnInit(PG_MSGARG param);
 	void gOnPowerGaugeBtnUp(void);
-	void gOnHideGUIStaticInit(int param);
-	void gOnHideGUIBtnInit(int param);
+	void gOnHideGUIStaticInit(PG_MSGARG param);
+	void gOnHideGUIBtnInit(PG_MSGARG param);
 	void gOnHideGUIBtnUp(void);
-	void gOnHidePIStaticInit(int param);
-	void gOnHidePIBtnInit(int param);
+	void gOnHidePIStaticInit(PG_MSGARG param);
+	void gOnHidePIBtnInit(PG_MSGARG param);
 	void gOnHidePIBtnUp(void);
-	void gOnTerrainBtnInit(int param);
-	void gOnCutinDisplayStaticInit(int param);
-	void gOnCutinDisplayBtnInit(int param);
+	void gOnTerrainBtnInit(PG_MSGARG param);
+	void gOnCutinDisplayStaticInit(PG_MSGARG param);
+	void gOnCutinDisplayBtnInit(PG_MSGARG param);
 	void gOnCutinDisplayBtnUp(void);
-	void vOnFullScreenStaticInit(int param);
-	void vOnFullScreenBtnInit(int param);
+	void vOnFullScreenStaticInit(PG_MSGARG param);
+	void vOnFullScreenBtnInit(PG_MSGARG param);
 	void vOnFullScreenBtnUp(void);
-	void vOnFillScreenStaticInit(int param);
-	void vOnFillScreenBtnInit(int param);
+	void vOnFillScreenStaticInit(PG_MSGARG param);
+	void vOnFillScreenBtnInit(PG_MSGARG param);
 	void vOnFillScreenBtnUp(void);
-	void vOnWideModeStaticInit(int param);
-	void vOnWideModeBtnInit(int param);
+	void vOnWideModeStaticInit(PG_MSGARG param);
+	void vOnWideModeBtnInit(PG_MSGARG param);
 	void vOnWideModeBtnUp(void);
-	void vOnOverallStaticInit(int param);
-	void vOnOverallCmbInit(int param);
-	void vOnScrResStaticInit(int param);
-	void vOnScrResCmbInit(int param);
-	void vOnTnlStaticInit(int param);
-	void vOnTnlCmbInit(int param);
-	void vOnTexResStaticInit(int param);
-	void vOnTexResCmbInit(int param);
-	void vOnShadowStaticInit(int param);
-	void vOnShadowBtnInit(int param);
+	void vOnOverallStaticInit(PG_MSGARG param);
+	void vOnOverallCmbInit(PG_MSGARG param);
+	void vOnScrResStaticInit(PG_MSGARG param);
+	void vOnScrResCmbInit(PG_MSGARG param);
+	void vOnTnlStaticInit(PG_MSGARG param);
+	void vOnTnlCmbInit(PG_MSGARG param);
+	void vOnTexResStaticInit(PG_MSGARG param);
+	void vOnTexResCmbInit(PG_MSGARG param);
+	void vOnShadowStaticInit(PG_MSGARG param);
+	void vOnShadowBtnInit(PG_MSGARG param);
 	void vOnShadowBtnUp(void);
-	void vOnShadowmapStaticInit(int param);
-	void vOnShadowmapBtnInit(int param);
+	void vOnShadowmapStaticInit(PG_MSGARG param);
+	void vOnShadowmapBtnInit(PG_MSGARG param);
 	void vOnShadowmapBtnUp(void);
-	void vOnReflectionStaticInit(int param);
-	void vOnReflectionBtnInit(int param);
+	void vOnReflectionStaticInit(PG_MSGARG param);
+	void vOnReflectionBtnInit(PG_MSGARG param);
 	void vOnReflectionBtnUp(void);
-	void vOnLodStaticInit(int param);
-	void vOnLodBtnInit(int param);
+	void vOnLodStaticInit(PG_MSGARG param);
+	void vOnLodBtnInit(PG_MSGARG param);
 	void vOnLodBtnUp(void);
-	void vOnNpcStaticInit(int param);
-	void vOnNpcBtnInit(int param);
+	void vOnNpcStaticInit(PG_MSGARG param);
+	void vOnNpcBtnInit(PG_MSGARG param);
 	void vOnNpcBtnUp(void);
-	void vOnParticleStaticInit(int param);
-	void vOnParticleCmbInit(int param);
-	void aOnEnableStaticInit(int param);
-	void aOnEnableBtnInit(int param);
+	void vOnParticleStaticInit(PG_MSGARG param);
+	void vOnParticleCmbInit(PG_MSGARG param);
+	void aOnEnableStaticInit(PG_MSGARG param);
+	void aOnEnableBtnInit(PG_MSGARG param);
 	void aOnEnableBtnUp(void);
-	void aOnOverallStaticInit(int param);
-	void aOnOverallCmbInit(int param);
-	void aOnSfxStaticInit(int param);
-	void aOnSfxGaugeInit(int param);
-	void aOnBgmStaticInit(int param);
-	void aOnBgmGaugeInit(int param);
-	void aOnSpeakerStaticInit(int param);
-	void aOnSpeakerCmbInit(int param);
-	void mOnMacroStatic1Init(int param);
-	void mOnMacroStatic2Init(int param);
+	void aOnOverallStaticInit(PG_MSGARG param);
+	void aOnOverallCmbInit(PG_MSGARG param);
+	void aOnSfxStaticInit(PG_MSGARG param);
+	void aOnSfxGaugeInit(PG_MSGARG param);
+	void aOnBgmStaticInit(PG_MSGARG param);
+	void aOnBgmGaugeInit(PG_MSGARG param);
+	void aOnSpeakerStaticInit(PG_MSGARG param);
+	void aOnSpeakerCmbInit(PG_MSGARG param);
+	void mOnMacroStatic1Init(PG_MSGARG param);
+	void mOnMacroStatic2Init(PG_MSGARG param);
 	void mOnMacroEnterKeyLBtnDown(void);
-	void mOnMacroStatic3Init(int param);
-	void mOnMacroStatic4Init(int param);
-	void mOnMacroStatic5Init(int param);
-	void mOnMacroStatic6Init(int param);
-	void mOnMacroStatic7Init(int param);
-	void mOnMacroStatic8Init(int param);
-	void mOnMacro1Init(int param);
-	void mOnMacro2Init(int param);
-	void mOnMacro3Init(int param);
-	void mOnMacro4Init(int param);
-	void mOnMacro5Init(int param);
-	void mOnMacro6Init(int param);
-	void mOnMacro7Init(int param);
-	void mOnMacro8Init(int param);
-	void tOnHintInit(int param);
+	void mOnMacroStatic3Init(PG_MSGARG param);
+	void mOnMacroStatic4Init(PG_MSGARG param);
+	void mOnMacroStatic5Init(PG_MSGARG param);
+	void mOnMacroStatic6Init(PG_MSGARG param);
+	void mOnMacroStatic7Init(PG_MSGARG param);
+	void mOnMacroStatic8Init(PG_MSGARG param);
+	void mOnMacro1Init(PG_MSGARG param);
+	void mOnMacro2Init(PG_MSGARG param);
+	void mOnMacro3Init(PG_MSGARG param);
+	void mOnMacro4Init(PG_MSGARG param);
+	void mOnMacro5Init(PG_MSGARG param);
+	void mOnMacro6Init(PG_MSGARG param);
+	void mOnMacro7Init(PG_MSGARG param);
+	void mOnMacro8Init(PG_MSGARG param);
+	void tOnHintInit(PG_MSGARG param);
 	const char* MakeHint(eTabType type, int index) const;
 	void ProcessHoverMessage(FrWnd* pWnd);   // optiondlg.cpp:2532
-	void OnHoverOn(int param);
-	void OnHoverOff(int param);
+	void OnHoverOn(PG_MSGARG param);
+	void OnHoverOff(PG_MSGARG param);
 
 	bool m_bApplyScrSize;               // 0x110
 	sOption m_option;                   // 0x114, edited copy of COption's block

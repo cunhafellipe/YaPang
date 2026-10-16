@@ -46,13 +46,13 @@ enum eAuthority {
 // each includer emits them.
 template <class T> enumGuiType GUIConverter(T* pWnd);
 // guildformcontroller.h:20
-template <> enumGuiType GUIConverter<FrEdit>(FrEdit* pWnd) { return GI_EDIT; }
+template <> inline enumGuiType GUIConverter<FrEdit>(FrEdit* pWnd) { return GI_EDIT; }
 // guildformcontroller.h:21
-template <> enumGuiType GUIConverter<FrArea>(FrArea* pWnd) { return GI_AREA; }
+template <> inline enumGuiType GUIConverter<FrArea>(FrArea* pWnd) { return GI_AREA; }
 // guildformcontroller.h:22
-template <> enumGuiType GUIConverter<FrButton>(FrButton* pWnd) { return GI_BUTTON; }
+template <> inline enumGuiType GUIConverter<FrButton>(FrButton* pWnd) { return GI_BUTTON; }
 // guildformcontroller.h:23
-template <> enumGuiType GUIConverter<FrListBox>(FrListBox* pWnd) { return GI_LISTBOX; }
+template <> inline enumGuiType GUIConverter<FrListBox>(FrListBox* pWnd) { return GI_LISTBOX; }
 
 // Enables and shows the controls of a guild form by page and rights.
 class CGuildFormController {

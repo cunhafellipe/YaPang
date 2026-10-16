@@ -333,7 +333,7 @@ sFRESH_ENTRY CShopMain::_MsgEntries[] = {
 };
 
 // shopmain.cpp:477
-void CShopMain::OnShopMainInit(int) {
+void CShopMain::OnShopMainInit(PG_MSGARG) {
 	SetTimeVariableBGM();
 	TurnOff3DBackground();
 }
@@ -379,7 +379,7 @@ void CShopMain::OnShopMainFinish(void) {
 }
 
 // shopmain.cpp:624
-void CShopMain::OnSortOptionComboInit(int param) {
+void CShopMain::OnSortOptionComboInit(PG_MSGARG param) {
 	FrComboBox *wnd = DYNAMIC_CAST(FrComboBox, param);
 	m_sortOptionCombo = wnd;
 	if (wnd) {
@@ -392,7 +392,7 @@ void CShopMain::OnSortOptionComboDown(void) {
 }
 
 // shopmain.cpp:638
-void CShopMain::OnSearchGoodsButtonInit(int param) {
+void CShopMain::OnSearchGoodsButtonInit(PG_MSGARG param) {
 	FrTextButton *wnd = DYNAMIC_CAST(FrTextButton, param);
 	m_searchGoodsButton = wnd;
 	if (wnd) {
@@ -630,17 +630,17 @@ bool CaddieCompare(const void *lhs, const void *rhs) {
 }
 
 // shopmain.cpp:996
-void CShopMain::OnPetInit(int param) {
+void CShopMain::OnPetInit(PG_MSGARG param) {
 	m_pet = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1001
-void CShopMain::OnSkinPetInit(int param) {
+void CShopMain::OnSkinPetInit(PG_MSGARG param) {
 	m_skinPet = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1006
-void CShopMain::OnSkinPet2Init(int param) {
+void CShopMain::OnSkinPet2Init(PG_MSGARG param) {
 	m_skinPet2 = DYNAMIC_CAST(FrArea, param);
 }
 
@@ -840,7 +840,7 @@ void CShopMain::DeleteCutinImages(void) {
 }
 
 // shopmain.cpp:1277
-void CShopMain::OnPetOwnerDraw(int) {
+void CShopMain::OnPetOwnerDraw(PG_MSGARG) {
 	if (m_shopTab == 4) {
 		switch (m_subTab) {
 		case 13:
@@ -869,12 +869,12 @@ void CShopMain::OnPetOwnerDraw(int) {
 }
 
 // shopmain.cpp:1309
-void CShopMain::OnItemDescBgInit(int param) {
+void CShopMain::OnItemDescBgInit(PG_MSGARG param) {
 	m_itemDescBg = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1316
-void CShopMain::OnItemDescBgOwnerDraw(int) {
+void CShopMain::OnItemDescBgOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *graphic = g_pFresh->GetManager()->GetGDI();
 	if (graphic == NULL)
 		return;
@@ -896,7 +896,7 @@ void CShopMain::OnItemDescBgOwnerDraw(int) {
 }
 
 // shopmain.cpp:1341
-void CShopMain::OnItemDescInit(int param) {
+void CShopMain::OnItemDescInit(PG_MSGARG param) {
 	m_itemDesc = DYNAMIC_CAST(FrEdit, param);
 	if (m_itemDesc) {
 		m_itemDesc->SetVisible(false);
@@ -1012,22 +1012,22 @@ void CShopMain::DrawItemPrice(FrGraphicInterface *graphic, float x, float y, IFF
 }
 
 // shopmain.cpp:1515
-void CShopMain::OnSelFrameInit(int param) {
+void CShopMain::OnSelFrameInit(PG_MSGARG param) {
 	m_selFrame = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1522
-void CShopMain::OnStatBoxInit(int param) {
+void CShopMain::OnStatBoxInit(PG_MSGARG param) {
 	m_statBox = DYNAMIC_CAST(FrGroupBox, param);
 }
 
 // shopmain.cpp:1529
-void CShopMain::OnSelItemIconInit(int param) {
+void CShopMain::OnSelItemIconInit(PG_MSGARG param) {
 	m_selItemIcon = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1536
-void CShopMain::OnSelItemIconOwnerDraw(int) {
+void CShopMain::OnSelItemIconOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *graphic = g_pFresh->GetManager()->GetGDI();
 	if (graphic == NULL)
 		return;
@@ -1060,7 +1060,7 @@ void CShopMain::OnSelItemIconOwnerDraw(int) {
 }
 
 // shopmain.cpp:1577
-void CShopMain::OnSelItemInit(int param) {
+void CShopMain::OnSelItemInit(PG_MSGARG param) {
 	m_selItem = DYNAMIC_CAST(FrButton, param);
 	if (m_selItem) {
 		m_selItem->EnableBlink(true);
@@ -1068,26 +1068,26 @@ void CShopMain::OnSelItemInit(int param) {
 }
 
 // shopmain.cpp:1586
-void CShopMain::OnSelItemOwnerDraw(int itemIndex) {
+void CShopMain::OnSelItemOwnerDraw(PG_MSGARG itemIndex) {
 }
 
 // shopmain.cpp:1591
-void CShopMain::OnTabTxt1Init(int param) {
+void CShopMain::OnTabTxt1Init(PG_MSGARG param) {
 	m_tabTxt1 = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1598
-void CShopMain::OnTabTxt2Init(int param) {
+void CShopMain::OnTabTxt2Init(PG_MSGARG param) {
 	m_tabTxt2 = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1605
-void CShopMain::OnTabTxt3Init(int param) {
+void CShopMain::OnTabTxt3Init(PG_MSGARG param) {
 	m_tabTxt3 = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1612
-void CShopMain::OnSelectedNameInit(int param) {
+void CShopMain::OnSelectedNameInit(PG_MSGARG param) {
 	m_selectedName = DYNAMIC_CAST(FrStatic, param);
 }
 
@@ -1097,7 +1097,7 @@ void CShopMain::OnSelItemUp(void) {
 }
 
 // shopmain.cpp:1629
-void CShopMain::OnSelItemPrevInit(int param) {
+void CShopMain::OnSelItemPrevInit(PG_MSGARG param) {
 	m_selItemPrev = DYNAMIC_CAST(FrButton, param);
 	if (m_selItemPrev) {
 		m_selItemPrev->SetPushDelay(0.0f);
@@ -1156,7 +1156,7 @@ void CShopMain::OnSelItemPrevUp(void) {
 }
 
 // shopmain.cpp:1680
-void CShopMain::OnSelItemNextInit(int param) {
+void CShopMain::OnSelItemNextInit(PG_MSGARG param) {
 	m_selItemNext = DYNAMIC_CAST(FrButton, param);
 	if (m_selItemNext) {
 		m_selItemNext->SetPushDelay(0.0f);
@@ -1215,17 +1215,17 @@ void CShopMain::OnSelItemNextUp(void) {
 }
 
 // shopmain.cpp:1737
-void CShopMain::OnStatFrameInit(int param) {
+void CShopMain::OnStatFrameInit(PG_MSGARG param) {
 	m_statFrame = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1742
-void CShopMain::OnStatTextInit(int param) {
+void CShopMain::OnStatTextInit(PG_MSGARG param) {
 	m_statText = DYNAMIC_CAST(FrArea, param);
 }
 
 // shopmain.cpp:1747
-void CShopMain::OnStatPartInit(int param) {
+void CShopMain::OnStatPartInit(PG_MSGARG param) {
 	m_statPart = DYNAMIC_CAST(FrViewer, param);
 }
 
@@ -1235,7 +1235,7 @@ void CShopMain::OnStatPartUp(void) {
 }
 
 // shopmain.cpp:1759
-void CShopMain::OnStatPartOwnerDraw(int) {
+void CShopMain::OnStatPartOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 		pGDI->DrawTexture(m_statPartBitmap[m_statPartKind][2], m_statPart->GetRect(), 0xFFFFFFFF, 0);
@@ -1246,7 +1246,7 @@ void CShopMain::OnStatPartOwnerDraw(int) {
 }
 
 // shopmain.cpp:1772
-void CShopMain::OnStatAllInit(int param) {
+void CShopMain::OnStatAllInit(PG_MSGARG param) {
 	m_statAll = DYNAMIC_CAST(FrViewer, param);
 	if (m_statAll) {
 		m_statAll->SetVisible(false);
@@ -1259,7 +1259,7 @@ void CShopMain::OnStatAllUp(void) {
 }
 
 // shopmain.cpp:1787
-void CShopMain::OnStatAllOwnerDraw(int) {
+void CShopMain::OnStatAllOwnerDraw(PG_MSGARG) {
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 		WRect rect = m_statAll->GetRect();
@@ -1276,7 +1276,7 @@ void CShopMain::OnStatAllOwnerDraw(int) {
 }
 
 // shopmain.cpp:1810
-void CShopMain::OnTabMainInit(int param) {
+void CShopMain::OnTabMainInit(PG_MSGARG param) {
 	m_tabMainButton = DYNAMIC_CAST(FrTabButton, param);
 	if (m_tabMainButton) {
 
@@ -1339,7 +1339,7 @@ void CShopMain::OnTabMainButtonUp(void) {
 }
 
 // shopmain.cpp:1898
-void CShopMain::OnTabSubInit(int param) {
+void CShopMain::OnTabSubInit(PG_MSGARG param) {
 	m_tabSubButton = DYNAMIC_CAST(FrTabButton, param);
 }
 
@@ -1451,7 +1451,7 @@ void CShopMain::DrawPartsSlot(FrGraphicInterface *graphic, FrListItem *listItem)
 extern TitleManager *g_TitleManager;   // defined in ProjectG.cpp
 
 // shopmain.cpp:2042
-void CShopMain::OnItemListOwnerDraw(int param) {
+void CShopMain::OnItemListOwnerDraw(PG_MSGARG param) {
 	FrListItem *listItem = (FrListItem *)param;
 	if (listItem == NULL)
 		return;
@@ -1866,7 +1866,7 @@ void CShopMain::OnItemListRBtnDown(void) {
 }
 
 // shopmain.cpp:2886
-void CShopMain::OnBuyAllInit(int param) {
+void CShopMain::OnBuyAllInit(PG_MSGARG param) {
 	m_buyAll = DYNAMIC_CAST(FrButton, param);
 	if (m_buyAll) {
 		m_buyAll->EnableHover(true, 0.0f);
@@ -1898,7 +1898,7 @@ void CShopMain::OnBuyAllUp(void) {
 }
 
 // shopmain.cpp:2958
-void CShopMain::OnBuyResetInit(int param) {
+void CShopMain::OnBuyResetInit(PG_MSGARG param) {
 	m_buyReset = DYNAMIC_CAST(FrButton, param);
 	if (m_buyReset) {
 		m_buyReset->EnableHover(true, 0.0f);
@@ -1961,7 +1961,7 @@ void CShopMain::OnBuyResetUp(void) {
 }
 
 // shopmain.cpp:3059
-void CShopMain::OnBuyHoverOn(int param) {
+void CShopMain::OnBuyHoverOn(PG_MSGARG param) {
 	FrButton *button = DYNAMIC_CAST(FrButton, param);
 	if (button == m_buyAll) {
 		CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x18);
@@ -1971,7 +1971,7 @@ void CShopMain::OnBuyHoverOn(int param) {
 }
 
 // shopmain.cpp:3072
-void CShopMain::OnBuyHoverOff(int param) {
+void CShopMain::OnBuyHoverOff(PG_MSGARG param) {
 	FrButton *button = DYNAMIC_CAST(FrButton, param);
 	CIconToolTip *toolTip = CIconToolTip::GetInstance();
 	bool clear = false;
@@ -2001,7 +2001,7 @@ void CShopMain::OnBuyHoverOff(int param) {
 }
 
 // shopmain.cpp:3107
-void CShopMain::OnSideTabBuyInit(int param) {
+void CShopMain::OnSideTabBuyInit(PG_MSGARG param) {
 	m_sideTabBuy = DYNAMIC_CAST(FrButton, param);
 	if (m_sideTabBuy) {
 		m_sideTabBuy->SetPushDelay(0.2f);
@@ -2027,7 +2027,7 @@ void CShopMain::OnSideTabBuyUp(void) {
 }
 
 // shopmain.cpp:3137
-void CShopMain::OnSideTabRentalInit(int param) {
+void CShopMain::OnSideTabRentalInit(PG_MSGARG param) {
 	m_sideTabRental = DYNAMIC_CAST(FrButton, param);
 	if (m_sideTabRental) {
 		m_sideTabRental->SetPushDelay(0.2f);
@@ -2130,7 +2130,7 @@ bool CShopMain::IsSelectedRentalTab(void) {
 }
 
 // shopmain.cpp:3271
-void CShopMain::OnPartCartListInit(int param) {
+void CShopMain::OnPartCartListInit(PG_MSGARG param) {
 	m_cartList = DYNAMIC_CAST(FrListBox, param);
 }
 
@@ -2138,7 +2138,7 @@ void CShopMain::OnPartCartListInit(int param) {
 extern "C" { extern int data_aa7d28[10]; }
 
 // shopmain.cpp:3279
-void CShopMain::OnPartCartListOwnerDraw(int param) {
+void CShopMain::OnPartCartListOwnerDraw(PG_MSGARG param) {
 	FrListItem *listItem = (FrListItem *)param;
 	if (listItem == NULL)
 		return;
@@ -2261,12 +2261,12 @@ void CShopMain::DrawStatus3(FrGraphicInterface *graphic, float x, float y, short
 }
 
 // shopmain.cpp:3484
-void CShopMain::OnAuxPartCartListInit(int param) {
+void CShopMain::OnAuxPartCartListInit(PG_MSGARG param) {
 	m_auxCartList = DYNAMIC_CAST(FrListBox, param);
 }
 
 // shopmain.cpp:3492
-void CShopMain::OnAuxPartCartListOwnerDraw(int param) {
+void CShopMain::OnAuxPartCartListOwnerDraw(PG_MSGARG param) {
 	FrListItem *listItem = (FrListItem *)param;
 	if (listItem == NULL)
 		return;
@@ -2377,7 +2377,7 @@ void CShopMain::TurnOnAuxCartScroll(void) {
 }
 
 // shopmain.cpp:3631
-void CShopMain::OnScrollUpInit(int param) {
+void CShopMain::OnScrollUpInit(PG_MSGARG param) {
 	m_scrollUp = DYNAMIC_CAST(FrButton, param);
 	if (m_scrollUp) {
 		m_scrollUp->SetVisible(false);
@@ -2391,7 +2391,7 @@ void CShopMain::OnScrollUpUp(void) {
 }
 
 // shopmain.cpp:3646
-void CShopMain::OnScrollDownInit(int param) {
+void CShopMain::OnScrollDownInit(PG_MSGARG param) {
 	m_scrollDown = DYNAMIC_CAST(FrButton, param);
 	if (m_scrollDown) {
 		m_scrollDown->SetVisible(false);
@@ -2405,7 +2405,7 @@ void CShopMain::OnScrollDownUp(void) {
 }
 
 // shopmain.cpp:3661
-void CShopMain::OnItemSlotFrame1Init(int param) {
+void CShopMain::OnItemSlotFrame1Init(PG_MSGARG param) {
 	m_itemSlotFrame1 = DYNAMIC_CAST(FrArea, param);
 	if (m_itemSlotFrame1) {
 		m_itemSlotFrame1->SetVisible(false);
@@ -2413,7 +2413,7 @@ void CShopMain::OnItemSlotFrame1Init(int param) {
 }
 
 // shopmain.cpp:3670
-void CShopMain::OnItemSlotFrame2Init(int param) {
+void CShopMain::OnItemSlotFrame2Init(PG_MSGARG param) {
 	m_itemSlotFrame2 = DYNAMIC_CAST(FrArea, param);
 	if (m_itemSlotFrame2) {
 		m_itemSlotFrame2->SetVisible(false);
@@ -2513,7 +2513,7 @@ void CShopMain::OnItemSlotInit(intptr_t param) {
 }
 
 // shopmain.cpp:3812
-void CShopMain::OnItemSlotOwnerDraw(int param) {
+void CShopMain::OnItemSlotOwnerDraw(PG_MSGARG param) {
 	FrListItem *listItem = (FrListItem *)param;
 	if (listItem == NULL)
 		return;
@@ -2554,27 +2554,27 @@ void CShopMain::OnItemSlotOwnerDraw(int param) {
 }
 
 // shopmain.cpp:3863
-void CShopMain::OnPowerEditInit(int param) {
+void CShopMain::OnPowerEditInit(PG_MSGARG param) {
 	m_statEdit[0] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // shopmain.cpp:3868
-void CShopMain::OnControlEditInit(int param) {
+void CShopMain::OnControlEditInit(PG_MSGARG param) {
 	m_statEdit[1] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // shopmain.cpp:3873
-void CShopMain::OnImpactEditInit(int param) {
+void CShopMain::OnImpactEditInit(PG_MSGARG param) {
 	m_statEdit[2] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // shopmain.cpp:3878
-void CShopMain::OnSpinEditInit(int param) {
+void CShopMain::OnSpinEditInit(PG_MSGARG param) {
 	m_statEdit[3] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // shopmain.cpp:3883
-void CShopMain::OnCurveEditInit(int param) {
+void CShopMain::OnCurveEditInit(PG_MSGARG param) {
 	m_statEdit[4] = DYNAMIC_CAST(FrStatic, param);
 }
 

@@ -106,7 +106,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // bongdarishopdlg.cpp:78
 
-	void OnBongdariShopInit(int);   // bongdarishopdlg.cpp:258
+	void OnBongdariShopInit(PG_MSGARG);   // bongdarishopdlg.cpp:258
 	void OnAboutShopBnInit(intptr_t);   // bongdarishopdlg.cpp:262
 	void OnAboutShopBnUp(void);   // bongdarishopdlg.cpp:267
 	void OnTotalItemBnInit(intptr_t);   // bongdarishopdlg.cpp:273
@@ -277,7 +277,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // bongdarishopdlg.cpp:2821
 
-	void OnAboutShopInit(int);   // bongdarishopdlg.cpp:2873
+	void OnAboutShopInit(PG_MSGARG);   // bongdarishopdlg.cpp:2873
 	void OnAboutViewerInit(intptr_t);   // bongdarishopdlg.cpp:2877
 	void OnIndex01Init(intptr_t);   // bongdarishopdlg.cpp:2883
 	void OnIndex02Init(intptr_t);   // bongdarishopdlg.cpp:2893
@@ -354,9 +354,9 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // bongdarishopdlg.cpp:3080
 
-	void OnTotalItemInit(int);   // bongdarishopdlg.cpp:3120
+	void OnTotalItemInit(PG_MSGARG);   // bongdarishopdlg.cpp:3120
 	void OnTotalItemListInit(intptr_t);   // bongdarishopdlg.cpp:3124
-	void OnTotalItemListOwnerDraw(int);   // bongdarishopdlg.cpp:3135
+	void OnTotalItemListOwnerDraw(PG_MSGARG);   // bongdarishopdlg.cpp:3135
 	void OnTotalItemListRBnDown(void);   // bongdarishopdlg.cpp:3213
 	void OpenInformation(unsigned long typeId);
 	void OnOkBnInit(intptr_t);   // bongdarishopdlg.cpp:3314
@@ -410,7 +410,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // bongdarishopdlg.cpp:3360
 
-	void OnBongdarishopNoticeInit(int);   // bongdarishopdlg.cpp:3399
+	void OnBongdarishopNoticeInit(PG_MSGARG);   // bongdarishopdlg.cpp:3399
 	void OnNoticeViewerInit(intptr_t);   // bongdarishopdlg.cpp:3403
 	void OnNoticeViewerBnUp(void);   // bongdarishopdlg.cpp:3408
 	void OnListIndexInit(intptr_t);   // bongdarishopdlg.cpp:3434
@@ -478,7 +478,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // bongdarishopdlg.cpp:3665
 
-	void OnBongdarishopRareItemInit(int);   // bongdarishopdlg.cpp:3688
+	void OnBongdarishopRareItemInit(PG_MSGARG);   // bongdarishopdlg.cpp:3688
 	void OnRareItemIconInit(intptr_t);   // bongdarishopdlg.cpp:3692
 	void OnRareItemNameInit(intptr_t);   // bongdarishopdlg.cpp:3697
 	void OnRareItemAbilityInit(intptr_t);   // bongdarishopdlg.cpp:3702
@@ -519,12 +519,12 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // bongdarishopdlg.cpp:3865
 
-	void OnBongdarishopWarningInit(int);   // bongdarishopdlg.cpp:3909
+	void OnBongdarishopWarningInit(PG_MSGARG);   // bongdarishopdlg.cpp:3909
 	void OnWarningBackInit(intptr_t);   // bongdarishopdlg.cpp:3913
 	void OnOkBnInit(intptr_t);   // bongdarishopdlg.cpp:3918
 	void OnOkBnUp(void);   // bongdarishopdlg.cpp:3923
 	virtual bool OnInit(void);   // bongdarishopdlg.cpp:3937
-	void OnWarningBackOwnerDraw(int);   // bongdarishopdlg.cpp:3964
+	void OnWarningBackOwnerDraw(PG_MSGARG);   // bongdarishopdlg.cpp:3964
 
 private:
 	FrArea* m_pWarningBack;            // 0x110, set by OnWarningBackInit
@@ -571,9 +571,9 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // bongdarishopdlg.cpp:3980
 
-	void OnClosedBonusBallResultInit(int);   // bongdarishopdlg.cpp:4012
+	void OnClosedBonusBallResultInit(PG_MSGARG);   // bongdarishopdlg.cpp:4012
 	void OnClosedBonusBallListInit(intptr_t);   // bongdarishopdlg.cpp:4016
-	void OnClosedBonusBallListOwnerDraw(int);   // bongdarishopdlg.cpp:4026
+	void OnClosedBonusBallListOwnerDraw(PG_MSGARG);   // bongdarishopdlg.cpp:4026
 	void OnClosedBonusBallName01Init(intptr_t);   // bongdarishopdlg.cpp:4078
 	void OnClosedBonusBallAbility01Init(intptr_t);   // bongdarishopdlg.cpp:4083
 	void OnClosedBonusBallName02Init(intptr_t);   // bongdarishopdlg.cpp:4088

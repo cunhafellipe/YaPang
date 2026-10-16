@@ -186,7 +186,7 @@ void FrNextHole::SetNextHole(int hole) {
 }
 
 // treasuredlg.cpp:191
-void FrNextHole::OnAreaNextHole_OwnerDraw(int param) {
+void FrNextHole::OnAreaNextHole_OwnerDraw(PG_MSGARG param) {
 	if (m_state == STATE_HIDE)
 		return;
 
@@ -313,7 +313,7 @@ FrTreasureGauge::~FrTreasureGauge(void) {
 }
 
 // treasuredlg.cpp:323
-void FrTreasureGauge::OnImageBarInit(int param) {
+void FrTreasureGauge::OnImageBarInit(PG_MSGARG param) {
 	m_pGauge = DYNAMIC_CAST(FrGaugeBarImage, param);
 	if (m_pGauge) {
 		m_pGauge->SetRange(0, 1000, 0);
@@ -392,12 +392,12 @@ void FrTreasureGauge::SetOutFrameVisible(bool bVisible) {
 }
 
 // treasuredlg.cpp:418
-void FrTreasureGauge::OnArea_Arrow_Init(int param) {
+void FrTreasureGauge::OnArea_Arrow_Init(PG_MSGARG param) {
 	m_pArrowArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // treasuredlg.cpp:423
-void FrTreasureGauge::OnArea_Arrow_OwnerDraw(int) {
+void FrTreasureGauge::OnArea_Arrow_OwnerDraw(PG_MSGARG) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -851,12 +851,12 @@ void FrTreasureCourse::ShiftAlpha(int cloudIdx, float dt, eALPHA type) {
 }
 
 // treasuredlg.cpp:957
-void FrTreasureCourse::OnAreaSelectMapInit(int param) {
+void FrTreasureCourse::OnAreaSelectMapInit(PG_MSGARG param) {
 	m_pSelectMapArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // treasuredlg.cpp:975
-void FrTreasureCourse::OnBtnMap_ALL_Init(int param) {
+void FrTreasureCourse::OnBtnMap_ALL_Init(PG_MSGARG param) {
 	FrButton* pBtn = DYNAMIC_CAST(FrButton, param);
 #ifdef JP_PAKS
 	// JP data: the JP form puts Ice Inferno's button between Eastern Valley's
@@ -913,7 +913,7 @@ void FrTreasureCourse::OnBtnMap_Lagoon_Down(void) {
 }
 
 // treasuredlg.cpp:1005
-void FrTreasureCourse::OnBtnMap_Lagoon_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Lagoon_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_BLUE_LAGOON);
 }
 
@@ -924,7 +924,7 @@ void FrTreasureCourse::OnBtnMap_Water_Down(void) {
 }
 
 // treasuredlg.cpp:1015
-void FrTreasureCourse::OnBtnMap_Water_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Water_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_BLUE_WATER);
 }
 
@@ -935,7 +935,7 @@ void FrTreasureCourse::OnBtnMap_Sepia_Down(void) {
 }
 
 // treasuredlg.cpp:1025
-void FrTreasureCourse::OnBtnMap_Sepia_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Sepia_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_SEPIA_WIND);
 }
 
@@ -946,7 +946,7 @@ void FrTreasureCourse::OnBtnMap_Hill_Down(void) {
 }
 
 // treasuredlg.cpp:1035
-void FrTreasureCourse::OnBtnMap_Hill_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Hill_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_WIND_HILL);
 }
 
@@ -957,7 +957,7 @@ void FrTreasureCourse::OnBtnMap_WizWiz_Down(void) {
 }
 
 // treasuredlg.cpp:1045
-void FrTreasureCourse::OnBtnMap_WizWiz_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_WizWiz_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_WIZ_WIZ);
 }
 
@@ -968,7 +968,7 @@ void FrTreasureCourse::OnBtnMap_West_Down(void) {
 }
 
 // treasuredlg.cpp:1055
-void FrTreasureCourse::OnBtnMap_West_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_West_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_WEST_WIZ);
 }
 
@@ -979,7 +979,7 @@ void FrTreasureCourse::OnBtnMap_Moon_Down(void) {
 }
 
 // treasuredlg.cpp:1065
-void FrTreasureCourse::OnBtnMap_Moon_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Moon_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_BLUE_MOON);
 }
 
@@ -990,7 +990,7 @@ void FrTreasureCourse::OnBtnMap_Silvia_Down(void) {
 }
 
 // treasuredlg.cpp:1075
-void FrTreasureCourse::OnBtnMap_Silvia_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Silvia_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_SILVIA_CANNON);
 }
 
@@ -1001,7 +1001,7 @@ void FrTreasureCourse::OnBtnMap_Cannon_Down(void) {
 }
 
 // treasuredlg.cpp:1085
-void FrTreasureCourse::OnBtnMap_Cannon_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Cannon_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_ICE_CANNON);
 }
 
@@ -1012,7 +1012,7 @@ void FrTreasureCourse::OnBtnMap_White_Down(void) {
 }
 
 // treasuredlg.cpp:1095
-void FrTreasureCourse::OnBtnMap_White_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_White_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_WHITE_WIZ);
 }
 
@@ -1023,7 +1023,7 @@ void FrTreasureCourse::OnBtnMap_Shining_Down(void) {
 }
 
 // treasuredlg.cpp:1105
-void FrTreasureCourse::OnBtnMap_Shining_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Shining_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_SHINING_SAND);
 }
 
@@ -1034,7 +1034,7 @@ void FrTreasureCourse::OnBtnMap_Pink_Down(void) {
 }
 
 // treasuredlg.cpp:1115
-void FrTreasureCourse::OnBtnMap_Pink_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Pink_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_PINK_WIND);
 }
 
@@ -1045,7 +1045,7 @@ void FrTreasureCourse::OnBtnMap_Inferno_Down(void) {
 }
 
 // treasuredlg.cpp:1125
-void FrTreasureCourse::OnBtnMap_Inferno_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Inferno_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_DEEP_INFERNO);
 }
 
@@ -1056,7 +1056,7 @@ void FrTreasureCourse::OnBtnMap_IceSpa_Down(void) {
 }
 
 // treasuredlg.cpp:1135
-void FrTreasureCourse::OnBtnMap_IceSpa_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_IceSpa_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_ICE_SPA);
 }
 
@@ -1067,7 +1067,7 @@ void FrTreasureCourse::OnBtnMap_SeaWay_Down(void) {
 }
 
 // treasuredlg.cpp:1146
-void FrTreasureCourse::OnBtnMap_SeaWay_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_SeaWay_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_LOST_SEAWAY);
 }
 
@@ -1078,7 +1078,7 @@ void FrTreasureCourse::OnBtnMap_Panda_Down(void) {
 }
 
 // treasuredlg.cpp:1157
-void FrTreasureCourse::OnBtnMap_Panda_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Panda_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_EASTERN_VALLEY);
 }
 
@@ -1089,7 +1089,7 @@ void FrTreasureCourse::OnBtnMap_Wizcity_Down(void) {
 }
 
 // treasuredlg.cpp:1169
-void FrTreasureCourse::OnBtnMap_Wizcity_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Wizcity_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_WIZ_CITY);
 }
 
@@ -1100,7 +1100,7 @@ void FrTreasureCourse::OnBtnMap_IceInferno_Down(void) {
 	Close(true);
 }
 
-void FrTreasureCourse::OnBtnMap_IceInferno_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_IceInferno_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_ICE_INFERNO);
 }
 
@@ -1109,7 +1109,7 @@ void FrTreasureCourse::OnBtnMap_AbbotMine_Down(void) {
 	Close(true);
 }
 
-void FrTreasureCourse::OnBtnMap_AbbotMine_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_AbbotMine_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_ABBOT_MINE);
 }
 
@@ -1118,13 +1118,13 @@ void FrTreasureCourse::OnBtnMap_Luna_Down(void) {
 	Close(true);
 }
 
-void FrTreasureCourse::OnBtnMap_Luna_OwnerDraw(int) {
+void FrTreasureCourse::OnBtnMap_Luna_OwnerDraw(PG_MSGARG) {
 	DrawMapBtn(MAP_MYSTIC_RUINS);
 }
 #endif
 
 // treasuredlg.cpp:1175
-void FrTreasureCourse::OnBtnMap_Random_Init(int param) {
+void FrTreasureCourse::OnBtnMap_Random_Init(PG_MSGARG param) {
 	m_randomBtn = DYNAMIC_CAST(FrButton, param);
 }
 
@@ -1135,21 +1135,21 @@ void FrTreasureCourse::OnBtnMap_Random_Down(void) {
 }
 
 // treasuredlg.cpp:1185
-void FrTreasureCourse::OnViewerF1(int param) {
+void FrTreasureCourse::OnViewerF1(PG_MSGARG param) {
 	m_pViewerF1 = DYNAMIC_CAST(FrViewer, param);
 	m_pViewerF1->SetMouseEvent(false);
 	m_pViewerF1->Open("th_quick_frm1.tga");
 }
 
 // treasuredlg.cpp:1192
-void FrTreasureCourse::OnViewerF2(int param) {
+void FrTreasureCourse::OnViewerF2(PG_MSGARG param) {
 	m_pViewerF2 = DYNAMIC_CAST(FrViewer, param);
 	m_pViewerF2->SetMouseEvent(false);
 	m_pViewerF2->Open("th_quick_frm2.tga");
 }
 
 // treasuredlg.cpp:1199
-void FrTreasureCourse::OnImageBar(int param) {
+void FrTreasureCourse::OnImageBar(PG_MSGARG param) {
 	m_pImageBar = DYNAMIC_CAST(FrGaugeBarImage, param);
 	if (m_pImageBar) {
 		m_pImageBar->SetRange(0, 300, 0);
@@ -1159,7 +1159,7 @@ void FrTreasureCourse::OnImageBar(int param) {
 }
 
 // treasuredlg.cpp:1210
-void FrTreasureCourse::OnGauge_SmallBar(int param) {
+void FrTreasureCourse::OnGauge_SmallBar(PG_MSGARG param) {
 	m_pSmallBar = DYNAMIC_CAST(FrGaugeBarImage, param);
 	if (m_pSmallBar) {
 		m_pSmallBar->SetRange(0, 300, 0);
@@ -1168,7 +1168,7 @@ void FrTreasureCourse::OnGauge_SmallBar(int param) {
 }
 
 // treasuredlg.cpp:1220
-void FrTreasureCourse::OnGauge_SmallBar_OwnerDraw(int param) {
+void FrTreasureCourse::OnGauge_SmallBar_OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI == 0)
 		return;
@@ -1199,17 +1199,17 @@ void FrTreasureCourse::OnGauge_SmallBar_OwnerDraw(int param) {
 }
 
 // treasuredlg.cpp:1243
-void FrTreasureCourse::OnViewer_CurrMap_Init(int param) {
+void FrTreasureCourse::OnViewer_CurrMap_Init(PG_MSGARG param) {
 	m_pCurMapViewer = DYNAMIC_CAST(FrViewer, param);
 }
 
 // treasuredlg.cpp:1248
-void FrTreasureCourse::OnArea_Explane_Init(int param) {
+void FrTreasureCourse::OnArea_Explane_Init(PG_MSGARG param) {
 	m_pExplaneArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // treasuredlg.cpp:1253
-void FrTreasureCourse::OnArea_Explane_OwnerDraw(int param) {
+void FrTreasureCourse::OnArea_Explane_OwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 	if (pGI) {
 		if (m_pExplaneArea && m_pExplaneBitmap) {
@@ -1222,12 +1222,12 @@ void FrTreasureCourse::OnArea_Explane_OwnerDraw(int param) {
 }
 
 // treasuredlg.cpp:1266
-void FrTreasureCourse::OnInit_Cloud_Area(int param) {
+void FrTreasureCourse::OnInit_Cloud_Area(PG_MSGARG param) {
 	m_pCloudArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // treasuredlg.cpp:1271
-void FrTreasureCourse::OnOwnerDraw_Cloud_Area(int param) {
+void FrTreasureCourse::OnOwnerDraw_Cloud_Area(PG_MSGARG param) {
 	if (m_pCloudOverlay) {
 		for (int i = 0; i < m_cloudCount; ++i) {
 			m_pCloudOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), m_clouds[i].srcRect, 0, (m_clouds[i].alpha << 24) | 0xffffff, 0, 0);
@@ -1780,12 +1780,12 @@ void FrTreasureGift::OnProc(const float dt) {
 }
 
 // treasuredlg.cpp:1913
-void FrTreasureGift::OnInit_RangeArea_Out(int param) {
+void FrTreasureGift::OnInit_RangeArea_Out(PG_MSGARG param) {
 	m_frame0.AddFrame(DYNAMIC_CAST(FrArea, param));
 }
 
 // treasuredlg.cpp:1918
-void FrTreasureGift::OnInit_RangeArea_In(int param) {
+void FrTreasureGift::OnInit_RangeArea_In(PG_MSGARG param) {
 	m_frame1.AddFrame(DYNAMIC_CAST(FrArea, param));
 }
 
@@ -1795,12 +1795,12 @@ void FrTreasureGift::OnInit_Gift_List(intptr_t param) {
 }
 
 // treasuredlg.cpp:1928
-void FrTreasureGift::OnInit_GridArea(int param) {
+void FrTreasureGift::OnInit_GridArea(PG_MSGARG param) {
 	m_pGridArea = DYNAMIC_CAST(FrArea, param);
 }
 
 // treasuredlg.cpp:1933
-void FrTreasureGift::OnOwnerDraw_GridArea(int param) {
+void FrTreasureGift::OnOwnerDraw_GridArea(PG_MSGARG param) {
 	WRect rect = m_boxOpener.m_pGiftList->GetRect();
 
 	// Horizontal lines of the gift grid.
@@ -1823,7 +1823,7 @@ void FrTreasureGift::OnOwnerDraw_GridArea(int param) {
 }
 
 // treasuredlg.cpp:1962
-void FrTreasureGift::OnInit_Box_Area(int param) {
+void FrTreasureGift::OnInit_Box_Area(PG_MSGARG param) {
 	m_boxOpener.m_pBoxArea = DYNAMIC_CAST(FrArea, param);
 	if (m_boxOpener.m_pBoxArea) {
 		WRect rect = m_boxOpener.m_pBoxArea->GetRect();
@@ -1834,7 +1834,7 @@ void FrTreasureGift::OnInit_Box_Area(int param) {
 }
 
 // treasuredlg.cpp:1975
-void FrTreasureGift::OnOwnerDraw_Box_Area(int param) {
+void FrTreasureGift::OnOwnerDraw_Box_Area(PG_MSGARG param) {
 	m_boxOpener.DrawBoxArea();
 }
 

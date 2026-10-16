@@ -25,35 +25,35 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // awarddlg.cpp:19
 
-	void OnGoldStaticInit(int param);     // awarddlg.cpp:55
-	void OnSilverStaticInit(int param);   // awarddlg.cpp:84
-	void OnBronzeStaticInit(int param);   // awarddlg.cpp:128
+	void OnGoldStaticInit(PG_MSGARG param);     // awarddlg.cpp:55
+	void OnSilverStaticInit(PG_MSGARG param);   // awarddlg.cpp:84
+	void OnBronzeStaticInit(PG_MSGARG param);   // awarddlg.cpp:128
 	int GetMedalIndex(unsigned long uid); // awarddlg.cpp:186
 
-	void OnWinner1Init(int param);     // awarddlg.cpp:395
-	void OnWinner2Init(int param);     // awarddlg.cpp:441
-	void OnWinner3Init(int param);     // awarddlg.cpp:485
-	void OnWinner4Init(int param);     // awarddlg.cpp:529
-	void OnWinner5Init(int param);     // awarddlg.cpp:573
-	void OnWinner6Init(int param);     // awarddlg.cpp:617
-	void OnLuckInit(int param);        // awarddlg.cpp:661
-	void OnSpeederInit(int param);     // awarddlg.cpp:725
-	void OnRunnerInit(int param);      // awarddlg.cpp:789
-	void OnChipInInit(int param);      // awarddlg.cpp:854
-	void OnLongPuttInit(int param);    // awarddlg.cpp:918
-	void OnRecoveryInit(int param);    // awarddlg.cpp:983
-	void OnWinner1OwnerDraw(int param);  // awarddlg.cpp:401
-	void OnWinner2OwnerDraw(int param);  // awarddlg.cpp:447
-	void OnWinner3OwnerDraw(int param);  // awarddlg.cpp:491
-	void OnWinner4OwnerDraw(int param);  // awarddlg.cpp:535
-	void OnWinner5OwnerDraw(int param);  // awarddlg.cpp:579
-	void OnWinner6OwnerDraw(int param);  // awarddlg.cpp:623
-	void OnLuckOwnerDraw(int param);     // awarddlg.cpp:666
-	void OnSpeederOwnerDraw(int param);  // awarddlg.cpp:730
-	void OnRunnerOwnerDraw(int param);   // awarddlg.cpp:794
-	void OnChipInOwnerDraw(int param);   // awarddlg.cpp:859
-	void OnLongPuttOwnerDraw(int param); // awarddlg.cpp:923
-	void OnRecoveryOwnerDraw(int param); // awarddlg.cpp:988
+	void OnWinner1Init(PG_MSGARG param);     // awarddlg.cpp:395
+	void OnWinner2Init(PG_MSGARG param);     // awarddlg.cpp:441
+	void OnWinner3Init(PG_MSGARG param);     // awarddlg.cpp:485
+	void OnWinner4Init(PG_MSGARG param);     // awarddlg.cpp:529
+	void OnWinner5Init(PG_MSGARG param);     // awarddlg.cpp:573
+	void OnWinner6Init(PG_MSGARG param);     // awarddlg.cpp:617
+	void OnLuckInit(PG_MSGARG param);        // awarddlg.cpp:661
+	void OnSpeederInit(PG_MSGARG param);     // awarddlg.cpp:725
+	void OnRunnerInit(PG_MSGARG param);      // awarddlg.cpp:789
+	void OnChipInInit(PG_MSGARG param);      // awarddlg.cpp:854
+	void OnLongPuttInit(PG_MSGARG param);    // awarddlg.cpp:918
+	void OnRecoveryInit(PG_MSGARG param);    // awarddlg.cpp:983
+	void OnWinner1OwnerDraw(PG_MSGARG param);  // awarddlg.cpp:401
+	void OnWinner2OwnerDraw(PG_MSGARG param);  // awarddlg.cpp:447
+	void OnWinner3OwnerDraw(PG_MSGARG param);  // awarddlg.cpp:491
+	void OnWinner4OwnerDraw(PG_MSGARG param);  // awarddlg.cpp:535
+	void OnWinner5OwnerDraw(PG_MSGARG param);  // awarddlg.cpp:579
+	void OnWinner6OwnerDraw(PG_MSGARG param);  // awarddlg.cpp:623
+	void OnLuckOwnerDraw(PG_MSGARG param);     // awarddlg.cpp:666
+	void OnSpeederOwnerDraw(PG_MSGARG param);  // awarddlg.cpp:730
+	void OnRunnerOwnerDraw(PG_MSGARG param);   // awarddlg.cpp:794
+	void OnChipInOwnerDraw(PG_MSGARG param);   // awarddlg.cpp:859
+	void OnLongPuttOwnerDraw(PG_MSGARG param); // awarddlg.cpp:923
+	void OnRecoveryOwnerDraw(PG_MSGARG param); // awarddlg.cpp:988
 
 private:
 	FrArea* m_pWinnerArea[6];   // 0x110 (one per player slot of the result)

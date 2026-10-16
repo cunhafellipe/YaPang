@@ -51,7 +51,7 @@ protected:
 	void OnOkayBtnUp(void);
 	void OnItemListUp(void);
 	void OnBgAreaDraw(void);
-	void OnItemListDraw(int param);
+	void OnItemListDraw(PG_MSGARG param);
 
 	virtual void OnProc(const float dt);
 

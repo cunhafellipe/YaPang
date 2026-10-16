@@ -43,8 +43,8 @@ public:
 protected:
 	virtual void OnKeyFocus(CChatMsg* im);
 	void OnUnfold(void);
-	void OnListOwnerDraw(int param);
-	void OnListLostKeyFocus(int param);
+	void OnListOwnerDraw(PG_MSGARG param);
+	void OnListLostKeyFocus(PG_MSGARG param);
 	// vtable slot 23
 	virtual void OnListBtnDown(void);
 
@@ -112,10 +112,10 @@ private:
 protected:
 	virtual void OnKeyFocus(CChatMsg* im);
 	void OnUnfold(void);
-	void OnUnfoldOwnerDraw(int param);
-	void OnListOwnerDraw(int param);
+	void OnUnfoldOwnerDraw(PG_MSGARG param);
+	void OnListOwnerDraw(PG_MSGARG param);
 	virtual void OnListBtnDown(void);
-	void OnListLostKeyFocus(int param);
+	void OnListLostKeyFocus(PG_MSGARG param);
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];

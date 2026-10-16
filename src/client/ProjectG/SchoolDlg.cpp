@@ -85,7 +85,7 @@ void FrSchoolDlg::OnLikeInit(intptr_t param) {
 }
 
 // schooldlg.cpp:76
-bool FrSchoolDlg::OnLikeEnterKey(int param) {
+bool FrSchoolDlg::OnLikeEnterKey(PG_MSGARG param) {
 	OnSearchBtnUp();
 	return false;
 }

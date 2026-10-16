@@ -12,7 +12,7 @@
 
 // The game style of a room (stGameClass, globalgamedefine.h:663); its
 // enumerators are not transcribed yet.
-enum eGameStyle;
+PG_ENUM_FWD(eGameStyle)
 
 struct sItemInfo;
 

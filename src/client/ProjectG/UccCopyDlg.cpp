@@ -195,7 +195,7 @@ void FrUccCopyDlg::OnCancelBtnUp(void) {
 }
 
 // ucccopydlg.cpp:168
-void FrUccCopyDlg::OnEtcOwnerDraw(int param) {
+void FrUccCopyDlg::OnEtcOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = GetGDI();
 	if (!pGDI) {
 		return;
@@ -360,7 +360,7 @@ void FrUccCopyConfirmDlg::OnCancelBtnUp(void) {
 }
 
 // ucccopydlg.cpp:335
-void FrUccCopyConfirmDlg::OnEtcOwnerDraw(int param) {
+void FrUccCopyConfirmDlg::OnEtcOwnerDraw(PG_MSGARG param) {
 	FrGraphicInterface* pGDI = GetGDI();
 	if (!pGDI) {
 		return;
@@ -455,7 +455,7 @@ void FrUccCopyCompletedDlg::OnOkBtnUp(void) {
 }
 
 // ucccopydlg.cpp:429
-void FrUccCopyCompletedDlg::OnEtcOwnerDraw(int param) {
+void FrUccCopyCompletedDlg::OnEtcOwnerDraw(PG_MSGARG param) {
 	if (m_typeId == 0 || strlen(m_name) == 0) {
 		return;
 	}

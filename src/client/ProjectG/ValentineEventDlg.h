@@ -23,8 +23,8 @@ public:
 
 	virtual bool OnInit(void);
 	void BuildHeartCount(void);
-	void DrawInDlg(const char* name, WPoint& pt);
-	void DrawGauge(WPoint& pt, unsigned char count);
+	void DrawInDlg(const char* name, const WPoint& pt);
+	void DrawGauge(const WPoint& pt, unsigned char count);
 
 	// valentineeventdlg.h:46
 	void SetGiftFlag(unsigned long flag) {
@@ -38,8 +38,8 @@ protected:
 
 	void BindButton(FrButton*& button, int id);
 	void OnBackImgInit(intptr_t id);
-	void OnBackImgOwnerDraw(int param);
-	void OnGaugeImgOwnerDraw(int param);
+	void OnBackImgOwnerDraw(PG_MSGARG param);
+	void OnGaugeImgOwnerDraw(PG_MSGARG param);
 	void OnNuriBtnInit(intptr_t id);
 	void OnNuriBtnLBDown(void);
 	void OnAzerBtnInit(intptr_t id);

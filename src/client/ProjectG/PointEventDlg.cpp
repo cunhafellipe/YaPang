@@ -670,7 +670,7 @@ void FrPointEventNoticeDlg::OnInitDrawArea(intptr_t param) {
 }
 
 // pointeventdlg.cpp:1001
-void FrPointEventNoticeDlg::OnOwnerDrawDrawArea(int param) {
+void FrPointEventNoticeDlg::OnOwnerDrawDrawArea(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 	if (gdi) {
 
@@ -873,7 +873,7 @@ void FrPointEventDlg::OnLBDownDescButton(void) {
 }
 
 // pointeventdlg.cpp:1245
-void FrPointEventDlg::OnOwnerDrawCoverArea(int param) {
+void FrPointEventDlg::OnOwnerDrawCoverArea(PG_MSGARG param) {
 	for (int i = 0; i < 10; i++) {
 
 		m_slots[i].DrawCover();
@@ -989,7 +989,7 @@ void FrPointEventDlg::OnLBDownBtnCommodity09(void) {
 }
 
 // pointeventdlg.cpp:1329
-void FrPointEventDlg::OnOwnerDrawDataArea(int param) {
+void FrPointEventDlg::OnOwnerDrawDataArea(PG_MSGARG param) {
 	FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
 
 	if (gdi == NULL) {
@@ -1373,7 +1373,7 @@ void FrPointEventDlg::LocalDataUpdate(unsigned short index) {
 }
 
 // pointeventdlg.cpp:2161
-void FrPointEventDlg::OnOwnerDrawContribution(int param) {
+void FrPointEventDlg::OnOwnerDrawContribution(PG_MSGARG param) {
 	if (IsLocalContent((localContentType_t)0x16)) {
 
 		FrGraphicInterface* gdi = g_pFresh->GetManager()->GetGDI();
