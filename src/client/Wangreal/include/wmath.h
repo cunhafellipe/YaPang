@@ -123,10 +123,35 @@ CHECK_FIELD(WQuat, w, 0xC);
 
 WQuat WQuaternionSlerp(const WQuat& from, const WQuat& to, float t);
 
+#if defined(__GNUC__) && !defined(__clang__)
+// GCC (the MinGW build) rejects members with constructors in anonymous
+// structs, which WMatrix, WPlane and WMatrix4 use to alias their WVector
+// rows with floats. There each row is an anonymous union of its own, and the
+// whole-object arrays (p, m) are these empty accessors laid over offset 0.
+template <int N> struct PgFloatAlias {
+	float& operator[](int i) { return ((float*)this)[i]; }
+	const float& operator[](int i) const { return ((const float*)this)[i]; }
+	operator float*() { return (float*)this; }
+	operator const float*() const { return (const float*)this; }
+};
+template <int Rows, int Cols> struct PgFloatRows {
+	float* operator[](int r) { return (float*)this + r * Cols; }
+	const float* operator[](int r) const { return (const float*)this + r * Cols; }
+};
+#endif
+
 class WVector {
 public:
+#if defined(__GNUC__) && !defined(__clang__)
+	// GCC (the MinGW build) takes only trivial members in the anonymous structs
+	// of WMatrix, WPlane and WMatrix4: the same no-op constructor and memberwise
+	// copy, defaulted.
+	WVector() = default;
+	WVector& operator=(const WVector& v) = default;
+#else
 	WVector() {
 	}
+#endif
 	WVector(const float a, const float b, const float c) {
 		x = a; y = b; z = c;
 	}
@@ -135,7 +160,9 @@ public:
 	}
 
 	WVector operator-(void) const;
+#if !defined(__GNUC__) || defined(__clang__)
 	WVector& operator=(const WVector& v);
+#endif
 	void operator+=(const WVector& v);
 	void operator-=(const WVector& v);
 	void operator*=(const float f);
@@ -203,6 +230,13 @@ public:
 	static const WMatrix IDENTITY;
 	static const WMatrix ZERO;
 
+#if defined(__GNUC__) && !defined(__clang__)
+	[[no_unique_address]] PgFloatAlias<12> p;
+	union { WVector xa; struct { float xx, yx, zx; }; };
+	union { WVector ya; struct { float xy, yy, zy; }; };
+	union { WVector za; struct { float xz, yz, zz; }; };
+	union { WVector pivot; struct { float xm, ym, zm; }; };
+#else
 	union {
 		struct { WVector xa, ya, za, pivot; };
 		struct {
@@ -213,6 +247,7 @@ public:
 		};
 		float p[12];
 	};
+#endif
 };
 CHECK_SIZE(WMatrix, 0x30);
 CHECK_FIELD(WMatrix, xa, 0x0);
@@ -251,7 +286,11 @@ public:
 	union {
 		struct { float x, y, z, dis; };
 		struct { float a, b, c, d; };
+#if defined(__GNUC__) && !defined(__clang__)
+		WVector normal;
+#else
 		struct { WVector normal; };
+#endif
 	};
 };
 CHECK_SIZE(WPlane, 0x10);
@@ -277,6 +316,18 @@ public:
 	static const WMatrix4 IDENTITY;
 	static const WMatrix4 ZERO;
 
+#if defined(__GNUC__) && !defined(__clang__)
+	[[no_unique_address]] PgFloatRows<4, 4> m;
+	[[no_unique_address]] PgFloatAlias<16> p;
+	union { WVector xa; struct { float xx, yx, zx; }; };
+	float wx;
+	union { WVector ya; struct { float xy, yy, zy; }; };
+	float wy;
+	union { WVector za; struct { float xz, yz, zz; }; };
+	float wz;
+	union { WVector pivot; struct { float xm, ym, zm; }; };
+	float wm;
+#else
 	union {
 		struct {
 			WVector xa; float wx;
@@ -293,6 +344,7 @@ public:
 		float m[4][4];
 		float p[16];
 	};
+#endif
 };
 CHECK_SIZE(WMatrix4, 0x40);
 CHECK_FIELD(WMatrix4, xa, 0x0);

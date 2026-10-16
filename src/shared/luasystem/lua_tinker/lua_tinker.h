@@ -10,6 +10,7 @@
 #endif
 
 extern "C" {
+#include <type_traits>
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -155,6 +156,67 @@ namespace lua_tinker {
 		return user2type<T>::invoke(L, lua_upvalueindex(1));
 	}
 
+	// C closures calling a registered function. GCC (the MinGW build) rejects
+	// the explicit member specializations below (invoke<void> in class scope):
+	// the same two cases, chosen with if constexpr.
+#if defined(__GNUC__) && !defined(__clang__)
+	template<typename T1 = void, typename T2 = void, typename T3 = void, typename T4 = void, typename T5 = void>
+	struct functor {
+		template<typename RVal>
+		static int invoke(lua_State *L) {
+			if constexpr (std::is_void<RVal>::value) {
+				upvalue_<void (*)(T1, T2, T3, T4, T5)>(L)(read<T1>(L, 1), read<T2>(L, 2), read<T3>(L, 3), read<T4>(L, 4), read<T5>(L, 5));
+				return 0;
+			} else {
+				push(L, upvalue_<RVal (*)(T1, T2, T3, T4, T5)>(L)(read<T1>(L, 1), read<T2>(L, 2), read<T3>(L, 3), read<T4>(L, 4), read<T5>(L, 5)));
+				return 1;
+			}
+		}
+	};
+
+	template<typename T1, typename T2>
+	struct functor<T1, T2> {
+		template<typename RVal>
+		static int invoke(lua_State *L) {
+			if constexpr (std::is_void<RVal>::value) {
+				upvalue_<void (*)(T1, T2)>(L)(read<T1>(L, 1), read<T2>(L, 2));
+				return 0;
+			} else {
+				push(L, upvalue_<RVal (*)(T1, T2)>(L)(read<T1>(L, 1), read<T2>(L, 2)));
+				return 1;
+			}
+		}
+	};
+
+	template<typename T1>
+	struct functor<T1> {
+		template<typename RVal>
+		static int invoke(lua_State *L) {
+			if constexpr (std::is_void<RVal>::value) {
+				upvalue_<void (*)(T1)>(L)(read<T1>(L, 1));
+				return 0;
+			} else {
+				push(L, upvalue_<RVal (*)(T1)>(L)(read<T1>(L, 1)));
+				return 1;
+			}
+		}
+	};
+
+	template<>
+	struct functor<> {
+		template<typename RVal>
+		static int invoke(lua_State *L) {
+			if constexpr (std::is_void<RVal>::value) {
+				upvalue_<void (*)()>(L)();
+				return 0;
+			} else {
+				push(L, upvalue_<RVal (*)()>(L)());
+				return 1;
+			}
+		}
+	};
+
+#else
 	// C closures calling a registered function
 	template<typename T1 = void, typename T2 = void, typename T3 = void, typename T4 = void, typename T5 = void>
 	struct functor {
@@ -211,6 +273,14 @@ namespace lua_tinker {
 			return 0;
 		}
 	};
+#endif
+
+	// GCC wants the `template` disambiguator before a dependent member template.
+#if defined(__GNUC__) && !defined(__clang__)
+#define PG_LT_TEMPLATE template
+#else
+#define PG_LT_TEMPLATE
+#endif
 
 	// push a C closure calling func
 	template<typename RVal>
@@ -220,12 +290,12 @@ namespace lua_tinker {
 
 	template<typename RVal, typename T1>
 	void push_functor(lua_State *L, RVal (*func)(T1)) {
-		lua_pushcclosure(L, functor<T1>::invoke<RVal>, 1);
+		lua_pushcclosure(L, functor<T1>::PG_LT_TEMPLATE invoke<RVal>, 1);
 	}
 
 	template<typename RVal, typename T1, typename T2>
 	void push_functor(lua_State *L, RVal (*func)(T1, T2)) {
-		lua_pushcclosure(L, functor<T1, T2>::invoke<RVal>, 1);
+		lua_pushcclosure(L, functor<T1, T2>::PG_LT_TEMPLATE invoke<RVal>, 1);
 	}
 
 	// register a global function
