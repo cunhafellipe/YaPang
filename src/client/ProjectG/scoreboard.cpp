@@ -2337,7 +2337,7 @@ void FrAwardForm::OnUserListOwnerDraw(int param) {
 			}
 		}
 	} else {
-		if (GOLFDOC()->GetPlayer(idx)->m_uid == MyGuid(true))
+		sPlayerData* pPlayer = GOLFDOC()->GetPlayer(idx); if (pPlayer->m_uid == MyGuid(true))
 			pGDI->Box(rect, 0x999B9DFF, 0, 0.0f);
 		else if (PLAYER(idx)->m_state == 3)
 			pGDI->Box(rect, 0x80808080, 0, 0.0f);
@@ -2389,7 +2389,7 @@ void FrAwardForm::OnUserListOwnerDraw(int param) {
 		}
 	}
 
-	if ((WSingleton<CSharedDoc>::Instance()->m_roomPlayers[idx].m_identity >> 7) & 1) {
+	if ((WSingleton<CSharedDoc>::Instance()->m_roomPlayers[idx].m_identity & 0x80) ? true : false) {
 		if (m_pBonus20Icon) {
 			WRect rc(pItem->pos.x + 412.0f, yOff + pItem->pos.y + 6.0f, (float)m_pBonus20Icon->Width(), (float)m_pBonus20Icon->Height());
 			pGDI->DrawTexture(m_pBonus20Icon, rc, 0xFFFFFFFF, 0);
@@ -2401,28 +2401,34 @@ void FrAwardForm::OnUserListOwnerDraw(int param) {
 		IFF_STRUCT::sMascot* pMascot = ItemManager()->FindMascot(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[idx].m_mascot.typeId);
 		if (pMascot) {
 			if (strcmpi(pMascot->m_name, "\xc7\xcf\xbe\xe7\xc1\xa6\xb8\xae") == 0) {
-				if (m_pMascotBonus01)
-					pGDI->DrawTexture(m_pMascotBonus01, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus01->Width(), (float)m_pMascotBonus01->Height()), 0xFFFFFFFF, 0);
+				const Bitmap* pIcon = m_pMascotBonus01;
+				if (pIcon)
+					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
 				bIcon = true;
 			} else if (strcmpi(pMascot->m_name, "\xb1\xee\xb8\xc1\xc1\xa6\xb8\xae") == 0) {
-				if (m_pMascotBonus02)
-					pGDI->DrawTexture(m_pMascotBonus02, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus02->Width(), (float)m_pMascotBonus02->Height()), 0xFFFFFFFF, 0);
+				const Bitmap* pIcon = m_pMascotBonus02;
+				if (pIcon)
+					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
 				bIcon = true;
 			} else if (pMascot->m_typeId == 0x40000009) {
-				if (m_pMascotBonus09)
-					pGDI->DrawTexture(m_pMascotBonus09, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus09->Width(), (float)m_pMascotBonus09->Height()), 0xFFFFFFFF, 0);
+				const Bitmap* pIcon = m_pMascotBonus09;
+				if (pIcon)
+					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
 				bIcon = true;
 			} else if (pMascot->m_typeId == 0x4000000A) {
-				if (m_pMascotBonus10)
-					pGDI->DrawTexture(m_pMascotBonus10, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus10->Width(), (float)m_pMascotBonus10->Height()), 0xFFFFFFFF, 0);
+				const Bitmap* pIcon = m_pMascotBonus10;
+				if (pIcon)
+					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
 				bIcon = true;
 			} else if (pMascot->m_typeId == 0x4000000B) {
-				if (m_pMascotBonus11)
-					pGDI->DrawTexture(m_pMascotBonus11, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus11->Width(), (float)m_pMascotBonus11->Height()), 0xFFFFFFFF, 0);
+				const Bitmap* pIcon = m_pMascotBonus11;
+				if (pIcon)
+					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
 				bIcon = true;
 			} else if (pMascot->m_typeId == 0x4000000C) {
-				if (m_pMascotBonus12)
-					pGDI->DrawTexture(m_pMascotBonus12, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus12->Width(), (float)m_pMascotBonus12->Height()), 0xFFFFFFFF, 0);
+				const Bitmap* pIcon = m_pMascotBonus12;
+				if (pIcon)
+					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
 				bIcon = true;
 			}
 		}
@@ -5133,7 +5139,7 @@ void FrScoreForm::OnPPLInit(intptr_t param) {
 	}
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1 || WSingleton<CSharedDoc>::Instance()->m_roomType == 6 || WSingleton<CSharedDoc>::Instance()->m_roomType == 3) {
-		pArea->SetRect(WRect(pArea->GetRect().x - 65.0f, pArea->GetRect().y, pArea->GetRect().w, pArea->GetRect().h));
+		m_pPPLArea->SetRect(WRect(m_pPPLArea->GetRect().x - 65.0f, m_pPPLArea->GetRect().y, m_pPPLArea->GetRect().w, m_pPPLArea->GetRect().h));
 	} else if (WSingleton<CSharedDoc>::Instance()->m_roomType == 7) {
 		pArea->SetRect(pArea->GetRect() + WRect(43.0f, 0.0f, 0.0f, 0.0f));
 	}
@@ -5303,7 +5309,7 @@ void FrScoreForm::SetDesc(void) {
 					if (j == holeCount - 1 && i == GOLFDOC()->m_myPlayerIndex)
 						pang += m_holePang;
 					else
-						pang += GOLFDOC()->GetPlayer(i)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[j] - 1];
+						pang += (int)GOLFDOC()->GetPlayer(i)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[j] - 1];
 				}
 
 				sprintf(text, "\xC7\xF6\xC0\xE7 %s\xB4\xD4\xC0\xCC \xBD\xBA\xC4\xDA\xBE\xEE %d, \xC6\xCE %I64d",
@@ -5321,11 +5327,11 @@ void FrScoreForm::SetDesc(void) {
 
 	case 3: {
 		sPlayerData *player0 = GOLFDOC()->GetPlayer(0);
-		if ((int)GOLFDOC()->GetPlayer(1)->m_ghostResult < (int)player0->m_ghostResult) {
+		if ((int)player0->m_ghostResult > (int)GOLFDOC()->GetPlayer(1)->m_ghostResult) {
 			sprintf(text, "\xC7\xF6\xC0\xE7 %s\xB4\xD4\xC0\xCC \xBD\xBA\xC4\xDA\xBE\xEE %d vs %d",
 				WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_name, GOLFDOC()->GetPlayer(0)->m_ghostResult, GOLFDOC()->GetPlayer(1)->m_ghostResult);
 			ConditionalStrCat(text, "\xB7\xCE \xBC\xB1\xB5\xCE\xC0\xD4\xB4\xCF\xB4\xD9.");
-		} else if (player0 = GOLFDOC()->GetPlayer(0), (int)GOLFDOC()->GetPlayer(1)->m_ghostResult > (int)player0->m_ghostResult) {
+		} else if (player0 = GOLFDOC()->GetPlayer(0), (int)player0->m_ghostResult < (int)GOLFDOC()->GetPlayer(1)->m_ghostResult) {
 			sprintf(text, "\xC7\xF6\xC0\xE7 %s\xB4\xD4\xC0\xCC \xBD\xBA\xC4\xDA\xBE\xEE %d vs %d",
 				WSingleton<CSharedDoc>::Instance()->m_roomPlayers[1].m_name, PLAYER(1)->m_ghostResult, PLAYER(0)->m_ghostResult);
 			ConditionalStrCat(text, "\xB7\xCE \xBC\xB1\xB5\xCE\xC0\xD4\xB4\xCF\xB4\xD9.");
@@ -5338,7 +5344,7 @@ void FrScoreForm::SetDesc(void) {
 					if (j == holeCount - 1 && i == GOLFDOC()->m_myPlayerIndex) {
 						pang[i] += m_holePang;
 					} else {
-						pang[i] += GOLFDOC()->GetPlayer(i)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[j] - 1];
+						pang[i] += (int)GOLFDOC()->GetPlayer(i)->m_holeRecord[WSingleton<CSharedDoc>::Instance()->m_holeOrder[j] - 1];
 					}
 				}
 			}

@@ -614,8 +614,10 @@ void FrChangeRoomInfoDlg::OnTimeLimitOwnerDraw(intptr_t param) {
 			DrawTimeLimitButton(pDevice, 50, rc5);
 		}
 		break;
-	case 6:
+	case 6: {
+		WRect rc1(rect.x, rect.y, rect.w, rect.h);
 		break;
+	}
 	}
 }
 

@@ -388,9 +388,8 @@ bool ZipUccClothes(Bitmap* pTexture, Bitmap* pMask, Bitmap* pIcon, const char* f
 bool UnzipUccClothes(unsigned char* pData, unsigned long size, Bitmap* pTexture, Bitmap* pMask, Bitmap* pIcon, sUccHeader* pHeader) {
 	ZIPENTRY ze;
 	int index;
-	bool result = true;
-
 	HZIP hZip = OpenZipU(pData, size, 3);
+	bool result = true;
 	if (pHeader != NULL && FindZipItemA(hZip, "header", true, &index, &ze) == 0) UnzipItem(hZip, index, pHeader, ze.unc_size, 3);
 
 	if (pTexture != NULL) {
@@ -626,7 +625,7 @@ std::string GenerateTextureName_B(unsigned long typeId, const char* uccKey) {
 		return "";
 	}
 
-	name = FilterFilename(pPart->texture[0]);
+	name = FilterFilename(pPart->texture[1]);
 	name = name.substr(0, name.rfind('.'));
 	name += "_";
 	name += uccKey;
@@ -665,9 +664,9 @@ void Convert32to24(Bitmap* src, Bitmap* dest, const Bitmap* mask) {
 
 	dest->Create(src->Width(), dest->Height(), 24);
 
-	sRGBA color(0, 0, 0, 0);
-	sRGBA brightness(0, 0, 0, 0);
-	sRGBA result(0, 0, 0, 0);
+	sRGBA color;
+	sRGBA brightness;
+	sRGBA result;
 
 	for (int y = 0; y < src->Height(); y++) {
 		for (int x = 0; x < src->Width(); x++) {
@@ -1034,10 +1033,9 @@ sRGB sHSV::toRGB(void) {
 
 // ucclibrary.cpp:1273
 void sRGBA::RemoveAlpha(void) {
-	unsigned char alpha = a;
-	if (alpha != 255) {
+	if (a != 255) {
 		sHSV hsv = toHSV();
-		hsv.s = (unsigned char)((float)alpha * hsv.s * (1.0f / 255.0f));
+		hsv.s = (unsigned char)(a * (1.0f / 255.0f) * hsv.s);
 		sRGB rgb = hsv.toRGB();
 
 		r = rgb.r; g = rgb.g;

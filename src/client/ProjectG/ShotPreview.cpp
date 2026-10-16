@@ -192,7 +192,7 @@ void ShotPreview::UpdateSensor::Update(void) {
 	m_clubIndex = GolfClub().GetIndex();
 	m_wind = Wind().GetGlobalWind();
 	m_powerShotType = GolfClub().PowerShotType();
-	m_shotItemTypeId = GOLFDOC()->GetPlayer(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId;
+	m_shotItemTypeId = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId;
 	m_impact = GOLFDOC()->GetBar().m_impact;
 }
 
@@ -437,29 +437,29 @@ void ShotPreview::DrawIndicator(const WVector& pos, unsigned long color, float s
 	float half = size * 0.5f;
 	vl[0] = &vtx[0];
 	vtx[0].x = screen.x - half;
-	vtx[0].y = screen.y;
 	vtx[0].z = screen.z;
+	vtx[0].y = screen.y;
 	vtx[0].rhw = 1.0f;
 	vtx[0].diffuse = color;
 
 	vl[1] = &vtx[1];
 	vtx[1].x = screen.x - half;
-	vtx[1].y = screen.y - size;
 	vtx[1].z = screen.z;
+	vtx[1].y = screen.y - size;
 	vtx[1].rhw = 1.0f;
 	vtx[1].diffuse = color;
 
 	vl[2] = &vtx[2];
-	vtx[2].x = half + screen.x;
-	vtx[2].y = screen.y - size;
+	vtx[2].x = screen.x + half;
 	vtx[2].z = screen.z;
+	vtx[2].y = screen.y - size;
 	vtx[2].rhw = 1.0f;
 	vtx[2].diffuse = color;
 
 	vl[3] = &vtx[3];
-	vtx[3].x = half + screen.x;
-	vtx[3].y = screen.y;
+	vtx[3].x = screen.x + half;
 	vtx[3].z = screen.z;
+	vtx[3].y = screen.y;
 	vtx[3].rhw = 1.0f;
 	vtx[3].diffuse = color;
 
@@ -498,7 +498,8 @@ void ShotPreview::DrawIndicator(const WVector& pos, unsigned long color, float s
 			m_pFont->Printf(g_view, -7, "0y");
 		} else {
 			m_pFont->SetColor(-1);
-			m_pFont->Printf(g_view, -7, "%.1fy", d.Magnitude() * 0.3125f);
+			float dist = d.Magnitude();
+			m_pFont->Printf(g_view, -7, "%.1fy", dist * 0.3125f);
 		}
 	}
 }
@@ -685,8 +686,7 @@ bool ShotPreview::Predict(std::vector<WVector>& path, std::vector<WVector>& boun
 			ball.m_lieSlope -= screen.x * 0.5f;
 	}
 
-	float slope = ball.m_lieSlope > 0.0f ? ball.m_lieSlope : -ball.m_lieSlope;
-	velocity = RotMat(GolfClub().GetLie(0), 0).za * ((slope * 0.1f + 1.0f) * power) * RotMat(spinAngle + angle, 1);
+	velocity = ((Abs(ball.m_lieSlope) * 0.1f + 1.0f) * power) * RotMat(GolfClub().GetLie(0), 0).za * RotMat(spinAngle + angle, 1);
 	first->m_velocity = velocity;
 
 	float frameOffset;

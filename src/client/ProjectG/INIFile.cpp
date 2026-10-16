@@ -35,8 +35,10 @@ CIniFile::~CIniFile(void) {
 
 // inifile.cpp:34
 bool CIniFile::Create(const char* filename, IO_MODE mode) {
-	char path[MAX_PATH];
 	cFile* file = NULL;
+	// Never used: the initializer is dead, but the array keeps the /GS cookie
+	// and moves `filename` into esi in the inlined copy in CIniFile(const char*).
+	char path[MAX_PATH] = { 0 };
 	if (mode == IO_READ) {
 		file = g_resrcmng->GetCFile(filename, -1);
 		if (file == NULL) {
@@ -62,7 +64,7 @@ const char* CIniFile::ReadString(const char* section, const char* key) {
 	if (s_filePath.length() > 0) {
 		memset(data_b790f8, 0, sizeof(data_b790f8));
 		GetPrivateProfileStringA(section, key, "OCCUR_ERROR", data_b790f8, sizeof(data_b790f8), s_filePath.c_str());
-		if (memcmp(data_b790f8, "OCCUR_ERROR", sizeof("OCCUR_ERROR")) != 0) {
+		if (strcmp(data_b790f8, "OCCUR_ERROR") != 0) {
 			return data_b790f8;
 		}
 	}

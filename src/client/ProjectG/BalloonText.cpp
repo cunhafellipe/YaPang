@@ -149,6 +149,7 @@ void ntBalloonText::Render(WView *view) {
 	bool hasEmoticon = false;
 	int emoticonLength = 0;
 	char lineBuffer[1024];
+	char key[32];
 	lineBuffer[0] = '\0';
 
 	while (src < length) {
@@ -172,7 +173,6 @@ void ntBalloonText::Render(WView *view) {
 			unsigned int keyLength = close - src - m_text.c_str();
 
 			if (close != NULL && keyLength < 32) {
-				char key[32];
 				memset(key, 0, sizeof(key) - 1);
 				key[31] = '\0';
 				memcpy(key, m_text.c_str() + src, keyLength);
@@ -246,11 +246,11 @@ void ntBalloonText::Render(WView *view) {
 	int textX = m_textExtent;
 	int textY;
 	ntBalloonTextManager *manager = ntBalloonTextManager::Instance();
+	tagRECT rect;
 	if (!m_isThink) {
 		int frameX = textX - manager->m_leftWidth;
 		textY = y - manager->m_bottomHeight - manager->m_frameCenter->GetHeight() - height + 5;
 
-		tagRECT rect;
 		rect.left = (int)((textX - manager->m_leftWidth - frameX) * scale + frameX);
 		rect.top = y - manager->m_bottomHeight - manager->m_frameCenter->GetHeight() - height - manager->m_topHeight + 5;
 		rect.right = manager->m_rightWidth + manager->m_leftWidth + maxWidth;
@@ -260,22 +260,11 @@ void ntBalloonText::Render(WView *view) {
 		manager = ntBalloonTextManager::Instance();
 		int w = manager->m_frameCenter->GetWidth();
 		int h = manager->m_frameCenter->GetHeight();
-		_WRECT uv;
-		uv.x = 0.0f;
-		uv.y = 0.0f;
-		uv.w = 1.0f;
-		uv.h = 1.0f;
-		_WRECT pos;
-		pos.x = (float)(x - w / 2);
-		pos.y = y - h;
-		pos.w = (float)w;
-		pos.h = (float)h;
-		manager->m_frameCenter->RenderWithShear(view, uv, pos, 0.0f, 0x80000, color);
+		manager->m_frameCenter->RenderWithShear(view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect((float)(x - w / 2), (float)y - h, w, h), 0.0f, 0x80000, color);
 	} else {
 		int frameX = textX - manager->m_leftWidth;
 		textY = y - manager->m_thinkFrame1->GetHeight() - height - 19;
 
-		tagRECT rect;
 		rect.left = (int)((textX - frameX - 24) * scale + frameX);
 		rect.top = y - manager->m_thinkFrame1->GetHeight() - height - 43;
 		rect.right = maxWidth + 48;
@@ -285,17 +274,7 @@ void ntBalloonText::Render(WView *view) {
 		manager = ntBalloonTextManager::Instance();
 		int w = manager->m_thinkFrame1->GetWidth();
 		int h = manager->m_thinkFrame1->GetHeight();
-		_WRECT uv;
-		uv.x = 0.0f;
-		uv.y = 0.0f;
-		uv.w = 1.0f;
-		uv.h = 1.0f;
-		_WRECT pos;
-		pos.x = (float)(x - w / 2);
-		pos.y = y - h;
-		pos.w = (float)w;
-		pos.h = (float)h;
-		manager->m_thinkFrame1->RenderWithShear(view, uv, pos, 0.0f, 0x80000, color);
+		manager->m_thinkFrame1->RenderWithShear(view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect((float)(x - w / 2), (float)y - h, w, h), 0.0f, 0x80000, color);
 	}
 
 	for (int i = 0; i < lineCount; i++) {

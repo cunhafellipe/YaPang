@@ -107,13 +107,11 @@ void C3dFont::Printf(WView* view, int spacing, const char* format, ...)
 		float v = (cell / m_columns) * m_cellV;
 
 		m_vertex[0].tu = u;
-		m_vertex[0].tv = v + m_cellV;
+		m_vertex[0].tv = m_vertex[3].tv = v + m_cellV;
 		m_vertex[1].tu = u;
 		m_vertex[1].tv = v;
-		m_vertex[2].tu = u + m_cellU;
+		m_vertex[2].tu = m_vertex[3].tu = u + m_cellU;
 		m_vertex[2].tv = v;
-		m_vertex[3].tu = m_vertex[2].tu;
-		m_vertex[3].tv = v + m_cellV;
 
 		float left = m_offsetX - (m_charWidth * len + (len - 1) * spacing) * 0.5f + (m_charWidth + spacing) * n;
 		float right = left + m_charWidth;

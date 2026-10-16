@@ -426,9 +426,11 @@ void CGMToolkit::SendPrize(FrListBox *listBox) {
 	for (std::list<sPrize *>::iterator it = m_prizeList.begin(); it != m_prizeList.end(); ++it) {
 		sPrize *prize = *it;
 
+		unsigned long lastRank = prize->m_lastRank;
+
 		if (prize->m_type == 0) {
 			// The players ranked m_firstRank to m_lastRank.
-			for (int rank = prize->m_firstRank; rank <= prize->m_lastRank; rank++) {
+			for (int rank = prize->m_firstRank; rank <= lastRank; rank++) {
 				if (rank > count) {
 					break;
 				}
@@ -513,18 +515,20 @@ void CGMToolkit::SendPrize(FrListBox *listBox) {
 					continue;
 				}
 
-				if (player->m_state != 3) {
-					WSendPacket packet(GCT_GM_COMMAND);
-					packet.Encode2(GM_COMMAND_SET_PRIZE);
-					packet.Encode4(player->m_uid);
-					packet.Encode4(prize->m_itemTypeId);
-					packet.Encode4(prize->m_itemCount);
-					packet.Encode1(prize->m_type);
-					packet.Encode1(award);
-					packet.Send(SEND_TO_DEFAULT);
-					// One winner per award.
-					break;
+				if (player->m_state == 3) {
+					continue;
 				}
+
+				WSendPacket packet(GCT_GM_COMMAND);
+				packet.Encode2(GM_COMMAND_SET_PRIZE);
+				packet.Encode4(player->m_uid);
+				packet.Encode4(prize->m_itemTypeId);
+				packet.Encode4(prize->m_itemCount);
+				packet.Encode1(prize->m_type);
+				packet.Encode1(award);
+				packet.Send(SEND_TO_DEFAULT);
+				// One winner per award.
+				break;
 			}
 		}
 	}
@@ -793,12 +797,14 @@ eGMToolResult CGMToolkit::CommandKickUser(eGMToolkitStatus status) {
 				if (strcmp(m_arguments[2], "-p") == 0) {
 					packet.Encode1(1);
 				} else {
-					return GM_RESULT_BAD_ARGUMENT;
+					result = GM_RESULT_BAD_ARGUMENT;
 				}
 			} else {
 				packet.Encode1(0);
 			}
-			packet.Send(SEND_TO_DEFAULT);
+			if (result == GM_RESULT_SUCCEEDED) {
+				packet.Send(SEND_TO_DEFAULT);
+			}
 		}
 	} else {
 		// "This user is not connected to the server or does not exist."

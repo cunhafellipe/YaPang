@@ -3959,13 +3959,17 @@ void CShopMain::OpenInformation(unsigned long typeId) {
 // shopmain.cpp:6393
 void CShopMain::OpenCaddieInfo(const sCaddieInfo &info) {
 	FrWnd *wnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("caddie_info");
-	if (wnd == NULL) {
-		FrCaddieInfoDlg *dlg = CreateForm<FrCaddieInfoDlg>(g_pFresh->GetManager(), this, "caddie_info", DYNAMIC_CAST(FrWnd, 0));
-		if (dlg) {
-			dlg->SetCaddieInfo(info);
-			dlg->Open((FRESH_RESULT_CALLBACK)&CShopMain::OnReemployeeResult, 3);
-		}
+	if (wnd != NULL) {
+		return;
 	}
+
+	FrCaddieInfoDlg *dlg = CreateForm<FrCaddieInfoDlg>(g_pFresh->GetManager(), this, "caddie_info", DYNAMIC_CAST(FrWnd, wnd));
+	if (dlg == NULL) {
+		return;
+	}
+
+	dlg->SetCaddieInfo(info);
+	dlg->Open((FRESH_RESULT_CALLBACK)&CShopMain::OnReemployeeResult, 3);
 }
 
 // shopmain.cpp:6407
@@ -6471,8 +6475,10 @@ void CShopMain::UpgradeCaddie(unsigned long caddieTypeId) {
 	int afterFee;
 
 	typedef std::map<unsigned int, IFF_STRUCT::sCaddie> CaddieMap;
-	CaddieMap::iterator before = ItemManager()->m_caddieMap.find(caddieTypeId);
-	CaddieMap::iterator after = ItemManager()->m_caddieMap.find(upgradeTypeId);
+	CaddieMap::iterator before;
+	CaddieMap::iterator after;
+	before = ItemManager()->m_caddieMap.find(caddieTypeId);
+	after = ItemManager()->m_caddieMap.find(upgradeTypeId);
 
 	if (before != ItemManager()->m_caddieMap.end()) {
 		memcpy(beforeLevels, before->second.m_levels, sizeof(beforeLevels));

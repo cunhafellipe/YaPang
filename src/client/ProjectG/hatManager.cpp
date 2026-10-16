@@ -623,9 +623,9 @@ int ChatManager::GetFaceIndex(const char *text) {
 // hatmanager.cpp:1340
 const char *ChatManager::GetMotionName(const char *text, unsigned long type) {
 	char command[64];
-	sMotionText *motions = data_00a9e9d8[type & 0x3FFFFFF];
 
 	for (int pass = 0; pass < 9; pass++) {
+		sMotionText *motions = data_00a9e9d8[type & 0x3FFFFFF];
 		for (int i = 0; i < 14; i++) {
 			sMotionText *motion = &motions[i];
 			if (motion == 0)
@@ -989,7 +989,9 @@ int ChatManager::CheckChatCommand(const char *text, int type) {
 				char name[0x18];
 				int identity = 0;
 
-				switch (sscanf(args, "%s %d %s", command, &identity, name)) {
+				int count = sscanf(args, "%s %d %s", command, &identity, name);
+
+				switch (count) {
 				case 1: {
 					WSendPacket packet(GCT_REQUEST_IDENTITY);
 					packet.Encode4(0xFFFFFFFF);
@@ -1018,7 +1020,9 @@ int ChatManager::CheckChatCommand(const char *text, int type) {
 				if (((unsigned long)WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity >> 6) & 1) {
 					int rate = 0;
 
-					switch (sscanf(args, "%s %d", command, &rate)) {
+					int count = sscanf(args, "%s %d", command, &rate);
+
+					switch (count) {
 					case 1: {
 						WSendPacket packet(GCT_SET_SYSTEM);
 						packet.Encode4(3);

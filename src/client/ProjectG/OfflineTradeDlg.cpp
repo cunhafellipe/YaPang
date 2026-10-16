@@ -2190,18 +2190,18 @@ void COfflineShopDlg::OnTradeItemListOwnerDraw(int param) {
 				if (hours / 24 >= 1) {
 					if (hours % 24 != 0) {
 						// "%d days"
-						pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24 + 1);
+						pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24 + 1);
 					} else {
-						pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24);
+						pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24);
 					}
 				} else {
 					// "%d hours"
-					pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xbd\xc3", hours);
+					pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xbd\xc3", hours);
 				}
 			} else {
 				pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 				// "expired"
-				pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f), 2, "\xb1\xe2\xb0\xa3\xb8\xb8\xb7\xe1");
+				pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "\xb1\xe2\xb0\xa3\xb8\xb8\xb7\xe1");
 			}
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 

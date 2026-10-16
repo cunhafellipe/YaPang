@@ -504,7 +504,7 @@ public:
 	struct sDroplet {
 		WVector m_vPos;     // 0x0
 		WVector m_vVelocity;     // 0xC
-		float m_fSpeed;     // 0x18, random 10..40 (MakeParticle)
+		UNKNOWN(0x18, 0x1C);
 	};
 
 	CDroplet(void);     // particleparty.cpp:1368

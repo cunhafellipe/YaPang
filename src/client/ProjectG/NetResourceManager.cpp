@@ -348,17 +348,6 @@ int NetResourceManager::WorkUploadThread(void)
 					LeaveCriticalSection(&m_uploadLock);
 
 					switch (res.type) {
-					case RESOURCE_TYPE_UCC_CLOTHES:
-						{
-							WSendPacket packet(GCT_UCC_INFO_REQUEST);
-							packet.Encode1(0);
-							packet.Encode4(res.id);
-							packet.EncodeStr(std::string(res.key));
-							packet.EncodeStr(std::string(res.data));
-							packet.Send(SEND_TO_DEFAULT);
-						}
-						break;
-
 					case RESOURCE_TYPE_EMBLEM:
 						{
 							IActor *pActor = AfxGetTask()->GetActor(data_a9fccc);
@@ -369,6 +358,17 @@ int NetResourceManager::WorkUploadThread(void)
 							WSendPacket packet(GCT_GUILD_EMBLEM);
 							packet.Send(SEND_TO_DEFAULT);
 							AfxGetTask()->SendMsgToMainActor(MsgObject(0, 1, 0, 0, 0, 0, 0));
+						}
+						break;
+
+					case RESOURCE_TYPE_UCC_CLOTHES:
+						{
+							WSendPacket packet(GCT_UCC_INFO_REQUEST);
+							packet.Encode1(0);
+							packet.Encode4(res.id);
+							packet.EncodeStr(std::string(res.key));
+							packet.EncodeStr(std::string(res.data));
+							packet.Send(SEND_TO_DEFAULT);
 						}
 						break;
 
@@ -636,7 +636,8 @@ const Bitmap *NetResourceManager::AddToDownloadList(const sResource &res, int re
 			return NULL;
 		}
 
-		std::map<std::string, Bitmap *>::iterator it = m_bitmaps.find(res.path);
+		std::map<std::string, Bitmap *>::iterator it;
+		it = m_bitmaps.find(res.path);
 
 		if (it == m_bitmaps.end() || it->second == NULL) {
 			if (!IsDownloadRequested(res)) {
@@ -668,9 +669,9 @@ const Bitmap *NetResourceManager::AddToDownloadList(const sResource &res, int re
 
 	default:
 		if (first) {
-			m_downloadList.insert(m_downloadList.begin(), res);
+			m_downloadList.push_front(res);
 		} else {
-			m_downloadList.insert(m_downloadList.end(), res);
+			m_downloadList.push_back(res);
 		}
 		break;
 	}

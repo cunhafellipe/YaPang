@@ -310,11 +310,13 @@ bool AviRecorder::start(char const *pszFileName, int nQuality, int nScale, int n
 	BITMAPINFO bmi;
 	memset(&bmi, 0, sizeof(bmi));
 	bmi.bmiHeader = *m_pVideoSource->get_format();
-	bmi.bmiHeader.biWidth /= m_nScale;
-	bmi.bmiHeader.biHeight /= m_nScale;
-	int nPad = bmi.bmiHeader.biWidth * 4 % 4;
-	int nPitch = bmi.bmiHeader.biWidth * 4 + nPad;
-	bmi.bmiHeader.biSizeImage = nPitch * bmi.bmiHeader.biHeight;
+	int nWidth = bmi.bmiHeader.biWidth / m_nScale;
+	int nHeight = bmi.bmiHeader.biHeight / m_nScale;
+	int nPad = nWidth * 4 % 4;
+	int nPitch = nWidth * 4 + nPad;
+	bmi.bmiHeader.biWidth = nWidth;
+	bmi.bmiHeader.biHeight = nHeight;
+	bmi.bmiHeader.biSizeImage = nPitch * nHeight;
 
 	m_pWriter = new Writer;
 	m_pWriter->init(pszFileName, &bmi.bmiHeader, nQuality, m_nFps);
@@ -410,9 +412,10 @@ void AviRecorder::record(void) {
 		for (int y = 0; y < nHeight; y++) {
 			for (int x = 0; x < nWidth; x++) {
 				DWORD dwColor = *(DWORD *)(pSrc + (y * nStride + x * 4) * m_nScale);
-				pDest[(nHeight - 1 - y) * nPitch + x * 4 + 0] = (BYTE)dwColor;
-				pDest[(nHeight - 1 - y) * nPitch + x * 4 + 1] = (BYTE)(dwColor >> 8);
-				pDest[(nHeight - 1 - y) * nPitch + x * 4 + 2] = (BYTE)(dwColor >> 16);
+				BYTE *pPixel = &pDest[(nHeight - 1 - y) * nPitch + x * 4];
+				*pPixel++ = (BYTE)dwColor;
+				*pPixel++ = (BYTE)(dwColor >> 8);
+				*pPixel = (BYTE)(dwColor >> 16);
 			}
 		}
 	}
@@ -445,9 +448,10 @@ void AviRecorder::unit_test(void) {
 	for (int y = 0; y < nHeight; y++) {
 		for (int x = 0; x < nWidth; x++) {
 			DWORD dwColor = *(DWORD *)(pSource + (y * nStride + x * 4) * m_nScale);
-			pDest[(nHeight - 1 - y) * nPitch + x * 4 + 0] = (BYTE)dwColor;
-			pDest[(nHeight - 1 - y) * nPitch + x * 4 + 1] = (BYTE)(dwColor >> 8);
-			pDest[(nHeight - 1 - y) * nPitch + x * 4 + 2] = (BYTE)(dwColor >> 16);
+			BYTE *pPixel = &pDest[(nHeight - 1 - y) * nPitch + x * 4];
+			*pPixel++ = (BYTE)dwColor;
+			*pPixel++ = (BYTE)(dwColor >> 8);
+			*pPixel = (BYTE)(dwColor >> 16);
 		}
 	}
 

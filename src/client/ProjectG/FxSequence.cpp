@@ -186,7 +186,7 @@ bool CFxSequence::ParseLine(const char* line, bool& bDone) {
 			pSpray->m_pos = WVector((float)atof(args[1]), (float)atof(args[2]), (float)atof(args[3]));
 			pSpray->m_spawnDir = RotVec(WVector((float)atof(args[4]), (float)atof(args[5]), (float)atof(args[6])), m_matrix);
 
-			pSpray->m_bActive = m_bActive;
+			pSpray->SetActive(m_bActive);
 			m_sprays[pSpray] = pSpray;
 			m_box.AddSpray(pSpray);
 
@@ -352,9 +352,8 @@ void CFxSequence::SetLineTime(void) {
 			it->m_time = rand() % (it->m_maxTime - it->m_minTime) + it->m_minTime;
 		}
 
-		std::list<sLine>::iterator pos = it;
+		std::list<sLine>::iterator pos = it, prev = it;
 		while (pos != m_lines.begin()) {
-			std::list<sLine>::iterator prev = pos;
 			--prev;
 			if (prev->m_time == -1 || prev->m_time == -2) {
 				break;
@@ -362,9 +361,9 @@ void CFxSequence::SetLineTime(void) {
 			--pos;
 		}
 
-		for (; pos != it; ++pos) {
-			if (pos->m_time > it->m_time) {
-				m_lines.insert(pos, *it);
+		for (std::list<sLine>::iterator ins = pos; ins != it; ++ins) {
+			if (ins->m_time > it->m_time) {
+				m_lines.insert(ins, *it);
 				it = m_lines.erase(it);
 				--it;
 				break;

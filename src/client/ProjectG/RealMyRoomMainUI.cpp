@@ -9050,17 +9050,16 @@ void CRealMyRoomMain::Net_EquipMascot(void) {
 
 // realmyroommainui.cpp:10903
 void CRealMyRoomMain::OpenCaddieInfo(const sCaddieInfo& info) {
-	if (g_pFresh->GetManager()->GetDesktop()->FindChildByName("caddie_info") == NULL) {
-		FrForm::ms_bHasTail = false;
-		FrCaddieInfoDlg* pDlg = CreateForm<FrCaddieInfoDlg>(g_pFresh->GetManager(), this, "caddie_info", NULL);
+	FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("caddie_info");
+	if (pWnd == NULL) {
+		FrCaddieInfoDlg* pDlg = CreateForm<FrCaddieInfoDlg>(g_pFresh->GetManager(), this, "caddie_info", DYNAMIC_CAST(FrWnd, pWnd));
 
 		if (pDlg) {
 			pDlg->SetCaddieInfo(info);
 			pDlg->Open((FRESH_RESULT_CALLBACK)&CRealMyRoomMain::OnCaddieInfoDlgResult, 3);
 
-			if (m_pCaddieInfoWnd) {
+			if (m_pCaddieInfoWnd)
 				m_pCaddieInfoWnd->Enable(false);
-			}
 		}
 	}
 }

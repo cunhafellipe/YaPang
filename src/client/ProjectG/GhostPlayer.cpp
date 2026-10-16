@@ -745,7 +745,7 @@ void CGhostPlayer::OnLoad(void) {
 
 	// The replay runs under the server property the ghost was recorded with.
 	m_serverProperty = S5::UTIL::GetServerProperty();
-	if (m_pGhostDoc->m_pGameData->m_serverProperty & 0x80) {
+	if (m_pGhostDoc->GetGameData()->m_serverProperty & 0x80) {
 		S5::UTIL::SetServerProperty(m_serverProperty | 0x80);
 	} else {
 		S5::UTIL::SetServerProperty(m_serverProperty & ~0x80);
@@ -987,7 +987,7 @@ void CGhostPlayer::SetWindAndWeather(unsigned char holeNum) {
 void CGhostPlayer::SendAwardResult(void) {
 	if (m_pAward) {
 
-		GHOST_USER_DATA* pUserData = m_pGhostDoc->m_pUserData;
+		const GHOST_USER_DATA* pUserData = m_pGhostDoc->GetUserData();
 		WSendPacket packet(GCT_GAME_GHOST);
 		packet.Encode1(6);
 		packet.Encode4(pUserData->uid);

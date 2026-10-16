@@ -1305,7 +1305,7 @@ void CTaskMain::OnUnderBar_ScratchUp(void) {
 		} else {
 			FrForm *notify = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 			WRect rect = notify->GetRect();
-			notify->SetRect(rect);
+			notify->SetRect(WRect(rect.x, rect.y, rect.w, rect.h));
 			notify->SetTimeLimit(12.0f);
 			notify->SetMessage("\xC7\xF6\xC0\xE7 \xC7\xD1 \xC1\xBE\xB7\xF9\xC0\xC7 \xBE\xC6\xC0\xCC\xC5\xDB \xBA\xB8\xC0\xAF \xB0\xB3\xBC\xF6\xB0\xA1 20,000\xB0\xB3\xC0\xCC\xB9\xC7\xB7\xCE \xC7\xD8\xB4\xE7 \xC4\xC1\xC5\xD9\xC3\xF7\xB8\xA6 \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", false);
 			notify->Open(0, 0);
@@ -1339,7 +1339,7 @@ void CTaskMain::OnUnderBar_BongdariShopUp(void) {
 
 	if (WSingleton<CSharedDoc>::Instance()->m_value5064 != 2) {
 		if (!m_bongdariShop[1]) {
-			FrWnd *shop = FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop"));
+			FrWnd *shop = FrStaticCast<FrWnd>(g_pFresh->GetDesktop()->FindChildByName("bongdari_shop"));
 			if (shop == NULL) {
 				WSendPacket packet(GCT_REQ_PLAYTIME_UPDATE);
 				packet.Send(SEND_TO_DEFAULT);
@@ -1352,7 +1352,7 @@ void CTaskMain::OnUnderBar_BongdariShopUp(void) {
 	} else {
 		FrForm *notify = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 		WRect rect = notify->GetRect();
-		notify->SetRect(rect);
+		notify->SetRect(WRect(rect.x, rect.y, rect.w, rect.h));
 		notify->SetTimeLimit(12.0f);
 		notify->SetMessage("\xC7\xF6\xC0\xE7 \xC7\xD1 \xC1\xBE\xB7\xF9\xC0\xC7 \xBE\xC6\xC0\xCC\xC5\xDB \xBA\xB8\xC0\xAF \xB0\xB3\xBC\xF6\xB0\xA1 20,000\xB0\xB3\xC0\xCC\xB9\xC7\xB7\xCE \xC7\xD8\xB4\xE7 \xC4\xC1\xC5\xD9\xC3\xF7\xB8\xA6 \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", false);
 		notify->Open(0, 0);
@@ -1427,7 +1427,7 @@ void CTaskMain::OnUnderBar_RankingInit(intptr_t param) {
 void CTaskMain::OnUnderBar_RankingUp(void) {
 	if (CSharedDoc::Instance()->IsControlServerService(0x10000)) {
 		// the ranking service is closed by the server
-		HandleMsg(MsgObject(this, 0x23, (intptr_t)"\xB7\xA9\xC5\xB7 \xB0\xFC\xB7\xC3 \xBA\xCE\xBA\xD0 \xC1\xA1\xB0\xCB\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
+		this << MsgObject(this, 0x23, (intptr_t)"\xB7\xA9\xC5\xB7 \xB0\xFC\xB7\xC3 \xBA\xCE\xBA\xD0 \xC1\xA1\xB0\xCB\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
 		return;
 	}
 
@@ -1466,7 +1466,7 @@ void CTaskMain::OnUnderBar_GuildUp(void) {
 	WSingleton<COption>::Instance()->vApplyLobbyScreenSize();
 
 	char url[1024] = { 0 };
-	sprintf(url, "http://www.pangya.com/new3/800x600/index.asp?userid=%s&pwd=%s", WSingleton<CSharedDoc>::Instance()->m_myUID, LOGININFO()->Passwd());
+	sprintf(url, "http://www.pangya.com/new3/800x600/index.asp?userid=%s&pwd=%s", MyUID(), LOGINPW());
 	WSingleton<CBrowser>::Instance()->Open(url, ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false) != 0, true);
 	OnBarHoverOff(0);
 }
@@ -2041,7 +2041,7 @@ bool CTaskMain::OnResultSubEquipBar(int result, FrForm *) {
 			if (itemGroup == 5) {
 				// a ball: no item guid to equip
 				CSharedDoc::Instance()->m_myBallId = typeId;
-				m_subSelection = typeId;
+				m_subSelection = CSharedDoc::Instance()->m_myBallId;
 				m_subSelectionTab = 0;
 			} else {
 				m_subSelection = typeId;
@@ -2216,9 +2216,7 @@ void CTaskMain::OnOverBar_CharSelOwnerDraw(int) {
 		if (bitmap)
 			gdi->DrawTexture(bitmap, rect, 0xFFFFFFFF, 0);
 
-		WVector mouse = g_input->GetMousePoint();
-		WPoint pt(mouse.x, mouse.y);
-		if (rect.IsInRect(pt)) {
+		if (rect.IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {
 			bitmap = g_pFresh->GetBitmap("select_frame");
 			if (bitmap)
 				gdi->DrawTexture(bitmap, WRect(rect.x - 3.0f, rect.y - 3.0f, rect.w + 6.0f, rect.h + 6.0f), 0xFFFFFFFF, 0);
@@ -2419,9 +2417,7 @@ void CTaskMain::OnOverBar_ClubSelOwnerDraw(int) {
 			g_view->DrawLine2D(a, b, 0xFFFF0000, 0xFFFF0000, 0);
 		}
 
-		WVector mouse = g_input->GetMousePoint();
-		WPoint pt(mouse.x, mouse.y);
-		if (WRect(itemX, y, 24.0f, 26.0f).IsInRect(pt)) {
+		if (WRect(itemX, y, 24.0f, 26.0f).IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {
 			bitmap = g_pFresh->GetBitmap("select_frame");
 			if (bitmap)
 				gdi->DrawTexture(bitmap, WRect(itemX - 3.0f, y - 3.0f, 30.0f, 32.0f), 0xFFFFFFFF, 0);
@@ -2556,7 +2552,7 @@ void CTaskMain::OnOverBar_MascotSelOwnerDraw(int) {
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
 	if (bitmap) {
 		w = 8.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
@@ -2564,14 +2560,14 @@ void CTaskMain::OnOverBar_MascotSelOwnerDraw(int) {
 	bitmap = g_pFresh->GetBitmap("select_bar_02");
 	if (bitmap) {
 		w = (count - 1) * 3.0f + count * 24.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
 	if (bitmap) {
 		w = 8.0f;
-		gdi->DrawTexture(bitmap, WRect(x, y, w, (float)bitmap->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(bitmap, WRect(x, y, w, bitmap->Height()), 0xFFFFFFFF, 0);
 	}
 
 	y += 7.0f;
@@ -2588,9 +2584,7 @@ void CTaskMain::OnOverBar_MascotSelOwnerDraw(int) {
 		if (bitmap)
 			gdi->DrawTexture(bitmap, WRect(itemX, y, 24.0f, 26.0f), 0xFFFFFFFF, 0);
 
-		WVector mouse = g_input->GetMousePoint();
-		WPoint pt(mouse.x, mouse.y);
-		if (WRect(itemX, y, 24.0f, 26.0f).IsInRect(pt)) {
+		if (WRect(itemX, y, 24.0f, 26.0f).IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {
 			bitmap = g_pFresh->GetBitmap("select_frame");
 			if (bitmap)
 				gdi->DrawTexture(bitmap, WRect(itemX - 3.0f, y - 3.0f, 30.0f, 32.0f), 0xFFFFFFFF, 0);
@@ -2610,9 +2604,7 @@ void CTaskMain::OnOverBar_MascotSelOwnerDraw(int) {
 		if (bitmap)
 			gdi->DrawTexture(bitmap, rect, 0xFFFFFFFF, 0);
 
-		WVector mouse = g_input->GetMousePoint();
-		WPoint pt(mouse.x, mouse.y);
-		if (rect.IsInRect(pt)) {
+		if (rect.IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {
 			bitmap = g_pFresh->GetBitmap("select_frame");
 			if (bitmap)
 				gdi->DrawTexture(bitmap, WRect(rect.x - 3.0f, rect.y - 3.0f, rect.w + 6.0f, rect.h + 6.0f), 0xFFFFFFFF, 0);
@@ -2978,7 +2970,7 @@ void CTaskMain::OnOverBar_MyInfoUp(void) {
 	CloseAllDialogs();
 	WSingleton<CUserInfo>::Instance()->SetInfo(WSingleton<CSharedDoc>::Instance()->m_myUID,
 		WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid, true, true, false, false,
-		WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname);
+		MyNick());
 
 	OnBarHoverOff(0);
 }
@@ -3352,7 +3344,8 @@ float CTaskMain::Print(float x, float y, const char *text, float space, int alig
 
 		int index = strchr(charSet, c) - charSet;
 
-		x += m_titleFont->PutChar(g_view, x, y, index, 0, color) + space;
+		float charWidth = m_titleFont->PutChar(g_view, x, y, index, 0, color);
+		x += charWidth + space;
 	}
 
 	m_titleFont->SetScale(oldScale);

@@ -1,5 +1,4 @@
 // Original: d:\build\custom\temp\code\client\projectg\ambientsound.cpp
-#define AMBIENTSOUND_WMATH_INLINE
 #include "ambientsound.h"
 #include "wmath.h"
 
@@ -52,13 +51,11 @@ float CAmbientSound::GetVolume(const Wobb& box, float range) {
 		return 1.0f;
 
 	float dist = 0.0f;
-	WVector delta = (g_camera.pivot - box.center) * 0.5f;
 
-	for (int i = 0; i < 3; i++) {
-
+	for (unsigned char i = 0; i < 3; i++) {
 
 		float half = box.extend[i].Magnitude() * 0.5f;
-		float proj = WDotProduct(delta, box.extend[i]) / half;
+		float proj = WDotProduct((g_camera.pivot - box.center) * 0.5f, box.extend[i]) / half;
 
 		if (proj < half * -1.0f) {
 
@@ -71,8 +68,6 @@ float CAmbientSound::GetVolume(const Wobb& box, float range) {
 			dist += proj * proj;
 		}
 	}
-
-
 
 	float volume = 1.0f - (float)sqrt(dist) / (range * 3.2f);
 	if (0.0f < volume)

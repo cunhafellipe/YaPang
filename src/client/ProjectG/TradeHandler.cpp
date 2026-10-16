@@ -302,10 +302,12 @@ void CTradeHandler::OnUpdateTradeMinusItem(int param) {
 			}
 		}
 
-		FrTradeDlg* pTradeDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetDesktop()->FindChildByName("tradedlg"));
+		FrWnd* pWnd = g_pFresh->GetDesktop()->FindChildByName("tradedlg");
 
-		if (pTradeDlg) {
+		FrTradeDlg* pTradeDlg = NULL;
+		if (FrTradeDlg* pFound = FrStaticCast<FrTradeDlg>(pWnd)) {
 
+			pTradeDlg = pFound;
 			pTradeDlg->SetListTradeItem(true);
 			pTradeDlg->SetListTradeItem(false);
 		}

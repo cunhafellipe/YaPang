@@ -291,16 +291,19 @@ void CWinnerNotice::SetWinnerData(int type, std::string data) {
 	sWinnerNotice* notice = &m_notice;
 	notice->clear_data();
 
+	sNoticeMsg* msg;
 	int count = 0;
 	switch (type) {
 	case 11:
-		GetColornText(m_pEventNotice->GetText(1), notice->m_msg[0].m_text, notice->m_msg[0].m_color);
+		msg = &notice->m_msg[0];
+		GetColornText(m_pEventNotice->GetText(1), msg->m_text, msg->m_color);
 
 		notice->m_msg[1].m_color = 0xFF050A9B;
 		notice->m_msg[1].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[1].m_text, EVENT_TIME_HOUR, false);
 
-		GetColornText(m_pEventNotice->GetText(2), notice->m_msg[2].m_text, notice->m_msg[2].m_color);
+		msg = &notice->m_msg[2];
+		GetColornText(m_pEventNotice->GetText(2), msg->m_text, msg->m_color);
 
 		notice->m_msg[3].m_color = 0xFFFF0000;
 		notice->m_msg[3].m_style = 2;
@@ -310,17 +313,20 @@ void CWinnerNotice::SetWinnerData(int type, std::string data) {
 		notice->m_msg[4].m_style = 2;
 		GetItemCountfromXml(doc, notice->m_msg[4].m_text);
 
-		GetColornText(m_pEventNotice->GetText(3), notice->m_msg[5].m_text, notice->m_msg[5].m_color);
+		msg = &notice->m_msg[5];
+		GetColornText(m_pEventNotice->GetText(3), msg->m_text, msg->m_color);
 		count = 6;
 		break;
 	case 12:
-		GetColornText(m_pEventNotice->GetText(4), notice->m_msg[0].m_text, notice->m_msg[0].m_color);
+		msg = &notice->m_msg[0];
+		GetColornText(m_pEventNotice->GetText(4), msg->m_text, msg->m_color);
 
 		notice->m_msg[1].m_color = 0xFF050A9B;
 		notice->m_msg[1].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[1].m_text, EVENT_TIME_HOUR, false);
 
-		GetColornText(m_pEventNotice->GetText(5), notice->m_msg[2].m_text, notice->m_msg[2].m_color);
+		msg = &notice->m_msg[2];
+		GetColornText(m_pEventNotice->GetText(5), msg->m_text, msg->m_color);
 
 		notice->m_msg[3].m_color = 0xFFFF0000;
 		notice->m_msg[3].m_style = 2;
@@ -330,28 +336,34 @@ void CWinnerNotice::SetWinnerData(int type, std::string data) {
 		notice->m_msg[4].m_style = 2;
 		GetItemCountfromXml(doc, notice->m_msg[4].m_text);
 
-		GetColornText(m_pEventNotice->GetText(6), notice->m_msg[5].m_text, notice->m_msg[5].m_color);
+		msg = &notice->m_msg[5];
+		GetColornText(m_pEventNotice->GetText(6), msg->m_text, msg->m_color);
 		count = 6;
 		break;
 	case 13:
-		GetColornText(m_pEventNotice->GetText(7), notice->m_msg[0].m_text, notice->m_msg[0].m_color);
+		msg = &notice->m_msg[0];
+		GetColornText(m_pEventNotice->GetText(7), msg->m_text, msg->m_color);
 
 		notice->m_msg[1].m_color = 0xFF050A9B;
 		notice->m_msg[1].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[1].m_text, EVENT_TIME_HOUR, false);
 
-		GetColornText(m_pEventNotice->GetText(8), notice->m_msg[2].m_text, notice->m_msg[2].m_color);
+		msg = &notice->m_msg[2];
+		GetColornText(m_pEventNotice->GetText(8), msg->m_text, msg->m_color);
 		count = 3;
 		break;
 	case 14:
-		GetColornText(m_pEventNotice->GetText(9), notice->m_msg[0].m_text, notice->m_msg[0].m_color);
-		GetColornText(m_pEventNotice->GetText(10), notice->m_msg[1].m_text, notice->m_msg[1].m_color);
+		msg = &notice->m_msg[0];
+		GetColornText(m_pEventNotice->GetText(9), msg->m_text, msg->m_color);
+		msg = &notice->m_msg[1];
+		GetColornText(m_pEventNotice->GetText(10), msg->m_text, msg->m_color);
 
 		notice->m_msg[2].m_color = 0xFF050A9B;
 		notice->m_msg[2].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[2].m_text, EVENT_TIME_HOUR, false);
 
-		GetColornText(m_pEventNotice->GetText(11), notice->m_msg[3].m_text, notice->m_msg[3].m_color);
+		msg = &notice->m_msg[3];
+		GetColornText(m_pEventNotice->GetText(11), msg->m_text, msg->m_color);
 
 		notice->m_msg[4].m_color = 0xFFFF0000;
 		notice->m_msg[4].m_style = 2;
@@ -361,39 +373,46 @@ void CWinnerNotice::SetWinnerData(int type, std::string data) {
 		notice->m_msg[5].m_style = 2;
 		GetItemCountfromXml(doc, notice->m_msg[5].m_text);
 
-		GetColornText(m_pEventNotice->GetText(12), notice->m_msg[6].m_text, notice->m_msg[6].m_color);
+		msg = &notice->m_msg[6];
+		GetColornText(m_pEventNotice->GetText(12), msg->m_text, msg->m_color);
 
 		notice->m_msg[7].m_color = 0xFFFF9BCD;
 		notice->m_msg[7].m_style = 2;
 		GetUserNamefromXml(doc, notice->m_msg[7].m_text);
 
-		GetColornText(m_pEventNotice->GetText(13), notice->m_msg[8].m_text, notice->m_msg[8].m_color);
+		msg = &notice->m_msg[8];
+		GetColornText(m_pEventNotice->GetText(13), msg->m_text, msg->m_color);
 		count = 9;
 		break;
 	case 15:
-		GetColornText(m_pEventNotice->GetText(14), notice->m_msg[0].m_text, notice->m_msg[0].m_color);
+		msg = &notice->m_msg[0];
+		GetColornText(m_pEventNotice->GetText(14), msg->m_text, msg->m_color);
 
 		notice->m_msg[1].m_color = 0xFF050A9B;
 		notice->m_msg[1].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[1].m_text, EVENT_TIME_HOUR, false);
 
-		GetColornText(m_pEventNotice->GetText(15), notice->m_msg[2].m_text, notice->m_msg[2].m_color);
+		msg = &notice->m_msg[2];
+		GetColornText(m_pEventNotice->GetText(15), msg->m_text, msg->m_color);
 
 		notice->m_msg[3].m_color = 0xFF050A9B;
 		notice->m_msg[3].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[3].m_text, EVENT_TIME_HOUR, true);
 
-		GetColornText(m_pEventNotice->GetText(16), notice->m_msg[4].m_text, notice->m_msg[4].m_color);
+		msg = &notice->m_msg[4];
+		GetColornText(m_pEventNotice->GetText(16), msg->m_text, msg->m_color);
 		count = 5;
 		break;
 	case 16:
-		GetColornText(m_pEventNotice->GetText(17), notice->m_msg[0].m_text, notice->m_msg[0].m_color);
+		msg = &notice->m_msg[0];
+		GetColornText(m_pEventNotice->GetText(17), msg->m_text, msg->m_color);
 
 		notice->m_msg[1].m_color = 0xFF050A9B;
 		notice->m_msg[1].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[1].m_text, EVENT_TIME_DAY, false);
 
-		GetColornText(m_pEventNotice->GetText(18), notice->m_msg[2].m_text, notice->m_msg[2].m_color);
+		msg = &notice->m_msg[2];
+		GetColornText(m_pEventNotice->GetText(18), msg->m_text, msg->m_color);
 
 		notice->m_msg[3].m_color = 0xFF050A9B;
 		notice->m_msg[3].m_style = 2;
@@ -403,26 +422,30 @@ void CWinnerNotice::SetWinnerData(int type, std::string data) {
 		notice->m_msg[4].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[4].m_text, EVENT_TIME_HOUR, true);
 
-		GetColornText(m_pEventNotice->GetText(19), notice->m_msg[5].m_text, notice->m_msg[5].m_color);
+		msg = &notice->m_msg[5];
+		GetColornText(m_pEventNotice->GetText(19), msg->m_text, msg->m_color);
 		count = 6;
 		break;
 	case 17:
-		GetColornText(m_pEventNotice->GetText(20), notice->m_msg[0].m_text, notice->m_msg[0].m_color);
+		msg = &notice->m_msg[0];
+		GetColornText(m_pEventNotice->GetText(20), msg->m_text, msg->m_color);
 		count = 1;
 		break;
 	case 18:
-		GetColornText(m_pEventNotice->GetText(21), notice->m_msg[0].m_text, notice->m_msg[0].m_color);
+		msg = &notice->m_msg[0];
+		GetColornText(m_pEventNotice->GetText(21), msg->m_text, msg->m_color);
 
 		notice->m_msg[1].m_color = 0xFF050A9B;
 		notice->m_msg[1].m_style = 2;
 		GetDaynTimefromXml(doc, notice->m_msg[1].m_text, EVENT_TIME_HOUR, false);
 
-		GetColornText(m_pEventNotice->GetText(22), notice->m_msg[2].m_text, notice->m_msg[2].m_color);
+		msg = &notice->m_msg[2];
+		GetColornText(m_pEventNotice->GetText(22), msg->m_text, msg->m_color);
 		count = 3;
 		break;
 	}
 
-	notice->m_msgCount = count + 1;
+	m_notice.m_msgCount = count + 1;
 	AddWinnerNotice(1);
 }
 

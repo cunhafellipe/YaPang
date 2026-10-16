@@ -324,7 +324,7 @@ void CLightColumn::Display(void) {
 						vPoint += fSide * vWidth[k];
 						m_buffers[i].m_vPos = vPoint;
 						m_buffers[i].m_fV = (m_fHeight - fY) / m_fHeight * fTexScale[k] + fTexV[k];
-						if (j < 2) {
+						if (j <= 1) {
 							m_buffers[i].m_nColor = ((int)byLayerAlpha << 24) | 0xFFFFFF;
 						} else {
 							float fRemain = m_fHeight - fY;
@@ -596,8 +596,10 @@ void CBunkerShotParticle::Process(float fElapsed) {
 	}
 
 	for (int i = 0; i < m_nSmokes; i++) {
-		m_pSmokes[i].m_vVelocity.y -= fElapsed * 120.033536f;
-		m_pSmokes[i].m_vPos += m_pSmokes[i].m_vVelocity * fElapsed;
+		sSmoke* pSmoke = &m_pSmokes[i];
+
+		pSmoke->m_vVelocity.y -= fElapsed * 120.033536f;
+		pSmoke->m_vPos += m_pSmokes[i].m_vVelocity * fElapsed;
 	}
 
 	for (int j = 0; j < m_nParticles; j++) {
@@ -852,9 +854,9 @@ void CDroplet::Display(void) {
 void CDroplet::MakeParticle(void) {
 	for (int i = 0; i < m_nDroplets; i++) {
 		m_pDroplets[i].m_vPos = GolfBall().m_pos;
-		m_pDroplets[i].m_vVelocity = WVector::UNIT_POS_Z * ((float)(rand() % 1023) * 0.005859375f) * RotMat((float)(rand() % 1023) * 0.0061359233f, 1);
+		m_pDroplets[i].m_vVelocity = ((float)(rand() % 1023) * 0.005859375f) * WVector::UNIT_POS_Z * RotMat((float)(rand() % 1023) * 0.0061359233f, 1);
 		float t = (float)(rand() % 1023) * 0.0009765625f;
-		m_pDroplets[i].m_fSpeed = (1.0f - t) * 10.0f + t * 40.0f;
+		m_pDroplets[i].m_vVelocity.y = (1.0f - t) * 10.0f + t * 40.0f;
 	}
 
 	m_fAlpha = 255.0f;
@@ -1571,7 +1573,7 @@ void CStarDust2::Process(float fElapsed) {
 			m_fGenTime += Min(fElapsed, fElapsed * m_fAlpha * 0.005f);
 			m_fAlpha = Max(0.0f, m_fAlpha - fElapsed * 150.0f);
 
-			CSceneManager::Instance()->GetPuppet("\xB0\xF8")->SetAlpha(255 - (unsigned char)(int)m_fAlpha);
+			CSceneManager::Instance()->GetPuppet("\xB0\xF8")->SetAlpha(255 - (unsigned char)float2int(m_fAlpha));
 
 			if (WAbsBySign(m_fAlpha) < g_EPSILON) {
 				m_bActive = false;

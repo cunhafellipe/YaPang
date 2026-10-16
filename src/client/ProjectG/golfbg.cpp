@@ -152,7 +152,8 @@ void CGolfBg::DoInitAfterLoad(void) {
 		if (!point)
 			point = GOLFDOC()->m_pPolySoup->FindPoint("\xB1\xD7\xB8\xAE\xB5\xE5");
 	}
-	SetGridCenter(point->m_pos);
+	WVector& center = point->m_pos;
+	SetGridCenter(center);
 
 	SetStartPoint(GOLFDOC()->GetHoleData().m_teePos);
 	SetHolePoint(GOLFDOC()->GetHoleData().m_cupPos);
@@ -200,8 +201,11 @@ void CGolfBg::OnLoad(void) {
 
 	if (CSharedDoc::Instance()->m_roomInfo.m_roomMode == 0xE) {
 		unsigned char i;
-		for (i = 0; i < 18;) {
-			if (CSharedDoc::Instance()->m_holeOrder[i++] == GOLFDOC()->m_currentHole) break;
+		for (i = 0; i != 18; i++) {
+			if (CSharedDoc::Instance()->m_holeOrder[i] == GOLFDOC()->m_currentHole) {
+				i++;
+				break;
+			}
 		}
 		i = Between<unsigned char>(1, i, 18);
 		SetCurMap(CSharedDoc::Instance()->m_holeCourse[i - 1]);
@@ -314,10 +318,10 @@ void CGolfBg::HandleMsg(const MsgObject& msg) {
 		const std::vector<WVector>& list = GOLFDOC()->m_pAutoTarget->GetPointList();
 		std::vector<WVector>* pOut = (std::vector<WVector>*)msg.m_param1;
 
-		unsigned int count = list.size() * 4 + 7;
+		unsigned int count = list.size() * 2;
 
-		if (pOut->capacity() < count) {
-			pOut->reserve(count);
+		if (pOut->capacity() < count * 2 + 7) {
+			pOut->reserve(count * 2 + 7);
 		} else {
 			pOut->clear();
 		}
@@ -326,7 +330,7 @@ void CGolfBg::HandleMsg(const MsgObject& msg) {
 		tee.y = GetPVS().GetGroundPoint(tee, false, 0, false).y + 100.0f;
 		WVector first; first = list[0];
 		first.y = GetPVS().GetGroundPoint(first, true, 0, true).y + 100.0f;
-		WVector dir = tee - first; WVector side = tee + WVector(dir).Normalize() * 250.0f;
+		WVector dir = tee - first; WVector side = tee + 250.0f * WVector(dir).Normalize();
 
 		pOut->push_back((side + tee) * 0.5f);
 		pOut->push_back(tee);

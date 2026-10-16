@@ -35,6 +35,7 @@ class CFxBox {
 	friend class CBase;   // AttachFx; the ctor sets m_frameTime
 	friend class CRealMyRoom_Avatar;   // the ctor sets m_frameTime
 	friend class ntAvatar;   // the ctor sets m_frameTime
+	friend class CExhibition;   // the ctor sets m_frameTime
 public:
 	CFxBox(void);
 	virtual ~CFxBox(void);

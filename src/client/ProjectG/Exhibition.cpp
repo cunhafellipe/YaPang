@@ -87,8 +87,7 @@ CExhibition::CExhibition(float x, float y, float screenScale, bool autoRecover)
 
 	m_fxBox.Init(g_resrcmng);
 	m_fxBox.SetCamera(&g_camera);
-	// The original also sets m_fxBox's frame time (CFxBox +0x4) to 33.333f
-	// here: FxBox.h has no accessor for it yet.
+	m_fxBox.m_frameTime = 33.333332f;
 	m_pFxSequence1 = NULL;
 	m_pFxSequence2 = NULL;
 }
@@ -122,14 +121,14 @@ void CExhibition::ReleasePet(void) {
 // exhibition.cpp:344
 void CExhibition::Init(void) {
 	m_pitchSpeed = m_directionSpeed = 0.0f;
-	m_defaultAngle.x = m_defaultAngle.y = 0.0f;
-	m_angle.x = m_angle.y = 0.0f;
+	m_defaultAngle.Reset();
+	m_angle.Reset();
 
-	m_defaultDistance = m_curDistance;
 	m_checkedDirection = 0.0f;
 	m_directionCheckTime = 0.0f;
 	m_facialTime = 0.0f;
 	m_distance = m_curDistance;
+	m_defaultDistance = m_curDistance;
 	m_resetByInit = 0;
 	m_minDistance = 15.0f;
 	m_maxDistance = 25.0f;
@@ -1157,8 +1156,6 @@ bool CExhibition::SetModel(CPartTidList& tidList, unsigned long* pItemSlots, con
 }
 
 // exhibition.cpp:1829
-// The statements marked "header:" wait for members the shared headers do not
-// declare yet (classdefine.h, SharedDoc.h, exhibition.h).
 bool CExhibition::SetModel(unsigned long typeId) {
 	m_motionIndex = -1;
 	m_typeId = typeId;
@@ -1320,8 +1317,7 @@ bool CExhibition::SetModel(unsigned long typeId) {
 			return false;
 		}
 
-		// header: sItem char[0x28] model name 0x94
-		// m_model = g_resrcmng->GetPuppet(MakeStr("%s.pet", pItem->m_model), false, true, false);
+		m_model = g_resrcmng->GetPuppet(MakeStr("%s.pet", pItem->m_model), false, true, false);
 
 		if (m_model == NULL) {
 			return false;
@@ -1647,7 +1643,7 @@ void CExhibition::SetScreenPos(WPuppet* pPuppet) {
 		m_defaultAngle.y = 0.33f;
 	}
 
-	m_angle = m_defaultAngle;
+	m_angle.Reset();
 	m_checkedDirection = m_defaultAngle.y;
 }
 

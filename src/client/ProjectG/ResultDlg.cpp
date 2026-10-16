@@ -1750,16 +1750,19 @@ void FrUniteResultDlg::OnRankListOwnerDraw(int param) {
 	}
 
 	unsigned char bgIndex = 2;
-	if (m_resultDlgType != 0)
+	if (m_resultDlgType)
 		bgIndex = pData->m_team;
 
-	if (bgIndex < 3 && m_pRankBgBitmaps[bgIndex]) {
-		float bgX = pItem->pos.x + 13.0f;
-		float bgY = (11.0f - (float)m_pRankBgBitmaps[bgIndex]->Height() * 0.5f) + pItem->pos.y;
+	const Bitmap* pBg;
+	if (bgIndex < 3 && (pBg = m_pRankBgBitmaps[bgIndex]) != 0) {
+		WPoint pos = pItem->pos;
+
+		float bgX = pos.x + 13.0f;
+		float bgY = (11.0f - (float)pBg->Height() * 0.5f) + pos.y;
 
 		WRect bgRect(bgX, bgY, (float)m_pRankBgBitmaps[bgIndex]->Width(), (float)m_pRankBgBitmaps[bgIndex]->Height());
 
-		gdi->DrawTexture(m_pRankBgBitmaps[bgIndex], bgRect, 0xFFFFFFFF, 0);
+		gdi->DrawTexture(pBg, bgRect, 0xFFFFFFFF, 0);
 
 		gdi->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 		gdi->SetTextStyle(1);
@@ -1903,7 +1906,7 @@ void FrUniteResultDlg::OnRankListOwnerDraw(int param) {
 		WRect ma2Rect(0.0f, 0.0f, (float)m_pBonusMa2->Width(), (float)m_pBonusMa2->Height());
 
 		if (pData->m_itemBoostFlags == 1) {
-			ma2Rect.x = (float)(m_pBonusMa2->Width() / 2) + 470.0f + pItem->pos.x;
+			ma2Rect.x = pItem->pos.x + ((float)(m_pBonusMa2->Width() / 2) + 470.0f);
 			ma2Rect.y = (11.0f - (float)(m_pBonusMa2->Height() / 2)) + pItem->pos.y;
 		} else {
 			ma2Rect.x = pItem->pos.x + 470.0f;

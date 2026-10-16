@@ -480,8 +480,8 @@ void CClub::SelectBestClub(const WVector &target) {
 	float dx = ball.m_pos.x - target.x;
 	float dz = ball.m_pos.z - target.z;
 
-	m_approachClubIndex = 0;
 	float dist = (float)sqrt(dx * dx + dz * dz) * 0.3125f;
+	m_approachClubIndex = 0;
 
 	if (dist < 10.0f)
 		m_approachMode = 0;
@@ -643,10 +643,10 @@ void CClub::SetApproachMode(void) {
 
 
 
-	m_approachClubIndex = 7;
 	float dx = ball.m_pos.x - cup.x;
 	float dz = ball.m_pos.z - cup.z;
 	float dist = (float)sqrt(dx * dx + dz * dz) * 0.3125f;
+	m_approachClubIndex = 7;
 
 	if (dist < 10.0f) {
 		m_powerPutter = false;
@@ -656,21 +656,20 @@ void CClub::SetApproachMode(void) {
 		m_powerPutter = false;
 		m_approachMode = 1;
 
-	} else {
-		if (dist < 28.0f) {
+	} else if (dist < 28.0f) {
 
-			m_approachMode = 2;
-
-		} else if (dist < 58.0f) {
-
-			m_approachMode = 3;
-
-		} else {
-
-			m_approachMode = 4;
-			m_approachClubIndex = 0;
-		}
+		m_approachMode = 2;
 		m_powerPutter = true;
+
+	} else if (dist < 58.0f) {
+
+		m_approachMode = 3;
+		m_powerPutter = true;
+
+	} else {
+		m_powerPutter = true;
+		m_approachMode = 4;
+		m_approachClubIndex = 0;
 	}
 
 	if (GetPVS().GetGroundType(GolfBall().m_pos, true, NULL) != 2)
@@ -834,7 +833,7 @@ float CClub::GetPower(void) {
 			} else {
 
 
-				return ((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + powerShot) / m_pClub->m_range * 1.5f + 1.0f) * m_pClub->m_power;
+				range = m_pClub->m_range; power = m_pClub->m_power; return ((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + powerShot) / range * 1.5f + 1.0f) * power;
 			}
 		}
 

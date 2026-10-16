@@ -1290,9 +1290,8 @@ void CPost_MyItemList::OnPost_SelectListOwnerDraw(intptr_t param) {
 void CPost_MyItemList::OnPost_SelectListBtnDown(void) {
 	FrListItem* pItem = m_pSelectList->GetItemUnderCursor();
 	if (pItem) {
-		WRect rc(m_miniBtn.m_rect.x + pItem->pos.x, m_miniBtn.m_rect.y + pItem->pos.y, m_miniBtn.m_rect.w, m_miniBtn.m_rect.h);
 		const WPoint& mousePos = g_pFresh->GetManager()->GetMousePos();
-		if (mousePos.x >= rc.x && mousePos.x <= rc.x + rc.w && mousePos.y >= rc.y && mousePos.y <= rc.y + rc.h) {
+		if ((m_miniBtn.m_rect + pItem->pos).IsInRect(mousePos)) {
 			sTradeItem* pTrade = (sTradeItem*)pItem->pData;
 			if (!pTrade) {
 				CallErrorMsg("\xbc\xb1\xc5\xc3\xc7\xd1 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xba \xc0\xdf\xb8\xf8\xb5\xc8 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xd4\xb4\xcf\xb4\xd9.");
@@ -1482,22 +1481,22 @@ void CPost_MyItemList::SetList(void) {
 		if (m_arrayIndex == -1) {
 			pListItem = m_pItemList->AddItem(pTrade);
 		} else if (m_arrayIndex >= 0 && m_arrayIndex < 10) {
-			unsigned long kind = it->typeId >> 26;
+			unsigned long kind = pTrade->typeId >> 26;
 			if (kind == 2 || kind == 1 || kind == 9) {
-				if (((it->typeId >> 18) & 0xFF) == (unsigned long)m_arrayIndex)
+				if (((pTrade->typeId >> 18) & 0xFF) == (unsigned long)m_arrayIndex)
 					pListItem = m_pItemList->AddItem(pTrade);
 			}
 		} else if (m_arrayIndex == 10) {
-			if ((it->typeId & 0xFC000000) == 0x10000000)
+			if ((pTrade->typeId & 0xFC000000) == 0x10000000)
 				pListItem = m_pItemList->AddItem(pTrade);
 		} else if (m_arrayIndex == 11) {
-			if ((it->typeId & 0xFC000000) == 0x18000000)
+			if ((pTrade->typeId & 0xFC000000) == 0x18000000)
 				pListItem = m_pItemList->AddItem(pTrade);
 		} else if (m_arrayIndex == 12) {
-			if ((it->typeId & 0xFC000000) == 0x7C000000)
+			if ((pTrade->typeId & 0xFC000000) == 0x7C000000)
 				pListItem = m_pItemList->AddItem(pTrade);
 		} else if (m_arrayIndex == 13) {
-			unsigned long kind = it->typeId >> 26;
+			unsigned long kind = pTrade->typeId >> 26;
 			if (kind == 7 || kind == 8 || kind == 0x1C || kind == 0x10 || kind == 0xE)
 				pListItem = m_pItemList->AddItem(pTrade);
 		}

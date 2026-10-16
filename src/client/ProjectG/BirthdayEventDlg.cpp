@@ -153,20 +153,21 @@ void FrBirthdayEventDlg::InitalizeImages(void) {
 			int index = i * 4 + j;
 			float x = (float)j;
 
+			BoardInfo& board = m_boards[index];
 			WRect rect;
 			rect.x = (m_boards[0].m_rect.w + 1.0f) * x;
 			rect.y = (m_boards[0].m_rect.h + 1.0f) * y;
-			m_boards[index].m_rect.x = rect.x + m_boards[0].m_rect.x;
-			m_boards[index].m_rect.y = (m_boards[0].m_rect.h + 1.0f) * y + m_boards[0].m_rect.y;
-			m_boards[index].m_rect.w = rect.w = m_boards[0].m_rect.w;
-			m_boards[index].m_rect.h = rect.h = m_boards[0].m_rect.h;
+			board.m_rect.x = (m_boards[0].m_rect.w + 1.0f) * x + m_boards[0].m_rect.x;
+			board.m_rect.y = (m_boards[0].m_rect.h + 1.0f) * y + m_boards[0].m_rect.y;
+			board.m_rect.w = rect.w = m_boards[0].m_rect.w;
+			board.m_rect.h = rect.h = m_boards[0].m_rect.h;
 			m_pBoardUI->Add(MakeStr("BoardBG_%d", index + 1), rect, true);
 
-			m_boards[index].m_pNumberImg = g_pFresh->RegisterBitmap(MakeStr("BirthdayEvent_num2_%d", index + 1));
-			m_boards[index].m_numberRect.x = (m_boards[0].m_rect.w + 1.0f) * x + 91.0f;
-			m_boards[index].m_numberRect.y = (m_boards[0].m_rect.h + 1.0f) * y + 161.0f;
-			m_boards[index].m_numberRect.w = 37.0f;
-			m_boards[index].m_numberRect.h = 30.0f;
+			board.m_pNumberImg = g_pFresh->RegisterBitmap(MakeStr("BirthdayEvent_num2_%d", index + 1));
+			board.m_numberRect.x = (m_boards[0].m_rect.w + 1.0f) * x + 91.0f;
+			board.m_numberRect.y = (m_boards[0].m_rect.h + 1.0f) * y + 161.0f;
+			board.m_numberRect.w = 37.0f;
+			board.m_numberRect.h = 30.0f;
 		}
 	}
 
@@ -268,18 +269,19 @@ void FrBirthdayEventDlg::OnProc(const float dt) {
 
 // birthdayeventdlg.cpp:277
 void FrBirthdayEventDlg::CheckToolTip(const WPoint& pt) {
-	WRect rect; rect.w = m_boards[0].m_rect.w; rect.h = m_boards[0].m_rect.h;
+	WRect rect(0.0f, 0.0f, m_boards[0].m_rect.w, m_boards[0].m_rect.h);
 
 	for (int i = 0; i < 4; ++i) {
 		float y = (float)i;
 		for (int j = 0; j < 4; ++j) {
+			int index = i * 4 + j;
 			float x = (float)j;
 
 			rect.x = x * m_boards[0].m_rect.w + m_boards[0].m_rect.x + m_rect.x;
 			rect.y = y * m_boards[0].m_rect.h + m_boards[0].m_rect.y + m_rect.y;
-			if (pt.x >= rect.x && rect.x + rect.w >= pt.x && pt.y >= rect.y && rect.y + rect.h >= pt.y) {
+			if (rect.IsInRect(pt)) {
 				m_pBoardNumberArea->SetRect(rect);
-				MakeToolTipText(board4_4[m_boardIndex][i * 4 + j]);
+				MakeToolTipText(board4_4[m_boardIndex][index]);
 			}
 		}
 	}
@@ -400,14 +402,15 @@ void FrBirthdayEventDlg::OnOwnerDrawBoardArea(int param) {
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			int index = i * 4 + j;
+			BoardInfo& board = m_boards[index];
 
 			if (m_missions[index].m_bCompleted) {
-				m_pBoardUI->Render(MakeStr("BoardBG_%d", index + 1), m_boards[index].m_rect.x + m_rect.x,
-					m_boards[index].m_rect.y + m_rect.y, 1.0f, 0);
+				m_pBoardUI->Render(MakeStr("BoardBG_%d", index + 1), board.m_rect.x + m_rect.x,
+					board.m_rect.y + m_rect.y, 1.0f, 0);
 			} else {
-				WRect rect(m_boards[index].m_numberRect.x + m_rect.x, m_boards[index].m_numberRect.y + m_rect.y,
-					m_boards[index].m_numberRect.w, m_boards[index].m_numberRect.h);
-
+				WRect rect(board.m_numberRect);
+				rect.x = board.m_numberRect.x + m_rect.x;
+				rect.y = board.m_numberRect.y + m_rect.y;
 				pGDI->DrawTexture(m_boards[board4_4[m_boardIndex][index] - 1].m_pNumberImg, rect, 0xFFFFFFFF, 0);
 			}
 		}

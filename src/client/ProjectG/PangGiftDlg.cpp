@@ -115,13 +115,13 @@ void FrPangGiftDlg::OnItemOwnerDraw(int param) {
 
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 			pGDI->SetTextStyle(1);
-			pGDI->Print(WPoint(m_pItemArea->GetRect().x + 175.0f, m_pItemArea->GetRect().y + 15.0f), 2, "%s", pItem->m_name);
+			pGDI->Print(WPoint(m_pItemArea->GetRect().x, m_pItemArea->GetRect().y) + WPoint(175.0f, 15.0f), 2, "%s", pItem->m_name);
 			pGDI->SetTextStyle(0);
 
 
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 			pGDI->SetTextStyle(0);
-			pGDI->Print(WPoint(m_pItemArea->GetRect().x + 170.0f, m_pItemArea->GetRect().y + 40.0f), 2, "%d\xC6\xCE", m_itemInfo->m_pang);
+			pGDI->Print(WPoint(m_pItemArea->GetRect().x, m_pItemArea->GetRect().y) + WPoint(170.0f, 40.0f), 2, "%d\xC6\xCE", m_itemInfo->m_pang);
 		}
 	}
 }

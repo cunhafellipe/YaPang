@@ -36,8 +36,8 @@ void CDrawHistory::Add(Bitmap* pBefore, Bitmap* pAfter, IPoint from, IPoint to) 
 
 	// drop the steps after the current one
 	if (m_histories.size() != 0) {
-		unsigned int i = m_index + 1;
-		if (i < m_histories.size()) {
+		if (m_index + 1 < m_histories.size()) {
+			unsigned int i = m_index + 1;
 			while (i < m_histories.size()) {
 				delete m_histories[i];
 				i++;
@@ -614,8 +614,10 @@ void CUccBase::MakeZoomedArea(int x, int y) {
 
 	IPoint offset((int)m_pTexture32->Width() / 2, (int)m_pTexture32->Height() / 2);
 	if (x == -1 && y == -1) {
-		x = (int)(m_zoomArea.x + m_zoomArea.w * 0.5f);
-		y = (int)(m_zoomArea.y + m_zoomArea.h * 0.5f);
+		IPoint center((int)(m_zoomArea.x + m_zoomArea.w * 0.5f), (int)(m_zoomArea.y + m_zoomArea.h * 0.5f));
+
+		x = center.x;
+		y = center.y;
 	}
 	else {
 		if (m_zoomRate * x < 128) {
@@ -889,11 +891,11 @@ void CUccBase::SpoidEventHandler(eButton button, int state, const WPoint& point)
 		WRect rc = m_pArea->GetRect();
 		IPoint pos(point.x - rc.x, point.y - rc.y);
 
-		unsigned char r = 0, g = 0, b = 0;
-		(m_zoomRate > 1 ? m_pZoomed : m_pTexture32)->GetPixel(pos.x, pos.y, r, g, b);
+		sRGB color;
+		(m_zoomRate > 1 ? m_pZoomed : m_pTexture32)->GetPixel(pos.x, pos.y, color.r, color.g, color.b);
 
 		if (m_pParent != NULL) {
-			m_pParent->SetCurrentColor(r, g, b);
+			m_pParent->SetCurrentColor(color.r, color.g, color.b);
 		}
 		break;
 	}

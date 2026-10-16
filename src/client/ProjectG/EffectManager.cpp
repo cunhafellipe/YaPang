@@ -66,16 +66,16 @@ const char* CAztecHoleinEffect::GetEffectName(unsigned long id) {
 
 		it = m_iffEffects.find(id);
 		if (it != m_iffEffects.end()) {
-			if (it->second) {
-				return it->second;
+			name = it->second;
+			if (name) {
+				return name;
 			}
 		}
 
 		it = m_registeredEffects.find(id);
 		if (it != m_registeredEffects.end()) {
-			name = it->second;
-			if (name) {
-				return name;
+			if (it->second) {
+				return it->second;
 			}
 		}
 	} catch (...) {

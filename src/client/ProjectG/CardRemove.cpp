@@ -32,6 +32,7 @@ void DrawPartsSlot(FrGraphicInterface* pGDI, sItemInfo* pItem, FrListItem* pList
 			return;
 	}
 
+	int i;
 	float charX = 220.0f;
 	float caddieX = 220.0f;
 	if (!((unsigned short)pItem->m_charCardSlotCount > -1 && (unsigned short)pItem->m_charCardSlotCount < 5)) {
@@ -48,7 +49,7 @@ void DrawPartsSlot(FrGraphicInterface* pGDI, sItemInfo* pItem, FrListItem* pList
 		}
 	}
 
-	for (int i = 1; i < (unsigned short)pItem->m_charCardSlotCount + 1; i++) {
+	for (i = 1; i < (unsigned short)pItem->m_charCardSlotCount + 1; i++) {
 		bool found = false;
 		for (std::list<sSCardAvilityPeriodInfo>::iterator it = CSharedDoc::Instance()->m_cardPeriodList[0].begin(); it != CSharedDoc::Instance()->m_cardPeriodList[0].end(); ++it) {
 
@@ -101,7 +102,7 @@ void DrawPartsSlot(FrGraphicInterface* pGDI, sItemInfo* pItem, FrListItem* pList
 		}
 	}
 
-	for (int i = 1; i < (unsigned short)pItem->m_caddieCardSlotCount + 1; i++) {
+	for (i = 1; i < (unsigned short)pItem->m_caddieCardSlotCount + 1; i++) {
 		bool found = false;
 		for (std::list<sSCardAvilityPeriodInfo>::iterator it = CSharedDoc::Instance()->m_cardPeriodList[0].begin(); it != CSharedDoc::Instance()->m_cardPeriodList[0].end(); ++it) {
 
@@ -446,7 +447,7 @@ void FrCardRemove::OnDrawAreaOwnerDraw(int param) {
 
 			unsigned int width = pBitmap->Width();
 			unsigned int height = pBitmap->Height();
-			pGDI->DrawTexture(pBitmap, WRect(rect.x + (410.0f - ((float)m_curPartCardList.size() * width * 0.5f + index * 5.0f) + (width + 5.0f) * index), rect.y + 215.0f, (float)width, (float)height), 0xFFFFFFFF, 0);
+			pGDI->DrawTexture(pBitmap, WRect(rect.x + (410.0f - ((float)m_curPartCardList.size() * width * 0.5f + index * 5.0f) + (width + 5.0f) * index), rect.y + 215.0f, (float)pBitmap->Width(), (float)height), 0xFFFFFFFF, 0);
 			index += 1.0f;
 		}
 	}
@@ -539,8 +540,9 @@ void FrCardRemove::OnItemListOwnerDraw(intptr_t param) {
 			sItemInfo* pItem = (sItemInfo*)pListItem->pData;
 			if (pItem) {
 
-				float x = pListItem->pos.x;
-				float y = pListItem->pos.y + 2.0f;
+				WPoint pt;
+				pt.x = pListItem->pos.x;
+				pt.y = pListItem->pos.y + 2.0f;
 
 
 
@@ -548,7 +550,19 @@ void FrCardRemove::OnItemListOwnerDraw(intptr_t param) {
 				bool expired = (pItem->m_stateBits.kind == 6 && pItem->m_stateBits.expired) ? true : false;
 
 				unsigned long diffuse = expired ? 0x80808080 : 0xFFFFFFFF;
-				DrawTexture((!pListItem->selected && !pListItem->underCursor) ? "button_n" : "button_o", x, y, diffuse);
+				if (!pListItem->selected) {
+
+					if (!pListItem->underCursor) {
+
+						DrawTexture("button_n", pt.x, pt.y, diffuse);
+					} else {
+
+						DrawTexture("button_o", pt.x, pt.y, diffuse);
+					}
+				} else {
+
+					DrawTexture("button_o", pt.x, pt.y, diffuse);
+				}
 
 
 
@@ -570,7 +584,7 @@ void FrCardRemove::OnItemListOwnerDraw(intptr_t param) {
 
 
 
-							pGDI->DrawTexture(pSetIcon, WRect(x + 5.0f, y + 3.0f, 90.0f * (pSetIcon->Width() * 0.01f), 90.0f * (pSetIcon->Height() * 0.01f)), 0xFFFFFFFF, 0);
+							pGDI->DrawTexture(pSetIcon, WRect(pt.x + 5.0f, pt.y + 3.0f, 90.0f * (pSetIcon->Width() * 0.01f), 90.0f * (pSetIcon->Height() * 0.01f)), 0xFFFFFFFF, 0);
 						}
 					}
 
@@ -586,7 +600,7 @@ void FrCardRemove::OnItemListOwnerDraw(intptr_t param) {
 
 
 
-						pGDI->DrawTexture(pIcon, WRect(x + 30.0f, y + 1.0f, 34.0f * (pIcon->Width() * 0.01f), 34.0f * (pIcon->Height() * 0.01f)), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pIcon, WRect(pt.x + 30.0f, pt.y + 1.0f, 34.0f * (pIcon->Width() * 0.01f), 34.0f * (pIcon->Height() * 0.01f)), 0xFFFFFFFF, 0);
 					}
 
 
@@ -611,10 +625,10 @@ void FrCardRemove::OnItemListOwnerDraw(intptr_t param) {
 
 					if (IsLocalContent((localContentType_t)0x57) && IsUccClothes(pItem->m_serial)) {
 
-						pGDI->Print(WPoint(x + 61.0f, y + 10.0f), 0, GetUccItemName(pItem->m_serial));
+						pGDI->Print(WPoint(pt.x + 61.0f, pt.y + 10.0f), 0, GetUccItemName(pItem->m_serial));
 					} else {
 
-						pGDI->Print(WPoint(x + 61.0f, y + 10.0f), 0, pCommon->m_name);
+						pGDI->Print(WPoint(pt.x + 61.0f, pt.y + 10.0f), 0, pCommon->m_name);
 					}
 
 
@@ -1000,7 +1014,7 @@ void FrCardRemoveResult::OnDrawAreaOwnerDraw(int param) {
 
 						unsigned int width = pBitmap->Width();
 						unsigned int height = pBitmap->Height();
-						pGDI->DrawTexture(pBitmap, WRect(rect.x + (centerX - ((float)m_cardList.size() * width * 0.5f + index * 5.0f) + (width + 5.0f) * index), rect.y + 40.0f, (float)width, (float)height), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pBitmap, WRect(rect.x + (centerX - ((float)m_cardList.size() * width * 0.5f + index * 5.0f) + (width + 5.0f) * index), rect.y + 40.0f, (float)pBitmap->Width(), (float)height), 0xFFFFFFFF, 0);
 						index += 1.0f;
 					}
 				}

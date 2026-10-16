@@ -93,7 +93,7 @@ unsigned long CPartList::SetPart(CPartTidList *pTidList, unsigned long tid, unsi
 
 // partsinfo.cpp:113
 bool CPartList::SetPart(unsigned long tid, unsigned long id) {
-	unsigned char slot = (unsigned char)((tid >> 13) & 0x1F);
+	unsigned char slot = (tid & 0x3E000) >> 13;
 	bool unequip = false;
 	if (m_parts[slot].m_tid == tid && (id == 0 || m_parts[slot].m_id == 0 || m_parts[slot].m_id == id)) {
 		if (slot < m_numDefaultParts) {
@@ -537,8 +537,8 @@ void CPetFrame::SetPartPets(unsigned long mask) {
 			continue;
 		}
 
-		texA[0] = 0; texA[1] = 0; texA[2] = 0;
-		texB[0] = 0; texB[1] = 0; texB[2] = 0;
+		memset(texA, 0, sizeof(texA));
+		memset(texB, 0, sizeof(texB));
 		IFF_STRUCT::sPart *pIff = m_partList.GetPart(slot)->m_pIff;
 
 		if (pIff != 0) {
@@ -553,7 +553,8 @@ void CPetFrame::SetPartPets(unsigned long mask) {
 			sprintf(mpetName, "%s.mpet", pIff->model);
 
 			if (IsLocalContent((localContentType_t)0x57) && IsLocalContent((localContentType_t)0x5F) && IsUccClothes(pIff->m_typeId)) {
-				char uccKey[9] = { 0 };
+				char uccKey[9];
+				memset(uccKey, 0, sizeof(uccKey));
 				sUccClothes *pClothes = UccManager()->FindClothes(m_partList.GetPart(slot)->m_id);
 				if (pClothes != 0) {
 					strncpy(uccKey, pClothes->m_uccKey, 9);
@@ -640,7 +641,7 @@ void CPetFrame::SetPartPets(unsigned long mask) {
 			}
 
 			for (int i = 0; i < 3; i++) {
-				if (texB[i] == hBaseTex && texA[i] == hBaseTex) {
+				if (texB[i] == hBaseTex && texB[i] == texA[i]) {
 					m_unk1B4 = true;
 				}
 				if (g_resrcmng != 0 && texB[i] != 0) {
