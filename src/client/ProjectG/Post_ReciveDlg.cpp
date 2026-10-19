@@ -1393,9 +1393,9 @@ void CPost_MessgeDlg::OnPostDescFrame(bool bShow) {
 
 // post_recivedlg.cpp:1951
 void CPost_MessgeDlg::SetGiftDescString(const char* pSender, const char* pContents, const char* pItemName, const char* pItemDesc) {
-	if (m_pReciveUserEdit->GetLine(1, false) > 0) m_pReciveUserEdit->ClearLine();
-	if (m_pLetterContentsEdit->GetLine(1, false) > 0) m_pLetterContentsEdit->ClearLine();
-	if (m_pLetterDateEdit->GetLine(1, false) > 0) m_pLetterDateEdit->ClearLine();
+	if (m_pReciveUserEdit->GetLine(1, false) != nullptr) m_pReciveUserEdit->ClearLine();
+	if (m_pLetterContentsEdit->GetLine(1, false) != nullptr) m_pLetterContentsEdit->ClearLine();
+	if (m_pLetterDateEdit->GetLine(1, false) != nullptr) m_pLetterDateEdit->ClearLine();
 
 	if (pSender == 0) {
 		// "There is no mail that has arrived."
