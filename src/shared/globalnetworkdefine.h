@@ -127,12 +127,18 @@ SHAREDDOC_GLOBALNETWORKDEFINE_INLINE sTradeItem::sTradeItem(void) {
 // The accessors are defined in the class body in the original (lines
 // 2981-2988); the units that emitted them define them out of line.
 struct sStoredItemInfo {
-	unsigned long GetTypeID(void) const;
-	void SetTypeID(unsigned long);
-	unsigned long GetGuid(void) const;
-	void SetGuid(unsigned long);
-	unsigned long GetCount(void) const;
-	void SetCount(unsigned long);
+	// globalnetworkdefine.h:2981
+	unsigned long GetTypeID(void) const { return item.typeId; }
+	// globalnetworkdefine.h:2982
+	void SetTypeID(unsigned long typeId) { item.typeId = typeId; }
+	// globalnetworkdefine.h:2984
+	unsigned long GetGuid(void) const { return item.guid; }
+	// globalnetworkdefine.h:2985
+	void SetGuid(unsigned long guid) { item.guid = guid; }
+	// globalnetworkdefine.h:2987
+	unsigned long GetCount(void) const { return item.count; }
+	// globalnetworkdefine.h:2988
+	void SetCount(unsigned long count) { item.count = count; }
 	sStoredItemInfo& operator=(const sStoredItemInfo& rhs);   // globalnetworkdefine.h:2991
 
 	unsigned long slot; // 0x00

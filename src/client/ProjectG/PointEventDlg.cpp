@@ -480,10 +480,12 @@ void CCommoditySlot::SetSlotStatus(eSlotStatus status) {
 	case SLOT_STATUS_OPEN:
 		ButtonSwitch(true);
 		break;
+	case SLOT_STATUS_CLOSED:
+		ButtonSwitch(false);
+		break;
 	case SLOT_STATUS_COMPLETED:
 		ButtonSwitch(false);
 		break;
-	case SLOT_STATUS_CLOSED:
 	case SLOT_STATUS_LOCKED:
 		ButtonSwitch(false);
 		break;

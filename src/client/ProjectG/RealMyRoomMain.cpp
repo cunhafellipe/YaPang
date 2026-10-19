@@ -271,11 +271,6 @@ void CRealMyRoomMain::OnInit(void) {
 	g_view->SetFOV(0.78539819f);
 }
 
-// Nameless per-unit rdata constant: degrees to radians.
-extern "C" {
-static const float data_9fa708 = 0.017453292f;
-}
-
 // realmyroommain.cpp:445
 void CRealMyRoomMain::OnLoad(void) {
 	sSlotInfo slotInfo;
@@ -291,7 +286,7 @@ void CRealMyRoomMain::OnLoad(void) {
 		WPolySoup::sCamera* camera = GOLFDOC()->m_pPolySoup->FindCamera("DefaultCamera");
 		if (camera) {
 			g_camera = camera->m_matrix;
-			g_view->SetFOV(camera->m_fov * data_9fa708);
+			g_view->SetFOV(camera->m_fov * g_DEGTORAD);
 		}
 		m_pCameras[0] = GOLFDOC()->m_pPolySoup->FindCamera("DefaultCamera");
 		m_pCameras[1] = GOLFDOC()->m_pPolySoup->FindCamera("DefaultCamera");
@@ -336,7 +331,7 @@ void CRealMyRoomMain::OnLoad(void) {
 		WPolySoup::sCamera* camera = GOLFDOC()->m_pPolySoup->FindCamera("DefaultCamera");
 		if (camera) {
 			g_camera = camera->m_matrix;
-			g_view->SetFOV(camera->m_fov * data_9fa708);
+			g_view->SetFOV(camera->m_fov * g_DEGTORAD);
 		}
 		m_pCameras[0] = GOLFDOC()->m_pPolySoup->FindCamera("DefaultCamera");
 		m_pCameras[1] = GOLFDOC()->m_pPolySoup->FindCamera("DefaultCamera");
@@ -748,17 +743,17 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 								m_lookAtOffset.x = 0.78539819f;
 							}
 						} else {
-							if (m_lookAtOffset.x < m_lookAtXMinDeg * data_9fa708) {
-								m_lookAtOffset.x = m_lookAtXMinDeg * data_9fa708;
+							if (m_lookAtOffset.x < m_lookAtXMinDeg * g_DEGTORAD) {
+								m_lookAtOffset.x = m_lookAtXMinDeg * g_DEGTORAD;
 							}
-							if (m_lookAtOffset.x > m_lookAtXMaxDeg * data_9fa708) {
-								m_lookAtOffset.x = m_lookAtXMaxDeg * data_9fa708;
+							if (m_lookAtOffset.x > m_lookAtXMaxDeg * g_DEGTORAD) {
+								m_lookAtOffset.x = m_lookAtXMaxDeg * g_DEGTORAD;
 							}
-							if (m_lookAtOffset.y < m_lookAtYMinDeg * data_9fa708) {
-								m_lookAtOffset.y = m_lookAtYMinDeg * data_9fa708;
+							if (m_lookAtOffset.y < m_lookAtYMinDeg * g_DEGTORAD) {
+								m_lookAtOffset.y = m_lookAtYMinDeg * g_DEGTORAD;
 							}
-							if (m_lookAtOffset.y > m_lookAtYMaxDeg * data_9fa708) {
-								m_lookAtOffset.y = m_lookAtYMaxDeg * data_9fa708;
+							if (m_lookAtOffset.y > m_lookAtYMaxDeg * g_DEGTORAD) {
+								m_lookAtOffset.y = m_lookAtYMaxDeg * g_DEGTORAD;
 							}
 						}
 
@@ -1306,7 +1301,7 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 			}
 		}
 
-		g_view->SetFOV(m_fovDeg * data_9fa708);
+		g_view->SetFOV(m_fovDeg * g_DEGTORAD);
 
 		if (m_lookAtOffset.y < -25.0f) {
 			m_lookAtOffset.y = -25.0f;
@@ -1328,7 +1323,7 @@ void CRealMyRoomMain::ProcessCamera(float elapsed) {
 
 		g_view->SetClip(8.0f, 8192.0f, false);
 
-		g_view->SetFOV(m_cameraFov * data_9fa708);
+		g_view->SetFOV(m_cameraFov * g_DEGTORAD);
 
 		mat = RotMat(WVector(-1.5707964f, 0.0f, 0.0f));
 

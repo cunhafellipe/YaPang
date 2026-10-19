@@ -47,10 +47,6 @@ extern unsigned long data_00aa5284;
 // The face texture of each character type (4 facials per character).
 extern "C" const char *data_a88020[][4];
 
-// wmath.h's header-static constants as this object holds them (PI, 2 PI,
-// FLT_MAX, 1e-5 at 0x9FA510).
-extern "C" const float data_9fa510[4];
-
 // ParsePuppetScript's buffers (nameless data, one object in the original):
 // [0] (0xAF5610) the sound name / texture part name, [1] (0xAF5650) the
 // "*command(" being parsed.
@@ -594,7 +590,7 @@ static bool SlideMove(const WVector &velocity, const WVector &pos, const Waabb &
 	int bump;
 	int i;
 
-	if (WAbsBySign(velocity.SquareMagnitude()) < data_9fa510[3]) {
+	if (WAbsBySign(velocity.SquareMagnitude()) < g_EPSILON) {
 		out = pos;
 		return false;
 	}
@@ -665,6 +661,11 @@ void CRealMyRoom_Avatar::ProcessChangeState() {
 
 // realmyroom_avatar.cpp:914
 void CRealMyRoom_Avatar::Process(float elapsed) {
+	WVector move;
+	WVector delta; // follow offset, then the step left to the target, then the offset to the camera
+	WVector velocity;
+	int hit;
+
 	if (m_burdenChanged) {
 		m_partTidList = m_burden.m_partTidList;
 
@@ -702,7 +703,6 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 	if (m_followNickName[0] != '\0') {
 		CRealMyRoom_Avatar *pTarget = WSingleton<CRealMyRoom_AvatarManager>::Instance()->FindAvatarByNickName(m_followNickName);
 		if (pTarget) {
-			WVector delta;
 			delta = pTarget->m_position - m_position;
 			float dist = delta.Magnitude();
 			if (dist > 64.0f) {
@@ -723,18 +723,16 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 		}
 	}
 
-	WVector move(0.0f, 0.0f, 0.0f); WVector dir;
+	move.Reset(); WVector dir;
 	dir = m_targetPosition - m_position;
-	if (!(Wabs(dir.x) < data_9fa510[3]) || !(Wabs(dir.z) < data_9fa510[3])) {
+	if (!(Wabs(dir.x) < g_EPSILON) || !(Wabs(dir.z) < g_EPSILON)) {
 		dir.y = 0.0f; dir.Normalize();
 
-		WVector velocity;
 		velocity = dir * 16.5f * elapsed;
 
-		WVector toTarget;
-		toTarget = WVector(m_targetPosition.x - m_position.x, 0.0f, m_targetPosition.z - m_position.z);
-		if (velocity.Magnitude() > toTarget.Magnitude()) { // original: fxch fxch fcompp, test ah,5 jp
-			velocity = toTarget;
+		delta = WVector(m_targetPosition.x - m_position.x, 0.0f, m_targetPosition.z - m_position.z);
+		if (velocity.Magnitude() > delta.Magnitude()) { // original: fxch fxch fcompp, test ah,5 jp
+			velocity = delta;
 		}
 
 		WVector newPos;
@@ -750,7 +748,6 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 		move.y = 0.0f;
 
 		if (move.Magnitude() > 0.01f) {
-			int hit;
 			GetPVS().GetGroundPoint(newPos, true, &hit, true);
 			if (hit >= 0) {
 				m_position = newPos;
@@ -766,7 +763,7 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 
 	SendMove(move, false);
 
-	float moveSq = move.x * move.x + move.z * move.z;
+	float moveSq = move.z * move.z + move.x * move.x;
 	if (sqrtf(moveSq) > 0.01f) {
 		if (m_motion != 1) {
 			ChangeMotion(1, NULL, 0.2f);
@@ -812,12 +809,12 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 	}
 
 	float turn = m_targetAngle - m_angle;
-	turn = RadianNormalize2PI(turn); if (turn > data_9fa510[0]) turn -= data_9fa510[1];
+	turn = RadianNormalize2PI(turn); if (turn > g_PI) turn -= g_2_PI;
 	if (turn > 0.0f && m_targetAngle < m_angle) {
-		m_angle -= data_9fa510[1];
+		m_angle -= g_2_PI;
 	}
 	else if (turn < 0.0f && m_targetAngle > m_angle) {
-		m_angle += data_9fa510[1];
+		m_angle += g_2_PI;
 	}
 
 	if (fabs(turn) > 0.001f) {
@@ -829,10 +826,9 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 
 	m_position = GetPVS().GetGroundPoint(m_position, false, NULL, false);
 
-	WVector toCamera;
-	toCamera = g_view->camera.pivot - m_position;
+	delta = g_view->camera.pivot - m_position;
 
-	float cameraDist = sqrtf(toCamera.x * toCamera.x + toCamera.z * toCamera.z);
+	float cameraDist = sqrtf(delta.z * delta.z + delta.x * delta.x);
 	if (cameraDist > 192.0f) {
 		m_alpha = 0.0f;
 	}
@@ -873,8 +869,8 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 	WVector axis = WCrossProduct(m_groundNormal, up);
 	axis.Normalize();
 
-	if (!(WAbsBySign(axis.SquareMagnitude()) < data_9fa510[3])) { // here the store + test-byte form, not Wabs
-		if (acos(WDotProduct(up, m_groundNormal)) < data_9fa510[1] * elapsed) {
+	if (!(WAbsBySign(axis.SquareMagnitude()) < g_EPSILON)) { // here the store + test-byte form, not Wabs
+		if (acos(WDotProduct(up, m_groundNormal)) < g_2_PI * elapsed) {
 			m_groundNormal = up;
 		}
 		else {
@@ -978,7 +974,7 @@ void CRealMyRoom_Avatar::RenderOverlay(bool detail) {
 		m_pBalloonText->SetTransparency(m_alpha);
 	}
 
-	if (GOLFDOC()->GameMode() != 0x200 && WAbsBySign(m_alpha) < data_9fa510[3]) {
+	if (GOLFDOC()->GameMode() != 0x200 && WAbsBySign(m_alpha) < g_EPSILON) {
 		return;
 	}
 
@@ -1098,7 +1094,7 @@ void CRealMyRoom_Avatar::ScriptProcess(const w_motion_data *data, float from, fl
 	} else {
 		to = Min(data->e, to) * 30.0f;
 		start = Ceil(from, 0.03f);
-		end = WAbsBySign((float)floor(to) - to) < data_9fa510[3] ? (int)to - 1 : (int)floor(to);
+		end = WAbsBySign((float)floor(to) - to) < g_EPSILON ? (int)to - 1 : (int)floor(to);
 
 		if (start == (int)floor(data->s * 30.0f + 0.5f)) {
 			start++;
@@ -1665,8 +1661,8 @@ CRealMyRoom_Avatar *CRealMyRoom_AvatarManager::CreateAvatar(const sSlotInfo &slo
 	position = GetPVS().GetGroundPoint(position, false, 0, false);
 	pAvatar->SetPosition(position);
 	float angle = slotInfo.m_angle;
-	if (angle >= data_9fa510[1] || angle < 0.0f) {
-		angle -= (float)floor((double)(angle * 0.15915494f)) * data_9fa510[1];
+	if (angle >= g_2_PI || angle < 0.0f) {
+		angle -= (float)floor((double)(angle * 0.15915494f)) * g_2_PI;
 	}
 	pAvatar->m_angle = angle;
 	pAvatar->m_targetAngle = angle;

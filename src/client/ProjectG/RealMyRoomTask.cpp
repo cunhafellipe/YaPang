@@ -527,8 +527,8 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 			case 2: msg = 0xCA; break;
 			case 7: msg = 0xCB; break;
 			case 8:
-				period *= 24;
 				msg = 0xCC;
+				period *= 24;
 				break;
 			case 4: msg = 0xCF; break;
 			case 14: msg = 0xD0; break;
@@ -1187,10 +1187,11 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 					break;
 				}
 
-				it->second.cadItemTypeId = typeId;
-				it->second.hours = hours;
-				if (it->second.days < hours) {
-					it->second.days = hours;
+				sCaddieInfo &caddie = it->second;
+				caddie.cadItemTypeId = typeId;
+				caddie.hours = hours;
+				if (caddie.days < hours) {
+					caddie.days = hours;
 				}
 				break;
 			}

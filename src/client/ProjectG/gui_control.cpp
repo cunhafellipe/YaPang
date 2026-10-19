@@ -824,10 +824,14 @@ void CScreen::OnProcess(float elapsed) {
 			float offset = 0;
 			SendMsg(this, "Player", 0x113, (intptr_t)&offset, 0, 0, 0);
 
-			if (IsLocalContent((localContentType_t)0x2F) && GOLFDOC()->GetPlayer(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000028)
+			if (IsLocalContent((localContentType_t)0x2F) && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000028) {
 				offset = (float)floor(0.0);
-			else
-				offset = (float)floor((double)(offset * 0.5f * data_9ef920));
+			}
+			else {
+				// the halved offset is its own value: cl multiplies by 180/pi last
+				float half = offset * 0.5f;
+				offset = (float)floor((double)(half * data_9ef920));
+			}
 
 			if (Abs(offset) < 2.5f)
 				offset = 0;
@@ -1806,7 +1810,7 @@ void CMiniScore::Display(void) {
 
 				if (GOLFDOC()->GetTeam(team)->m_state == 1) {
 
-					if ((unsigned char)GOLFDOC()->GetTeam(team)->m_holes[GOLFDOC()->m_currentHole - 1] > (unsigned char)(GOLFDOC()->GetHoleData().m_par + 4))
+					if (TEAM(team)->m_holes[GOLFDOC()->m_currentHole - 1] > (unsigned char)(GOLFDOC()->GetHoleData().m_par + 4))
 						m_pSimpleUI->Render("GiveUp", stateX, 80.0f, 1.0f, 0x22);
 					else if (PLAYER(team)->m_holes[GOLFDOC()->m_currentHole - 1] > (unsigned char)0)
 						m_pSimpleUI->Render("HoleOut", stateX, 80.0f, 1.0f, 0x22);

@@ -598,9 +598,9 @@ int ntAvatarChatTask::OnPacket(WReceivedPacket &packet) {
 		unsigned char chatType = packet.Decode1();
 		std::string text;
 
+		unsigned long color = 0;
 		bool bCommand = false;
 		bool bBalloon = false;
-		unsigned long color = 0;
 
 		bool bWhisper = (chatType >> 7) != 0;
 		chatType &= 0x7F;

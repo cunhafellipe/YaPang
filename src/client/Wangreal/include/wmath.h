@@ -59,10 +59,6 @@ const float g_HUGE = 3.402823466e+38f;
 const float g_EPSILON = 0.00001f;
 const float g_CM_TO_WU = 0.32f;
 
-// Nameless .rdata floats of Wangreal's math (pi, pi/2, degrees to radians,
-// radians to degrees, epsilon), read through memory rather than literals.
-extern "C" const float data_9eb420[5];
-
 // wmath.h:98 (emitted out of line; the body sits in avatar_avatar.cpp for now)
 float RadianNormalize2PI(float radian);
 // wmath.h:106

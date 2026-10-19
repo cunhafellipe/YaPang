@@ -45,7 +45,7 @@ bool CShuffleBonus::_Validity(eVaildType type) {
 
 	bool result = false;
 	if (type == eVaild_FirstHole) {
-		if (WSingleton<CSharedDoc>::Instance()->m_holeOrder[0] != GOLFDOC()->m_currentHole) {
+		if (GetStartHole() != GOLFDOC()->m_currentHole) {
 			return false;
 		}
 	}

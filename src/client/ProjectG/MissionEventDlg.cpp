@@ -330,8 +330,8 @@ void FrMissionEventDlg::OnOwnerDrawCourseClearArea(PG_MSGARG param) {
 			const WRect& rcArea = m_pCourseClearArea->GetRect();
 
 
-			pGDI->DrawTexture(m_pBitmap[BITMAP_COURSE_BG], WRect(rcArea.x, rcArea.y, (float)m_pBitmap[BITMAP_COURSE_BG]->Width(), (float)m_pBitmap[BITMAP_COURSE_BG]->Height()), 0xffffffff, 0);
-
+			WRect rc(rcArea.x, rcArea.y, (float)m_pBitmap[BITMAP_COURSE_BG]->Width(), (float)m_pBitmap[BITMAP_COURSE_BG]->Height());
+			pGDI->DrawTexture(m_pBitmap[BITMAP_COURSE_BG], rc, 0xffffffff, 0);
 
 
 			float x = 0.0f;

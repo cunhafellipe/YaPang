@@ -52,10 +52,10 @@ void FrFindEbortEventDlg::OnCurrentItemOwnerDraw(PG_MSGARG param) {
 
 		int oldSpace = pGDI->SetSpace(0);
 
-		WPoint origin(m_rect.x, m_rect.y);
+		WRect rect = m_rect;
 
 		for (int i = 0; i < 4; ++i) {
-			WPoint pos = WPoint(m_countPositions[i]) + origin;
+			WPoint pos = WPoint(m_countPositions[i]) + WPoint(rect.x, rect.y);
 
 			pGDI->PrintText(pos, 2, MakeStr("%d", m_itemCounts[i]), 0);
 		}

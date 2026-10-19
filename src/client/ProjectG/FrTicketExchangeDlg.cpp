@@ -386,8 +386,7 @@ void FrTicketExchangeDlg::Reponse(unsigned long group, unsigned char result) {
 			break;
 
 		case 0x11110000:
-			ApplyInformation();
-			return;
+			goto apply; // one ApplyInformation call shared with the result-0 tail, without the notify form
 		}
 		break;
 
@@ -412,6 +411,7 @@ void FrTicketExchangeDlg::Reponse(unsigned long group, unsigned char result) {
 	pForm->Open(0, 0);
 
 	if (result == 0) {
+apply:
 		ApplyInformation();
 	}
 }

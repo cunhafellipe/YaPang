@@ -510,7 +510,7 @@ void CPost_ReciveDlg::OnPostListOwnerDraw(intptr_t param) {
 		}
 
 		if (fmt)
-			pGI->Print(WPoint(pItem->pos.x + 72.0f, pItem->pos.y + 72.0f), 2, fmt, pBrief->m_item.flag);
+			pGI->Print(WPoint(pItem->pos.x + 72.0f, pItem->pos.y + 72.0f) + WPoint(0.0f, 0.0f), 2, fmt, pBrief->m_item.flag);
 	} else if (count > 1) {
 		const char* text = MakeStr("%d", count);
 		float x = pItem->pos.x + 72.0f;
@@ -523,12 +523,12 @@ void CPost_ReciveDlg::OnPostListOwnerDraw(intptr_t param) {
 
 
 	if (pBrief->m_hasItem == -1)
-		pGI->Print(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 23.0f), 2, "%d", typeId);
+		pGI->Print(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 23.0f) + WPoint(0.0f, 0.0f), 2, "%d", typeId);
 	else if (pBrief->m_hasItem > 1)
-		pGI->Print(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 23.0f), 2, " + %d\xB0\xB3", pBrief->m_hasItem - 1);   // " + %d more"
+		pGI->Print(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 23.0f) + WPoint(0.0f, 0.0f), 2, " + %d\xB0\xB3", pBrief->m_hasItem - 1);   // " + %d more"
 
 	pGI->SetTextStyle(0);
-	pGI->Print(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 7.0f), 2, "%s", name);
+	pGI->Print(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 7.0f) + WPoint(0.0f, 0.0f), 2, "%s", name);
 
 	if (IsLocalContent((localContentType_t)0x51)) {
 		if ((pBrief->m_item.typeId & 0xFC000000) == 0x8000000 && pBrief->m_hasItem > 0)
@@ -1393,9 +1393,9 @@ void CPost_MessgeDlg::OnPostDescFrame(bool bShow) {
 
 // post_recivedlg.cpp:1951
 void CPost_MessgeDlg::SetGiftDescString(const char* pSender, const char* pContents, const char* pItemName, const char* pItemDesc) {
-	if (m_pReciveUserEdit->GetLine(1, false) != nullptr) m_pReciveUserEdit->ClearLine();
-	if (m_pLetterContentsEdit->GetLine(1, false) != nullptr) m_pLetterContentsEdit->ClearLine();
-	if (m_pLetterDateEdit->GetLine(1, false) != nullptr) m_pLetterDateEdit->ClearLine();
+	if (m_pReciveUserEdit->GetLine(1, false) > (const char*)0) m_pReciveUserEdit->ClearLine();
+	if (m_pLetterContentsEdit->GetLine(1, false) > (const char*)0) m_pLetterContentsEdit->ClearLine();
+	if (m_pLetterDateEdit->GetLine(1, false) > (const char*)0) m_pLetterDateEdit->ClearLine();
 
 	if (pSender == 0) {
 		// "There is no mail that has arrived."
@@ -1609,7 +1609,7 @@ void CPost_Contents::OnPostListOwnerDraw(intptr_t param) {
 	if (pMail->kind && (int)pMail->flag > 0) {
 		pGI->SetTextStyle(2);
 		pGI->SetTextColor(0xFF000000, 0xFFFFFFFF);
-		pGI->Print(WPoint(pItem->pos.x + 72.0f, pItem->pos.y + 72.0f), 2, "%d\xC0\xCF", pMail->flag);   // "%d days"
+		pGI->Print(WPoint(pItem->pos.x + 72.0f, pItem->pos.y + 72.0f) + WPoint(0.0f, 0.0f), 2, "%d\xC0\xCF", pMail->flag);   // "%d days"
 	} else if (count > 1) {
 		const char* text = MakeStr("%d", count);
 		float x = pItem->pos.x + 72.0f;

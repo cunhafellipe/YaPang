@@ -199,13 +199,7 @@ void CGolfBg::OnLoad(void) {
 	GOLFDOC()->m_pAutoTarget = new CAutoTarget;
 
 	if (CSharedDoc::Instance()->m_roomInfo.m_roomMode == 0xE) {
-		unsigned char i;
-		for (i = 0; i < 18; i++) {
-			if (CSharedDoc::Instance()->m_holeOrder[i] == GOLFDOC()->m_currentHole) {
-				i++;
-				break;
-			}
-		}
+		unsigned char i = GetHoleIndex(GOLFDOC()->m_currentHole);
 		i = Between<unsigned char>(1, i, 18);
 		SetCurMap(CSharedDoc::Instance()->m_holeCourse[i - 1]);
 	}

@@ -547,8 +547,8 @@ void SetListAztec(std::vector<sWarpItem*>& items) {
 
 // privatetradedlg.cpp:580
 void SetListClubSet(std::vector<sWarpItem*>& items) {
-	std::map<unsigned int, sItemInfo>* pItemMap = &WSingleton<CSharedDoc>::Instance()->m_myItemMap;
 	unsigned long clubId = WSingleton<CSharedDoc>::Instance()->m_myClubId;
+	std::map<unsigned int, sItemInfo>* pItemMap = &WSingleton<CSharedDoc>::Instance()->m_myItemMap;
 
 	items.reserve(pItemMap->size());
 
@@ -1613,7 +1613,12 @@ void FrMyWareHouse::OnListDraw(intptr_t param) {
 			CTradeDragDrop::SetPopItem(sTradeDropItem(pWarp->guid, pWarp->typeId));
 		}
 
-		WOverlay::DrawLineBox(g_view, WRect(itemRect.TopLeft() + WPoint(1.0f, 1.0f), WSize(itemRect.w - 2.0f, itemRect.h - 2.0f)), 0, 0xffffff00);
+		// Residue (94.5%): the original spills w-2/h-2 through [ebp-0x10c] and
+		// copies them as integers; tried the template ctor (float and double
+		// widths), WRect(pt + WPoint, WSize), in-place w/h, a named copy,
+		// itemRect -= WSize then itemRect + WPoint, Size() - WSize. The original
+		// stores w-2/h-2 into itemRect's own w/h slots before copying them.
+		WOverlay::DrawLineBox(g_view, WRect(itemRect.TopLeft(), WSize(itemRect.w - 2.0f, itemRect.h - 2.0f)) + WPoint(1.0f, 1.0f), 0, 0xffffff00);
 		FrTradeToolTip* pToolTip = FindPrivateTradeChildForm<FrTradeToolTip>("FrTradeToolTip");
 		if (pToolTip != 0) {
 			_sPrivateTradeItemSingle single;
@@ -2429,11 +2434,17 @@ void FrPrivateTradeWnd::OnViewDraw(void) {
 			pDevice->DrawTexture(pBitmap, src, m_rect + WRect(-5.0f, -5.0f, 10.0f, 10.0f), 0x4000ff00, 0);
 		}
 
-		// Residue (90.2%): the original builds the outer rect in this rect's own
-		// slot, w and h through a spilled copy ([ebp-0x30]); ours uses a separate
-		// temporary. Assignment, op+ chains, WSize forms and a helper were tried.
+		// Residue (91.8%): the original rebuilds this rect in its own slot with x-1
+		// and y-1 stored directly and only w+2/h+2 spilled through [ebp-0x30]; ours
+		// spills all four. Tried: WRect(pt - WPoint, w + 2, h + 2) as argument or
+		// assigned, WRect(pt, WSize) / Size() + WSize, one-expression op chains,
+		// rect - WPoint + WRect. Slot reading: the m_rect + WRect temp sits at
+		// [ebp-0x18], a 16-byte rect at [ebp-0x38] gets w+2/h+2 stored in memory,
+		// then (rect - WPoint(1, 1)) is built back in [ebp-0x18]; rect += WSize
+		// (body w += size.w), assignment and one-chain forms all scored lower.
 		WRect rect = m_rect + WRect(-5.0f, -5.0f, 10.0f, 10.0f);
-		WOverlay::DrawLineBox(g_view, WRect(rect.TopLeft() - WPoint(1.0f, 1.0f), rect.w + 2.0f, rect.h + 2.0f), 0, 0xff000000);
+		rect = rect + WRect(0.0f, 0.0f, 2.0f, 2.0f) - WPoint(1.0f, 1.0f);
+		WOverlay::DrawLineBox(g_view, rect, 0, 0xff000000);
 	}
 }
 

@@ -218,9 +218,10 @@ void FrSubEquipBar::Initialize(void) {
 		rect.w = (float)(m_pSubEquipList->GetItemWidth() * count) + extra + 0.5f;
 		rect.h = (float)m_pSubEquipList->GetItemHeight();
 		m_pSubEquipList->SetRect(rect);
+		m_pSubEquipList->Resize(m_pSubEquipList->GetItemWidth() + 2, m_pSubEquipList->GetItemHeight());
 	} else {
-		WRect rect = m_rect;
 		if (count > 6) {
+			WRect rect = m_rect;
 			rect.w = (float)(m_pSubEquipList->GetItemWidth() * 6) + 41.0f;
 			rect.h = (float)m_pSubEquipList->GetItemHeight() + 13.0f;
 			SetRect(rect);
@@ -230,7 +231,9 @@ void FrSubEquipBar::Initialize(void) {
 			rect.w = (float)(m_pSubEquipList->GetItemWidth() * 6) + 28.0f;
 			rect.h = (float)m_pSubEquipList->GetItemHeight();
 			m_pSubEquipList->SetRect(rect);
+			m_pSubEquipList->Resize(m_pSubEquipList->GetItemWidth() + 2, m_pSubEquipList->GetItemHeight());
 		} else {
+			WRect rect = m_rect;
 			extra = count * 3.0f + extra + 10.0f;
 			rect.w = (float)(m_pSubEquipList->GetItemWidth() * count) + extra + 0.5f;
 			rect.h = (float)m_pSubEquipList->GetItemHeight() + 13.0f;
@@ -241,20 +244,19 @@ void FrSubEquipBar::Initialize(void) {
 			rect.w = (float)(m_pSubEquipList->GetItemWidth() * count) + extra + 0.5f;
 			rect.h = (float)m_pSubEquipList->GetItemHeight();
 			m_pSubEquipList->SetRect(rect);
+			m_pSubEquipList->Resize(m_pSubEquipList->GetItemWidth() + 2, m_pSubEquipList->GetItemHeight());
 		}
 	}
 
-	m_pSubEquipList->Resize(m_pSubEquipList->GetItemWidth() + 2, m_pSubEquipList->GetItemHeight());
-
 	switch (m_category) {
 	case 1: {
-		std::map<unsigned int, sCharacterInfo>::iterator it;
-		for (it = WSingleton<CSharedDoc>::Instance()->m_characterMap.begin(); it != WSingleton<CSharedDoc>::Instance()->m_characterMap.end(); ++it) {
+		std::map<unsigned int, sCharacterInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_characterMap.begin();
+		while (it != WSingleton<CSharedDoc>::Instance()->m_characterMap.end()) {
 			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
-			if (pItem == NULL)
-				continue;
-
-			m_sortList.insert(m_sortList.end(), _sortitem(pItem, it->first));
+			if (pItem != NULL) {
+				m_sortList.push_back(_sortitem(pItem, it->first));
+			}
+			++it;
 		}
 		break;
 	}
@@ -262,36 +264,36 @@ void FrSubEquipBar::Initialize(void) {
 		if (WSingleton<CSharedDoc>::Instance()->m_caddieMap.size() == 0)
 			break;
 
-		std::map<unsigned int, sCaddieInfo>::iterator it;
-		for (it = WSingleton<CSharedDoc>::Instance()->m_caddieMap.begin(); it != WSingleton<CSharedDoc>::Instance()->m_caddieMap.end(); ++it) {
+		std::map<unsigned int, sCaddieInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_caddieMap.begin();
+		while (it != WSingleton<CSharedDoc>::Instance()->m_caddieMap.end()) {
 			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
-			if (pItem == NULL)
-				continue;
-
-			m_sortList.push_back(_sortitem(pItem, it->second.id));
+			if (pItem != NULL) {
+				m_sortList.push_back(_sortitem(pItem, it->second.id));
+			}
+			++it;
 		}
 		break;
 	}
 	case 4: {
-		std::map<unsigned int, sItemInfo>::iterator it;
-		for (it = WSingleton<CSharedDoc>::Instance()->m_myItemMap.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myItemMap.end(); ++it) {
+		std::map<unsigned int, sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_myItemMap.begin();
+		while (it != WSingleton<CSharedDoc>::Instance()->m_myItemMap.end()) {
 			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.m_typeId);
-			if (pItem == NULL)
-				continue;
-
-			if (((pItem->m_level & 0x7F) >= WSingleton<CSharedDoc>::Instance()->m_myLevel && (pItem->m_level & 0x80)) || !(pItem->m_level & 0x80))
-				m_sortList.push_back(_sortitem(pItem, it->second.m_serial));
+			if (pItem != NULL) {
+				if (((pItem->m_level & 0x7F) >= WSingleton<CSharedDoc>::Instance()->m_myLevel && (pItem->m_level & 0x80)) || !(pItem->m_level & 0x80))
+					m_sortList.push_back(_sortitem(pItem, it->second.m_serial));
+			}
+			++it;
 		}
 		break;
 	}
 	case 5: {
-		std::list<sItemInfo>::iterator it;
-		for (it = WSingleton<CSharedDoc>::Instance()->m_myGearList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myGearList.end(); ++it) {
+		std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_myGearList.begin();
+		while (it != WSingleton<CSharedDoc>::Instance()->m_myGearList.end()) {
 			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->m_typeId);
-			if (pItem == NULL)
-				continue;
-
-			m_sortList.insert(m_sortList.end(), _sortitem(pItem, 0));
+			if (pItem != NULL) {
+				m_sortList.push_back(_sortitem(pItem, 0));
+			}
+			++it;
 		}
 		break;
 	}
@@ -299,21 +301,24 @@ void FrSubEquipBar::Initialize(void) {
 		if (WSingleton<CSharedDoc>::Instance()->m_myMascotMap.size() == 0)
 			break;
 
-		std::map<unsigned int, sMascotInfo>::iterator it;
-		for (it = WSingleton<CSharedDoc>::Instance()->m_myMascotMap.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myMascotMap.end(); ++it) {
+		std::map<unsigned int, sMascotInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_myMascotMap.begin();
+		while (it != WSingleton<CSharedDoc>::Instance()->m_myMascotMap.end()) {
 			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
 			if (pItem != NULL) {
 				_sortitem item(pItem, it->second.id);
 				m_sortList.push_back(item);
 			}
+			++it;
 		}
 		break;
 	}
 	}
 
 	m_sortList.sort();
-	for (std::list<_sortitem>::iterator it = m_sortList.begin(); it != m_sortList.end(); ++it) {
+	std::list<_sortitem>::iterator it = m_sortList.begin();
+	while (it != m_sortList.end()) {
 		m_pSubEquipList->AddItem(&(*it));
+		++it;
 	}
 
 	if (m_category == 16 || m_category == 7)
@@ -1265,11 +1270,13 @@ void FrPlayerDlg::SetLevelBar(void) {
 	const unsigned long* parts = charIt->second.partTypeIds;
 	const unsigned long* cards = charIt->second.auxParts.tids;
 	unsigned long caddieTypeId;
+	std::map<unsigned int, sCaddieInfo>::iterator caddieIt;
 
 	if (caddieId == 0) {
 		caddieTypeId = caddieId;
 	} else {
-		caddieTypeId = WSingleton<CSharedDoc>::Instance()->m_caddieMap.find(caddieId)->second.typeId;
+		caddieIt = WSingleton<CSharedDoc>::Instance()->m_caddieMap.find(caddieId);
+		caddieTypeId = caddieIt->second.typeId;
 	}
 
 	unsigned char myLevel = WSingleton<CSharedDoc>::Instance()->m_myLevel;

@@ -472,12 +472,13 @@ void FrSupplyPackDlg::OnBgAreaDraw(void) {
 
 		// the count held before the supply, then the count shown so far
 		m_pWindFont->SetColor(((unsigned long)(unsigned char)m_exhibitionAlpha << 24) | 0xFFFFFF);
-		float x = m_rect.x;
-		float y = m_rect.y + 212.0f;
-		m_pWindFont->Print(x + 71.0f, y, MakeStr("%d", m_heldCount), TITLEFONT_ALIGN_CENTER, 1.0f, 1.0f);
+		{
+			WRect rect = m_rect;
+			m_pWindFont->Print(rect.x + 71.0f, rect.y + 212.0f, MakeStr("%d", m_heldCount), TITLEFONT_ALIGN_CENTER, 1.0f, 1.0f);
 
-		m_pWindFont->SetColor(((unsigned long)(unsigned char)m_exhibitionAlpha << 24) | 0xFF80FF);
-		m_pWindFont->Print(x + 177.0f, y, MakeStr("%d", m_displayCount), TITLEFONT_ALIGN_CENTER, 1.0f, 1.0f);
+			m_pWindFont->SetColor(((unsigned long)(unsigned char)m_exhibitionAlpha << 24) | 0xFF80FF);
+			m_pWindFont->Print(rect.x + 177.0f, rect.y + 212.0f, MakeStr("%d", m_displayCount), TITLEFONT_ALIGN_CENTER, 1.0f, 1.0f);
+		}
 
 		pBmp = g_pFresh->GetBitmap("supplypack_arrow");
 		if (pBmp) {

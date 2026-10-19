@@ -38,7 +38,7 @@ void CBackGround::Load(const char* filename, bool bScale) {
 
 		WSplash* splash = (WSplash*)g_resrcmng->VideoReference()->Command(W_VDEV_GET_SPLASH, 0, 0);
 		if (splash) {
-			if (!splash->Init(*bitmap->bi, bitmap->vram, bScale)) {
+			if (!splash->Init(*bitmap->bi, bitmap->GetVram(0), bScale)) {
 				delete splash;
 				splash = NULL;
 			}

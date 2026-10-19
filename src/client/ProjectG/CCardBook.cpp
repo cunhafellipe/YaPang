@@ -1081,7 +1081,8 @@ void CCardBook::BuildCardTab(unsigned long tab) {
 
 				for (unsigned long i = 0; i < pageCount; i++) {
 					WRect rect;
-					rect = WRect(startX + i * 20.0f, 492.0f, i * 20.0f + startX + 20.0f, 502.0f);
+					float offset = i * 20.0f;
+					rect = WRect(startX + offset, 492.0f, i * 20.0f + startX + 20.0f, 502.0f);
 
 					m_pageIndexRects.push_back(rect);
 				}

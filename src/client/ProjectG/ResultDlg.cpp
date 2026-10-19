@@ -1521,7 +1521,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		gdi->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 		gdi->SetTextStyle(1);
 
-		float halfW = (float)(m_pRankBgBitmaps[bgIndex]->Width() / 2);
+		float rankX = (float)(m_pRankBgBitmaps[bgIndex]->Width() / 2) + bgX;
 		bgY += 2.0f;
 
 		unsigned char rank;
@@ -1530,10 +1530,11 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		else
 			rank = myData.m_rank;
 
+		WPoint rankPos(rankX, bgY);
 		if (rank < 0xFF)
-			gdi->Print(WPoint(bgX + halfW, bgY), 1, "%d", rank);
+			gdi->Print(rankPos, 1, "%d", rank);
 		else
-			gdi->Print(WPoint(bgX + halfW, bgY), 1, "-");
+			gdi->Print(rankPos, 1, "-");
 
 		gdi->SetTextStyle(0);
 		gdi->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -2661,9 +2662,11 @@ bool FrUniteResultDlg::OnInit(void) {
 
 
 
-	const char* name;
-	char text[256];
-	if (m_bTikiReport && IsLocalContent((localContentType_t)0x14)) {
+	// A block of its own: the packet above shares text's stack slot.
+	{
+		const char* name;
+		char text[256];
+		if (m_bTikiReport && IsLocalContent((localContentType_t)0x14)) {
 
 
 
@@ -2672,67 +2675,68 @@ bool FrUniteResultDlg::OnInit(void) {
 
 
 
-		sprintf(text, "30\xC0\xCE \xB4\xEB\xC8\xB8 %d-%d-%d %d:%d", m_tikiReportTime.wYear, m_tikiReportTime.wMonth, m_tikiReportTime.wDay, m_tikiReportTime.wHour, m_tikiReportTime.wMinute);
+			sprintf(text, "30\xC0\xCE \xB4\xEB\xC8\xB8 %d-%d-%d %d:%d", m_tikiReportTime.wYear, m_tikiReportTime.wMonth, m_tikiReportTime.wDay, m_tikiReportTime.wHour, m_tikiReportTime.wMinute);
 
-		name = text;
-	} else {
+			name = text;
+		} else {
 
-		unsigned char gameType = WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType;
-		switch (gameType) {
-		case 4:
-		case 5:
-		case 6:
-		case 9:
-		case 10:
-		case 14:
-			if (gameType != 10) {
-				IFF_STRUCT::sMatch* pMatch = ItemManager()->FindMatch(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_trophy);
+			unsigned char gameType = WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType;
+			switch (gameType) {
+			case 4:
+			case 5:
+			case 6:
+			case 9:
+			case 10:
+			case 14:
+				if (gameType != 10) {
+					IFF_STRUCT::sMatch* pMatch = ItemManager()->FindMatch(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_trophy);
 
-				if (pMatch) {
-					const char* p;
+					if (pMatch) {
+						const char* p;
 
-					if (WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomMode == 14) {
-						p = "\xBC\xC5\xC7\xC3\xC4\xDA\xBD\xBA";
+						if (WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomMode == 14) {
+							p = "\xBC\xC5\xC7\xC3\xC4\xDA\xBD\xBA";
+						} else {
+							p = pMatch->m_name;
+						}
+
+						name = p;
 					} else {
-						p = pMatch->m_name;
+						unsigned char type = WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType;
+						name = type >= 15 ? 0 : WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[type].name;
 					}
-
-					name = p;
-				} else {
-					unsigned char type = WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType;
-					name = type >= 15 ? 0 : WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[type].name;
+					break;
 				}
+				// game type 10 shows the game type name
+			default:
+				name = gameType >= 15 ? 0 : WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[gameType].name;
 				break;
 			}
-			// game type 10 shows the game type name
-		default:
-			name = gameType >= 15 ? 0 : WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[gameType].name;
+		}
+
+		char typeText[32];
+		memset(typeText, 0, sizeof(typeText));
+
+		switch (m_resultDlgType) {
+		case 0: {
+			const char* p = "\xB0\xB3\xC0\xCE\xC0\xFC";
+			strcpy(typeText, p);
 			break;
 		}
-	}
+		case 2: {
+			const char* p = "\xB1\xE6\xB5\xE5\xC0\xFC";
+			strcpy(typeText, p);
+			break;
+		}
+		case 1: {
+			const char* p = "\xC6\xC0\xC0\xFC";
+			strcpy(typeText, p);
+			break;
+		}
+		}
 
-	char typeText[32];
-	memset(typeText, 0, sizeof(typeText));
-
-	switch (m_resultDlgType) {
-	case 0: {
-		const char* p = "\xB0\xB3\xC0\xCE\xC0\xFC";
-		strcpy(typeText, p);
-		break;
+		SetCaption(MakeStr("            (%s %s)", name, typeText));
 	}
-	case 2: {
-		const char* p = "\xB1\xE6\xB5\xE5\xC0\xFC";
-		strcpy(typeText, p);
-		break;
-	}
-	case 1: {
-		const char* p = "\xC6\xC0\xC0\xFC";
-		strcpy(typeText, p);
-		break;
-	}
-	}
-
-	SetCaption(MakeStr("            (%s %s)", name, typeText));
 
 
 	return true;
@@ -2944,10 +2948,12 @@ int FrUniteResultDlg::GetMedalIndex(unsigned long uid) {
 	unsigned char higherCount = 0;
 	if (memberSize == 0) {
 		for (it = WSingleton<CSharedDoc>::Instance()->m_gameResultList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_gameResultList.end(); ++it) {
-			if (it->m_state != 3 || GetHoleIndex(it->m_hole) >= 4)
-				count++;
+			unsigned char state = it->m_state;
+			if (state == 3 && GetHoleIndex(it->m_hole) < 4 && it->m_state == 3)
+				continue;
+			count++;
 
-			if (it->m_state != 3 && it->m_rank < myRank && it->m_characterType > 3)
+			if (state != 3 && it->m_rank < myRank && it->m_characterType > 3)
 				higherCount++;
 		}
 	} else {

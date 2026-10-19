@@ -254,16 +254,6 @@ bool IFF_STRUCT::sItem::IsRandomBox(void) const {
 	return isRandomBox;
 }
 
-// globalnetworkdefine.h:2981
-unsigned long sStoredItemInfo::GetTypeID(void) const {
-	return item.typeId;
-}
-
-// globalnetworkdefine.h:2984
-unsigned long sStoredItemInfo::GetGuid(void) const {
-	return item.guid;
-}
-
 // globalnetworkdefine.h:2991
 sStoredItemInfo& sStoredItemInfo::operator=(const sStoredItemInfo& rhs) {
 	slot = rhs.slot;
@@ -1059,11 +1049,10 @@ void CRealMyRoomMain::ShowPet(unsigned long typeId) {
 			pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f, 0.0f, true);
 			pet->SetArea(rect.w, rect.h);
 
+			pet->SetDistanceRange(5.0f, 7.0f);
 			if ((typeId & 0x3C00000) == 0xC00000) {
-				pet->SetDistanceRange(5.0f, 7.0f);
 				pet->SetDistance(5.0f, true, false);
 			} else {
-				pet->SetDistanceRange(5.0f, 7.0f);
 				pet->SetDistance(6.0f, true, false);
 			}
 
@@ -1118,7 +1107,7 @@ void CRealMyRoomMain::OnMyRoomFinish(void) {
 
 // realmyroommainui.cpp:1478
 void CRealMyRoomMain::Reinitialize(bool bForce) {
-	if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
+	if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
 		ChangeCharacter(WSingleton<CSharedDoc>::Instance()->m_myCharacterId);
 		ChangeClubset(WSingleton<CSharedDoc>::Instance()->m_myClubId);
 		ChangeAztec(WSingleton<CSharedDoc>::Instance()->m_myBallId);
@@ -2196,7 +2185,7 @@ void CRealMyRoomMain::ChangeCharacter(unsigned long typeId) {
 	m_charSerial = it->second.id;
 	WSingleton<CSharedDoc>::Instance()->m_myCharacterId = it->second.id;
 
-	if (WSingleton<CSharedDoc>::Instance()->m_myUID != WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
+	if (MyUID() != WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
 		if (m_mainTab == 0) {
 			WSingleton<CSharedDoc>::Instance()->BuildMyPartTidList(it->second);
 
@@ -2322,7 +2311,7 @@ bool CRealMyRoomMain::ChangeCaddie(unsigned long id) {
 		else
 			m_caddieValueB = it->second.typeId;
 
-		IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(m_caddieTypeId);
+		IFF_STRUCT::sCaddie* pCaddie = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCaddie(m_caddieTypeId);
 		if (pCaddie) {
 			unsigned char level = pCaddie->m_level & 0x7F;
 
@@ -6781,23 +6770,22 @@ void CRealMyRoomMain::OnItemListRBtnDown(void) {
 		OpenInformation(pItem);
 	}
 
-	if (m_roomMode == 22) {
-		m_pUccCopyHideWnd->ToggleItem(pItem);
-		return;
-	}
-
-	if (IsLocalContent((localContentType_t)0x57)) {
-		sItemInfo* pInfo = (sItemInfo*)pItem->pData;
-		if (IsUccClothes(pInfo->m_typeId)) {
-			if (!(pInfo->m_uccStatus & 1) || !UccManager()->IsDownloadComplete(pInfo->m_typeId, pInfo->m_uccKey)) {
-				m_pUccCopyHideWnd->ToggleItem(pItem);
-				return;
+	if (m_roomMode != 22) {
+		if (IsLocalContent((localContentType_t)0x57)) {
+			sItemInfo* pInfo = (sItemInfo*)pItem->pData;
+			if (IsUccClothes(pInfo->m_typeId)) {
+				if (!(pInfo->m_uccStatus & 1) || !UccManager()->IsDownloadComplete(pInfo->m_typeId, pInfo->m_uccKey)) {
+					m_pUccCopyHideWnd->ToggleItem(pItem);
+					return;
+				}
 			}
 		}
-	}
 
-	if (pItem->selected) {
-		SelectItemList(pItem);
+		if (pItem->selected) {
+			SelectItemList(pItem);
+		} else {
+			m_pUccCopyHideWnd->ToggleItem(pItem);
+		}
 		return;
 	}
 
@@ -9582,7 +9570,7 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 			m_avatarViewPos.z -= 46.0f;
 
 			// realmyroommainui.cpp:11984
-			if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
+			if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
 				SetUIState(1);
 				// realmyroommainui.cpp:11985
 				if (WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
@@ -10601,7 +10589,7 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 				// realmyroommainui.cpp:13144
 				ChangeSubTab((subTab_t)0x15, false);
 			// realmyroommainui.cpp:13146
-			if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID)
+			if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID)
 				// realmyroommainui.cpp:13149
 				SetMiddleUIControl(!m_bHideMiddleUI);
 			// realmyroommainui.cpp:13155
@@ -11737,7 +11725,7 @@ void CRealMyRoomMain::OnFurnitureSaveInit(PG_MSGARG param) {
 
 // realmyroommainui.cpp:14373
 void CRealMyRoomMain::OnFurnitureSaveButtonUp(void) {
-	if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
+	if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
 		m_pNamedCameras[1]->m_matrix = g_camera;
 		m_pNamedCameras[1]->m_fov = g_view->GetFOV();
 		m_savedClipNear = g_view->GetClipNearValue();
@@ -11745,7 +11733,7 @@ void CRealMyRoomMain::OnFurnitureSaveButtonUp(void) {
 		SetCameraDisplayType(2);
 
 		if (WSingleton<CRealMyRoomData>::Instance()->SaveModel(false)) {
-			if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
+			if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
 				RMR_UpdateDB();
 				WSingleton<CRealMyRoomData>::Instance()->SaveModel(true);
 			}
@@ -12391,10 +12379,11 @@ void CRealMyRoomMain::SelectMenu(unsigned char menu) {
 	case 2:
 		if (!GetFlags(8)) {
 			ControlUiHideMode(4);
+			SetCardBookVisible(false);
 		} else {
 			ControlUiHideMode(2);
+			SetCardBookVisible(false);
 		}
-		SetCardBookVisible(false);
 		m_furnitureMainTab = (eFurniture_Tab)0;
 		break;
 	case 8:
@@ -12849,7 +12838,7 @@ void CRealMyRoomMain::UpdateRightMenu(void) {
 			return;
 		}
 
-		if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID
+		if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID
 			|| !WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT)) {
 			if (m_flags[3]) {
 				static_cast<FrContextMenuCtrl*>(m_pRightMenuWnd)->SetMenuList("\xB0\xA1\xB1\xB8\xBB\xE7\xBF\xEB@rmr_i_use|\xB0\xA1\xB1\xB8\xC0\xCC\xB5\xBF@rmr_i_move|separator|\xB0\xA1\xB1\xB8\xC8\xB8\xC0\xFC@rmr_i_rotate|separator|\xB0\xA1\xB1\xB8\xC1\xA6\xB0\xC5@rmr_i_delete");
@@ -12892,7 +12881,7 @@ void CRealMyRoomMain::UpdateRightMenu(void) {
 
 // realmyroommainui.cpp:16202
 void CRealMyRoomMain::PopupRightMenu(int x, int y) {
-	if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID
+	if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID
 		|| !WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT)) {
 		m_pRightMenuWnd->MoveWindow(WPoint((float)x, (float)y));
 
@@ -13008,7 +12997,7 @@ void CRealMyRoomMain::FurnitureUse(void) {
 		unsigned long id = pFurniture->m_id;
 
 		if (!WSingleton<CRealMyRoomData>::Instance()->IsArragementFurniture(id)) {
-			if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
+			if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
 				FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 				// "This furniture is not placed. Place it, press save, then use it."
 				pForm->SetMessage("\xB9\xE8\xC4\xA1\xB5\xC7\xC1\xF6 \xBE\xCA\xC0\xBA \xB0\xA1\xB1\xB8\xC0\xD4\xB4\xCF\xB4\xD9. \xB9\xE8\xC4\xA1\xC7\xD1 \xB4\xD9\xC0\xBD \xC0\xFA\xC0\xE5\xB9\xF6\xC6\xB0\xC0\xBB \xB4\xAD\xB7\xAF \xC0\xFA\xC0\xE5\xC7\xCF\xBD\xC5 \xC8\xC4\xBF\xA1 \xBB\xE7\xBF\xEB\xC7\xCF\xBD\xC7 \xBC\xF6 \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9.", false);
@@ -13057,7 +13046,7 @@ void CRealMyRoomMain::FurnitureFunctionChange(void) {
 	IFF_STRUCT::sFurniture* pFurniture = ItemManager()->FindFurniture(WSingleton<CRealMyRoomData>::Instance()->m_pSelectModel->m_pFurniture->m_typeId);
 
 	if (pFurniture->m_rentalFlag > 100) {
-		if (WSingleton<CSharedDoc>::Instance()->m_myUID == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID
+		if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID
 			|| !WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT)) {
 			SelectMenu(3);
 		} else {
@@ -13687,8 +13676,7 @@ bool CheckRandomBoxTypeID(unsigned long typeId) {
 // realmyroommainui.cpp:17481
 void CRealMyRoomMain::OpenNewRandomBox(sItemInfo* pItemInfo) {
 	if (pItemInfo != NULL) {
-		IFF_STRUCT::sItem* pItem = ItemManager()->FindItem(pItemInfo->m_typeId);
-		if (pItem != NULL && pItem->IsRandomBox()) {
+		if (CheckRandomBoxTypeID(pItemInfo->m_typeId)) {
 			m_s4EventGiftBoxTypeId = pItemInfo->m_typeId;
 			OnOpenedBoxDlg(pItemInfo->m_typeId, (FRESH_RESULT_CALLBACK)&CRealMyRoomMain::OnOpenNewRandomBoxDlgResult, this);
 		} else {
@@ -14006,8 +13994,8 @@ void CRealMyRoomMain::OnRBDownItemStorageList(void) {
 
 						if (pInfo != NULL) {
 
-							unsigned long typeId = pInfo->item.typeId;
-							unsigned long serial = pInfo->item.guid;
+							unsigned long typeId = pInfo->GetTypeID();
+							unsigned long serial = pInfo->GetGuid();
 
 							OpenInformation(&typeId, 0, &serial);
 						}

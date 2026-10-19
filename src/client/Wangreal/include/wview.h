@@ -98,8 +98,9 @@ public:
 		return true;
 	}
 	bool InFrustum(const Waabb& box) {                                          // wview.h:406
-		for (int i = 0; i < 6; i++) {
-			if (frustum[i] * WVector(frustum[i].x < 0.0f ? box.max.x : box.min.x, frustum[i].y < 0.0f ? box.max.y : box.min.y, frustum[i].z < 0.0f ? box.max.z : box.min.z) > 0.0f)
+		const WPlane* p = frustum;
+		for (int i = 0; i < 6; i++, p++) {
+			if (*p * WVector(p->x < 0.0f ? box.max.x : box.min.x, p->y < 0.0f ? box.max.y : box.min.y, p->z < 0.0f ? box.max.z : box.min.z) > 0.0f)
 				return false;
 		}
 		return true;
@@ -112,8 +113,9 @@ public:
 		return true;
 	}
 	bool InFrustumSafe(const Waabb& box) {                                      // wview.h:419
-		for (int i = 0; i < 6; i++) {
-			if (frustumSafe[i].z * (frustumSafe[i].z > 0.0f ? box.max.z : box.min.z) + frustumSafe[i].y * (frustumSafe[i].y > 0.0f ? box.max.y : box.min.y) + frustumSafe[i].x * (frustumSafe[i].x > 0.0f ? box.max.x : box.min.x) + frustumSafe[i].dis >= 0.0f)
+		const WPlane* p = frustumSafe;
+		for (int i = 0; i < 6; i++, p++) {
+			if (*p * WVector(p->x > 0.0f ? box.max.x : box.min.x, p->y > 0.0f ? box.max.y : box.min.y, p->z > 0.0f ? box.max.z : box.min.z) >= 0.0f)
 				return false;
 		}
 		return true;

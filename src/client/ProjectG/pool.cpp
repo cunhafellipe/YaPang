@@ -392,24 +392,26 @@ void CPoolReflective::Render(WView *view)
 		float facing = max(-view->camera.za * WVector::UNIT_POS_Y, 0.0f);
 		float steep = 1.0f - facing;
 
+		float lit;
+		float spec;
 		if (IsFlag(FLAG_NO_WAVE)) {
 			// A single flat quad over the area.
-			float top = m_area.max.y;
-			float lit = max(-g_lightset.nearone * WVector::UNIT_POS_Y, 0.0f);
-			float spec = max(WVector::UNIT_POS_Y * ((view->camera.pivot - m_area.GetCenter()).Normalize() - g_lightset.nearone).Normalize(), 0.0f);
+			WVector pos;
+			pos.y = m_area.max.y;
+			lit = max(-g_lightset.nearone * WVector::UNIT_POS_Y, 0.0f);
+			spec = max(WVector::UNIT_POS_Y * ((view->camera.pivot - m_area.GetCenter()).Normalize() - g_lightset.nearone).Normalize(), 0.0f);
 			spec = spec * spec;
 
 			unsigned long color = AddDiffuse(AddDiffuse(AddDiffuse(0, g_lightset.ambient, 0x66), g_lightset.diffuse, (unsigned char)(int)(lit * 102.0f)), 0x808080, (unsigned char)(int)(spec * 255.0f))
 				| ((unsigned long)(unsigned char)(int)(((1.0f - steep) * 0.5f + steep) * alpha) << 24);
 
-			m_bufferData[0].SetPosition(WVector(m_area.min.x, top, m_area.min.z));
-			m_bufferData[0].diffuse = color;
-			m_bufferData[1].SetPosition(WVector(m_area.min.x, top, m_area.max.z));
-			m_bufferData[1].diffuse = color;
-			m_bufferData[2].SetPosition(WVector(m_area.max.x, top, m_area.min.z));
-			m_bufferData[2].diffuse = color;
-			m_bufferData[3].SetPosition(WVector(m_area.max.x, top, m_area.max.z));
-			m_bufferData[3].diffuse = color;
+			// Corners in the wave grid's order: bit 1 picks x, bit 0 picks z.
+			for (int i = 0; i < 4; i++) {
+				pos.x = (i & 2) ? m_area.max.x : m_area.min.x;
+				pos.z = (i & 1) ? m_area.max.z : m_area.min.z;
+				m_bufferData[i].SetPosition(pos);
+				m_bufferData[i].diffuse = color;
+			}
 
 			view->DrawPolygonFan(m_buffers, (texture & 0x7FF) | 0xA400000, 0, false);
 		} else {
@@ -417,15 +419,15 @@ void CPoolReflective::Render(WView *view)
 				for (int x = 0; x < m_width - 1; x++) {
 					int included = 0;
 					for (int i = 0; i < 4; i++) {
-						sWaveVertex &v = m_grid[y + (i & 1)][x + ((i >> 1) & 1)];
+						sWaveVertex &v = m_grid[y + (i & 1)][x + (((unsigned int)i >> 1) & 1)];
 						if (!v.m_excluded) {
 							included++;
 						}
 
 						m_bufferData[i].SetPosition(v.m_pos);
 
-						float lit = max(-g_lightset.nearone * v.m_normal, 0.0f);
-						float spec = max(((view->camera.pivot - v.m_pos).Normalize() - g_lightset.nearone).Normalize() * v.m_normal, 0.0f);
+						lit = max(-g_lightset.nearone * v.m_normal, 0.0f);
+						spec = max(((view->camera.pivot - v.m_pos).Normalize() - g_lightset.nearone).Normalize() * v.m_normal, 0.0f);
 						spec = spec * spec;
 
 						m_bufferData[i].diffuse = AddDiffuse(AddDiffuse(AddDiffuse(0, g_lightset.ambient, 0x66), g_lightset.diffuse, (unsigned char)(int)(lit * 102.0f)), 0x808080, (unsigned char)(int)(spec * 255.0f))

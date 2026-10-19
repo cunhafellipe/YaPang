@@ -1126,7 +1126,8 @@ void ntAvatarChatMain::PrintText(float x, float y, const char *text, float spaci
 		char *found = strchr(charSet, c);
 
 		float charWidth = m_pTitleFont->PutChar(g_view, x, y, found - charSet, 0, color);
-		x += charWidth + spacing;
+		charWidth += spacing;
+		x += charWidth;
 	}
 
 	m_pTitleFont->SetScale(oldScale);
@@ -1909,12 +1910,14 @@ void ntAvatarChatMain::StartSpEffect(ntAvatar *pAvatar, eSPAVILITYTYPE type) {
 
 	switch (type) {
 	case 0:
-		if (bOn) {
-			pSeq = CFx::Instance()->OpenSequence("change_up-big.seq", true);
-		} else if (pAvatar->GetMySpItem((eSPAVILITYTYPE)1).getflag()) {
-			pSeq = CFx::Instance()->OpenSequence("change_up-middle.seq", true);
+		if (!bOn) {
+			if (pAvatar->GetMySpItem((eSPAVILITYTYPE)1).getflag()) {
+				pSeq = CFx::Instance()->OpenSequence("change_up-middle.seq", true);
+			} else {
+				pSeq = CFx::Instance()->OpenSequence("change_up-small.seq", true);
+			}
 		} else {
-			pSeq = CFx::Instance()->OpenSequence("change_up-small.seq", true);
+			pSeq = CFx::Instance()->OpenSequence("change_up-big.seq", true);
 		}
 		break;
 
@@ -1935,14 +1938,14 @@ void ntAvatarChatMain::StartSpEffect(ntAvatar *pAvatar, eSPAVILITYTYPE type) {
 		break;
 
 	case 2:
-		if (pAvatar->GetMySpItem((eSPAVILITYTYPE)0).getflag()) {
-			pSeq = CFx::Instance()->OpenSequence("change_up-big.seq", true);
-		} else {
+		if (!pAvatar->GetMySpItem((eSPAVILITYTYPE)0).getflag()) {
 			if (pAvatar->GetMySpItem((eSPAVILITYTYPE)1).getflag()) {
 				pSeq = CFx::Instance()->OpenSequence("change_up-middle.seq", true);
 			} else {
 				pSeq = CFx::Instance()->OpenSequence("change_up-small.seq", true);
 			}
+		} else {
+			pSeq = CFx::Instance()->OpenSequence("change_up-big.seq", true);
 		}
 		break;
 

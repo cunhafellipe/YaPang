@@ -538,7 +538,6 @@ void FrItemStorageAccessPanel::OnInitPrintOut(intptr_t id) {
 
 // itemstorage.cpp:441
 void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
-	int i;
 	int len;
 
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
@@ -561,7 +560,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 			pGDI->Print(WPoint(rc.x + 20.0f, rc.y + 35.0f), 0, "\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "password"
 
 			if (len > 0 && pTip) {
-				for (i = 0; i < len; i++) {
+				for (int i = 0; i < len; i++) {
 					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 82.0f, rc.y + 32.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 				}
 			}
@@ -575,7 +574,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 			pGDI->Print(WPoint(rc.x + 20.0f, rc.y + 60.0f), 0, "\xc8\xae\xc0\xce\xc0\xd4\xb7\xc2");   // "confirm"
 
 			if (len > 0 && pTip) {
-				for (i = 0; i < len; i++) {
+				for (int i = 0; i < len; i++) {
 					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 82.0f, rc.y + 57.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 				}
 			}
@@ -584,7 +583,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 		case 1:
 		case 3:
 		case 4: {
-			len = strlen(m_newPassword);
+			int len = strlen(m_newPassword);
 
 			pGDI->Print(WPoint(rc.x + 20.0f, rc.y + 55.0f), 0, "\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "password"
 
@@ -593,7 +592,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 			}
 
 			if (len > 0 && pTip) {
-				for (i = 0; i < len; i++) {
+				for (int i = 0; i < len; i++) {
 					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 82.0f, rc.y + 52.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 				}
 			}
@@ -611,7 +610,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 				}
 
 				if (len > 0 && pTip) {
-					for (i = 0; i < len; i++) {
+					for (int i = 0; i < len; i++) {
 						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 92.0f, rc.y + 52.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 					}
 				}
@@ -631,7 +630,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 				len = strlen(m_newPassword);
 
 				if (len > 0 && pTip) {
-					for (i = 0; i < len; i++) {
+					for (int i = 0; i < len; i++) {
 						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 92.0f, rc.y + 32.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 					}
 				}
@@ -639,7 +638,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 				len = strlen(m_confirmPassword);
 
 				if (len > 0 && pTip) {
-					for (i = 0; i < len; i++) {
+					for (int i = 0; i < len; i++) {
 						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 92.0f, rc.y + 57.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 					}
 				}
@@ -1191,10 +1190,10 @@ void FrItemStoragePangBank::OnOwnerDrawDrawArea(intptr_t id) {
 				}
 			}
 
-			char myPangText[0x20] = "\0";
-			char storedPangText[0x20] = "\0";
 			__int64 myPang = m_myPang;
 			__int64 storedPang = m_storedPang;
+			char myPangText[0x20] = "\0";
+			char storedPangText[0x20] = "\0";
 
 			if (m_type == TYPE_DEPOSIT) {
 				myPang -= inputPang;
@@ -1641,7 +1640,8 @@ void CItemStorage::Print(float x, float y, const char* text, float spacing, int 
 		const char* found = strchr(charSet, ch);
 
 		float advance = m_pTitleFont->PutChar(g_view, x, y, found - charSet, 0, color);
-		x += advance + spacing;
+		advance += spacing;
+		x += advance;
 	}
 
 	m_pTitleFont->SetScale(oldScale);
@@ -1748,7 +1748,7 @@ bool CItemStorage::CheckStoredItemInfo(sStoredItemInfo& stored, const sItemInfo&
 	strcpy(stored.item.uccCopierNick, info.m_reserved5E);   // sItemInfo 0x5E holds the UCC copier's nick
 	strcpy(stored.item.uccIdx, info.m_uccKey);
 
-	switch (stored.item.typeId >> 26) {
+	switch (stored.GetTypeID() >> 26) {
 	case 28:
 		if (info.m_count > 1) {
 			ret = false;
@@ -2323,24 +2323,4 @@ unsigned long CItemStorage::GetDragingItemIndex(sStoredItemDragDrop::MODE mode) 
 	}
 
 	return index;
-}
-
-// globalnetworkdefine.h:2982
-void sStoredItemInfo::SetTypeID(unsigned long typeId) {
-	item.typeId = typeId;
-}
-
-// globalnetworkdefine.h:2985
-void sStoredItemInfo::SetGuid(unsigned long guid) {
-	item.guid = guid;
-}
-
-// globalnetworkdefine.h:2987
-unsigned long sStoredItemInfo::GetCount(void) const {
-	return item.count;
-}
-
-// globalnetworkdefine.h:2988
-void sStoredItemInfo::SetCount(unsigned long count) {
-	item.count = count;
 }

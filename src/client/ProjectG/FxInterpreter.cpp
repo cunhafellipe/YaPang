@@ -138,14 +138,16 @@ bool FxInterpreter::AttachFx(const char* name, const Attacher* pAttacher, eEffec
 	if (type == EFFECT_SPRAY) {
 		void* pFx = CFx::Instance()->Attach(*pAttacher, name, false, NULL);
 		m_fxList.push_back(sFxInfo(m_handle, EFFECT_SPRAY, pFx));
-	} else if (type == EFFECT_SEQUENCE) {
-		void* pFx = CFx::Instance()->Attach(*pAttacher, name, false, NULL);
-		m_fxList.push_back(sFxInfo(m_handle, EFFECT_SEQUENCE, pFx));
-	} else {
-		return false;
+		return true;
 	}
 
-	return true;
+	if (type == EFFECT_SEQUENCE) {
+		void* pFx = CFx::Instance()->Attach(*pAttacher, name, false, NULL);
+		m_fxList.push_back(sFxInfo(m_handle, EFFECT_SEQUENCE, pFx));
+		return true;
+	}
+
+	return false;
 }
 
 // fxinterpreter.cpp:193

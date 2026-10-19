@@ -1050,14 +1050,14 @@ eGMToolResult CGMToolkit::CommandIdentity(eGMToolkitStatus status) {
 			// "Identity changes are only possible in the lobby."
 			Display("\xb1\xc7\xc7\xd1 \xba\xaf\xb0\xe6\xc0\xba \xb7\xce\xba\xf1\xbf\xa1\xbc\xad\xb8\xb8 \xb0\xa1\xb4\xc9\xc7\xd5\xb4\xcf\xb4\xd9.", 0xFF7802);
 		}
-	} else if (m_argumentCount == 1) {
+	} else if (m_argumentCount != 1) {
+		result = GM_RESULT_BAD_ARGUMENT;
+	} else {
 		if (AdminMode()) {
 			Display("You are the Administrator now! (~+_+)~", 0xC6FF85);
 		} else {
 			Display("You are a normal user T_T", 0xC6FF85);
 		}
-	} else {
-		result = GM_RESULT_BAD_ARGUMENT;
 	}
 	return result;
 }

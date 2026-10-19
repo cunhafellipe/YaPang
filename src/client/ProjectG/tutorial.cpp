@@ -106,7 +106,7 @@ void AnimatedOverlay::Process(float dt) {
 	} else if (m_fadeDir != 0 || m_frameTime == 0.0f) {
 		if (m_fadeDir != 0) {
 			m_elapsed += dt * 3.0f;
-			float alpha = (1 - m_fadeDir) * 128.0f + m_fadeDir * m_elapsed * 255.0f;
+			float alpha = (1 - m_fadeDir) * 128.0f; alpha += m_fadeDir * m_elapsed * 255.0f;
 			m_alpha = alpha;
 			if (alpha < 0.0f || alpha > 255.0f) {
 				m_alpha = Between(0.0f, alpha, 255.0f);
@@ -1422,6 +1422,9 @@ bool CTutorial::OnMissionFailedFormResult(int result, FrForm *form) {
 			PrepareMission();
 			OpenMissionForm();
 			SendMsg(this, "Screen", 0x1BC, 2, 0, 0, 0);
+			SendMsg(this, "Screen", 0x1BA, 1, 0, 0, 0);
+			FreeInput();
+			return true;
 		} else if (result == 2) {
 			m_macroHold = false;
 

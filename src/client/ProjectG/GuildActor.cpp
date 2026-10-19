@@ -513,8 +513,7 @@ void CGuildActor::ChangeGuildEmblem(GUILD_USER_INFO* pInfo) {
 	strncpy(WSingleton<CSharedDoc>::Instance()->m_userInfo.guildMark, pInfo->emblem, 0xB);
 
 	std::map<unsigned long, sBriefUserInfo>::iterator it;
-	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
-	if (pDoc->FindUserInfo(pDoc->m_userInfo.guid, it) == 1) {
+	if (WSingleton<CSharedDoc>::Instance()->FindUserInfo(MyGuid(false), it) == 1) {
 		strncpy(it->second.guildMark, pInfo->emblem, 0xB);
 	}
 

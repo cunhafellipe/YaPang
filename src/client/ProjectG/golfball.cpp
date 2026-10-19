@@ -32,8 +32,8 @@ void CGolfBall::Reset(WVector pos) {
 	m_pos = pos;
 	m_preData[0].m_pos = pos;
 
-	m_velocity.x = m_velocity.y = m_velocity.z = 0.0f;
-	m_rotation.x = m_rotation.y = 0.0f;
+	m_velocity.Reset();
+	m_rotation.Reset();
 
 	m_state = 0;
 	m_powerFlags = 0;

@@ -55,7 +55,11 @@ float CAmbientSound::GetVolume(const Wobb& box, float range) {
 	for (unsigned char i = 0; i < 3; i++) {
 
 		float half = box.extend[i].Magnitude() * 0.5f;
-		float proj = WDotProduct((g_camera.pivot - box.center) * 0.5f, box.extend[i]) / half;
+		WVector offset = (g_camera.pivot - box.center) * 0.5f;
+		float proj = offset.z * box.extend[i].z;
+		proj += offset.x * box.extend[i].x;
+		proj += offset.y * box.extend[i].y;
+		proj /= half;
 
 		if (proj < half * -1.0f) {
 

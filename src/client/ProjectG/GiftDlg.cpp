@@ -494,8 +494,8 @@ void FrGiftDlg::SetReceiverInfo(unsigned long uid, const sPangYaUserInfo& info) 
 			std::string id(info.id);
 			unsigned int len = id.length();
 			id.erase(id.begin() + len / 2, id.end());
-			len -= id.length();
-			id.insert(id.end(), len, '*');
+			unsigned int hidden = len - id.length();
+			id.insert(id.end(), hidden, '*');
 
 			if (m_pEdConfirm) {
 				m_pEdConfirm->SetLine(1, id.c_str(), 0, false, 0);
@@ -984,12 +984,13 @@ void FrGiftDlg::OnCartOwnerDraw(intptr_t param) {
 				pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 				// "count:"
 				pGDI->Print(WPoint(pItem->pos.x + 90.0f, lineY + pItem->pos.y), 0, "\xb0\xb3    \xbc\xf6:");
+				pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
 			}
 			else {
 				pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 				pGDI->Print(WPoint(pItem->pos.x + 90.0f, lineY + pItem->pos.y), 0, "\xbb\xe7\xbf\xeb\xb1\xe2\xb0\xa3:");
+				pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
 			}
-			pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
 
 			if (m_bItemSet) {
 				m_pDays->SetVisible(true);
@@ -1011,30 +1012,28 @@ void FrGiftDlg::OnCartOwnerDraw(intptr_t param) {
 			pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
 			pGDI->SetTextStyle(1);
 
-			const char* cashName;
+			const char* cashName = 0;
 			switch (WSingleton<CSharedDoc>::Instance()->m_billingType) {
 			case 2: cashName = "\xc6\xae\xb8\xae\xc4\xb3\xbd\xac"; break;   // "tree cash"
 			case 4: cashName = "\xc7\xd1\xc4\xda\xc0\xce"; break;   // "han coin"
-			default:
-				pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
-				pGDI->SetTextStyle(0);
-				return;
 			}
 
-			const WRect& rc = m_pExplaneStatic->GetRect();
-			if (m_totalCookie < 0) {
-				// "Not enough %s balance."
-				pGDI->Print(WPoint(rc.x - 70.0f, rc.y - 20.0f), 0, MakeStr("%s \xc0\xdc\xbe\xd7\xc0\xcc \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.", cashName));
-			}
-			else {
-				__int64 balance = WSingleton<CSharedDoc>::Instance()->m_outsideCash;
-				__int64 bonus = WSingleton<CSharedDoc>::Instance()->m_myBonusCash - m_cookiePrice;
-				__int64 cash = S5::ExchangeOwnCookieToCash(bonus, 100);
-				if (cash < 0)
-					balance = WSingleton<CSharedDoc>::Instance()->m_outsideCash + cash;
+			if (cashName) {
+				const WRect& rc = m_pExplaneStatic->GetRect();
+				if (m_totalCookie < 0) {
+					// "Not enough %s balance."
+					pGDI->Print(WPoint(rc.x - 70.0f, rc.y - 20.0f), 0, MakeStr("%s \xc0\xdc\xbe\xd7\xc0\xcc \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.", cashName));
+				}
+				else {
+					__int64 balance = WSingleton<CSharedDoc>::Instance()->m_outsideCash;
+					__int64 bonus = WSingleton<CSharedDoc>::Instance()->m_myBonusCash - m_cookiePrice;
+					__int64 cash = S5::ExchangeOwnCookieToCash(bonus, 100);
+					if (cash < 0)
+						balance = WSingleton<CSharedDoc>::Instance()->m_outsideCash + cash;
 
-				// "Your final %s balance after the purchase is %I64d won."
-				pGDI->Print(WPoint(rc.x - 140.0f, rc.y - 20.0f), 0, MakeStr("\xb1\xb8\xb8\xc5 \xc8\xc4 \xc3\xd6\xc1\xbe %s \xc0\xdc\xbe\xd7\xc0\xba %I64d\xbf\xf8 \xc0\xd4\xb4\xcf\xb4\xd9.", cashName, balance > 0 ? balance : (__int64)0));
+					// "Your final %s balance after the purchase is %I64d won."
+					pGDI->Print(WPoint(rc.x - 140.0f, rc.y - 20.0f), 0, MakeStr("\xb1\xb8\xb8\xc5 \xc8\xc4 \xc3\xd6\xc1\xbe %s \xc0\xdc\xbe\xd7\xc0\xba %I64d\xbf\xf8 \xc0\xd4\xb4\xcf\xb4\xd9.", cashName, balance > 0 ? balance : (__int64)0));
+				}
 			}
 
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);

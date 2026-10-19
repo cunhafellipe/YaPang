@@ -55,13 +55,6 @@ extern const char* const data_a96128[];    // character motion names
 extern const char* const data_a96158[];    // caddie motion names
 extern const char* const data_a96180[][4]; // face textures [face type][expression]
 
-// Constants the original reads from storage (0xa088e0..0xa088ec); their
-// header is not identified yet.
-const float kPi = 3.14159265f;
-const float kDegree = 0.017453292f;
-const float kFloatMax = 3.402823466e+38f;
-const float kEpsilon = 1e-5f;
-
 extern WMatrix g_camera;
 int WisZero(const float &f, float eps);
 const char* GetStrConst(const char* pSrc, char* pDest);
@@ -275,8 +268,8 @@ void CExhibition::Process(float dt, bool b) {
 				float sum = Abs(pitch) + Abs(direction);
 				float inv = 1.0f / sum;
 				m_cameraUpdate = 0;
-				m_pitchSpeed = pitch * inv * kPi;
-				m_directionSpeed = direction * inv * kPi;
+				m_pitchSpeed = pitch * inv * g_PI;
+				m_directionSpeed = direction * inv * g_PI;
 			}
 			m_distance = m_defaultDistance;
 		}
@@ -310,7 +303,7 @@ void CExhibition::Process(float dt, bool b) {
 	m_directionCheckTime += dt;
 	if (m_directionCheckTime > 1.0f) {
 		m_directionCheckTime -= 1.0f;
-		if (!m_changed.directionChanged && Abs(GetBaseAngle(m_checkedDirection, m_angle.y) - m_angle.y) > kDegree) {
+		if (!m_changed.directionChanged && Abs(GetBaseAngle(m_checkedDirection, m_angle.y) - m_angle.y) > g_DEGTORAD) {
 			m_checkedDirection = m_angle.y;
 			m_changed.directionChanged = true;
 		}
@@ -374,8 +367,8 @@ int CExhibition::ProcessBongdariShop(float dt) {
 				float sum = Abs(pitch) + Abs(direction);
 				float inv = 1.0f / sum;
 				m_cameraUpdate = 0;
-				m_pitchSpeed = pitch * inv * kPi;
-				m_directionSpeed = direction * inv * kPi;
+				m_pitchSpeed = pitch * inv * g_PI;
+				m_directionSpeed = direction * inv * g_PI;
 			}
 			m_distance = m_defaultDistance;
 		}
@@ -406,7 +399,7 @@ int CExhibition::ProcessBongdariShop(float dt) {
 	m_directionCheckTime += dt;
 	if (m_directionCheckTime > 1.0f) {
 		m_directionCheckTime -= 1.0f;
-		if (!m_changed.directionChanged && Abs(GetBaseAngle(m_checkedDirection, m_angle.y) - m_angle.y) > kDegree) {
+		if (!m_changed.directionChanged && Abs(GetBaseAngle(m_checkedDirection, m_angle.y) - m_angle.y) > g_DEGTORAD) {
 			m_checkedDirection = m_angle.y;
 			m_changed.directionChanged = true;
 		}
@@ -497,10 +490,10 @@ void CExhibition::Animate(void) {
 		m_model->ApplyBones(NULL, m_matrix);
 		break;
 	case 3:
-		m_model->ApplyBones(m_model->GetBones(NULL, m_frame, 0, NULL, false), m_matrix * RotMat(-15.0f * kDegree, 2));
+		m_model->ApplyBones(m_model->GetBones(NULL, m_frame, 0, NULL, false), m_matrix * RotMat(-15.0f * g_DEGTORAD, 2));
 		break;
 	case 5:
-		m_model->ApplyBones(m_model->GetBones(NULL, m_frame, 0, NULL, false), m_matrix * RotMat(-15.0f * kDegree, 2));
+		m_model->ApplyBones(m_model->GetBones(NULL, m_frame, 0, NULL, false), m_matrix * RotMat(-15.0f * g_DEGTORAD, 2));
 		break;
 	case 7:
 		if (IsLocalContent((localContentType_t)0x56)) {
@@ -518,7 +511,7 @@ void CExhibition::Animate(void) {
 		break;
 	case 9:
 		if (IsLocalContent((localContentType_t)0x56)) {
-			m_model->ApplyBones(m_model->GetBones(NULL, m_frame, 0, NULL, false), m_matrix * RotMat(-15.0f * kDegree, 2));
+			m_model->ApplyBones(m_model->GetBones(NULL, m_frame, 0, NULL, false), m_matrix * RotMat(-15.0f * g_DEGTORAD, 2));
 		}
 		break;
 	case 10:
@@ -527,7 +520,7 @@ void CExhibition::Animate(void) {
 			scale.Reset();
 			scale *= 0.7f;
 			m_model->ApplyBones(m_model->GetBones(NULL, m_frame, 0, NULL, false),
-				m_matrix * RotMat(kPi / 2.0f, 0) * RotMat(-15.0f * kDegree, 2) * scale);
+				m_matrix * RotMat(g_PI / 2.0f, 0) * RotMat(-15.0f * g_DEGTORAD, 2) * scale);
 		}
 		break;
 	case 11:
@@ -536,7 +529,7 @@ void CExhibition::Animate(void) {
 			scale.Reset();
 			scale *= 0.85f;
 			m_model->ApplyBones(m_model->GetBones(NULL, m_frame, 0, NULL, false),
-				m_matrix * RotMat(kPi / 2.0f, 0) * RotMat(-15.0f * kDegree, 2) * scale);
+				m_matrix * RotMat(g_PI / 2.0f, 0) * RotMat(-15.0f * g_DEGTORAD, 2) * scale);
 		}
 		break;
 	case 13:
@@ -567,7 +560,7 @@ void CExhibition::ScriptProcess(const w_motion_data* data, float from, float to,
 	} else {
 		to = Min(data->e, to) * 30.0f;
 		start = Ceil(from, 0.03f);
-		end = WAbsBySign((float)floor(to) - to) < kEpsilon ? (int)to - 1 : (int)floor(to);
+		end = WAbsBySign((float)floor(to) - to) < g_EPSILON ? (int)to - 1 : (int)floor(to);
 
 		if (start == (int)floor(data->s * 30.0f + 0.5f)) {
 			start++;
@@ -1949,7 +1942,8 @@ void CExhibition::DisplayClip(const WRect& rect, float fov, float clipNear, floa
 	g_view->SetClip(nearClip, farClip, false);
 	g_view->SetCamera(m_camera);
 	g_view->SetClippingArea(rect);
-	g_view->SetFOV((4.0f / 3.0f) * (fov * kDegree / g_view->GetWidth() * g_view->GetHeight()));
+	float viewFov = fov * g_DEGTORAD; viewFov /= g_view->GetWidth(); viewFov *= g_view->GetHeight();
+	g_view->SetFOV((4.0f / 3.0f) * viewFov);
 	g_view->SetScreenCenter(m_center.x, m_center.y);
 	g_view->UpdateCamera();
 
@@ -1974,20 +1968,20 @@ void CExhibition::MoveModel(const WPoint& point, const WRect* pRect, float fov) 
 
 	// The area center and the point, unprojected at the camera distance
 	// (the WView::GetScreen2World_Perspective formula).
-	WVector from, to;
+	WVector offset, from, to;
 	from.z = m_curDistance;
-	float scale = (float)tan((fov * kDegree) * 0.5f) * from.z / (width * 0.5f);
+	float scale = (float)tan((fov * g_DEGTORAD) * 0.5f) * from.z / (width * 0.5f);
 	from.x = (m_center.x - width * 0.5f) * scale;
 	from.y = (m_center.y - height * 0.5f) * scale * -1.0f;
 
 	to.z = m_curDistance;
-	scale = (float)tan((fov * kDegree) * 0.5f) * to.z / (width * 0.5f);
+	scale = (float)tan((fov * g_DEGTORAD) * 0.5f) * to.z / (width * 0.5f);
 	to.x = (point.x - width * 0.5f) * scale;
 	to.y = (point.y - height * 0.5f) * scale * -1.0f;
-	from = from - to;
+	offset = from - to;
 
 	WPuppet *model = m_model;
 	if (model) {
-		model->MoveBone(model->GetRootBone()->GetBoneName(), from);
+		model->MoveBone(model->GetRootBone()->GetBoneName(), offset);
 	}
 }

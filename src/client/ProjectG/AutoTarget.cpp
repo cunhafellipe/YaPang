@@ -143,13 +143,13 @@ WVector CAutoTarget::GetPoint(const char *clubName) {
 		if (startDist * endDist < 0.0f) {
 			WVector point = SolveEquation(i, range) + GolfBall().m_pos;
 
-			WVector toPoint, toCup;
-			toPoint = point - GolfBall().m_pos;
+			WVector dir[2]; // towards the point, towards the cup
+			dir[0] = point - GolfBall().m_pos;
 
-			toCup = WVector(GOLFDOC()->GetHoleData().m_cupPos) - GolfBall().m_pos;
+			dir[1] = WVector(GOLFDOC()->GetHoleData().m_cupPos) - GolfBall().m_pos;
 
-			if (toCup.x * toPoint.x + toCup.z * toPoint.z > 0.0f
-					&& (WVector2D(toCup.x, toCup.z) - WVector2D(toPoint.x, toPoint.z)).Magnitude() < sqrtf(toCup.x * toCup.x + toCup.z * toCup.z)) {
+			if (dir[0].x * dir[1].x + dir[0].z * dir[1].z > 0.0f
+					&& (WVector2D(dir[1].x, dir[1].z) - WVector2D(dir[0].x, dir[0].z)).Magnitude() < sqrtf(dir[1].x * dir[1].x + dir[1].z * dir[1].z)) {
 				point.y = 0.0f;
 				return point;
 			}
@@ -163,19 +163,19 @@ WVector CAutoTarget::GetPoint(const char *clubName) {
 // Where the line through points index and index + 1 (relative to the ball)
 // crosses the circle of the given radius around the ball, on the XZ plane.
 WVector CAutoTarget::SolveEquation(unsigned char index, float radius) {
-	WVector a, b, pos;
-	a = m_pointList[index] - GolfBall().m_pos;
-	b = m_pointList[index + 1] - GolfBall().m_pos;
+	WVector end[2], pos; // the segment ends relative to the ball
+	end[0] = m_pointList[index] - GolfBall().m_pos;
+	end[1] = m_pointList[index + 1] - GolfBall().m_pos;
 	float x[2], z[2];
 
-	if (WAbsBySign(a.x - b.x) < data_9eb410) {
-		x[0] = x[1] = a.x;
+	if (WAbsBySign(end[0].x - end[1].x) < data_9eb410) {
+		x[0] = x[1] = end[0].x;
 
-		z[0] = sqrtf(radius * radius - a.x * a.x);
+		z[0] = sqrtf(radius * radius - end[0].x * end[0].x);
 		z[1] = z[0] * -1.0f;
 	} else {
-		float slope = (b.z - a.z) / (b.x - a.x);
-		float intercept = a.z - slope * a.x;
+		float slope = (end[1].z - end[0].z) / (end[1].x - end[0].x);
+		float intercept = end[0].z - slope * end[0].x;
 
 		float disc = (slope * slope + 1.0f) * radius * radius - intercept * intercept;
 
@@ -186,7 +186,7 @@ WVector CAutoTarget::SolveEquation(unsigned char index, float radius) {
 		z[1] = slope * x[1] + intercept;
 	}
 
-	if (x[0] >= (a.x > b.x ? b.x : a.x) && x[0] <= (a.x < b.x ? b.x : a.x)) {
+	if (x[0] >= (end[0].x > end[1].x ? end[1].x : end[0].x) && x[0] <= (end[0].x < end[1].x ? end[1].x : end[0].x)) {
 		pos.x = x[0];
 		pos.z = z[0];
 	} else {

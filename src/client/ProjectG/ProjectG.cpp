@@ -800,8 +800,8 @@ void CProjectG::CheckScreenShot(void) {
 	// Frames left before the capture is taken (-1: no capture pending).
 	static int s_captureDelay = -1;
 
-	if (g_input->GetDown("FUNC_11", true) || CSharedDoc::Instance()->m_replayState == 6) {
-		if (IsLocalContent((localContentType_t)0x4F) && (CSharedDoc::Instance()->m_replayState == 6 || CSharedDoc::Instance()->m_replayState == 9)) {
+	if (g_input->GetDown("FUNC_11", true) || CSharedDoc::Instance()->GetReplayState() == 6) {
+		if (IsLocalContent((localContentType_t)0x4F) && (CSharedDoc::Instance()->GetReplayState() == 6 || CSharedDoc::Instance()->GetReplayState() == 9)) {
 			__int64 freeSpace = CalcHddFreeSpace();
 			if (freeSpace == 0) {
 				CChatMsg::Instance()->AddChatMsg("\xc7\xcf\xb5\xe5\xc0\xc7 \xbf\xeb\xb7\xae\xc0\xbb \xc3\xbc\xc5\xa9 \xc7\xd2 \xbc\xf6 \xbe\xf8\xc0\xb8\xb9\xc7\xb7\xce \xb5\xbf\xbf\xb5\xbb\xf3 \xc6\xc4\xc0\xcf\xc0\xbb \xbb\xfd\xbc\xba \xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0xFFFF7878, true, false);
@@ -814,8 +814,8 @@ void CProjectG::CheckScreenShot(void) {
 
 			COption::Instance()->dSetCaptureFormat(2);
 
-			if (CSharedDoc::Instance()->m_replayState == 6)
-				CSharedDoc::Instance()->m_replayState = 7;
+			if (CSharedDoc::Instance()->GetReplayState() == 6)
+				CSharedDoc::Instance()->SetReplayState(7);
 		} else {
 			COption::Instance()->dSetCaptureFormat(0);
 		}
@@ -878,12 +878,13 @@ void CProjectG::CheckScreenShot(void) {
 	} while (_access(fileName, 0) != -1);
 
 	if (stricmp(format, "avi") == 0) {
-		CSharedDoc::Instance()->m_replayState = 7;
+		CSharedDoc::Instance()->SetReplayState(7);
 		if (m_aviEncoder.IsOpened()) {
 			m_aviEncoder.Close();
 
 			m_mainFlags.Disable(0x22);
-			m_appFlags &= ~2;
+			unsigned int& appFlags = m_appFlags;
+			appFlags &= ~2;
 			SetFPS(m_monitorFPS);
 
 			if (IsLocalContent((localContentType_t)0x4F))

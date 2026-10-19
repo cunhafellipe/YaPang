@@ -309,7 +309,7 @@ int NetResourceManager::WorkUploadThread(void)
 				http.AddPostArguments("GUILD_IDX", *guildIdx);
 				http.AddPostArguments("UID", MyUID());
 				http.AddPostArguments("EMBLEM", res.data, FALSE);
-				http.AddPostArguments("FILENAME", fileName.c_str(), TRUE);
+				http.AddPostArguments("FILENAME", res.path.c_str(), TRUE);
 			}
 		} else if (res.type == RESOURCE_TYPE_5) {
 			if (m_postArguments.find(res.data) != m_postArguments.end()) {
@@ -429,7 +429,7 @@ int NetResourceManager::WorkUploadThread(void)
 			}
 		}
 
-		DeleteFile(fileName.c_str());
+		DeleteFile(res.path.c_str());
 	}
 
 	return 0;

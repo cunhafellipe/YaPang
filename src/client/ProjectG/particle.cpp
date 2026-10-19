@@ -40,11 +40,6 @@ CGolfDoc* CParticleRecv::m_pDoc;
 // unknown.
 template <class T> T MaxOf(T a, T b) { return a < b ? b : a; }
 
-// Nameless per-unit rdata constant: the 1e-5 epsilon of Generate and CParticle2D.
-extern "C" {
-static const float data_9f16cc = 0.00001f;
-}
-
 // particle.cpp:24 (run-time type and factory registration of CParticleEffect)
 IObject* CParticleEffectMakeInstance(void) {
 	return new CParticleEffect;
@@ -667,7 +662,7 @@ void CParticleRecv::Generate(void) {
 
 	case 1:
 		// a random direction, or a random point of a sphere of radius m_spread
-		if (WAbsBySign(m_spread) < data_9f16cc) {
+		if (WAbsBySign(m_spread) < g_EPSILON) {
 			m_frags[m_nextFrag].vel = (WVector::UNIT_POS_Z * RotMat(6.2831855f * ((rand() % 1023) / 1024.0f), 0)) * RotMat(6.2831855f * ((rand() % 1023) / 1024.0f), 1);
 		} else {
 			m_frags[m_nextFrag].pos += (WVector::UNIT_POS_Z * m_spread * RotMat(6.2831855f * ((rand() % 1023) / 1024.0f), 0)) * RotMat(6.2831855f * ((rand() % 1023) / 1024.0f), 1);
@@ -786,12 +781,12 @@ int CParticle2D::Initialize(const std::list<std::string>& bitmapNames, const WRe
 
 		pParticle->m_vel = velMin;
 
-		if (!(WAbsBySign(velMax.x - velMin.x) < data_9f16cc)) {
+		if (!(WAbsBySign(velMax.x - velMin.x) < g_EPSILON)) {
 			float range = velMax.x - velMin.x;
 			pParticle->m_vel.x = velMin.x + rand() % (int)(float)fabs((double)range);
 		}
 
-		if (!(WAbsBySign(velMax.y - velMin.y) < data_9f16cc)) {
+		if (!(WAbsBySign(velMax.y - velMin.y) < g_EPSILON)) {
 			float range = velMax.y - velMin.y;
 			pParticle->m_vel.y = velMin.y + rand() % (int)(float)fabs((double)range);
 		}
@@ -924,12 +919,12 @@ void CParticle2D::Process(float elapsed) {
 
 		pParticle->m_vel = m_velMin;
 
-		if (!(WAbsBySign(m_velMax.x - m_velMin.x) < data_9f16cc)) {
+		if (!(WAbsBySign(m_velMax.x - m_velMin.x) < g_EPSILON)) {
 			float range = m_velMax.x - m_velMin.x;
 			pParticle->m_vel.x = m_velMin.x + rand() % (int)(float)fabs((double)range);
 		}
 
-		if (!(WAbsBySign(m_velMax.y - m_velMin.y) < data_9f16cc)) {
+		if (!(WAbsBySign(m_velMax.y - m_velMin.y) < g_EPSILON)) {
 			float range = m_velMax.y - m_velMin.y;
 			pParticle->m_vel.y = m_velMin.y + rand() % (int)(float)fabs((double)range);
 		}

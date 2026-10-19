@@ -515,6 +515,7 @@ bool CGhostTurnBeginAnimationState::RunAnimate(float fDelta) {
 	float width = g_view->GetWidth();
 	float height = g_view->GetHeight();
 	bool finished = false;
+	int i = 0;
 
 	switch (m_maskType) {
 	case 5: {
@@ -539,13 +540,14 @@ bool CGhostTurnBeginAnimationState::RunAnimate(float fDelta) {
 
 		float move = width * fDelta * 0.5f;
 		int closed = 0;
-		int i = 0;
 		for (std::vector<WRect>::iterator it = m_maskRects.begin(); it != m_maskRects.end(); ++it) {
 			if (i % 2) {
-				if (it->x < width) { if ((it->x += move * m_maskSpeeds[i]) >= width) it->x = width; }
+				float add = move * m_maskSpeeds[i];
+				if (it->x < width) { if ((it->x += add) >= width) it->x = width; }
 			}
 
-			if (it->w > 0.0f) { if ((it->w -= move * m_maskSpeeds[i]) <= 0.0f) it->w = 0.0f; }
+			float sub = move * m_maskSpeeds[i];
+			if (it->w > 0.0f) { if ((it->w -= sub) <= 0.0f) it->w = 0.0f; }
 			else ++closed;
 
 			++i;
@@ -560,14 +562,16 @@ bool CGhostTurnBeginAnimationState::RunAnimate(float fDelta) {
 		if (m_alpha > 0.0f) { if ((m_alpha -= fDelta * 127.5f) <= 0.0f) m_alpha = 0.0f; }
 
 		float move = height * fDelta * 0.5f;
+		i = 0;
 		int closed = 0;
-		int i = 0;
 		for (std::vector<WRect>::iterator it = m_maskRects.begin(); it != m_maskRects.end(); ++it) {
 			if (i % 2) {
-				if (it->y < height) { if ((it->y += move * m_maskSpeeds[i]) >= height) it->y = height; }
+				float add = move * m_maskSpeeds[i];
+				if (it->y < height) { if ((it->y += add) >= height) it->y = height; }
 			}
 
-			if (it->h > 0.0f) { if ((it->h -= move * m_maskSpeeds[i]) <= 0.0f) it->h = 0.0f; }
+			float sub = move * m_maskSpeeds[i];
+			if (it->h > 0.0f) { if ((it->h -= sub) <= 0.0f) it->h = 0.0f; }
 			else ++closed;
 
 			++i;

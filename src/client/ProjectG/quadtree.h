@@ -506,10 +506,16 @@ extern int g_colNum;
 extern char g_colTex[16][32]; // the texture names of the last contacts (IntersectObj)
 
 // GolfRule.cpp defines GOLFRULE_QUADTREE_INLINE empty before its includes:
-// the original holds the out-of-line copies of SetFrame and GetFrame in
-// GolfRule's object (0x43df90, 0x43dfb0); every other includer inlines them.
+// the original holds the out-of-line copies of SetSlopeFactor, SetFrame and
+// GetFrame in GolfRule's object (0x43df40, 0x43df90, 0x43dfb0); every other
+// includer inlines them. GolfRule.cpp keeps its own SetSlopeFactor body.
 #ifndef GOLFRULE_QUADTREE_INLINE
 #define GOLFRULE_QUADTREE_INLINE inline
+
+// quadtree.h:112
+inline void CQuadTree::SetSlopeFactor(float factor) {
+	m_slopeFactor = factor;
+}
 #endif
 
 // quadtree.h:497

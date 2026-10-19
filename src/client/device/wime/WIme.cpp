@@ -366,10 +366,11 @@ int WIme::GetState(int sort, int n) {
 		}
 
 		if (pos < current) {
-			unsigned char ch = ringBuf[pos++ & 0x3FF];
+			unsigned char ch = ringBuf[pos & 0x3FF]; pos++;
 
 			if (ch >= 0x80) {
-				return ch | (ringBuf[pos++ & 0x3FF] << 8);
+				unsigned char trail = ringBuf[pos & 0x3FF]; pos++;
+				return ch | (trail << 8);
 			}
 
 			return ch;

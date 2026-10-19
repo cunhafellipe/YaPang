@@ -3363,7 +3363,7 @@ bool CTaskMain::OnSpecialCardFormResult(int, FrForm *) {
 
 // taskmain.cpp:4287
 float CTaskMain::Print(float x, float y, const char *text, float space, int align, float scale, unsigned long color) {
-	float startX = x;
+	float result = x;
 
 	int len = 0;
 	if (text != NULL)
@@ -3371,18 +3371,15 @@ float CTaskMain::Print(float x, float y, const char *text, float space, int alig
 	if (len == 0)
 		return 0.0f;
 
-	WTitleFont *font = m_titleFont;
+	const char *charSet = m_titleFont->GetFontInfo()->pCharSet;
 
-	float oldScale = font->GetScale();
-	font->SetScale(scale);
-	const char *charSet = font->GetFontInfo()->pCharSet;
+	float oldScale = m_titleFont->GetScale();
+	m_titleFont->SetScale(scale);
 
 	float width = 0.0f;
-	const char *p;
 	switch (align) {
 	case 1:
-		p = text;
-		while (*p) {
+		for (const char *p = text; *p; ) {
 			char c = *p++;
 
 			int index = strchr(charSet, c) - charSet;
@@ -3393,8 +3390,7 @@ float CTaskMain::Print(float x, float y, const char *text, float space, int alig
 		width *= 0.5f;
 		break;
 	case 2:
-		p = text;
-		while (*p) {
+		for (const char *p = text; *p; ) {
 			char c = *p++;
 
 			int index = strchr(charSet, c) - charSet;
@@ -3407,14 +3403,14 @@ float CTaskMain::Print(float x, float y, const char *text, float space, int alig
 
 	x -= width;
 
-	p = text;
-	while (*p) {
+	for (const char *p = text; *p; ) {
 		char c = *p++;
 
 		int index = strchr(charSet, c) - charSet;
 
 		float charWidth = m_titleFont->PutChar(g_view, x, y, index, 0, color);
-		x += charWidth + space;
+		charWidth += space;
+		x += charWidth;
 	}
 
 	m_titleFont->SetScale(oldScale);
@@ -3422,13 +3418,15 @@ float CTaskMain::Print(float x, float y, const char *text, float space, int alig
 
 	switch (align) {
 	case 0:
-		return x - startX;
+		result = x - result;
+		break;
 	case 1:
 	case 2:
-		return width;
-	default:
-		return startX;
+		result = width;
+		break;
 	}
+
+	return result;
 }
 
 // taskmain.cpp:4378

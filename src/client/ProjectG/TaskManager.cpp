@@ -904,7 +904,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:1304
 				pDlg->Close(FrCANCEL, true);
 				// taskmanager.cpp:1305
-				FrForm *pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
+				FrForm *pForm = CreateForm<FrForm>(g_pFresh->GetManager(), NULL, "notify", 0);
 				// taskmanager.cpp:1306
 				pForm->SetMessage("\xbf\xc0\xb7\xf9\xb0\xa1 \xb9\xdf\xbb\xfd\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9. \xc0\xe1\xbd\xc3 \xc8\xc4 \xb4\xd9\xbd\xc3 \xbd\xc3\xb5\xb5\xc7\xd8 \xc1\xd6\xbc\xbc\xbf\xe4.", false);
 				// taskmanager.cpp:1307
@@ -2825,7 +2825,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		{
 			unsigned char count = packet.Decode1();
 			// taskmanager.cpp:3374
-			for (int i = 0; i < count; i++) {
+			for (unsigned char i = 0; i < count; i++) {
 				sMascotInfo mascot;
 				// taskmanager.cpp:3376
 				packet.DecodeBuffer(&mascot, sizeof(sMascotInfo));
@@ -3326,7 +3326,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 								// taskmanager.cpp:4059
 								if ((it->typeId & 0x3C00000) == 0x800000) {
 									// taskmanager.cpp:4061
-									if (it->effect == info.effect) {
+									if (info.effect == it->effect) {
 										// taskmanager.cpp:4063
 										periodList.erase(it);
 										break;
@@ -8975,32 +8975,32 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 							switch (pPrize->m_type) {
 							case 1:
 								// taskmanager.cpp:11152
-								strcpy(awardName, "\xba\xa3\xbd\xba\xc6\xae \xbd\xba\xc7\xc7\xb4\xf5");
+								{ const char *name = "\xba\xa3\xbd\xba\xc6\xae \xbd\xba\xc7\xc7\xb4\xf5"; strcpy(awardName, name); }
 								// taskmanager.cpp:11153
 								break;
 							case 2:
 								// taskmanager.cpp:11156
-								strcpy(awardName, "\xba\xa3\xbd\xba\xc6\xae \xb7\xaf\xb3\xca");
+								{ const char *name = "\xba\xa3\xbd\xba\xc6\xae \xb7\xaf\xb3\xca"; strcpy(awardName, name); }
 								// taskmanager.cpp:11157
 								break;
 							case 3:
 								// taskmanager.cpp:11160
-								strcpy(awardName, "\xba\xa3\xbd\xba\xc6\xae \xb8\xae\xc4\xbf\xb9\xf6\xb8\xae");
+								{ const char *name = "\xba\xa3\xbd\xba\xc6\xae \xb8\xae\xc4\xbf\xb9\xf6\xb8\xae"; strcpy(awardName, name); }
 								// taskmanager.cpp:11161
 								break;
 							case 4:
 								// taskmanager.cpp:11164
-								strcpy(awardName, "\xc7\xe0\xbf\xee\xbb\xf3");
+								{ const char *name = "\xc7\xe0\xbf\xee\xbb\xf3"; strcpy(awardName, name); }
 								// taskmanager.cpp:11165
 								break;
 							case 5:
 								// taskmanager.cpp:11168
-								strcpy(awardName, "\xba\xa3\xbd\xba\xc6\xae \xb7\xd5\xc6\xdb\xc5\xcd");
+								{ const char *name = "\xba\xa3\xbd\xba\xc6\xae \xb7\xd5\xc6\xdb\xc5\xcd"; strcpy(awardName, name); }
 								// taskmanager.cpp:11169
 								break;
 							case 6:
 								// taskmanager.cpp:11172
-								strcpy(awardName, "\xba\xa3\xbd\xba\xc6\xae \xc4\xa8\xc0\xce");
+								{ const char *name = "\xba\xa3\xbd\xba\xc6\xae \xc4\xa8\xc0\xce"; strcpy(awardName, name); }
 								break;
 							}
 							// taskmanager.cpp:11175

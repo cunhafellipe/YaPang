@@ -140,7 +140,7 @@ CHECK_FIELD(sLobbyRoomListState, m_gameType, 0xC);
 static sLobbyRoomListState data_aa9eac = { "GuildActor", { 0 }, 4, -1 };
 
 // Unnamed data: the IME mode (alphanumeric) the chat language mark shows.
-extern "C" bool data_ab2830;
+static bool data_ab2830;
 
 // clientsetting.h:404
 int COption::gGetChatWndUp(void) {
@@ -2962,7 +2962,7 @@ void CLobbyMain::ProcessLobbyPetSync(float dt) {
 
 		it->second.m_pPet->Process(dt, false);
 
-		if (CSharedDoc::Instance()->GetPangyaUserInfo().guid == it->first
+		if (it->first == MyGuid(false)
 			&& strcmpi(g_pFresh->GetManager()->GetLayoutID(), "GAMEROOM") == 0) {
 			if (it->second.m_pPet->IsDirectionChanged()) {
 				float direction = it->second.m_pPet->GetDirection();
@@ -3121,15 +3121,13 @@ void CLobbyMain::ProcessLobbyUI(float dt) {
 	}
 
 	if (strcmpi(g_pFresh->GetManager()->GetLayoutID(), "GAMEROOM_EXTRES") == 0) {
-		unsigned long endTime = CSharedDoc::Instance()->m_gameTimeLimit + CSharedDoc::Instance()->m_gameStartTime;
-		const char* text;
+		unsigned long endTime = GetGameTimeLimit() + CSharedDoc::Instance()->m_gameStartTime;
 		if (endTime > g_CurrentTime) {
 			unsigned long seconds = (endTime - g_CurrentTime) / 1000;
-			text = MakeStr("%02d:%02d", seconds / 60, seconds % 60);
+			HandleMsg(MsgObject(this, 0x10, (intptr_t)MakeStr("%02d:%02d", seconds / 60, seconds % 60), 0, 0, 0, 0));
 		} else {
-			text = "00:00";
+			HandleMsg(MsgObject(this, 0x10, (intptr_t)"00:00", 0, 0, 0, 0));
 		}
-		HandleMsg(MsgObject(this, 0x10, (intptr_t)text, 0, 0, 0, 0));
 	}
 
 	if (m_waitDlgTime < 0.0f
@@ -3146,8 +3144,7 @@ void CLobbyMain::ProcessLobbyUI(float dt) {
 			// Five minutes away: the room master is told to kick the player.
 			if (timeGetTime() - g_mouse->GetLastInputTime() > 300000
 				&& timeGetTime() - g_ime->GetLastInputTime() > 300000) {
-				unsigned long myGuid = CSharedDoc::Instance()->GetPangyaUserInfo().guid;
-				std::list<sSlotInfo>::iterator it = std::find(CSharedDoc::Instance()->m_roomPlayerList.begin(), CSharedDoc::Instance()->m_roomPlayerList.end(), myGuid);
+				std::list<sSlotInfo>::iterator it = std::find(CSharedDoc::Instance()->m_roomPlayerList.begin(), CSharedDoc::Instance()->m_roomPlayerList.end(), MyGuid(false));
 
 				if (it != CSharedDoc::Instance()->m_roomPlayerList.end() && (it->m_attribute & 0x18)) {
 					WSendPacket packet(GCT_EXIT_ROOM);
@@ -3167,7 +3164,7 @@ void CLobbyMain::ProcessLobbyUI(float dt) {
 		}
 
 		if (awayChanged) {
-			std::list<sSlotInfo>::iterator it = std::find(CSharedDoc::Instance()->m_roomPlayerList.begin(), CSharedDoc::Instance()->m_roomPlayerList.end(), CSharedDoc::Instance()->GetPangyaUserInfo().guid);
+			std::list<sSlotInfo>::iterator it = std::find(CSharedDoc::Instance()->m_roomPlayerList.begin(), CSharedDoc::Instance()->m_roomPlayerList.end(), MyGuid(false));
 
 			if (it == CSharedDoc::Instance()->m_roomPlayerList.end())
 				return;
@@ -3191,7 +3188,7 @@ void CLobbyMain::ProcessLobbyUI(float dt) {
 		if (m_toppageEvent1Btn && m_toppageEvent1Btn->IsVisible()) {
 			WRect rect;
 			rect = m_toppageEvent1Btn->GetRect();
-			float top = dt * m_toppageBtnScale * 8.0f + rect.y;
+			float top = rect.y + dt * m_toppageBtnScale * 8.0f;
 
 			if ((top > m_event1IconRect.y + 15.0f && m_toppageBtnScale > 0.0f)
 				|| (top < m_event1IconRect.y - 15.0f && m_toppageBtnScale < 0.0f))
@@ -3205,7 +3202,7 @@ void CLobbyMain::ProcessLobbyUI(float dt) {
 	}
 
 	if (CSharedDoc::Instance()->GetAppGiftDownLoadState() == 2 && CSharedDoc::Instance()->m_roomType == 10 && m_approachGiftDlg == NULL) {
-		int giftCount = CTHunter::Instance()->GetGiftSize();
+		unsigned int giftCount = CTHunter::Instance()->GetGiftSize();
 		if (giftCount <= 8)
 			m_approachGiftTimer = -9.0f;
 		else if (giftCount <= 16)
@@ -7711,8 +7708,9 @@ int CLobbyMain::GetMedalIndex(unsigned long uid) {
 	if (expMemberCount == 0) {
 		for (std::vector<sGameResultInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_gameResultList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_gameResultList.end(); ++it) {
 			unsigned char state = it->m_state;
-			if (state != 3 || GetHoleIndex(it->m_hole) >= 4)
-				memberCount++;
+			if (state == 3 && GetHoleIndex(it->m_hole) < 4 && it->m_state == 3)
+				continue;
+			memberCount++;
 
 			if (state != 3 && it->m_rank < myRank && it->m_characterType > 3)
 				skipCount++;
@@ -11147,11 +11145,9 @@ void CLobbyMain::OnGameRoom_CaddieOwnerDraw(PG_MSGARG) {
 		IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(it->second.typeId);
 		if (pCaddie) {
 			if ((it->second.flags & 2) && it->second.days <= 0 && it->second.cadItemTypeId == 0 && pCaddie->fee != 0) {
-				float right = rect.x + rect.w - 1.0f;
-				float middle = rect.y + rect.h * 0.5f;
-				g_view->DrawLine2D(WPoint(rect.x, middle - 1.0f), WPoint(right, middle - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
-				g_view->DrawLine2D(WPoint(rect.x, middle), WPoint(right, middle), 0xFFFF0000, 0xFFFF0000, 0);
-				g_view->DrawLine2D(WPoint(rect.x, middle + 1.0f), WPoint(right, middle + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f - 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f + 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
 			}
 		}
 	}

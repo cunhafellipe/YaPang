@@ -46,15 +46,15 @@ void CGallery::SetSound(const char *name, float delay) {
 			return;
 
 		m_soundDelay = delay;
+		g_audio->PlaySfx(m_soundName, 0, 0, m_soundName, 0, 0.5f, 200.0f);
 	} else {
 		if (m_soundName[0] != '\0') {
 			g_audio->StopSfx(m_soundName);
 		}
 		m_soundDelay = delay;
 		strcpy(m_soundName, name);
+		g_audio->PlaySfx(m_soundName, 0, 0, m_soundName, 0, 0.5f, 200.0f);
 	}
-
-	g_audio->PlaySfx(m_soundName, 0, 0, m_soundName, 0, 0.5f, 200.0f);
 }
 
 // galleryreaction.cpp:58

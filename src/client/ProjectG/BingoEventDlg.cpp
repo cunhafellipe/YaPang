@@ -863,10 +863,13 @@ void FrBingoGiftDlg::OnOwnerDrawGiftArea(PG_MSGARG param) {
 		for (int i = 0; i < count; i++) {
 			const Bitmap* pBitmap = m_giftBitmaps[i];
 			WRect dest;
-			dest.x = offset + rect.x + m_startX[count - 1];
 			dest.y = rect.y;
-			dest.w = (float)pBitmap->Width();
-			dest.h = (float)pBitmap->Height();
+			dest.x = offset + rect.x;
+			dest.x += m_startX[count - 1];
+			unsigned int width = pBitmap->Width();
+			unsigned int height = pBitmap->Height();
+			dest.w = (float)width;
+			dest.h = (float)height;
 			pGDI->DrawTexture(pBitmap, dest, 0xFFFFFFFF, 0);
 			offset += 63.0f;
 		}

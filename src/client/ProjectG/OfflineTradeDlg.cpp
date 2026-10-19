@@ -180,15 +180,13 @@ void FrOfflineTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 			pGDI->DrawTexture(pSlotBitmap, WRect(pItem->pos.x, pItem->pos.y, (float)pSlotBitmap->Width(), (float)pSlotBitmap->Height()), 0xFFFFFFFF, 0);
 		}
 		// "buy a shop item slot"
-		pGDI->Print(pItem->pos + WPoint(182.0f, 7.0f), 2, "\xbb\xf3\xc1\xa1 \xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4 \xb1\xb8\xb8\xc5");
+		pGDI->Print(pItem->pos + WPoint(182.0f, 7.0f) + WPoint(0.0f, 0.0f), 2, "\xbb\xf3\xc1\xa1 \xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4 \xb1\xb8\xb8\xc5");
 
 		if (pItem->underCursor && (m_buyBtnNormal.rect + pItem->pos).IsInRect(mousePos)) {
 			pGDI->DrawTexture(m_buyBtnOver.pBitmap, m_buyBtnOver.rect + pItem->pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
 			CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x16);
 		} else {
-			WRect rect;
-			rect = m_buyBtnNormal.rect + pItem->pos;
-			pGDI->DrawTexture(m_buyBtnNormal.pBitmap, rect, 0xFFFFFFFF, 0);
+			pGDI->DrawTexture(m_buyBtnNormal.pBitmap, m_buyBtnNormal.rect + pItem->pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
 		}
 	} else {
 		__int64 hours = 0;
@@ -208,15 +206,15 @@ void FrOfflineTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 				pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 				if (hours / 24 >= 1) {
 					// "%d days"
-					pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24 + 1);
+					pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "%d\xc0\xcf", hours / 24 + 1);
 				} else {
 					// "%d hours"
-					pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xbd\xc3", hours);
+					pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "%d\xbd\xc3", hours);
 				}
 			} else {
 				pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 				// "expired"
-				pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f), 2, "\xb1\xe2\xb0\xa3\xb8\xb8\xb7\xe1");
+				pGDI->Print(m_tradeState3.rect.TopLeft() + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "\xb1\xe2\xb0\xa3\xb8\xb8\xb7\xe1");
 			}
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 
@@ -233,7 +231,7 @@ void FrOfflineTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 				pGDI->DrawTexture(pSlotBitmap, WRect(pItem->pos.x, pItem->pos.y, (float)pSlotBitmap->Width(), (float)pSlotBitmap->Height()), 0xFFFFFFFF, 0);
 			}
 			// "shop item slot"
-			pGDI->Print(pItem->pos + WPoint(182.0f, 7.0f), 2, "\xbb\xf3\xc1\xa1 \xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4");
+			pGDI->Print(pItem->pos + WPoint(182.0f, 7.0f) + WPoint(0.0f, 0.0f), 2, "\xbb\xf3\xc1\xa1 \xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4");
 
 			if (pItem->underCursor && (m_uploadBtnNormal.rect + pItem->pos).IsInRect(mousePos)) {
 				pGDI->DrawTexture(m_uploadBtnOver.pBitmap, m_uploadBtnOver.rect + pItem->pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
@@ -2160,15 +2158,13 @@ void COfflineShopDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 			pGDI->DrawTexture(pSlotBitmap, WRect(pItem->pos.x, pItem->pos.y, (float)pSlotBitmap->Width(), (float)pSlotBitmap->Height()), 0xFFFFFFFF, 0);
 		}
 		// "buy a shop item slot"
-		pGDI->Print(pItem->pos + WPoint(182.0f, 7.0f), 2, "\xbb\xf3\xc1\xa1 \xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4 \xb1\xb8\xb8\xc5");
+		pGDI->Print(pItem->pos + WPoint(182.0f, 7.0f) + WPoint(0.0f, 0.0f), 2, "\xbb\xf3\xc1\xa1 \xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4 \xb1\xb8\xb8\xc5");
 
 		if (pItem->underCursor && (m_buyBtnNormal.rect + pItem->pos).IsInRect(mousePos)) {
 			pGDI->DrawTexture(m_buyBtnOver.pBitmap, m_buyBtnOver.rect + pItem->pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
 			CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x16);
 		} else {
-			WRect rect;
-			rect = m_buyBtnNormal.rect + pItem->pos;
-			pGDI->DrawTexture(m_buyBtnNormal.pBitmap, rect, 0xFFFFFFFF, 0);
+			pGDI->DrawTexture(m_buyBtnNormal.pBitmap, m_buyBtnNormal.rect + pItem->pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
 		}
 	} else {
 		__int64 hours = 0;
@@ -2189,18 +2185,18 @@ void COfflineShopDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 				if (hours / 24 >= 1) {
 					if (hours % 24 != 0) {
 						// "%d days"
-						pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24 + 1);
+						pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "%d\xc0\xcf", hours / 24 + 1);
 					} else {
-						pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24);
+						pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "%d\xc0\xcf", hours / 24);
 					}
 				} else {
 					// "%d hours"
-					pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xbd\xc3", hours);
+					pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "%d\xbd\xc3", hours);
 				}
 			} else {
 				pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 				// "expired"
-				pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "\xb1\xe2\xb0\xa3\xb8\xb8\xb7\xe1");
+				pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "\xb1\xe2\xb0\xa3\xb8\xb8\xb7\xe1");
 			}
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 
@@ -2217,7 +2213,7 @@ void COfflineShopDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 				pGDI->DrawTexture(pSlotBitmap, WRect(pItem->pos.x, pItem->pos.y, (float)pSlotBitmap->Width(), (float)pSlotBitmap->Height()), 0xFFFFFFFF, 0);
 			}
 			// "shop item slot"
-			pGDI->Print(pItem->pos + WPoint(182.0f, 7.0f), 2, "\xbb\xf3\xc1\xa1 \xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4");
+			pGDI->Print(pItem->pos + WPoint(182.0f, 7.0f) + WPoint(0.0f, 0.0f), 2, "\xbb\xf3\xc1\xa1 \xbe\xc6\xc0\xcc\xc5\xdb \xbd\xbd\xb7\xd4");
 
 			if (pItem->underCursor && (m_uploadBtnNormal.rect + pItem->pos).IsInRect(mousePos)) {
 				pGDI->DrawTexture(m_uploadBtnOver.pBitmap, m_uploadBtnOver.rect + pItem->pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
@@ -2264,7 +2260,7 @@ void COfflineShopDlg::OnTradeItemListLClick(void) {
 	const WPoint& mousePos = pManager->GetMousePos();
 	sStallSlot* pSlot = (sStallSlot*)pItem->pData;
 
-	if (pSlot->reserved == 0
+	if (pSlot != 0 && pSlot->reserved == 0
 		&& ((m_buyBtnNormal.rect + pItem->pos).IsInRect(mousePos)
 		|| (m_buyBtnOver.rect + pItem->pos).IsInRect(mousePos))) {
 		CBuyingSlotDlg* pDlg = CreateForm<CBuyingSlotDlg>(pManager, this, "buyslotdlg", 0);
@@ -2274,7 +2270,7 @@ void COfflineShopDlg::OnTradeItemListLClick(void) {
 		return;
 	}
 
-	if (pSlot->reserved == 1 && pSlot->item.typeId == 0
+	if (pSlot != 0 && pSlot->reserved == 1 && pSlot->item.typeId == 0
 		&& ((m_uploadBtnNormal.rect + pItem->pos).IsInRect(mousePos)
 		|| (m_uploadBtnOver.rect + pItem->pos).IsInRect(mousePos))) {
 		m_pSelectedSlotItem = pItem;
@@ -2291,7 +2287,7 @@ void COfflineShopDlg::OnTradeItemListLClick(void) {
 		return;
 	}
 
-	if (pSlot->reserved == 1
+	if (pSlot != 0 && pSlot->reserved == 1
 		&& ((m_extendBtnNormal.rect + pItem->pos).IsInRect(mousePos)
 		|| (m_extendBtnOver.rect + pItem->pos).IsInRect(mousePos))) {
 		CBuyingSlotDlg* pDlg = CreateForm<CBuyingSlotDlg>(pManager, this, "buyslotdlg", 0);
@@ -2301,7 +2297,7 @@ void COfflineShopDlg::OnTradeItemListLClick(void) {
 		return;
 	}
 
-	if (pSlot->reserved == 1
+	if (pSlot != 0 && pSlot->reserved == 1
 		&& ((m_returnBtnNormal.rect + pItem->pos).IsInRect(mousePos)
 		|| (m_returnBtnOver.rect + pItem->pos).IsInRect(mousePos)
 		|| (m_deleteBtnNormal.rect + pItem->pos).IsInRect(mousePos)
@@ -2541,13 +2537,13 @@ void COfflineShopVisitorDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 			if (hours / 24 > 1) {
 				if (hours % 24 != 0) {
 					// "%d days"
-					pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24 + 1);
+					pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "%d\xc0\xcf", hours / 24 + 1);
 				} else {
-					pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xc0\xcf", hours / 24);
+					pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "%d\xc0\xcf", hours / 24);
 				}
 			} else {
 				// "%d hours"
-				pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "%d\xbd\xc3", hours);
+				pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "%d\xbd\xc3", hours);
 			}
 		}
 
@@ -2562,7 +2558,7 @@ void COfflineShopVisitorDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 
 		pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 		// "cannot buy"
-		pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f), 2, "\xb1\xb8\xb8\xc5 \xba\xd2\xb0\xa1");
+		pGDI->Print(WPoint(m_tradeState3.rect.x, m_tradeState3.rect.y) + pItem->pos + WPoint(55.0f, 6.0f) + WPoint(0.0f, 0.0f), 2, "\xb1\xb8\xb8\xc5 \xba\xd2\xb0\xa1");
 	}
 }
 

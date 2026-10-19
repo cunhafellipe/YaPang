@@ -1243,7 +1243,7 @@ void FrBongdariShopDlg::DrawShadow(void) {
 					FrArea* pArea = m_pBongdariArea;
 					float w = m_pShadowImage->Width() * 1.5f;
 
-					rect = WRect(pArea->GetRect().x + pArea->GetRect().w * 0.5f - w * 0.5f, pArea->GetRect().y + pArea->GetRect().h - 23.0f - (m_pShadowImage->Height() * 1.5f) * 0.5f, w, m_pShadowImage->Height() * 1.5f);
+					rect = WRect(WPoint(pArea->GetRect().x + pArea->GetRect().w * 0.5f - w * 0.5f, pArea->GetRect().y + pArea->GetRect().h - 23.0f - (m_pShadowImage->Height() * 1.5f) * 0.5f), w, m_pShadowImage->Height() * 1.5f);
 					pGDI->DrawTexture(m_pShadowImage, rect, 0x90ffffff, 0);
 				}
 			}

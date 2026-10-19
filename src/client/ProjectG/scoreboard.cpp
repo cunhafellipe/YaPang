@@ -1789,8 +1789,9 @@ void CRankExData::SetLeader(void) {
 	m_pRankList->SortItem(RankCompare);
 
 	int firstCount = 0;
+	int i;
 
-	for (int i = 0; i < (int)resultList.size(); i++) {
+	for (i = 0; i < (int)resultList.size(); i++) {
 		if (m_pRival[i].m_rank == 1)
 			firstCount++;
 	}
@@ -1802,7 +1803,7 @@ void CRankExData::SetLeader(void) {
 
 	firstCount = 0; int leaderIndex = resultList.size();
 
-	for (int i = 0; i < (int)resultList.size(); i++) {
+	for (i = 0; i < (int)resultList.size(); i++) {
 		if (m_pRival[i].m_rank == 1) {
 			if (firstCount == pick) {
 				leaderIndex = i;
@@ -1832,10 +1833,9 @@ void CRankExData::SetLeader(void) {
 	ShowLeader();
 
 	char text[256];
-	sRivalData* pLeader = &m_pRival[leaderIndex];
 
 	sprintf(text, "\xC7\xF6\xC0\xE7 1\xC0\xA7 %s\xB4\xD4, \xBD\xBA\xC4\xDA\xBE\xEE %d",
-		pLeader->m_nickname, pLeader->m_score);
+		m_pRival[leaderIndex].m_nickname, m_pRival[leaderIndex].m_score);
 	m_pBoard->SetCaption(text);
 }
 
@@ -3262,7 +3262,7 @@ void cAquireItem::DisplayPrizeList(int player) {
 
 	float offset = 5.0f;
 	for (std::map<unsigned long, int>::const_iterator it = m_prizeSlots[player].m_counts.begin(); it != m_prizeSlots[player].m_counts.end(); ++it) {
-		unsigned long typeId = it->first;
+		unsigned int typeId = it->first;
 		WOverlay* pOverlay = 0;
 
 		std::map<unsigned long, WOverlay*>::iterator found = m_overlays[player].find(typeId);
@@ -4356,9 +4356,16 @@ void FrScoreForm::OnTotalListOwnerDraw(PG_MSGARG param) {
 
 	if (GetGameType() == 1) {
 		// the row of this client's team
-		if (index == GOLFDOC()->GetPlayer(OnlinePlay() ? MyIndex() : GOLFDOC()->m_myPlayerIndex)->m_attribute) {
-			WRect rect(pItem->pos.x, pItem->pos.y, (float)m_pScoreList[2]->GetItemWidth() * 0.5f, (float)m_pScoreList[2]->GetItemHeight());
-			pGDI->Box(rect, 0x809B9DFF, 0, 0.0f);
+		if (OnlinePlay()) {
+			if (index == PLAYER(MyIndex())->m_attribute) {
+				WRect rect(pItem->pos.x, pItem->pos.y, (float)m_pScoreList[2]->GetItemWidth() * 0.5f, (float)m_pScoreList[2]->GetItemHeight());
+				pGDI->Box(rect, 0x809B9DFF, 0, 0.0f);
+			}
+		} else {
+			if (index == PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute) {
+				WRect rect(pItem->pos.x, pItem->pos.y, (float)m_pScoreList[2]->GetItemWidth() * 0.5f, (float)m_pScoreList[2]->GetItemHeight());
+				pGDI->Box(rect, 0x809B9DFF, 0, 0.0f);
+			}
 		}
 	} else if (OnlinePlay()) {
 		unsigned long color = 0;
@@ -4633,8 +4640,8 @@ void FrScoreForm::DrawShot(FrListItem* pItem) {
 			} else {
 				int par = GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]).m_par;
 				int shots = GUILDMATCHUP(index)->m_holeShots[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
-				int score = shots - par;
-				score = score < -3 ? -3 : (score > 3 ? 3 : score);
+				int diff = shots - par;
+				int score = diff < -3 ? -3 : (diff > 3 ? 3 : diff);
 
 				unsigned long color;
 				switch (score) {
@@ -5836,7 +5843,7 @@ void CScore::OnProcess(float dt) {
 			}
 		} else {
 			// scoreboard.cpp:7700
-			bool bShow = g_pFresh->GetManager()->GetDesktop()->IsWallPaperVisible() == false;
+			bool bShow = g_pFresh->GetDesktop()->IsWallPaperVisible() == false;
 			if (GetGameType() == 10) {
 				bShow = false;
 			}

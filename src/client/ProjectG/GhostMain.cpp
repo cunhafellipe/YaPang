@@ -646,7 +646,7 @@ void CGhostMain::OnInitStart(PG_MSGARG) {
 
 // ghostmain.cpp:838
 void CGhostMain::OnDownStart(void) {
-	if (FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop")))
+	if (FrStaticCast<FrWnd>(g_pFresh->GetDesktop()->FindChildByName("bongdari_shop")))
 		return;
 
 	CGhostDocument *doc = CGhostManager::Instance()->GetDocument();
@@ -664,8 +664,8 @@ void CGhostMain::OnDownStart(void) {
 	memset(&ghostSlot, 0, sizeof(ghostSlot));
 
 	mySlot.m_uid = WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid;
-	mySlot.m_level = WSingleton<CSharedDoc>::Instance()->m_myLevel;
 	mySlot.m_connection = 1;
+	mySlot.m_level = WSingleton<CSharedDoc>::Instance()->m_myLevel;
 	strcpy(mySlot.m_nickname, WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname);
 	players.push_back(mySlot);
 
@@ -674,11 +674,11 @@ void CGhostMain::OnDownStart(void) {
 
 	const GHOST_GAME_DATA *game = doc->GetGameData();
 	SetCurMap(game->m_curMap);
-	WSingleton<CSharedDoc>::Instance()->m_roomType = 0; strcpy(WSingleton<CSharedDoc>::Instance()->m_roomName, WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[0].name);
-	WSingleton<CSharedDoc>::Instance()->m_gameKind = game->m_gameKind;
-	WSingleton<CSharedDoc>::Instance()->m_holes = 18;
-	WSingleton<CSharedDoc>::Instance()->m_shotTimeLimit = 0;
-	WSingleton<CSharedDoc>::Instance()->m_gameTimeLimit = 0;
+	SetGameType(0);
+	SetHoleType(game->m_gameKind);
+	SetHoles(18);
+	SetShotTimeLimit(0);
+	SetGameTimeLimit(0);
 
 	for (int i = 0; i < 18; i++) {
 		WSingleton<CSharedDoc>::Instance()->m_holeRandom[i] = game->m_holeRandom[i];
@@ -707,17 +707,17 @@ void CGhostMain::OnInitPlayerZone(PG_MSGARG param) {
 
 // ghostmain.cpp:906
 void CGhostMain::OnDrawPlayerZone(void) {
-	FrWnd *shop = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop");
+	FrWnd *shop = g_pFresh->GetDesktop()->FindChildByName("bongdari_shop");
 	if (FrStaticCast<FrWnd>(shop))
 		return;
 
-	if (m_hand.IsWorking(0))
-		return;
-	if (CRankingInfo::Instance()->GetDlg() == 0 && USERINFODLG() == 0) {
-		m_hand.Enter();
-		if (m_userPet)
-			m_userPet->Display(0.0f, 0.0f);
-		m_hand.Leave();
+	if (!m_hand.IsWorking(0)) {
+		if (CRankingInfo::Instance()->GetDlg() == 0 && USERINFODLG() == 0) {
+			m_hand.Enter();
+			if (m_userPet)
+				m_userPet->Display(0.0f, 0.0f);
+			m_hand.Leave();
+		}
 	}
 }
 
@@ -817,8 +817,8 @@ void CGhostMain::OnDownUserEquip(void) {
 
 		m_selectedIcon = pItem;
 
-		WPoint pt = pItem->pos;
 		int category = 1;
+		WPoint pt = pItem->pos;
 		switch (pItem->idx) {
 		case 4: category = 0x10; break;
 		case 1: category = 7; break;

@@ -60,25 +60,28 @@ public:
 	template <class T, class P>
 	bool Exec(T* pObj, P param) {
 		std::map<int, sFunctionHandler>::iterator it;
-		if ((it = m_functions.find(m_type)) == m_functions.end()) {
+		it = m_functions.find(m_type);
+		if (it == m_functions.end()) {
 			return false;
 		}
 
 		sFunctionHandler handler = it->second;
 
+		FUNCTION_MAPPER_PFN pFunc = handler.pFunc;
+
 		bool bResult = true;
 		switch (handler.type) {
 		case FUNCTION_TYPE_VV:
-			(pObj->*(void (T::*)(void))handler.pFunc)();
+			(pObj->*(void (T::*)(void))pFunc)();
 			break;
 		case FUNCTION_TYPE_BV:
-			bResult = (pObj->*(bool (T::*)(void))(void (T::*)(void))handler.pFunc)();
+			bResult = (pObj->*(bool (T::*)(void))(void (T::*)(void))pFunc)();
 			break;
 		case FUNCTION_TYPE_VP:
-			(pObj->*(void (T::*)(P))(void (T::*)(void))handler.pFunc)(param);
+			(pObj->*(void (T::*)(P))(void (T::*)(void))pFunc)(param);
 			break;
 		case FUNCTION_TYPE_BP:
-			bResult = (pObj->*(bool (T::*)(P))(void (T::*)(void))handler.pFunc)(param);
+			bResult = (pObj->*(bool (T::*)(P))(void (T::*)(void))pFunc)(param);
 			break;
 		}
 		return bResult;

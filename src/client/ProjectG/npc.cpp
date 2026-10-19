@@ -33,14 +33,6 @@ extern WMatrix g_camera;
 // ?g_lightset@@3ULightSet@@A; its header (wscene.h) does not declare it yet.
 extern LightSet g_lightset;
 
-// One degree in radians, a file-static float of the original (read from
-// memory, not folded); its name is not known. wmath.h's g_DEGTORAD has the
-// value but is referenced under its own name, which check_diff does not pair.
-static float data_9f0fc0 = 0.017453292f;
-
-// FLT_MAX, a file-static float of the original (FindParameterByDistance reads
-// it from memory); its name is not known.
-static float data_9f0fc4 = FLT_MAX;
 
 // npc.cpp:24 (run-time type and factory registration of CNPC)
 const WRTTI CNPC::m_RTTI("CNPC", &IActor::m_RTTI);
@@ -530,7 +522,7 @@ void CCreature::SetArea(const Waabb &area, unsigned long flags) {
 	if (m_flags & 1)
 		return;
 
-	m_matrix = RotMat(Random(-180.0f, 180.0f, -1) * data_9f0fc0, 1);
+	m_matrix = RotMat(Random(-180.0f, 180.0f, -1) * g_DEGTORAD, 1);
 
 	for (int i = 0; i < 3; i++) {
 		float r = Random(0, 1.0f, -1);
@@ -638,7 +630,7 @@ void CCreature::Init(const char *name, unsigned long flags) {
 		if (m_pPet->CheckFrameData((int)floor(m_pMotion->s * 30.0f), (int)ceil(m_pMotion->e * 30.0f), first, last)) {
 			for (int i = first; i <= last; ++i) {
 				sAlpha alpha;
-				if (sscanf(m_pPet->m_frame[i].data, "*opa %f", &alpha.m_value)) {
+				if (sscanf(m_pPet->GetFrameData(i), "*opa %f", &alpha.m_value)) {
 					alpha.m_value *= 2.55f;
 					alpha.m_time = m_pPet->GetFrameDataTime(i);
 					m_alphaList.push_back(alpha);
@@ -907,7 +899,7 @@ void CCreature::CheckTarget(float dt) {
 	} else {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
-		if (Abs(angle) > data_9f0fc0) {
+		if (Abs(angle) > g_DEGTORAD) {
 			if (Abs(angle) > m_rollRate) {
 				if (Abs(m_motionParam) < m_unk7C)
 					m_motionParam -= angle * dt;
@@ -1177,7 +1169,7 @@ void CSparrow::PlayEvent(void) {
 
 	m_count = (int)(m_maxCount / GolfBall().PreData(0)->m_velocity.Magnitude() * speed);
 	for (int i = 0; i < m_count; i++) {
-		m_pMatrices[i] = RotMat(Random(-180.0f, 180.0f, -1) * data_9f0fc0, 1);
+		m_pMatrices[i] = RotMat(Random(-180.0f, 180.0f, -1) * g_DEGTORAD, 1);
 		m_pMatrices[i].pivot = (m_area.min + m_area.max) * 0.5f;
 	}
 }
@@ -1277,7 +1269,7 @@ void CSanta::CheckTarget(float dt) {
 
 	float angle = CalcDeltaAngle(d, m_matrix.za * -1.0f);
 
-	if (Abs(angle) > data_9f0fc0) {
+	if (Abs(angle) > g_DEGTORAD) {
 		float limit = dt * m_turnRate;
 		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
@@ -1369,7 +1361,7 @@ void CFighter::CheckTarget(float dt) {
 
 	float angle = CalcDeltaAngle(d, m_matrix.za * -1.0f);
 
-	if (Abs(angle) > data_9f0fc0) {
+	if (Abs(angle) > g_DEGTORAD) {
 		float limit = dt * m_turnRate;
 		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
@@ -1472,7 +1464,7 @@ void CUfo::CheckTarget(float dt) {
 
 	float angle = CalcDeltaAngle(d, m_matrix.za * -1.0f);
 
-	if (Abs(angle) > data_9f0fc0) {
+	if (Abs(angle) > g_DEGTORAD) {
 		float limit = dt * m_turnRate;
 		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
 	}
@@ -1562,7 +1554,7 @@ void ntPenguin::CheckTarget(float dt) {
 
 	float angle = CalcDeltaAngle(d, m_matrix.za * -1.0f);
 
-	if (Abs(angle) > data_9f0fc0) {
+	if (Abs(angle) > g_DEGTORAD) {
 		m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 	}
 
@@ -1720,7 +1712,7 @@ void ntPenguin_Sailor::CheckTarget(float dt) {
 	} else {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
-		if (Abs(angle) > data_9f0fc0) {
+		if (Abs(angle) > g_DEGTORAD) {
 			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		}
 
@@ -2078,7 +2070,7 @@ void ntNpc_BlackSparrow::CheckTarget(float dt) {
 	} else {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
-		if (Abs(angle) > data_9f0fc0) {
+		if (Abs(angle) > g_DEGTORAD) {
 			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		}
 
@@ -2203,7 +2195,7 @@ void ntNpc_PolaPenguin1::CheckTarget(float dt) {
 
 	float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
-	if (Abs(angle) > data_9f0fc0) {
+	if (Abs(angle) > g_DEGTORAD) {
 		m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 	}
 
@@ -2297,7 +2289,7 @@ void ntNpc_PolaPenguin2::CheckTarget(float dt) {
 	if (m_unk120) {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
-		if (Abs(angle) > data_9f0fc0) {
+		if (Abs(angle) > g_DEGTORAD) {
 			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		}
 
@@ -2331,7 +2323,7 @@ void ntNpc_PolaPenguin2::FindTarget(void) {
 bool ntNpc_PolaPenguin2::IsSlidable(void) {
 	float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
-	if (Abs(angle) > data_9f0fc0)
+	if (Abs(angle) > g_DEGTORAD)
 		return false;
 
 	w_motion_data *motion = m_pPet->FindMotionData("NPC_Default");
@@ -2387,7 +2379,7 @@ void CNPC_BIRD::CheckTarget(float dt) {
 
 	float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
-	if (Abs(angle) > data_9f0fc0) {
+	if (Abs(angle) > g_DEGTORAD) {
 		m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 	}
 
@@ -2479,7 +2471,7 @@ void CNPC_TORTOISE::CheckTarget(float dt) {
 
 	float angle = CalcDeltaAngle(d, m_matrix.za * -1.0f);
 
-	if (Abs(angle) > data_9f0fc0) {
+	if (Abs(angle) > g_DEGTORAD) {
 		m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 	}
 
@@ -2613,7 +2605,7 @@ void ntNpc_AreaWalker::CheckTarget(float dt) {
 	if (m_walking) {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
-		if (Abs(angle) > data_9f0fc0) {
+		if (Abs(angle) > g_DEGTORAD) {
 			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		}
 
@@ -3064,7 +3056,7 @@ float ntCatmullRom::FindParameterByDistance(float t, float distance) {
 		u -= diff / Velocity(u).Magnitude();
 	}
 
-	return data_9f0fc4;
+	return g_HUGE;
 }
 
 // npc.cpp:4118

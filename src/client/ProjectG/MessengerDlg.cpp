@@ -1891,7 +1891,7 @@ void CMessengerInfo::SaveCurrentFocus(void) {
 			} else if (strcmp(name.c_str(), "messenger_chat") == 0) {
 				std::list<sChatSlot>::iterator itSlot;
 				for (itSlot = chatList.begin(); itSlot != chatList.end(); ++itSlot) {
-					if (itSlot->pChatDlg == pForm)
+					if (itSlot->pChatDlg == pWnd)
 						m_focusOrder.push_back(itSlot->uid);
 				}
 			}
@@ -2288,16 +2288,14 @@ void CMessengerInfo::RepositionPopupDlg(FrMessengerChatDlg* pDlg, int index) {
 
 	WRect rc = pDlg->GetRect();
 
-	float cx = g_view->GetWidth() - rc.w;
-	if (cx <= 0.0f)
+	if (g_view->GetWidth() - rc.w <= 0.0f)
 		return;
-	float cy = g_view->GetHeight() - rc.h;
-	if (cy <= 0.0f)
+	if (g_view->GetHeight() - rc.h <= 0.0f)
 		return;
 
 	int offset = m_popupCount * 20;
 
-	WPoint pt(rc.x + cx * offset / cy, rc.y + offset); if ((int)(g_view->GetWidth() - rc.w) > 0) pt.x = (float)((int)pt.x % (int)(g_view->GetWidth() - rc.w)); if ((int)(g_view->GetHeight() - rc.h) > 0) pt.y = (float)((int)pt.y % (int)(g_view->GetHeight() - rc.h)); pDlg->MoveWindow(pt); m_popupCount++;
+	WPoint pt(rc.x + (g_view->GetWidth() - rc.w) * offset / (g_view->GetHeight() - rc.h), rc.y + offset); if ((int)(g_view->GetWidth() - rc.w) > 0) pt.x = (float)((int)pt.x % (int)(g_view->GetWidth() - rc.w)); if ((int)(g_view->GetHeight() - rc.h) > 0) pt.y = (float)((int)pt.y % (int)(g_view->GetHeight() - rc.h)); pDlg->MoveWindow(pt); m_popupCount++;
 }
 
 // messengerdlg.cpp:4151
