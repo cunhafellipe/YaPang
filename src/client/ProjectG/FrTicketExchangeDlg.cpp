@@ -405,10 +405,12 @@ void FrTicketExchangeDlg::Reponse(unsigned long group, unsigned char result) {
 		break;
 	}
 
-	FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
-	pForm->SetTimeLimit(3.0f);
-	pForm->SetMessage(message, true);
-	pForm->Open(0, 0);
+	{
+		FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
+		pForm->SetTimeLimit(3.0f);
+		pForm->SetMessage(message, true);
+		pForm->Open(0, 0);
+	}
 
 	if (result == 0) {
 apply:
