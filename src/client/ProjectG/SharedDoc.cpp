@@ -27,7 +27,7 @@
 #include "TaskManager.h"
 #include "LobbyTask.h"
 #include "GolfTask.h"
-#include "Exhibition.h"
+#include "exhibition.h"
 #include "ShopTask.h"
 #include "frwnd.h"
 #include "frcombobox.h"

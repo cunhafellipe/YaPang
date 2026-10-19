@@ -17,7 +17,7 @@
 #include "quadtree.h"
 #include "ClientSetting.h"
 #include "fresh.h"
-#include "FrEdit.h"
+#include "fredit.h"
 #include "Shadow.h"
 #include "ItemManager.h"
 #include "wresrcmng.h"

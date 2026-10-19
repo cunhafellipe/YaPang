@@ -14,7 +14,7 @@
 #include "client/Wangreal/include/wutil.h"
 #include "client/Wangreal/include/wview.h"
 #include "commonutil.h"
-#include "QuadTree.h"
+#include "quadtree.h"
 #include "ProjectG.h"
 #include "SoundManager.h"
 #include "TaskManager.h"

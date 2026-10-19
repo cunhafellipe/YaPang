@@ -18,7 +18,7 @@
 #include "ClientSetting.h"
 #include <mmsystem.h>
 #include "GolfDoc.h"
-#include "Fx.h"
+#include "fx.h"
 #include "club.h"
 #include "quadtree.h"
 #include "wutil.h"
@@ -68,7 +68,7 @@
 #include "camerawork.h"
 #include "SoundManager.h"
 #include "ProjectG.h"
-#include "VoiceItem.h"
+#include "voiceitem.h"
 #include "EffectManager.h"
 #include "fxspray.h"
 #include "CodeTinker.h"

@@ -14,7 +14,7 @@
 #include "client/Wangreal/include/woverlay.h"
 #include "client/Wangreal/include/wresrcmng.h"
 #include "SharedDoc.h"
-#include "golfdoc.h"
+#include "GolfDoc.h"
 #include "quadtree.h"
 #include "TaskManager.h"
 #include "RealMyRoomTask.h"

@@ -4,7 +4,7 @@
 #include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
 #include "NetworkSystem.h"
 #include "Packet.h"
-#include "post_senddlg.h"
+#include "Post_SendDlg.h"
 #include "FriendDlg.h"
 #include "EmoticonDlg.h"
 #include "ObjectFactory.h"

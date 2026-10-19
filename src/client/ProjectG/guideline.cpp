@@ -8,11 +8,11 @@
 #include "wview.h"
 #include "wutil.h"
 #include "SharedDoc.h"
-#include "golfdoc.h"
+#include "GolfDoc.h"
 #include "golfball.h"
 #include "club.h"
 #include "CapturedBg.h"
-#include "QuadTree.h"
+#include "quadtree.h"
 
 // guideline.cpp:18
 IObject* CGuideLineMakeInstance(void) {

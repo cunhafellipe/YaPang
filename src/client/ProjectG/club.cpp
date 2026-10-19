@@ -28,7 +28,7 @@
 #include "HelpMsg.h"
 #include "slicestr.h"
 #include "wpuppet.h"
-#include "AutoTarget.h"
+#include "autotarget.h"
 
 // Declared nowhere yet: SharedDoc.h (PerformPowerBarSetting) and
 // s5/Utilities.h (S5::IsUsableCalipers) are other units' headers.

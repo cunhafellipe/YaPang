@@ -8,7 +8,7 @@
 #include <string>
 #include "wview.h"
 #include "SharedDoc.h"
-#include "golfdoc.h"
+#include "GolfDoc.h"
 #include "golfball.h"
 #include "CapturedBg.h"
 #include "ChatMsg.h"

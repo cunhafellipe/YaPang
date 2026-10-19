@@ -1,5 +1,5 @@
 // Original: d:\build\custom\temp\code\client\projectg\logininfo.cpp
-#include "LoginInfo.h"
+#include "logininfo.h"
 
 #include <algorithm>
 #include <string.h>

@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include "ClientSetting.h"
-#include "GolfBall.h"
+#include "golfball.h"
 #include "GolfDoc.h"
 #include "SharedDoc.h"
 #include "commonutil.h"

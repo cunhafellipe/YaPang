@@ -12,7 +12,7 @@
 #include "RealMyRoom_Avatar.h"
 #include "RealMyRoomData.h"
 #include "InputManager.h"
-#include "MouseCursor.h"
+#include "mousecursor.h"
 #include "exhibition.h"
 #include "client/Wangreal/include/wpuppet.h"
 #include "client/Wangreal/include/wbone.h"

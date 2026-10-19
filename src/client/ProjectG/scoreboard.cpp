@@ -29,7 +29,7 @@
 #include "frstatic.h"
 #include "frwndmanager.h"
 #include "GolfDoc.h"
-#include "HeadIcon.h"
+#include "headicon.h"
 #include "Intrusion.h"
 #include "NetResourceManager.h"
 #include "NetworkSystem.h"

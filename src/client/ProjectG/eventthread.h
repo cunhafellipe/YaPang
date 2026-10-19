@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <list>
 
-#include "criticalsection.h"
+#include "CriticalSection.h"
 #include "defines.h"
 #include "singleton.h"
 #include "thread.h"
