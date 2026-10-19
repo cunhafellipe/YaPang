@@ -398,10 +398,10 @@ FrUserInfoForm::FrUserInfoForm(void) {
 	m_pCommentEdit = NULL;
 	m_pNickArea = NULL;
 
-	m_skinScrollState[0] = 0;
-	m_skinScroll[0] = 0;
-	m_skinScrollState[1] = 0;
-	m_skinScroll[1] = 0;
+	for (int axis = 0; axis < 2; axis++) {
+		m_skinScrollState[axis] = 0;
+		m_skinScroll[axis] = 0;
+	}
 
 	m_pScoreList = NULL;
 	m_pTitleFont = NULL;
@@ -2406,6 +2406,7 @@ void FrUserInfoForm::SetContent(bool b) {
 		m_pGuildPangEdit->SetLine(1, buf, 0xFF000000, false, 0);
 
 		sprintf(buf, "%d", m_guildMyPercent);
+		m_pGuildMyPercentEdit->SetLine(1, buf, 0xFF000000, false, 0);
 	} else {
 		const char *none = "\xbe\xf8\xc0\xbd";   // "none"
 
@@ -2416,8 +2417,8 @@ void FrUserInfoForm::SetContent(bool b) {
 		m_pGuildPangEdit->SetLine(1, buf, 0xFF000000, false, 0);
 
 		strcpy(buf, none);
+		m_pGuildMyPercentEdit->SetLine(1, buf, 0xFF000000, false, 0);
 	}
-	m_pGuildMyPercentEdit->SetLine(1, buf, 0xFF000000, false, 0);
 }
 
 // user_info.cpp:3078

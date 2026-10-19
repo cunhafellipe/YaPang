@@ -76,10 +76,6 @@ extern LightSet g_lightset;
 // other way); its header is unknown, as for camerawork.cpp's MinOf.
 template <class T> T MinOf(T a, T b) { return a > b ? b : a; }
 
-// Nameless .rdata floats Process reads through memory: pi, 2 pi, (unused
-// here), epsilon; like wmath.h's data_9eb420, their source is not known.
-extern "C" const float data_9f4084[4];
-
 // wmath.h:98
 float RadianNormalize2PI(float radian) {
 	if (radian >= 6.2831855f || radian < 0.0f) {
@@ -681,7 +677,7 @@ static bool SlideMove(const WVector &velocity, const WVector &pos, CQuadTree *pP
 	int k;
 	float d;
 
-	if (Wabs(velocity.SquareMagnitude()) < data_9f4084[3]) {
+	if (Wabs(velocity.SquareMagnitude()) < g_EPSILON) {
 		out = pos;
 		return false;
 	}
@@ -853,7 +849,7 @@ void ntAvatar::Process(float elapsed) {
 
 	WVector move; move.Reset(); WVector dir;
 	dir = m_targetPosition - m_position;
-	if (!(Wabs(dir.x) < data_9f4084[3]) || !(Wabs(dir.z) < data_9f4084[3])) {
+	if (!(Wabs(dir.x) < g_EPSILON) || !(Wabs(dir.z) < g_EPSILON)) {
 		dir.y = 0.0f; dir.Normalize();
 
 		float speed = m_spItems[2].getvalue();
@@ -941,12 +937,12 @@ void ntAvatar::Process(float elapsed) {
 	}
 
 	float turn = m_targetAngle - m_angle;
-	turn = RadianNormalize2PI(turn); if (turn > data_9f4084[0]) turn -= data_9f4084[1];
+	turn = RadianNormalize2PI(turn); if (turn > g_PI) turn -= g_2_PI;
 	if (turn > 0.0f && m_targetAngle < m_angle) {
-		m_angle -= data_9f4084[1];
+		m_angle -= g_2_PI;
 	}
 	else if (turn < 0.0f && m_targetAngle > m_angle) {
-		m_angle += data_9f4084[1];
+		m_angle += g_2_PI;
 	}
 
 	if (fabs(turn) > 0.001f) {
@@ -1002,8 +998,8 @@ void ntAvatar::Process(float elapsed) {
 	WVector axis = WCrossProduct(m_groundNormal, up);
 	axis.Normalize();
 
-	if (!(Wabs(axis.SquareMagnitude()) < data_9f4084[3])) {
-		if (acos(WDotProduct(up, m_groundNormal)) < elapsed * data_9f4084[1]) {
+	if (!(Wabs(axis.SquareMagnitude()) < g_EPSILON)) {
+		if (acos(WDotProduct(up, m_groundNormal)) < elapsed * g_2_PI) {
 			m_groundNormal = up;
 		}
 		else {
@@ -1017,7 +1013,7 @@ void ntAvatar::Process(float elapsed) {
 	mat = RotMat(m_angle, 1) * mat;
 
 	float scale = m_spItems[0].getvalue(); mat.pivot = m_position;
-	WVector axisScale(scale, scale, scale); mat.AxisScale(axisScale);
+	{ WVector axisScale(scale, scale, scale); mat.AxisScale(axisScale); }
 
 	if (m_pPetFrame) {
 		m_pPetFrame->ApplyBones(&m_boneSet, mat);
@@ -1113,7 +1109,7 @@ void ntAvatar::RenderOverlay(bool detail) {
 		m_pBalloonText->SetTransparency(m_time);
 	}
 
-	if (GOLFDOC()->GameMode() != 0x200 && WAbsBySign(m_time) < data_9f4084[3]) {
+	if (GOLFDOC()->GameMode() != 0x200 && WAbsBySign(m_time) < g_EPSILON) {
 		return;
 	}
 
@@ -1320,7 +1316,7 @@ void ntAvatar::ScriptProcess(const w_motion_data *data, float from, float to, bo
 	} else {
 		to = MinOf(data->e, to) * 30.0f;
 		start = Ceil(from, 0.03f);
-		end = WAbsBySign((float)floor(to) - to) < data_9f4084[3] ? (int)to - 1 : (int)floor(to);
+		end = WAbsBySign((float)floor(to) - to) < g_EPSILON ? (int)to - 1 : (int)floor(to);
 
 		if (start == (int)floor(data->s * 30.0f + 0.5f)) {
 			start++;
@@ -1785,11 +1781,11 @@ ntAvatar *ntAvatarManager::CreateAvatar(const sSlotInfo &slotInfo, const sCharac
 	pos = GetPVS().GetGroundPoint(pos, false, NULL, false);
 	pAvatar->SetPosition(pos);
 	// avatar_avatar.cpp:2433: SetAngle written out; it reads 2 pi from the
-	// unit's .rdata (data_9f4084[1]) where the inline RadianNormalize2PI has
+	// unit's .rdata (g_2_PI) where the inline RadianNormalize2PI has
 	// a literal.
 	float angle = slotInfo.m_angle;
-	if (angle >= data_9f4084[1] || angle < 0.0f) {
-		angle -= (float)floor((double)(angle * 0.15915494f)) * data_9f4084[1];
+	if (angle >= g_2_PI || angle < 0.0f) {
+		angle -= (float)floor((double)(angle * 0.15915494f)) * g_2_PI;
 	}
 	pAvatar->m_angle = angle;
 	pAvatar->m_targetAngle = angle;

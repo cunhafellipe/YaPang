@@ -263,7 +263,10 @@ bool GroundItem::TestIntersection(int frame) {
 	float dz = ball.center[2] - item.center[2];
 	float sumRadius = item.radius + ball.radius;
 
-	if (dx * dx + dy * dy + dz * dz <= sumRadius * sumRadius) {
+	// Horizontal distance first, then the height.
+	float distSq = dx * dx + dz * dz;
+	distSq += dy * dy;
+	if (distSq <= sumRadius * sumRadius) {
 		return true;
 	}
 

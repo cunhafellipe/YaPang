@@ -307,12 +307,11 @@ WMatrix CGolfDoc::MakeTopViewCameraMatrix(bool keepCamera) {
 	WMatrix mat;
 
 	mat.za = WVector::UNIT_NEG_Y;
-	CGolfDoc *pDoc = GOLFDOC();
-	mat.ya = pDoc->m_cameraData.m_matrix.za;
+	mat.ya = GOLFDOC()->m_cameraData.m_matrix.za;
 	mat.ya.Normalize();
 	mat.xa = WCrossProduct(mat.ya, mat.za);
 
-	WVector toCup = GetHoleCupPos() - pDoc->GetPlayer(pDoc->m_myPlayerIndex)->m_ballPos;
+	WVector toCup = GetHoleCupPos() - PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ballPos;
 	float dist = (float)sqrt(toCup.z * toCup.z + toCup.x * toCup.x);
 
 	if (g_input->Get("LCONTROL", true) || g_input->Get("RCONTROL", true)) {
@@ -963,9 +962,9 @@ const sProperty &CPropertyInfo::GetProperty(int index) {
 void sBar::Reset(void) {
 	m_accuracy = 105.0f;
 	m_prevAccuracy = 105.0f;
-	m_position = m_power = m_startPosition = 140.0f; m_stopped = false;
+	m_position = m_power = m_startPosition = BAR_START; m_stopped = false;
 	m_state = 0;
-	m_impact = 140.0f;
+	m_impact = BAR_START;
 }
 
 // golfdoc.cpp:1159

@@ -190,7 +190,8 @@ bool FrMessengerChatDlg::OnChatInputEnterKey(intptr_t param) {
 				CSharedDoc::Instance()->m_chatManager.Filtering(text);
 
 				WSendPacket packet(GCR_REQUEST_SEND_TALK);
-				packet.Encode4(pFriend->uid);
+				unsigned long uid = pFriend->uid;
+				packet.Encode4(uid);
 				packet.EncodeStr(std::string(text));
 				packet.Send(SEND_TO_MSN);
 

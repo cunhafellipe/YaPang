@@ -153,7 +153,7 @@ void CLensFlare::Render(WView* view) {
 	m_sprites[1]->Render(view, 0x20800000, W3dSpr::CAMERA_XY_ALIGN);
 
 	m_sprites[2]->SetPos(pos);
-	height = m_spriteSize[1].height * 2.0f; width = m_spriteSize[1].width * 2.0f; m_sprites[2]->SetRect(width, height, width * 0.5f, height * 0.5f);
+	float glowHeight = m_spriteSize[1].height * 2.0f; float glowWidth = m_spriteSize[1].width * 2.0f; m_sprites[2]->SetRect(glowWidth, glowHeight, glowWidth * 0.5f, glowHeight * 0.5f);
 	m_sprites[2]->Render(view, 0x20800000, W3dSpr::CAMERA_XY_ALIGN);
 
 	if (vtx.sx < m_spriteSize[1].width * -0.7f || vtx.sx > m_spriteSize[1].width * 0.7f + view->GetWidth()
@@ -193,9 +193,9 @@ void CLensFlare::Render(WView* view) {
 		WOverlay* overlay = m_overlays[ms_lenzTable[j].overlay];
 		int r = rand() % 500;
 
-		float size = (r * 0.0001f + 1.0f) * ms_lenzTable[j].scale * view->GetWidth() * unit;
-		dst.w = size;
-		dst.h = size;
+		float size = (r * 0.0001f + 1.0f) * ms_lenzTable[j].scale * view->GetWidth();
+		dst.w = size * unit;
+		dst.h = size * unit;
 		dst.x = (dx * ms_lenzTable[j].position + 0.5f) * view->GetWidth() - dst.w * 0.5f;
 		dst.y = (dy * ms_lenzTable[j].position + 0.5f) * view->GetHeight() - dst.w * 0.5f;
 		overlay->Render(view, src, dst, 0xC00000, ms_lenzTable[j].color, 0.0f, 0);

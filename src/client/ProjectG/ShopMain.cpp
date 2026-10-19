@@ -1112,51 +1112,44 @@ void CShopMain::OnSelItemPrevInit(PG_MSGARG param) {
 // shopmain.cpp:1638
 void CShopMain::OnSelItemPrevUp(void) {
 	switch (m_shopTab) {
-	case 0: {
-		std::map<unsigned int, IFF_STRUCT::sChar>::reverse_iterator it = ItemManager()->m_charMap.rbegin();
-		std::map<unsigned int, IFF_STRUCT::sChar>::reverse_iterator end = ItemManager()->m_charMap.rend();
-		for (; it != end; ++it) {
-			if (it->second.m_typeId == m_standPetTypeId) {
+	case 0:
+		for (std::map<unsigned int, IFF_STRUCT::sChar>::reverse_iterator it = ItemManager()->m_charMap.rbegin(), end = ItemManager()->m_charMap.rend(); it != end; ++it) {
+			if ((*it).second.m_typeId == m_standPetTypeId) {
 				if (it++ != end) {
-					ChangeCharacter(it->second.m_typeId);
+					ChangeCharacter((*it).second.m_typeId);
 					break;
 				}
 			}
 		}
 		break;
-	}
-	case 2: {
-		std::map<unsigned int, IFF_STRUCT::sCaddie>::reverse_iterator it;
-		for (it = m_visibleCaddies.rbegin(); it != m_visibleCaddies.rend(); ++it) {
-			if (it->second.m_typeId == m_caddieTypeId) {
+	case 2:
+		for (std::map<unsigned int, IFF_STRUCT::sCaddie>::reverse_iterator it = m_visibleCaddies.rbegin(); it != m_visibleCaddies.rend(); ++it) {
+			if ((*it).second.m_typeId == m_caddieTypeId) {
 				while (it++ != m_visibleCaddies.rend()) {
-					const IFF_STRUCT::sCaddie &item = it->second;
+					const IFF_STRUCT::sCaddie &item = (*it).second;
 					if ((item.flags >> 5) != 0 && (item.flags >> 5) != 5 && (item.flags >> 5) != 6
 						&& ItemManager()->IsInSalePeriod(item.m_typeId, WSingleton<CSharedDoc>::Instance()->GetServerTime())) {
-						ChangeCaddie(it->second.m_typeId);
+						ChangeCaddie((*it).second.m_typeId);
 						break;
 					}
 				}
 			}
 		}
 		break;
-	}
-	case 3: {
-		std::map<unsigned int, IFF_STRUCT::sMascot>::reverse_iterator it;
-		for (it = ItemManager()->m_mascotMap.rbegin(); it != ItemManager()->m_mascotMap.rend(); ++it) {
-			if (it->second.m_typeId == m_mascotTypeId) {
+	case 3:
+		for (std::map<unsigned int, IFF_STRUCT::sMascot>::reverse_iterator it = ItemManager()->m_mascotMap.rbegin(); it != ItemManager()->m_mascotMap.rend(); ++it) {
+			if ((*it).second.m_typeId == m_mascotTypeId) {
 				while (it++ != ItemManager()->m_mascotMap.rend()) {
-					const IFF_STRUCT::sMascot &item = it->second;
+					const IFF_STRUCT::sMascot &item = (*it).second;
 					if ((item.m_flags >> 5) != 0 && (item.m_flags >> 5) != 5 && (item.m_flags >> 5) != 6
 						&& ItemManager()->IsInSalePeriod(item.m_typeId, WSingleton<CSharedDoc>::Instance()->GetServerTime())) {
-						ChangeMascot(it->second.m_typeId);
+						ChangeMascot((*it).second.m_typeId);
 						break;
 					}
 				}
 			}
 		}
 		break;
-	}
 	}
 }
 
@@ -1171,51 +1164,44 @@ void CShopMain::OnSelItemNextInit(PG_MSGARG param) {
 // shopmain.cpp:1689
 void CShopMain::OnSelItemNextUp(void) {
 	switch (m_shopTab) {
-	case 0: {
-		std::map<unsigned int, IFF_STRUCT::sChar>::iterator it = ItemManager()->m_charMap.begin();
-		std::map<unsigned int, IFF_STRUCT::sChar>::iterator end = ItemManager()->m_charMap.end();
-		for (; it != end; ++it) {
-			if (it->second.m_typeId == m_standPetTypeId) {
+	case 0:
+		for (std::map<unsigned int, IFF_STRUCT::sChar>::iterator it = ItemManager()->m_charMap.begin(), end = ItemManager()->m_charMap.end(); it != end; ++it) {
+			if ((*it).second.m_typeId == m_standPetTypeId) {
 				if (it++ != end) {
-					ChangeCharacter(it->second.m_typeId);
+					ChangeCharacter((*it).second.m_typeId);
 					break;
 				}
 			}
 		}
 		break;
-	}
-	case 2: {
-		std::map<unsigned int, IFF_STRUCT::sCaddie>::iterator it;
-		for (it = m_visibleCaddies.begin(); it != m_visibleCaddies.end(); ++it) {
-			if (it->second.m_typeId == m_caddieTypeId) {
+	case 2:
+		for (std::map<unsigned int, IFF_STRUCT::sCaddie>::iterator it = m_visibleCaddies.begin(); it != m_visibleCaddies.end(); ++it) {
+			if ((*it).second.m_typeId == m_caddieTypeId) {
 				while (it++ != m_visibleCaddies.end()) {
-					const IFF_STRUCT::sCaddie &item = it->second;
+					const IFF_STRUCT::sCaddie &item = (*it).second;
 					if ((item.flags >> 5) != 0 && (item.flags >> 5) != 5 && (item.flags >> 5) != 6
 						&& ItemManager()->IsInSalePeriod(item.m_typeId, WSingleton<CSharedDoc>::Instance()->GetServerTime())) {
-						ChangeCaddie(it->second.m_typeId);
+						ChangeCaddie((*it).second.m_typeId);
 						break;
 					}
 				}
 			}
 		}
 		break;
-	}
-	case 3: {
-		std::map<unsigned int, IFF_STRUCT::sMascot>::iterator it;
-		for (it = ItemManager()->m_mascotMap.begin(); it != ItemManager()->m_mascotMap.end(); ++it) {
-			if (it->second.m_typeId == m_mascotTypeId) {
+	case 3:
+		for (std::map<unsigned int, IFF_STRUCT::sMascot>::iterator it = ItemManager()->m_mascotMap.begin(); it != ItemManager()->m_mascotMap.end(); ++it) {
+			if ((*it).second.m_typeId == m_mascotTypeId) {
 				while (it++ != ItemManager()->m_mascotMap.end()) {
-					const IFF_STRUCT::sMascot &item = it->second;
+					const IFF_STRUCT::sMascot &item = (*it).second;
 					if ((item.m_flags >> 5) != 0 && (item.m_flags >> 5) != 5 && (item.m_flags >> 5) != 6
 						&& ItemManager()->IsInSalePeriod(item.m_typeId, WSingleton<CSharedDoc>::Instance()->GetServerTime())) {
-						ChangeMascot(it->second.m_typeId);
+						ChangeMascot((*it).second.m_typeId);
 						break;
 					}
 				}
 			}
 		}
 		break;
-	}
 	}
 }
 
@@ -1732,7 +1718,7 @@ void CShopMain::OnItemListBtnDown(void) {
 		}
 
 		const WPoint &mousePos = g_pFresh->GetManager()->GetMousePos();
-		if (WRect(m_miniBtns[1].rect.x + listItem->pos.x, m_miniBtns[1].rect.y + listItem->pos.y, m_miniBtns[1].rect.w, m_miniBtns[1].rect.h).IsInRect(mousePos)) {
+		if ((m_miniBtns[1].rect + listItem->pos).IsInRect(mousePos)) {
 
 			bool canBuy = ((item->m_flags0 >> 5) == 1 || (item->m_flags0 >> 5) == 3) ? true : false;
 
@@ -1775,7 +1761,7 @@ void CShopMain::OnItemListBtnDown(void) {
 				actor << MsgObject(0, 0x26D, 0x11, 0, 0, 0, 0);
 				return;
 			}
-		} else if (WRect(m_miniBtns[2].rect.x + listItem->pos.x, m_miniBtns[2].rect.y + listItem->pos.y, m_miniBtns[2].rect.w, m_miniBtns[2].rect.h).IsInRect(mousePos)) {
+		} else if ((m_miniBtns[2].rect + listItem->pos).IsInRect(mousePos)) {
 
 			bool canGift = ((item->m_flags0 >> 5) == 1 || (item->m_flags0 >> 5) == 2) ? true : false;
 
@@ -4399,13 +4385,14 @@ bool CShopMain::SelectItemList(FrListItem *pItem) {
 	}
 
 	case 2: {
+		IFF_ITEM_COMMON *part = (IFF_ITEM_COMMON *)pItem->pData;
 		CPartTidList &tidList = WSingleton<CSharedDoc>::Instance()->GetMyPartTidList();
 
-		unsigned long overlapped = tidList.GetOverlapped(item->m_typeId);
-		if (!tidList.CanSetPart(item->m_typeId)) {
+		unsigned long overlapped = tidList.GetOverlapped(part->m_typeId);
+		if (!tidList.CanSetPart(part->m_typeId)) {
 			m_itemListBox->UnselectItem(pItem);
 			char text[256];
-			if (((IFF_STRUCT::sPart *)item)->m_wearRestricted) {
+			if (((IFF_STRUCT::sPart *)part)->m_wearRestricted) {
 				sprintf(text, "\xBA\xBB \xBB\xF3\xC7\xB0\xC0\xBA \xC7\xF6\xC0\xE7 \xC0\xC7\xBB\xF3\xBF\xA1\xB4\xC2 \xC2\xF8\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.");
 				this << MsgObject(0, 0x23, (intptr_t)text, 0, 0, 0, 0);
 				return false;
@@ -4419,9 +4406,9 @@ bool CShopMain::SelectItemList(FrListItem *pItem) {
 
 		TakeOff_AuxPartNCartList(tidList, overlapped);
 
-		IFF_ITEM_COMMON *partItem = (IFF_ITEM_COMMON *)pItem->pData;
 		unsigned long serial = 0;
-		if (UccManager()->IsDisplayUccClothes(item)) {
+		IFF_ITEM_COMMON *partItem = (IFF_ITEM_COMMON *)pItem->pData;
+		if (UccManager()->IsDisplayUccClothes(part)) {
 			// A UCC part replaces the old items and the selection of its slot.
 			unsigned long typeId = item->m_typeId;
 			for (std::list<oldItem_t>::iterator it = m_shoppersOldItems.begin(); it != m_shoppersOldItems.end();) {
@@ -4447,14 +4434,14 @@ bool CShopMain::SelectItemList(FrListItem *pItem) {
 			serial = ((sDisplayUccClothes *)partItem)->m_serial;
 		}
 
-		PutOnNBackupShoppersOldItem(item->m_typeId, tidList, serial);
+		PutOnNBackupShoppersOldItem(part->m_typeId, tidList, serial);
 
 		if (!UccManager()->IsDisplayUccClothes(partItem)) {
-			unsigned char slot = ((IFF_STRUCT::sPart *)item)->slot;
+			unsigned char slot = ((IFF_STRUCT::sPart *)part)->slot;
 			if (slot == 0 || slot == 1 || slot == 4 || slot == 7 || slot == 8 || slot == 9) {
-				m_cartList->AddItem(item);
+				m_cartList->AddItem(part);
 			} else {
-				m_auxCartList->AddItem(item);
+				m_auxCartList->AddItem(part);
 				CheckAuxCartScroll();
 			}
 		}
@@ -4642,8 +4629,29 @@ bool CShopMain::SelectItemList(FrListItem *pItem) {
 		break;
 	}
 
+	// Three identical bodies, which cl merges into one block: a single body
+	// with three labels is hot enough for cl to inline TurnOffItemStatus,
+	// which the original calls.
 	case 6:
+		m_cartList->ClearItem();
+		m_cartList->AddItem(item);
+
+		SafeLoadPet(&item->m_typeId, false);
+		TurnOffItemStatus();
+		g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
+		ShowItemDesc(item->m_typeId);
+		break;
+
 	case 0x12:
+		m_cartList->ClearItem();
+		m_cartList->AddItem(item);
+
+		SafeLoadPet(&item->m_typeId, false);
+		TurnOffItemStatus();
+		g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
+		ShowItemDesc(item->m_typeId);
+		break;
+
 	case 0x1F:
 		m_cartList->ClearItem();
 		m_cartList->AddItem(item);

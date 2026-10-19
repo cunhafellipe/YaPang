@@ -322,9 +322,9 @@ void CLightColumn::Display(void) {
 						float fSide = (i & 2) ? 1.0f : -1.0f;
 
 						vPoint += fSide * vWidth[k];
-						m_buffers[i].m_vPos.z = vPoint.z;
 						m_buffers[i].m_vPos.x = vPoint.x;
 						m_buffers[i].m_vPos.y = vPoint.y;
+						m_buffers[i].m_vPos.z = vPoint.z;
 						m_buffers[i].m_fV = (m_fHeight - fY) / m_fHeight * fTexScale[k] + fTexV[k];
 						if (j <= 1) {
 							m_buffers[i].m_nColor = ((int)byLayerAlpha << 24) | 0xFFFFFF;
@@ -1266,7 +1266,9 @@ void CEnergyCenter::Generate(float fElapsed) {
 		pSpark->m_vPos = WVector((float)(rand() % 31 - 15) * 0.05f + 8.0f, (float)(rand() % 31 - 15) * 0.05f + 8.0f, 0.0f)
 			* RotMat((float)m_nSparks * 6.2831855f / (float)(rand() % m_nSparks + 1), 1) + m_vOrigin;
 		pSpark->m_vDir = m_vOrigin - pSpark->m_vPos;
-		pSpark->m_vDir = pSpark->m_vDir.Normalize();
+		// Rebuilt from the float array: the original keeps the 12-byte
+		// temporary this constructor makes.
+		pSpark->m_vDir = WVector(pSpark->m_vDir.Normalize().p);
 
 		pSpark->m_fAlpha = 0.0f;
 		pSpark->m_bAlive = true;

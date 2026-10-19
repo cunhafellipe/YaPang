@@ -271,8 +271,8 @@ int Base64Encode(char* src, int len, char* dst) {
 // utilities.cpp:420
 int Base64Decode(char* src, unsigned char* dst, int dstSize) {
 	int prev = 0, written = 0, phase = 0;
-	for (int i = 0; src[i] != '\0'; i++) {
-		int value = data_ac0160.decode[src[i]];
+	for (char* p = src; *p != '\0'; p++) {
+		int value = data_ac0160.decode[*p];
 		if (value == -1) {
 			continue;
 		}

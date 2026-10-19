@@ -175,12 +175,17 @@ bool WStrStr_JP(char *out, unsigned short *text, int textLen, unsigned short *wo
 		unsigned short *textPos = &text[i + 1];
 
 		while (*textPos != 0 && *wordPos != 0) {
-			bool same;
-			if (*textPos < 0x80 && *wordPos < 0x80)
-				same = tolower(*wordPos) == tolower(*textPos);
-			else
-				same = *textPos == *wordPos;
-			if (!same) {
+			int wordCh;
+			int textCh;
+			if (*textPos < 0x80 && *wordPos < 0x80) {
+				wordCh = tolower(*wordPos);
+				textCh = tolower(*textPos);
+			} else {
+				wordCh = *wordPos;
+				textCh = *textPos;
+			}
+
+			if (textCh != wordCh) {
 				int k;
 				for (k = 0; k < 28; k++) {
 					if (*textPos == FakeTable[k])
@@ -941,7 +946,7 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 			packet.Send(SEND_TO_DEFAULT);
 		}
 	} else {
-		std::string nickname(WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname);
+		std::string nickname(MyNick());
 		std::string line(message);
 
 		WSendPacket packet(GCT_CHATMSG);

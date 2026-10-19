@@ -61,15 +61,14 @@ void CClock::OnProcess(float elapsed) {
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 10) {
 		unsigned long startTime = WSingleton<CSharedDoc>::Instance()->m_gameStartTime;
 		if (startTime > 0) {
-			unsigned long endTime = startTime + GetGameTimeLimit();
-			if (g_CurrentTime > endTime) {
+			if (g_CurrentTime > startTime + GetGameTimeLimit()) {
 				if (m_bTicking) {
 					m_bTicking = false;
 					g_audio->PlaySfx(CLOCK_TICK_SFX, 0, 1, CLOCK_TICK_SFX, 0, 0.5f, 200.0f);
 
 					g_audio->PlaySfx("approach_bell", 0, 0, 0, 0, 0.5f, 200.0f);
 				}
-			} else if (g_CurrentTime > endTime - 10000) {
+			} else if (g_CurrentTime > startTime + GetGameTimeLimit() - 10000) {
 				if (!m_bTicking) {
 					m_bTicking = true;
 					g_audio->PlaySfx(CLOCK_TICK_SFX, 0, 1, CLOCK_TICK_SFX, 0, 0.5f, 200.0f);

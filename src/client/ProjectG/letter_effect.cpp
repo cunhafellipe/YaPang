@@ -419,14 +419,13 @@ void CLetter::Print(float x, float y, const char* str, float spacing, int type, 
 		return;
 	}
 
-	const char* p;
 	float width = 0.0f;
 	const char* charSet = m_fontInfo.pCharSet;
 	m_pFont->SetScale(scale);
 
 	switch (m_align) {
 	case 1: {
-		p = str;
+		const char* p = str;
 		while (*p) {
 			int c = *p++;
 			int index = strchr(charSet, c) - charSet;
@@ -437,7 +436,7 @@ void CLetter::Print(float x, float y, const char* str, float spacing, int type, 
 		break;
 	}
 	case 2: {
-		p = str;
+		const char* p = str;
 		while (*p) {
 			int c = *p++;
 			int index = strchr(charSet, c) - charSet;
@@ -450,11 +449,12 @@ void CLetter::Print(float x, float y, const char* str, float spacing, int type, 
 
 	x -= width;
 
-	p = str;
-	while (*p) {
-		int c = *p++;
+	const char* q = str;
+	while (*q) {
+		int c = *q++;
 		int index = strchr(charSet, c) - charSet;
 		float w = m_pFont->PutChar(g_view, x, y, index, type, color);
-		x += w + spacing;
+		w += spacing;
+		x += w;
 	}
 }

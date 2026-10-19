@@ -291,11 +291,10 @@ void CBall::TransformBall(void) {
 		scale = 1.0f;
 	} else {
 		// The ball's apparent height on screen: keep it between 0.1 and 1.5.
-		WVector bottom;
-		WVector top;
-		bottom = g_view->Projection(GolfBall().m_pos - g_camera.ya * GolfBall().m_radius);
-		top = g_view->Projection(GolfBall().m_pos + g_camera.ya * GolfBall().m_radius);
-		scale = 1.5f / Between(0.1f, Abs(bottom.y - top.y), 1.5f);
+		WVector screen[2];
+		screen[0] = g_view->Projection(GolfBall().m_pos - g_camera.ya * GolfBall().m_radius);
+		screen[1] = g_view->Projection(GolfBall().m_pos + GolfBall().m_radius * g_camera.ya);
+		scale = 1.5f / Between(0.1f, Abs(screen[0].y - screen[1].y), 1.5f);
 	}
 
 	if (m_pPuppet) {

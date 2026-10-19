@@ -35,10 +35,6 @@ extern WMatrix g_camera;
 // commonutil.cpp:714 (?Random@@YIMMMH@Z); commonutil.h does not declare it yet.
 float Random(float min, float max, int seed);
 
-// Nameless .rdata floats of Wangreal's math (pi, pi/2, degrees to radians,
-// radians to degrees, epsilon), read through memory rather than literals.
-extern "C" const float data_9eb420[5];
-
 // One camera of the selection tables ReplayCamera cycles through (header
 // not identified; 8 bytes).
 struct sCameraSelectionData {
@@ -374,7 +370,7 @@ float CCameraWork::LoadCamera(eCamMode mode, char *name, const WVector &target) 
 		float length = m_pScriptMotion->e - m_pScriptMotion->s;
 
 		for (w_motion_data *next = m_pScriptPuppet->FindMotionData(m_pScriptMotion->nextmotion); next; next = m_pScriptPuppet->FindMotionData(next->nextmotion)) {
-			if (WAbsBySign(next->e - next->s) < data_9eb420[4])
+			if (WAbsBySign(next->e - next->s) < g_EPSILON)
 				break;
 
 			length += next->e - next->s;
@@ -479,9 +475,7 @@ void CCameraWork::SetCamera(int type, bool immediately) {
 		WVector dir;
 		dir = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), ball.PreData(midIndex)->m_velocity);
 		dir = dir.Normalize() * 10.0f;
-		float height = (float)(m_fixedCameraIndex % 11) - 5.0f;
-		const CGolfBall::sExpected *pMid = ball.PreData(midIndex);
-		m_phase0SourceCamera = WVector(dir.x + pMid->m_pos.x, height + pMid->m_pos.y + dir.y, dir.z + pMid->m_pos.z);
+		m_phase0SourceCamera = WVector(0.0f, (float)(m_fixedCameraIndex % 11) - 5.0f, 0.0f) + ball.PreData(midIndex)->m_pos + dir;
 		m_flags = m_fixedCameraIndex % 2 + 1;
 		m_pCameraProc = &CCameraWork::PanCamera;
 		break;
@@ -605,7 +599,7 @@ void CCameraWork::SetCamera(int type, bool immediately) {
 
 		dir.y = 0.0f; dir = dir.Normalize() * 30.0f;
 
-		m_sourceCamera = (ball.PreData(lastIndex)->m_pos - ball.PreData(0)->m_pos) * 0.5f + ball.PreData(0)->m_pos + dir;
+		m_sourceCamera = ball.PreData(0)->m_pos + (ball.PreData(lastIndex)->m_pos - ball.PreData(0)->m_pos) * 0.5f + dir;
 		m_sourceCamera.y = ball.PreData(midIndex)->m_pos.y + 2.0f;
 
 		m_pCameraProc = &CCameraWork::FromMidPointCamera;
@@ -642,7 +636,7 @@ void CCameraWork::SetCamera(int type, bool immediately) {
 		break;
 	case 22:
 		m_destCamera = GolfBall().PreData(0)->m_pos + WVector(0.0f, 3.0f, 0.0f);
-		m_sourceCamera = RotMat(GOLFDOC()->GetCameraData().m_yaw + Random(-1.5707964f, 1.5707964f, m_fixedCameraIndex), 1).za * 30.0f + ball.PreData(0)->m_pos + WVector(0.0f, 10.0f, 0.0f);
+		m_sourceCamera = ball.PreData(0)->m_pos + RotMat(GOLFDOC()->GetCameraData().m_yaw + Random(-1.5707964f, 1.5707964f, m_fixedCameraIndex), 1).za * 30.0f + WVector(0.0f, 10.0f, 0.0f);
 		m_pCameraProc = &CCameraWork::FromRandomPointCamera;
 
 		break;
@@ -751,7 +745,7 @@ void CCameraWork::SetCamera(int type, bool immediately) {
 		WVector side;
 		side = WCrossProduct(WVector::UNIT_POS_Y, ball.PreData(0)->m_velocity);
 		side.Normalize();
-		m_sourceCamera = side * 16.0f + ball.PreData(0)->m_pos + WVector(0.0f, 32.0f, 0.0f);
+		m_sourceCamera = ball.PreData(0)->m_pos + side * 16.0f + WVector(0.0f, 32.0f, 0.0f);
 		m_destCamera = ball.PreData(0)->m_pos;
 		m_destCamera.y += 2.5f;
 		m_pCameraProc = &CCameraWork::SideCamera;
@@ -1199,7 +1193,8 @@ void CCameraWork::InitCtrlPoints(int type) {
 	}
 	case 2: {
 		WVector vel = ball.PreData(0)->m_velocity;
-		WVector side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), vel).Normalize() * 25.0f;
+		WVector side;
+		side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), vel).Normalize() * 25.0f;
 		m_bezierPoints[0] = side + ball.PreData(startIndex)->m_pos;
 		vel = ball.PreData(midIndex)->m_velocity;
 		m_bezierPoints[1] = ball.PreData(midIndex)->m_pos + WVector(0.0f, 50.0f, 0.0f) + vel * 1.2f + side;
@@ -1254,7 +1249,8 @@ void CCameraWork::InitCtrlPoints(int type) {
 	}
 	case 18: {
 		m_bezierPoints[0] = m_sourceCamera;
-		WVector side = WCrossProduct(WVector::UNIT_POS_Y, ball.PreData(0)->m_velocity).Normalize() * 100.0f;
+		WVector side;
+		side = WCrossProduct(WVector::UNIT_POS_Y, ball.PreData(0)->m_velocity).Normalize() * 100.0f;
 		m_bezierPoints[1] = ball.PreData(midIndex)->m_pos + WVector(0.0f, 100.0f, 0.0f) - side;
 		m_bezierPoints[2] = ball.PreData(spinIndex)->m_pos + WVector(0.0f, 50.0f, 0.0f) + side;
 		dir = side;
@@ -1320,7 +1316,7 @@ void CCameraWork::InputProcess(float elapsed) {
 			m_input.m_yaw += elapsed * 0.52359879f;
 	}
 
-	if (!g_input->Get("\xbb\xf3", true) && !g_input->Get("\xc7\xcf", true) && !(WAbsBySign(m_input.m_yaw) < data_9eb420[4]) && m_inputMode == 2) {
+	if (!g_input->Get("\xbb\xf3", true) && !g_input->Get("\xc7\xcf", true) && !(WAbsBySign(m_input.m_yaw) < g_EPSILON) && m_inputMode == 2) {
 		if (m_input.m_yaw > 0.0f) {
 			m_input.m_yaw -= elapsed * 1.0471976f;
 			if (m_input.m_yaw < 0.0f)
@@ -1349,7 +1345,7 @@ void CCameraWork::InputProcess(float elapsed) {
 			m_input.m_pitch -= speed * elapsed;
 	}
 
-	if (!g_input->Get("\xbb\xf3", true) && !g_input->Get("\xc7\xcf", true) && !(WAbsBySign(m_input.m_pitch) < data_9eb420[4]) && m_inputMode == 2) {
+	if (!g_input->Get("\xbb\xf3", true) && !g_input->Get("\xc7\xcf", true) && !(WAbsBySign(m_input.m_pitch) < g_EPSILON) && m_inputMode == 2) {
 		if (m_input.m_pitch > 0.0f) {
 			m_input.m_pitch -= speed * elapsed * 2.0f;
 			if (m_input.m_pitch < 0.0f)
@@ -1372,7 +1368,7 @@ void CCameraWork::InputProcess(float elapsed) {
 	if (g_input->Get("\xbf\xec", true))
 		m_input.m_zoom += speed * elapsed;
 
-	if (!g_input->Get("\xc1\xc2", true) && !g_input->Get("\xbf\xec", true) && !(WAbsBySign(m_input.m_zoom) < data_9eb420[4]) && m_inputMode == 2) {
+	if (!g_input->Get("\xc1\xc2", true) && !g_input->Get("\xbf\xec", true) && !(WAbsBySign(m_input.m_zoom) < g_EPSILON) && m_inputMode == 2) {
 		if (m_input.m_zoom > 0.0f) {
 			m_input.m_zoom -= speed * elapsed * 2.0f;
 			if (m_input.m_zoom < 0.0f)
@@ -1395,9 +1391,9 @@ void CCameraWork::InputProcess(float elapsed) {
 
 	if (m_keepInputOffsets) {
 		float fov = m_input.m_yaw + 0.95993108f;
-		g_view->SetFOV(fov < 0.17453292f ? 0.17453292f : (fov > data_9eb420[1] ? 1.5707964f : fov));
+		g_view->SetFOV(fov < 0.17453292f ? 0.17453292f : (fov > g_PI_DIV_2 ? 1.5707964f : fov));
 
-		if (WAbsBySign(m_input.m_zoom) < data_9eb420[4] && WAbsBySign(m_input.m_pitch) < data_9eb420[4]) {
+		if (WAbsBySign(m_input.m_zoom) < g_EPSILON && WAbsBySign(m_input.m_pitch) < g_EPSILON) {
 			g_camera = m_baseMatrixCopy;
 			return;
 		}
@@ -1407,11 +1403,11 @@ void CCameraWork::InputProcess(float elapsed) {
 	}
 
 	float fov = m_zoomAngle + m_input.m_yaw;
-	g_view->SetFOV(fov < 0.17453292f ? 0.17453292f : (fov > data_9eb420[1] ? 1.5707964f : fov));
+	g_view->SetFOV(fov < 0.17453292f ? 0.17453292f : (fov > g_PI_DIV_2 ? 1.5707964f : fov));
 
 	m_baseMatrixCopy = GetCameraMatrix(m_sourceCamera, m_destCamera, m_bankAngle);
 
-	if (WAbsBySign(m_input.m_zoom) < data_9eb420[4] && WAbsBySign(m_input.m_pitch) < data_9eb420[4]) {
+	if (WAbsBySign(m_input.m_zoom) < g_EPSILON && WAbsBySign(m_input.m_pitch) < g_EPSILON) {
 		g_camera = m_baseMatrixCopy;
 	} else if (m_inputMode == 2) {
 		WVector dir = m_baseMatrixCopy.pivot - *m_pTarget;
@@ -1460,7 +1456,7 @@ void CCameraWork::Process(float elapsed, float time) {
 			m_pScriptMotion = m_pScriptPuppet->FindMotionData(m_pScriptMotion->nextmotion);
 
 			if (m_pScriptMotion) {
-				if (WAbsBySign(m_pScriptMotion->e - m_pScriptMotion->s) < data_9eb420[4]) {
+				if (WAbsBySign(m_pScriptMotion->e - m_pScriptMotion->s) < g_EPSILON) {
 					m_cameraTime = m_pScriptMotion->s;
 					m_transitionTime = m_cameraTime - 1.0f;
 				} else {
@@ -1491,7 +1487,7 @@ void CCameraWork::Process(float elapsed, float time) {
 				WMatrix mat;
 				mat = pBone->GetMatrix();
 
-				if (!(WAbsBySign(offset.x) < data_9eb420[4]) || !(WAbsBySign(offset.y) < data_9eb420[4]) || !(WAbsBySign(offset.z) < data_9eb420[4])) {
+				if (!(WAbsBySign(offset.x) < g_EPSILON) || !(WAbsBySign(offset.y) < g_EPSILON) || !(WAbsBySign(offset.z) < g_EPSILON)) {
 					if (!m_skipTurn)
 						mat = mat * RotMat(yaw, 1);
 				}
@@ -1503,7 +1499,7 @@ void CCameraWork::Process(float elapsed, float time) {
 				WVector pos = mat.pivot;
 				if (m_cameraType == 0xcb) {
 					WMatrix turn(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-					turn.Rotate(data_9eb420[0] + yaw, 1);
+					turn.Rotate(g_PI + yaw, 1);
 
 					rot = rot * turn;
 					pos = pos * turn;
@@ -1753,17 +1749,18 @@ void CCameraWork::CheckDriveCameraBallVisibilityAndSetBallVisibilitySafeCamera(v
 	} else if (m_ballHiddenFrame < 0) {
 		m_ballHiddenFrame = m_preDataFrame;
 	} else if (m_preDataFrame - m_ballHiddenFrame > 50) {
+		std::vector<int>& safeCameras = m_safeCameras;
 		m_installed = false;
-		unsigned int i = rand() % m_safeCameras.size();
+		unsigned int i = rand() % safeCameras.size();
 
-		if (m_safeCameras[i] == m_cameraType) {
-			i = (i + 1) % m_safeCameras.size();
+		if (safeCameras[i] == m_cameraType) {
+			i = (i + 1) % safeCameras.size();
 
-			if (m_safeCameras[i] == m_cameraType)
+			if (safeCameras[i] == m_cameraType)
 				return;
 		}
 
-		SetCamera(m_safeCameras[i], false);
+		SetCamera(safeCameras[i], false);
 	}
 }
 
@@ -1822,7 +1819,7 @@ void CCameraWork::LookBackCamera(float elapsed, float time) {
 void CCameraWork::Rail_or_SideCamera(float elapsed, float time) {
 	float t = (time + m_workTime - m_phase0Time) / (m_phase2Time - m_phase0Time);
 	InterpolateBezier(&m_sourceCamera, t, m_bezierPoints, 4);
-	m_zoomAngle = 0.95993108f - data_9eb420[2] * (sinf(t * data_9eb420[0]) * 25.0f);
+	m_zoomAngle = 0.95993108f - g_DEGTORAD * (sinf(t * g_PI) * 25.0f);
 
 	if (m_workTime < m_phase1Time)
 		m_destCamera = GolfBall().m_pos;
@@ -1853,7 +1850,7 @@ void CCameraWork::PanCamera(float elapsed, float time) {
 		}
 
 		float t = (time + m_workTime - m_phase0Time) / (m_phase1Time * 0.7f - m_phase0Time);
-		m_zoomAngle = 0.95993108f - data_9eb420[2] * (sinf(t * data_9eb420[1]) * 25.0f);
+		m_zoomAngle = 0.95993108f - g_DEGTORAD * (sinf(t * g_PI_DIV_2) * 25.0f);
 
 		if (GolfClub().GetType() != 0)
 			return;
@@ -1925,7 +1922,7 @@ void CCameraWork::Chase_and_FollowCamera(float elapsed, float time) {
 	}
 	if (!found) {
 		pos = GolfBall().m_pos;
-		dir = GolfBall().PreData(m_preDataFrame)->m_pos - GolfBall().PreData(m_preDataFrame - 1)->m_pos;
+		dir = GolfBall().PreData(m_preDataFrame - 1)->m_pos - GolfBall().PreData(m_preDataFrame)->m_pos;
 	}
 
 	dir.y = 0.0f;
@@ -1939,7 +1936,8 @@ void CCameraWork::Chase_and_FollowCamera(float elapsed, float time) {
 	else if (distance > 80.0f)
 		distance = 80.0f;
 
-	WVector target = pos + dir * distance;
+	WVector target;
+	target = pos + dir * distance;
 	WVector toSource = m_sourceCamera - m_destCamera;
 	WVector toTarget = target - m_destCamera;
 	if (toTarget.Magnitude() > toSource.Magnitude()) {
@@ -1953,8 +1951,8 @@ void CCameraWork::Chase_and_FollowCamera(float elapsed, float time) {
 	}
 
 	float t = speed * 0.001f;
-	if (t < data_9eb420[4])
-		t = data_9eb420[4];
+	if (t < g_EPSILON)
+		t = g_EPSILON;
 	else if (t > 0.1f)
 		t = 0.1f;
 
@@ -1974,7 +1972,7 @@ void CCameraWork::CircleCamera(float elapsed, float time) {
 		WVector dir = GolfBall().m_pos - m_sourceCamera;
 
 		dir.y = 0.0f;
-		m_introDistance = sqrt(dir.x * dir.x + dir.z * dir.z); dir.Normalize(); dir = WCrossProduct(dir, WVector::UNIT_POS_Y); m_sourceCamera += dir * (m_introDistance * data_9eb420[0]) * elapsed;
+		m_introDistance = sqrt(dir.x * dir.x + dir.z * dir.z); dir.Normalize(); dir = WCrossProduct(dir, WVector::UNIT_POS_Y); m_sourceCamera += dir * (m_introDistance * g_PI) * elapsed;
 	} else {
 		m_sourceCamera += GolfBall().m_velocity * 0.75f * elapsed;
 		m_destCamera += GolfBall().m_velocity * 0.75f * elapsed;
@@ -1986,7 +1984,7 @@ void CCameraWork::CircleCamera(float elapsed, float time) {
 void CCameraWork::Chase_and_LookBackCamera(float elapsed, float time) {
 	float t = (time + m_workTime - m_phase0Time) / (m_phase2Time - m_phase0Time);
 	InterpolateBezier(&m_sourceCamera, t, m_bezierPoints, 4);
-	m_zoomAngle = 0.95993108f - data_9eb420[2] * (sinf(t * data_9eb420[0]) * 25.0f);
+	m_zoomAngle = 0.95993108f - g_DEGTORAD * (sinf(t * g_PI) * 25.0f);
 
 	if (m_flags & 0x20000000) {
 		if (m_workTime < (float)m_workLength - 50.0f)
@@ -2007,7 +2005,7 @@ void CCameraWork::Chase_and_LookBackCamera(float elapsed, float time) {
 void CCameraWork::ZoomInCamera(float elapsed, float time) {
 	if (m_workTime < m_duration) {
 		float t = (time + m_workTime) / m_duration;
-		m_zoomAngle = 0.95993108f - data_9eb420[2] * (t * 35.0f);
+		m_zoomAngle = 0.95993108f - g_DEGTORAD * (t * 35.0f);
 
 		m_destCamera = GolfBall().m_pos;
 		m_destCamera.y += (1.0f - t) * 2.0f;
@@ -2148,7 +2146,7 @@ void CCameraWork::FromRandomPointCamera(float elapsed, float time) {
 void CCameraWork::BankFromHeadCamera(float elapsed, float time) {
 	time = (time + m_workTime - m_phase0Time) / (m_duration - m_phase0Time);
 
-	m_bankAngle = (time * 60.0f - 30.0f) * data_9eb420[2];
+	m_bankAngle = (time * 60.0f - 30.0f) * g_DEGTORAD;
 
 	WVector dir = GolfBall().m_velocity;
 	dir.Normalize();
@@ -2238,7 +2236,7 @@ void CCameraWork::SpikeACamera(float elapsed, float time) {
 	} else if (m_workTime < m_duration) {
 		m_zoomAngle = 0.95993108f;
 		float t = (time + m_workTime) / m_duration;
-		m_bankAngle = (t * 60.0f - 30.0f) * data_9eb420[2];
+		m_bankAngle = (t * 60.0f - 30.0f) * g_DEGTORAD;
 
 		WVector dir = GolfBall().m_velocity;
 		dir.Normalize();
@@ -2347,7 +2345,7 @@ void CCameraWork::FollowBallCamera(float elapsed, float time) {
 	// One vector: the ball's offset from the cup, then its velocity.
 	WVector cup = GOLFDOC()->GetHoleData().m_cupPos; WVector v = GolfBall().m_pos - cup;
 	v.y = 0.0f;
-	float cupDistance2 = v.x * v.x + v.z * v.z;
+	float cupDistance2 = v.x * v.x; cupDistance2 += v.z * v.z;
 
 	v = GolfBall().m_velocity;
 
@@ -2488,7 +2486,8 @@ void CCameraWork::CaddieChanceCamera(float elapsed, float time) {
 	float t = Between(0.0f, 1.0f - m_cameraTime * 0.33333334f, 1.0f);
 	WVector offset = WVector::UNIT_POS_Z * m_baseRotation; offset = offset * RotMat(t * m_swingAngle, 1);
 
-	m_sourceCamera = (m_introFrom - m_introTo) * CAMERA_CLAMP(t, 0.0f, 1.0f) + m_introTo;
+	float clamped = CAMERA_CLAMP(t, 0.0f, 1.0f);
+	m_sourceCamera = (m_introFrom - m_introTo) * clamped + m_introTo;
 	m_destCamera = offset + m_sourceCamera;
 }
 

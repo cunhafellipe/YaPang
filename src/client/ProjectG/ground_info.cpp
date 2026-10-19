@@ -318,7 +318,8 @@ void CBase::AttachFx(void) {
 	if (!m_pCurBall || !m_pCurBall->m_pData || !m_pCurBall->m_pPuppet)
 		return;
 
-	switch (m_pCurBall->m_pData->m_typeId) {
+	IFF_STRUCT::sBall* pData = m_pCurBall->m_pData;
+	switch (pData->m_typeId) {
 	case 0x14000001:
 	case 0x14000008:
 	case 0x14000009:
@@ -328,7 +329,7 @@ void CBase::AttachFx(void) {
 		return;
 	}
 
-	if (m_pCurBall->m_pData->m_fxName[0][0] == 0)
+	if (pData->m_fxName[0][0] == 0)
 		return;
 
 	int len = strlen(m_pCurBall->m_pData->m_fxName[0]);
@@ -360,7 +361,8 @@ void CBase::AttachFx(void) {
 		}
 	}
 
-	if (strcmpi(&m_pCurBall->m_pData->m_fxName[0][len - 3], "spr") == 0) {
+	const char* ext = &m_pCurBall->m_pData->m_fxName[0][len - 3];
+	if (strcmpi(ext, "spr") == 0) {
 		CFxSpray* pSpray = m_fxBox.LoadSpray(m_pCurBall->m_pData->m_fxName[0], NULL);
 		if (pSpray == NULL)
 			return;

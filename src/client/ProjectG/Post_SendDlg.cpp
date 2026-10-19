@@ -226,7 +226,7 @@ void CPost_SendDlg::OnPostSearchUserBtnUp(void) {
 	if (m_pReciveUserEdit) {
 		const char* text = m_pReciveUserEdit->GetLine(1, false);
 
-		if (!stricmp(text, WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname)) {
+		if (!stricmp(text, MyNick())) {
 			FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 			pForm->SetMessage("\xba\xbb\xc0\xce\xbf\xa1\xb0\xd4\xb4\xc2 \xbf\xec\xc6\xed\xb9\xb0\xc0\xbb \xba\xb8\xb3\xbe \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9. ", false);
 			pForm->Open((FRESH_RESULT_CALLBACK)0, 3);

@@ -748,8 +748,7 @@ void CCamera::FixedCamera(float dt) {
 			m_at = m_pos + cam->m_matrix.za * 10.0f;
 
 			g_camera = cam->m_matrix;
-			// The original reads pi / 180 from a named constant (0x9ED8AC), not a __real.
-			g_view->SetFOV(cam->m_fov * 0.017453292f);
+			g_view->SetFOV(cam->m_fov * g_DEGTORAD);
 
 			GOLFDOC()->GameMode() = 0x8000;
 			return;
@@ -827,7 +826,7 @@ void CCamera::RotateEnvironment(float angle) {
 
 	float dist = GOLFDOC()->GetCameraData().m_distance * -1.0f;
 	sCameraData &cam = GOLFDOC()->GetCameraData();
-	WVector pos = WVector(cam.m_matrix.za.x * dist, cam.m_height, cam.m_matrix.za.z * dist) + cam.m_target; cam.m_matrix.pivot = GetPVS().TestCameraCollision(pos);
+	WVector pos; pos.x = cam.m_matrix.za.x * dist; pos.y = cam.m_height; pos.z = cam.m_matrix.za.z * dist; pos += cam.m_target; cam.m_matrix.pivot = GetPVS().TestCameraCollision(pos);
 
 	m_heightRate = GetHeightRate(GOLFDOC()->GetCameraData().m_matrix.pivot.y);
 

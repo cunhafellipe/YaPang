@@ -17,8 +17,10 @@
 // Emoticon code delimiters of the IsLocalCountry(30) build ("-" marks the
 // flipped icon, drawn when shift is held). Reading them from a const variable
 // makes the static locals below dynamically initialized (guard bits), as in
-// the original.
-static const char* const EMOTICON_OPEN = "(";
+// the original. The opening "(" is read from a function-local const instead:
+// a file-scope variable pointing at it keeps cl from turning the
+// strcpy(m_szSelectedIcon, "(") of the other branch into the immediate store
+// the original has.
 static const char* const EMOTICON_CLOSE = ")";
 static const char* const EMOTICON_FLIP = "-";
 
@@ -73,7 +75,8 @@ void FrEmoticonDlg::OnOK(void) {
 		const char* name = pEmoticon->GetIconName((intptr_t)pItem->pData);
 		if (name) {
 			if (IsLocalCountry(30)) {
-				static const char* szOpen = EMOTICON_OPEN;
+				const char* const open = "(";
+				static const char* szOpen = open;
 				static const char* szClose = EMOTICON_CLOSE;
 
 				static const char* szFlip = EMOTICON_FLIP;
@@ -145,7 +148,8 @@ void FrEmoticonDlg::OnListOwnerDraw(PG_MSGARG param) {
 		const char* name = pEmoticon->GetIconName(index);
 		if (name) {
 			if (IsLocalCountry(30)) {
-				static const char* szOpen = EMOTICON_OPEN;
+				const char* const open = "(";
+				static const char* szOpen = open;
 				static const char* szClose = EMOTICON_CLOSE;
 
 				static const char* szFlip = EMOTICON_FLIP;
@@ -181,7 +185,8 @@ void FrEmoticonDlg::OnListBtnUp(void) {
 	const char* name = pEmoticon->GetIconName((intptr_t)pItem->pData);
 	if (name) {
 		if (IsLocalCountry(30)) {
-			static const char* szOpen = EMOTICON_OPEN;
+			const char* const open = "(";
+			static const char* szOpen = open;
 			static const char* szClose = EMOTICON_CLOSE;
 
 			static const char* szFlip = EMOTICON_FLIP;

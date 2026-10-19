@@ -934,7 +934,11 @@ void ntAvatarChatMain::OnEnterTradeShop(void) {
 	ntAvatar* pAvatar = WSingleton<ntAvatarManager>::Instance()->FindAvatarByNickName(m_targetNickName);
 	if (pAvatar) {
 		ntAvatar* pMyAvatar = WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar;
-		float distance = (pAvatar->m_position - pMyAvatar->m_position).Magnitude();
+		WVector offset = pAvatar->m_position - pMyAvatar->m_position;
+		float distance = offset.x * offset.x;
+		distance += offset.y * offset.y;
+		float squareDistance = distance + offset.z * offset.z;
+		distance = sqrtf(squareDistance);
 		if (distance > 19.2f) {
 			WSingleton<CChatMsg>::Instance()->AddChatMsg("\xB0\xB3\xC0\xCE\xBB\xF3\xC1\xA1\xBF\xA1 \xC0\xD4\xC0\xE5\xC7\xCF\xBD\xC3\xB7\xC1\xB8\xE9 \xB4\xF5 \xB0\xA1\xB1\xEE\xC0\xCC \xB0\xA1\xBE\xDF \xC7\xD5\xB4\xCF\xB4\xD9.", 0xFFFF00, true, false);
 			return;

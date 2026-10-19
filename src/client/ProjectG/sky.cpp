@@ -527,8 +527,8 @@ void CSky::GenerateStars(int count) {
 		attacher.m_pOffset[0] = &view->camera.pivot;
 
 		pSequence->m_fDistLimitA = attacher.m_fLimitA;
-		pSequence->m_fDistLimitB = attacher.m_fLimitB;
 		pSequence->m_pAttacher = &attacher;
+		pSequence->m_fDistLimitB = attacher.m_fLimitB;
 		attacher.m_pMatrix[0] = NULL;
 		m_fxBox->AddSequence(pSequence);
 
@@ -589,8 +589,8 @@ void CSky::GenerateMoons(void) {
 			WView* view = g_view;
 			attacher.m_pOffset[0] = &view->camera.pivot;
 
-			pSpray->m_pAttacher = &attacher;
 			pSpray->m_fAttachLimitA = attacher.m_fLimitA;
+			pSpray->m_pAttacher = &attacher;
 			pSpray->m_fAttachLimitB = attacher.m_fLimitB;
 			pSpray->m_spawnDir = point->m_pos.Normalize() * 50.0f;
 			attacher.m_pMatrix[0] = NULL;
@@ -608,8 +608,8 @@ void CSky::GenerateMoons(void) {
 			WView* view = g_view;
 			attacher.m_pOffset[0] = &view->camera.pivot;
 
-			pSequence->m_pAttacher = &attacher;
 			pSequence->m_fDistLimitA = attacher.m_fLimitA;
+			pSequence->m_pAttacher = &attacher;
 			pSequence->m_fDistLimitB = attacher.m_fLimitB;
 			attacher.m_pMatrix[0] = NULL;
 			m_pvsFxBox->AddSequence(pSequence);
@@ -890,9 +890,11 @@ void CSky::RenderBillboardCloud(WView* view) {
 				}
 				WVector d(sy * right.x + sx * up.x, sy * right.y + sx * up.y, sy * right.z + sx * up.z);
 #else
+				float dz = sx * view->camera.ya.z;
+				dz += sy * view->camera.xa.z;
 				WVector d(sy * view->camera.xa.x + sx * view->camera.ya.x + view->camera.za.x * 0.0f,
 				          sy * view->camera.xa.y + sx * view->camera.ya.y + view->camera.za.y * 0.0f,
-				          sy * view->camera.xa.z + sx * view->camera.ya.z + view->camera.za.z * 0.0f);
+				          dz + view->camera.za.z * 0.0f);
 #endif
 				WVector pos;
 				pos = d * m_clouds[i].m_size + m_clouds[i].m_pos;

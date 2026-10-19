@@ -2374,47 +2374,49 @@ void CPangInfo::ResetUiPosition(void) {
 
 	unsigned char roomType = CSharedDoc::Instance()->m_roomType;
 	if (roomType == 0 || roomType == 3 || roomType == 7) {
+		float (*pos)[2] = m_uiPos;
 		float fTop = 48.0f;
 		float fBottom = 141.0f;
 
-		m_uiPos[0][0] = -25.0f;
-		m_uiPos[0][1] = fTop;
-		m_uiPos[1][0] = -25.0f;
-		m_uiPos[1][1] = fBottom;
-		m_uiPos[2][0] = fWidth - 186.0f;
-		m_uiPos[2][1] = fTop;
-		m_uiPos[3][0] = fWidth - 186.0f;
-		m_uiPos[3][1] = fBottom;
+		pos[0][1] = fTop;
+		pos[0][0] = -25.0f;
+		pos[1][0] = -25.0f;
+		pos[1][1] = fBottom;
+		pos[2][0] = fWidth - 186.0f;
+		pos[2][1] = fTop;
+		pos[3][0] = fWidth - 186.0f;
+		pos[3][1] = fBottom;
 
-		m_uiPos[4][0] = -25.0f;
-		m_uiPos[4][1] = 68.0f;
-		m_uiPos[5][0] = -25.0f;
-		m_uiPos[5][1] = 161.0f;
-		m_uiPos[6][0] = fWidth - 186.0f;
-		m_uiPos[6][1] = 68.0f;
-		m_uiPos[7][0] = fWidth - 186.0f;
-		m_uiPos[7][1] = 161.0f;
+		pos[4][0] = -25.0f;
+		pos[4][1] = 68.0f;
+		pos[5][0] = -25.0f;
+		pos[5][1] = 161.0f;
+		pos[6][0] = fWidth - 186.0f;
+		pos[6][1] = 68.0f;
+		pos[7][0] = fWidth - 186.0f;
+		pos[7][1] = 161.0f;
 	} else if (roomType == 1) {
+		float (*pos)[2] = m_uiPos;
 		float fTop = 51.0f;
 		float fBottom = 100.0f;
 
-		m_uiPos[0][0] = -25.0f;
-		m_uiPos[0][1] = fTop;
-		m_uiPos[1][0] = -25.0f;
-		m_uiPos[1][1] = fBottom;
-		m_uiPos[2][0] = fWidth - 186.0f;
-		m_uiPos[2][1] = fTop;
-		m_uiPos[3][0] = fWidth - 186.0f;
-		m_uiPos[3][1] = fBottom;
+		pos[0][1] = fTop;
+		pos[0][0] = -25.0f;
+		pos[1][0] = -25.0f;
+		pos[1][1] = fBottom;
+		pos[2][0] = fWidth - 186.0f;
+		pos[2][1] = fTop;
+		pos[3][0] = fWidth - 186.0f;
+		pos[3][1] = fBottom;
 
-		m_uiPos[4][0] = -25.0f;
-		m_uiPos[4][1] = 68.0f;
-		m_uiPos[5][0] = -25.0f;
-		m_uiPos[5][1] = 161.0f;
-		m_uiPos[6][0] = fWidth - 186.0f;
-		m_uiPos[6][1] = 68.0f;
-		m_uiPos[7][0] = fWidth - 186.0f;
-		m_uiPos[7][1] = 161.0f;
+		pos[4][0] = -25.0f;
+		pos[4][1] = 68.0f;
+		pos[5][0] = -25.0f;
+		pos[5][1] = 161.0f;
+		pos[6][0] = fWidth - 186.0f;
+		pos[6][1] = 68.0f;
+		pos[7][0] = fWidth - 186.0f;
+		pos[7][1] = 161.0f;
 	}
 }
 
@@ -3832,7 +3834,7 @@ void CPangInfo::ProcessCases(float fDelta) {
 					case 8:
 						m_shownPangs[0] += m_cases[8].m_pang;
 						m_shownPangs[0] = (int)m_shownPangs[0] < 0 ? 0 : (int)m_shownPangs[0];
-						m_totalCases[0].m_pang = m_shownPangs[0];
+						m_totalCases[0].m_pang = (int)m_shownPangs[0];
 						break;
 					case 9:
 					case 10:

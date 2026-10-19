@@ -106,7 +106,13 @@ int CCompressBuffer::Decompress(unsigned char *pSrc, int nSize) {
 		return 3;
 	}
 
-	int nOrgSize = pSrc[1] * 65025 + pSrc[2] * 255 + pSrc[3];
+	// The original size, [1..3] in base 255 (Compress's header), read low digit first.
+	int nOrgSize = 0;
+	int nMul = 1;
+	for (int i = 3; i >= 1; i--) {
+		nOrgSize += pSrc[i] * nMul;
+		nMul *= 255;
+	}
 
 	m_bUsed = true;
 	if (m_pNewBuffer) {

@@ -461,7 +461,7 @@ void CGuildMainForm::RefreshSearchPageList(void) {
 
 // ingameguildlobbydlg.cpp:449
 void CGuildMainForm::RequestMember_Page(int page) {
-	GUILD_CLASS_IDX classIndex = MyGuildClassIndex();
+	GUILD_CLASS_IDX classIndex = GuildInfo()->GetClassIndex();
 	if (classIndex == GUILD_CLASS_NONE || classIndex == (GUILD_CLASS_IDX)9) {
 		// No guild, or a join request still waiting.
 		return;

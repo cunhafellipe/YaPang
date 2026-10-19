@@ -1352,9 +1352,9 @@ void WPolySoup::ChangeDataStructure(sModel *pModel) {
 // polysoup.cpp:1307
 // Removes a model (found by name) from the quadtree and from the soup.
 bool WPolySoup::DeleteDataStructure(sModel *pModel) {
-	int numObjects = m_numObjects;
 	int index = 0;
-	bool result;
+	int numObjects = m_numObjects;
+	bool result = false;
 	const char *name;
 
 	if (IsLocalContent((localContentType_t)0x56)) {
@@ -1362,45 +1362,41 @@ bool WPolySoup::DeleteDataStructure(sModel *pModel) {
 		for (it = m_models.begin(); it != m_models.end(); ++it, ++index) {
 			name = pModel->m_name;
 			if (stricmp((*it)->m_name, name) == 0) {
+				if (it != m_models.end()) {
+					result = true;
+					(*it)->m_pPuppet = 0;
+
+					GetPVS().MakeBaseStructure(m_pBgModel, true);
+
+					GetPVS().MakeObjStructure((*it)->m_objIndex, index, true);
+
+					for (int i = 0; i < numObjects; i++) {
+						GetPVS().MakeObjStructure(m_models[i]->m_objIndex, i, true);
+					}
+
+					for (it = m_models.begin(); it != m_models.end(); ++it) {
+						if (stricmp((*it)->m_name, name) == 0) {
+							if (it != m_models.end()) {
+								if ((*it)->m_pTriangles != 0) {
+									delete[] (*it)->m_pTriangles;
+									(*it)->m_pTriangles = 0;
+								}
+								if ((*it)->m_pQuads != 0) {
+									delete[] (*it)->m_pQuads;
+									(*it)->m_pQuads = 0;
+								}
+
+								m_models.erase(it);
+
+								m_numObjects--;
+							}
+							break;
+						}
+					}
+				}
 				break;
 			}
 		}
-		if (it == m_models.end()) {
-			result = false;
-		} else {
-			result = true;
-			(*it)->m_pPuppet = 0;
-
-			GetPVS().MakeBaseStructure(m_pBgModel, true);
-
-			GetPVS().MakeObjStructure((*it)->m_objIndex, index, true);
-
-			for (int i = 0; i < numObjects; i++) {
-				GetPVS().MakeObjStructure(m_models[i]->m_objIndex, i, true);
-			}
-
-			for (it = m_models.begin(); it != m_models.end(); ++it) {
-				if (stricmp((*it)->m_name, name) == 0) {
-					break;
-				}
-			}
-			if (it != m_models.end()) {
-				if ((*it)->m_pTriangles != 0) {
-					delete[] (*it)->m_pTriangles;
-					(*it)->m_pTriangles = 0;
-				}
-				if ((*it)->m_pQuads != 0) {
-					delete[] (*it)->m_pQuads;
-					(*it)->m_pQuads = 0;
-				}
-
-				m_models.erase(it);
-
-				m_numObjects--;
-			}
-		}
-	} else {
-		result = false;
 	}
 	return result;
 }
@@ -2027,47 +2023,49 @@ static void GetBarycentric(const WVector &a, const WVector &b, const WVector &c,
 // plane the triangle's normal is closest to (sub_006ba880, register
 // arguments). u weighs c, v weighs b. Taking c before b reproduces the
 // original's registers (ecx a, edx b, esi c, edi pos). Emitted once its callers
-// smBuildOutFragMeshes and smAddSmapPack are written.
+// smBuildOutFragMeshes and smAddSmapPack are written. The projected pos is an
+// array: the original homes p[1] in the frame and copies it through eax.
 static void GetBarycentricProjected(const WVector &a, const WVector &c, const WVector &b, const WVector &pos, float &u, float &v) {
+	float p[2];
+	float cx, cy, bx, by;
 	WVector normal;
 	normal = WCrossProduct(c - a, b - a);
-	float px, py, cx, cy, bx, by;
 
 	float absX = Abs(normal.x);
 	float absY = Abs(normal.y);
 	float absZ = Abs(normal.z);
 
 	if (absX >= absY && absX >= absZ) {
-		px = pos.z;
-		py = pos.y;
-		px -= a.z;
-		py -= a.y;
+		p[0] = pos.z;
+		p[1] = pos.y;
+		p[0] -= a.z;
+		p[1] -= a.y;
 		cx = c.z - a.z;
 		cy = c.y - a.y;
 		bx = b.z - a.z;
 		by = b.y - a.y;
 	} else if (absY >= absX && absY >= absZ) {
-		px = pos.x;
-		py = pos.z;
-		px -= a.x;
-		py -= a.z;
+		p[0] = pos.x;
+		p[1] = pos.z;
+		p[0] -= a.x;
+		p[1] -= a.z;
 		cx = c.x - a.x;
 		cy = c.z - a.z;
 		bx = b.x - a.x;
 		by = b.z - a.z;
 	} else {
-		px = pos.x;
-		py = pos.y;
-		px -= a.x;
-		py -= a.y;
+		p[0] = pos.x;
+		p[1] = pos.y;
+		p[0] -= a.x;
+		p[1] -= a.y;
 		cx = c.x - a.x;
 		cy = c.y - a.y;
 		bx = b.x - a.x;
 		by = b.y - a.y;
 	}
 
-	u = (by * px - bx * py) / (by * cx - bx * cy);
-	v = (cx * py - cy * px) / (by * cx - bx * cy);
+	u = (by * p[0] - bx * p[1]) / (by * cx - bx * cy);
+	v = (cx * p[1] - cy * p[0]) / (by * cx - bx * cy);
 }
 
 #ifdef PG_7XX

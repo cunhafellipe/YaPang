@@ -166,9 +166,10 @@ FrChangeRoomInfoDlg::FrChangeRoomInfoDlg(void) {
 	m_pHoleTypeImg[6] = g_pFresh->GetManager()->GetBitmap("ITEMS", "hole_shuffle_n");
 	m_pHoleTypeImg[7] = g_pFresh->GetManager()->GetBitmap("ITEMS", "hole_shuffle_d");
 
-	m_pMapSelectImg = g_pFresh->GetManager()->GetBitmap("MAKEROOM", "map_select_o");
+	const Bitmap* pMapSelectImg = g_pFresh->GetManager()->GetBitmap("MAKEROOM", "map_select_o");
 
 	m_pMapSelectDlg = 0;
+	m_pMapSelectImg = pMapSelectImg;
 
 	m_roomInfo = WSingleton<CSharedDoc>::Instance()->m_roomInfo;
 

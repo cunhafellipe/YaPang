@@ -92,8 +92,9 @@ int WSendPacket::GetPacketType(void) const {
 
 // packet.cpp:245
 void WSendPacket::InitPacket(int type) {
-	m_packetType = type;
+	// Zeroed before the type store to match the code; the line marks put the type store first (packet.cpp:247).
 	m_length = 0;
+	m_packetType = type;
 	Encode1(0);
 	Encode2(0);
 	Encode1(0);

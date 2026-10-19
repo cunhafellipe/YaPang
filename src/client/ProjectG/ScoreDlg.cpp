@@ -495,7 +495,7 @@ void FrScoreDlg::OnHoleListOwnerDraw(intptr_t param) {
 		return;
 
 	for (unsigned char i = m_bFront9 ? 0 : 9; i < (m_bFront9 ? 9 : 18); i++) {
-		if (i <= WSingleton<CSharedDoc>::Instance()->m_holes) {
+		if (i <= GetHoles()) {
 			if (WSingleton<CSharedDoc>::Instance()->m_courseHoleOn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] > 0) {
 				DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 				pt.x += w * 0.11111111f;

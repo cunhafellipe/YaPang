@@ -201,7 +201,9 @@ bool CPartTidList::SetTid(unsigned long tid, unsigned long id, const char *textu
 			if (overlap != 0) {
 				remainMask &= ~overlap;
 
-				if (overlap != pOther->hideMask) {
+				if (overlap == pOther->hideMask) {
+					EmptyList(overlap);
+				} else {
 					switch ((m_partTids[i] >> 9) & 3) {
 					case 0:
 					case 2: {
@@ -239,9 +241,9 @@ bool CPartTidList::SetTid(unsigned long tid, unsigned long id, const char *textu
 						break;
 					}
 					}
-				}
 
-				EmptyList(overlap);
+					EmptyList(overlap);
+				}
 			}
 
 			if (remainMask == 0) {

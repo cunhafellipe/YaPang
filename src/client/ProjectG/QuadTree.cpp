@@ -52,12 +52,6 @@ float __cdecl ObbIntersect(const Waabb &src, const WVector &direction, const Wob
 
 float RayIntersectAABB(const Waabb &aabb, const WVector &pos, const WVector &moveDelta, WPlane *pReturnPlane, float radius);
 
-// File-local float table in .rdata (no symbol): {pi, degrees to radians,
-// FLT_MAX, epsilon}; [3] is the epsilon the zero tests below compare with.
-extern "C" const float data_a11514[4] = {
-	3.14159265358979f, 3.14159265358979f / 180.0f, 3.402823466e+38f, 1e-5f
-};
-
 
 namespace intersection {
 	float IntersectRayTriangle(const WVector &orig, const WVector &dir, const WVector *tri);
@@ -183,7 +177,7 @@ float intersection::IntersectRayTriangle(const WVector &orig, const WVector &dir
 	pvec = WCrossProduct(dir, edge2);
 	float det = pvec.x * edge1.x + pvec.y * edge1.y + pvec.z * edge1.z;
 
-	if (WAbsBySign(det) < data_a11514[3])
+	if (WAbsBySign(det) < g_EPSILON)
 		return 1.0f;
 
 	det = 1.0f / det;
@@ -1030,7 +1024,7 @@ bool CQuadTree::ObjColTest(const WVector &dir, short objIndex, WPlane *pPlane, f
 		if (m_pPolySoup->GetProperty(pModel->m_pTriangles[tri].m_propIndex).m_penetrable) {
 			if ((GolfBall().m_flags & 0x10)
 					|| ((GolfBall().m_flags & 0x20) && GolfBall().m_eventPreDataIndex[9] < 0)
-					|| WAbsBySign(m_pPolySoup->GetProperty(pModel->m_pTriangles[tri].m_propIndex).m_bounceCoeff - 1.0f) < data_a11514[3])
+					|| WAbsBySign(m_pPolySoup->GetProperty(pModel->m_pTriangles[tri].m_propIndex).m_bounceCoeff - 1.0f) < g_EPSILON)
 				continue;
 
 			if (GolfBall().m_flags & 0x40)
@@ -1577,7 +1571,7 @@ void CQuadTree::GetMeshList(WVector pos, const WVector &dir) {
 	int numCols = maxCol - minCol + 1, numRows = maxRow - minRow + 1;
 	int *pGrid = new int[numCols * numRows];
 
-	if (Wabs(dir.x) < data_a11514[3]) {
+	if (Wabs(dir.x) < g_EPSILON) {
 		// A segment along z: the quads of one column.
 		int i;
 		for (i = 0; i < numRows; i++)
@@ -1720,7 +1714,7 @@ void CQuadTree::GetObjList(WVector pos, const WVector &dir) {
 	int numCols = maxCol - minCol + 1, numRows = maxRow - minRow + 1;
 	int *pGrid = new int[numCols * numRows];
 
-	if (Wabs(dir.x) < data_a11514[3]) {
+	if (Wabs(dir.x) < g_EPSILON) {
 		int i;
 		for (i = 0; i < numRows; i++)
 			pGrid[i] = 1;
@@ -1967,7 +1961,8 @@ void CQuadTree::MakeCollisionData(short objIndex) {
 
 				WPolySoup::sTriangle *pTri = &pModel->m_pTriangles[triIndex];
 
-				WVector normal = WCrossProduct(pTri->m_vertex[2] - pTri->m_vertex[1], pTri->m_vertex[0] - pTri->m_vertex[1]);
+				WVector normal;
+				normal = WCrossProduct(pTri->m_vertex[2] - pTri->m_vertex[1], pTri->m_vertex[0] - pTri->m_vertex[1]);
 				normal.Normalize();
 
 				pTri->m_plane.normal = normal;
@@ -2310,9 +2305,9 @@ void CQuadTree::BallProcess(float elapsed) {
 			&& WSingleton<CSharedDoc>::Instance()->m_roomType != 0xB
 			&& WSingleton<CSharedDoc>::Instance()->m_roomType != 0xC) {
 		if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x800)
-			m_holeCupRadius = GolfBall().m_radius * 6.0f;
+			m_holeCupRadius = GolfBall().GetRadius() * 6.0f;
 		else
-			m_holeCupRadius = GolfBall().m_radius * 3.0f;
+			m_holeCupRadius = GolfBall().GetRadius() * 3.0f;
 	}
 
 	CGolfBall &ball = GolfBall();
@@ -2352,7 +2347,7 @@ void CQuadTree::BallProcess(float elapsed) {
 	}
 
 	if (ball.m_pos.y < m_pBaseModel->m_aabb.min.y) {
-		ball.m_velocity.x = ball.m_velocity.y = ball.m_velocity.z = 0.0f;
+		ball.m_velocity.Reset();
 		ball.m_landed = true;
 		ball.m_state = 0;
 		return;
@@ -2360,7 +2355,7 @@ void CQuadTree::BallProcess(float elapsed) {
 
 	if (ball.m_preDataCount < 100 && m_ballState == 0) {
 		WVector center = ball.m_pos;
-		center.y = (m_ballTestBox.max.y + m_ballTestBox.min.y) * 0.5f;
+		center.y = ((m_ballTestBox.max + m_ballTestBox.min) * 0.5f).y;
 		if (RayIntersectAABB(m_ballTestBox, center, WVector(elapsed * ball.m_velocity.x, 0.0f, elapsed * ball.m_velocity.z), 0, 0.0f) < 1.0f) {
 			if (ball.m_pos.y < m_ballTestBox.min.y)
 				m_ballState = 2;
@@ -2371,14 +2366,11 @@ void CQuadTree::BallProcess(float elapsed) {
 		}
 	}
 
-	WVector step = ball.m_velocity * elapsed;
-	float depth = GolfBall().m_radius * 6.0f;
-	WVector cup = GetHoleCupPos();
-	m_cupApproach = DistanceBetweenRayNSegment(WVector(cup.x, cup.y - depth, cup.z), WVector::UNIT_POS_Y, ball.m_pos, step);
+	m_cupApproach = DistanceBetweenRayNSegment(GetHoleCupPos() - WVector(0.0f, GolfBall().m_radius * 6.0f, 0.0f), WVector::UNIT_POS_Y, ball.m_pos, ball.m_velocity * elapsed);
 
 	if (ball.m_eventPreDataIndex[8] < 0 && ball.m_eventPreDataIndex[7] < 0
 			&& m_holeCupRadius - ball.m_radius > m_cupApproach.z
-			&& (!(ball.m_flags & 0x20) || ball.m_velocity.y < 0.0f)) {
+			&& ((ball.m_flags & 0x20) ? ball.m_velocity.y < 0.0f : true)) {
 		ball.m_eventPreDataIndex[8] = ball.m_preDataCount;
 		ball.m_pos += m_cupApproach.y * ball.m_velocity * elapsed;
 
@@ -2460,9 +2452,9 @@ bool CQuadTree::IsValid(const WVector &pos) {
 WVector CQuadTree::ApplyForce(void) {
 	WVector force(0.0f, 0.0f, 0.0f);
 
-	if (!(WAbsBySign(GolfBall().m_curve) < data_a11514[3]) && GolfBall().m_eventPreDataIndex[9] < 0) {
+	if (!(WAbsBySign(GolfBall().m_curve) < g_EPSILON) && GolfBall().m_eventPreDataIndex[9] < 0) {
 		force = (GolfClub().GetCurve() * GolfBall().m_curve * 0.75f) * WVector(GolfBall().m_velocity.z * -1.0f, 0.0f, GolfBall().m_velocity.x).Normalize();
-	} else if (!(WAbsBySign(GolfBall().m_curve) < data_a11514[3]) && GolfBall().m_eventPreDataIndex[12] < 0) {
+	} else if (!(WAbsBySign(GolfBall().m_curve) < g_EPSILON) && GolfBall().m_eventPreDataIndex[12] < 0) {
 		force = (GolfClub().GetCurve() * GolfBall().m_curve * 0.75f) * WVector(GolfBall().m_velocity.z * -1.0f, 0.0f, GolfBall().m_velocity.x).Normalize();
 	}
 
@@ -2478,7 +2470,7 @@ WVector CQuadTree::ApplyForce(void) {
 		CGolfBall &ball = GolfBall();
 
 		force.y -= m_gravity * ball.m_mass * 34.295296f;
-		if (!(WAbsBySign(GolfBall().m_spin) < data_a11514[3]))
+		if (!(WAbsBySign(GolfBall().m_spin) < g_EPSILON))
 			force.y += GolfClub().GetSpin() * GolfBall().m_spin * 3.0f;
 		force -= (GolfBall().m_velocity.Magnitude() * 0.00008f) * GolfBall().m_velocity;
 	}
@@ -2551,10 +2543,9 @@ void CQuadTree::SetPenaltyPos(const Waabb &aabb) {
 		break;
 	case 2:
 		{
-			WVector pin = GOLFDOC()->GetHoleData().m_cupPos;
-			WVector toFirst = pin - found[0];
-			dir = GOLFDOC()->GetHoleData().m_cupPos - found[1];
-			m_penaltyPos = toFirst.Magnitude() > dir.Magnitude() ? found[0] : found[1];
+			WVector toFirst = GetHoleCupPos() - found[0];
+			WVector toSecond = GetHoleCupPos() - found[1];
+			m_penaltyPos = WVectorLen(toFirst) > WVectorLen(toSecond) ? found[0] : found[1];
 		}
 		{ WVector probe = m_penaltyPos; GetMeshList(m_penaltyPos); int hit; probe = ColTest(probe, false, &hit, true); if (probe.y < m_pBaseModel->m_aabb.min.y) probe.y = m_pBaseModel->m_aabb.min.y; m_penaltyPos = probe; }
 		m_penaltyPos.y += GolfBall().m_radius;
@@ -2583,13 +2574,13 @@ void CQuadTree::BounceProcess(float elapsed) {
 		GolfBall();     // the original reaches the ball here and does nothing with it
 
 	if (ball.m_lastContactIndex != -1) {
-		// Sliding along the last contact: keep only the velocity along its face.
+		// Sliding along the last contact: keep only the ball.m_velocity along its face.
 		WVector normal = m_pPolySoup->m_models[ball.m_lastContactId]->m_pTriangles[ball.m_lastContactIndex].m_plane.normal;
 
 		ball.m_velocity -= normal * WDotProduct(normal, ball.m_velocity);
 
 		if (ball.m_velocity.y > 0.0f) {
-			ball.m_velocity.x = ball.m_velocity.y = ball.m_velocity.z = 0.0f;
+			ball.m_velocity.Reset();
 			ball.m_state = 0;
 		}
 	}
@@ -2600,8 +2591,8 @@ void CQuadTree::BounceProcess(float elapsed) {
 	else
 		ball.m_rotation.y += elapsed * ball.m_spin * 25.132742f;
 
-	if (ball.m_groundArea >= 0 && WDotProduct(ball.m_velocity, ball.PreDataToWrite(ball.m_preDataCount - 1)->m_contactVector) < 0.0f) {
-		// On the ground: drop the velocity into the ground and put the ball on it.
+	if (ball.m_groundArea >= 0 && WDotProduct(ball.PreDataToWrite(ball.m_preDataCount - 1)->m_contactVector, ball.m_velocity) < 0.0f) {
+		// On the ground: drop the ball.m_velocity into the ground and put the ball on it.
 		ball.m_velocity -= ball.PreDataToWrite(ball.m_preDataCount - 1)->m_contactVector * WDotProduct(ball.m_velocity, ball.PreDataToWrite(ball.m_preDataCount - 1)->m_contactVector);
 		{ WVector pos = ball.m_pos; CQuadTree &pvs = GetPVS(); pvs.GetMeshList(pos); int hit; WVector ground = pvs.ColTest(pos, false, &hit, true); if (ground.y < pvs.m_pBaseModel->m_aabb.min.y) ground.y = pvs.m_pBaseModel->m_aabb.min.y; ball.m_pos = ground; }
 
@@ -2613,11 +2604,11 @@ void CQuadTree::BounceProcess(float elapsed) {
 			ball.m_state = 3;
 		}
 
-		const sProperty &prop = m_pPolySoup->GetProperty(m_pBaseModel->m_pTriangles[ball.m_groundArea].m_propIndex);
+		const char *desc = m_pPolySoup->GetProperty(m_pBaseModel->m_pTriangles[ball.m_groundArea].m_propIndex).m_desc;
 		float speed = (ball.m_spinImpulse + ball.m_velocity).Magnitude();
 
-		if (prop.m_desc[0] && speed > 20.0f)
-			strcpy(pData->m_sound, prop.m_desc);
+		if (desc[0] && speed > 20.0f)
+			strcpy(pData->m_sound, desc);
 
 		if (GetGroundType(ball.m_pos, true, 0) == 2 && speed > 20.0f)
 			ball.m_eventPreDataIndex[5] = ball.m_preDataCount;
@@ -2666,7 +2657,7 @@ void CQuadTree::BounceProcess(float elapsed) {
 				return;
 			}
 
-			ball.m_velocity.x = ball.m_velocity.y = ball.m_velocity.z = 0.0f;
+			ball.m_velocity.Reset();
 			ball.m_state = 0;
 			ball.m_landed = true;
 			pData->m_groundSubType = 4;
@@ -2683,9 +2674,8 @@ void CQuadTree::BounceProcess(float elapsed) {
 		WVector normal;
 		if (pTri->m_edgeHit) {
 			// An edge hit: the normal points from the edge to the ball.
-			WVector step = move * t;
-			normal = intersection::closestPointOnTriangle(ball.m_pos + step, pTri->m_vertex[0], pTri->m_vertex[1], pTri->m_vertex[2]);
-			normal = ball.m_pos + step - normal;
+			normal = intersection::closestPointOnTriangle(ball.m_pos + move * t, pTri->m_vertex[0], pTri->m_vertex[1], pTri->m_vertex[2]);
+			normal = ball.m_pos + move * t - normal;
 			normal.Normalize();
 		} else {
 			normal = pTri->m_plane.normal;
@@ -2699,12 +2689,12 @@ void CQuadTree::BounceProcess(float elapsed) {
 
 		CVectorSlideTestContainer *pContainer = (CVectorSlideTestContainer *)WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0xA2);
 		if (pContainer && pContainer->m_newTypeVectorSlide) {
-			if (WDotProduct(normal, WVector(0.0f, 1.0f, 0.0f)) < cos(0.7853982f) && ball.m_groundType == 8)
+			if (WDotProduct(normal, WVector(0.0f, 1.0f, 0.0f)) < cos(45.0f * g_DEGTORAD) && ball.m_groundType == 8)
 				ball.m_velocity.y = 0.0f;
 		}
 
 		if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_powerShotLevel == 0)
-			pData->m_groundSubType = cos(0.7853982f) < normal.y ? 1 : 2;
+			pData->m_groundSubType = cos(45.0f * g_DEGTORAD) < normal.y ? 1 : 2;
 		else
 			pData->m_groundSubType = 3;
 
@@ -2712,7 +2702,7 @@ void CQuadTree::BounceProcess(float elapsed) {
 		pData->m_groundType = 1;
 
 		if (m_pPolySoup->GetProperty(ball.m_lastEventPreDataIndex).m_weatherBounceType == 8) {
-			float scale = (m_pPolySoup->GetProperty(GolfBall().m_lastEventPreDataIndex).m_maxPowerOnGround[1] > 500.0f ? 500.0f
+			float scale = (500.0f < m_pPolySoup->GetProperty(GolfBall().m_lastEventPreDataIndex).m_maxPowerOnGround[1] ? 500.0f
 				: m_pPolySoup->GetProperty(GolfBall().m_lastEventPreDataIndex).m_maxPowerOnGround[1]) * 0.01f;
 
 			CVectorSlideTestContainer *pSlide = (CVectorSlideTestContainer *)WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0xA2);
@@ -2787,13 +2777,13 @@ void CQuadTree::BounceProcess(float elapsed) {
 		pData->m_groundSubType = 2;
 		pData->m_groundType = 2;
 
-		ball.m_curve = ball.m_spin = 0.0f;
+		ball.m_spin = ball.m_curve = 0.0f;
 		ball.m_flags = 0;
 
 		CVectorSlideTestContainer *pContainer = 0;
 		WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0xA2, pContainer);
 		if (pContainer && pContainer->m_newTypeVectorSlide) {
-			if (WDotProduct(plane.normal, WVector(0.0f, 1.0f, 0.0f)) < cos(0.7853982f) && ball.m_groundType == 8)
+			if (WDotProduct(plane.normal, WVector(0.0f, 1.0f, 0.0f)) < cos(45.0f * g_DEGTORAD) && ball.m_groundType == 8)
 				ball.m_velocity.y = 0.0f;
 		}
 		return;
@@ -3067,13 +3057,14 @@ void CQuadTree::RollProcess(float elapsed) {
 	CGolfBall &ball = GolfBall();
 
 	ball.m_groundArea = GetMeshIndex(ball.m_pos, false);
+	WVector &velocity = ball.m_velocity;
 
 	if (ball.m_groundArea == -1) {
 		// Off the course: back off a little and stop when slow enough.
-		ball.m_velocity = ball.m_velocity * -1.0f / ball.m_velocity.Magnitude() * 0.02f;
+		velocity = ball.m_velocity * -1.0f * (1.0f / ball.m_velocity.Magnitude()) * 0.02f;
 		ball.m_pos += ball.m_velocity * 0.02f;
 		if (ball.m_velocity.Magnitude() < 0.02f / ball.m_mass) {
-			ball.m_velocity.x = ball.m_velocity.y = ball.m_velocity.z = 0.0f;
+			velocity.Reset();
 			ball.m_landed = true;
 			ball.m_state = 0;
 		}
@@ -3093,7 +3084,7 @@ void CQuadTree::RollProcess(float elapsed) {
 			return;
 		}
 
-		ball.m_velocity.x = ball.m_velocity.y = ball.m_velocity.z = 0.0f;
+		velocity.Reset();
 
 		Waabb water;
 		if (IsFallenIntoWater(ball.m_pos, &water, false)) {
@@ -3108,7 +3099,7 @@ void CQuadTree::RollProcess(float elapsed) {
 	}
 
 	WVector move;
-	move = ball.m_velocity * elapsed;
+	move = velocity * elapsed;
 	WPlane plane;
 	float t = IntersectObj(ball.m_pos, move, &plane);
 
@@ -3158,12 +3149,11 @@ void CQuadTree::RollProcess(float elapsed) {
 		if (ball.m_eventPreDataIndex[0] < 0)
 			ball.m_eventPreDataIndex[0] = ball.m_preDataCount;
 	} else {
-		int prev = ball.m_preDataCount - 1;
-		if (ball.PreData(prev)->m_contactType == 3) {
-			move = dest - ball.PreData(prev)->m_pos;
+		if (ball.PreData(ball.m_preDataCount - 1)->m_contactType == 3) {
+			move = dest - ball.PreData(ball.m_preDataCount - 1)->m_pos;
 			float len = (float)sqrt(move.z * move.z + move.x * move.x);
-			if (WisZero(len, 1e-5f)) {
-				ball.m_velocity.x = ball.m_velocity.y = ball.m_velocity.z = 0.0f;
+			if (WisZero((float)sqrt(move.z * move.z + move.x * move.x), 1e-5f)) {
+				velocity.Reset();
 				ball.m_state = 0;
 				if (ball.m_flags & 1)
 					MakeAfterBurner();
@@ -3178,11 +3168,11 @@ void CQuadTree::RollProcess(float elapsed) {
 	if (!(m_holeCupRadius + ball.m_radius < m_cupApproach.z) && (float)m_cupRollCount < 75.0f) {
 		m_cupRollCount++;
 		move = ball.m_pos - GetHoleCupPos();
-		if (WDotProduct(WVector(move.x, 0.0f, move.z), ball.m_velocity) > 0.0f) {
+		if (WDotProduct(WVector(move.x, 0.0f, move.z), velocity) > 0.0f) {
 			WVector dir = GetHoleCupPos() - ball.m_pos;
 			dir.y = 0.0f;
 			dir.Normalize();
-			ball.m_velocity += dir * 80.0f * elapsed;
+			velocity += dir * 80.0f * elapsed;
 		}
 	}
 }
@@ -3259,10 +3249,11 @@ void CQuadTree::BounceResponse(const WVector &normal) {
 		}
 	}
 
-	ball.m_spin = ball.m_spin < 0.0f ? ball.m_spin : 0.0f;
+	ball.m_spin = Min(0.0f, ball.m_spin);
 
 	WVector &velocity = ball.m_velocity;
-	WVector perpendicular = normal * (WDotProduct(velocity, normal) * -1.0f);
+	float dot = WDotProduct(velocity, normal);
+	WVector perpendicular = normal * (dot * -1.0f);
 	WVector tangent = perpendicular + velocity;
 	float friction = ball.m_lieAngle * 0.1f + 0.3f;
 	WVector bounce = perpendicular * (GetWeatherBounceCoeff(ball.m_lastEventPreDataIndex) * m_bounceFactor * GetBounceCoeff(ball.m_lastEventPreDataIndex));
@@ -3355,7 +3346,7 @@ void CQuadTree::ObjResponse(const WVector &dir, float t, const WVector &contactV
 
 		WPolySoup::sTriangle *pTri = &m_pPolySoup->m_models[response.m_ball.m_lastContactId]->m_pTriangles[response.m_ball.m_lastContactIndex];
 
-		if (WAbsBySign(pTri->m_plane.normal.y) < data_a11514[3]) {
+		if (WAbsBySign(pTri->m_plane.normal.y) < g_EPSILON) {
 			response.m_ball.m_velocity.x = response.m_ball.m_velocity.y = response.m_ball.m_velocity.z = 0.0f;
 			response.m_ball.m_state = 0;
 		} else {
@@ -3466,7 +3457,8 @@ void CQuadTree::HoleProcess(float elapsed) {
 
 	float gravity = elapsed * m_gravity;
 	ball.m_velocity.y -= gravity * 34.295296f;
-	WVector move = ball.m_velocity * elapsed;
+	WVector move;
+	move = ball.m_velocity * elapsed;
 
 	// The heights above the cup's bottom now and after the step.
 	float height = ball.m_pos.y - ball.m_radius - m_cupBottom;
@@ -3474,7 +3466,7 @@ void CQuadTree::HoleProcess(float elapsed) {
 
 	float side = nextHeight * height;
 	float t;
-	if (side < 0.0f && ball.m_velocity.y < 0.0f && !(WAbsBySign(height) < data_a11514[3]))
+	if (side < 0.0f && ball.m_velocity.y < 0.0f && !(WAbsBySign(height) < g_EPSILON))
 		t = height / (height - nextHeight);
 	else
 		t = 1.0f;
@@ -3488,10 +3480,10 @@ void CQuadTree::HoleProcess(float elapsed) {
 	WVector d;
 	d = ball.m_pos - GetHoleCupPos();
 	d.y = 0.0f;
-	float over = (float)sqrt(d.z * d.z + d.x * d.x) - (m_holeCupRadius - ball.m_radius);
+	float over = (float)sqrt(d.x * d.x + d.z * d.z) - (m_holeCupRadius - ball.m_radius);
 	d = move + ball.m_pos - GetHoleCupPos();
 	d.y = 0.0f;
-	float nextOver = (float)sqrt(d.z * d.z + d.x * d.x) - (m_holeCupRadius - ball.m_radius);
+	float nextOver = (float)sqrt(d.x * d.x + d.z * d.z) - (m_holeCupRadius - ball.m_radius);
 
 	if (ball.PreData(ball.m_preDataCount - 1)->m_contactType == 1 && over > 0.0f) {
 		if (nextOver > ball.m_radius) {
@@ -3515,9 +3507,9 @@ void CQuadTree::HoleProcess(float elapsed) {
 				WVector normal = ball.m_pos - rim;
 				dir = normal.Normalize();
 				if (ball.m_pos.y < rimY) {
-					ball.m_pos.y = rimY;
 					ball.m_flags &= ~0x73;
 					ball.m_curve = ball.m_spin = 0.0f;
+					ball.m_pos.y = rimY;
 					ball.m_velocity += dir * (Abs(WDotProduct(dir, ball.m_velocity)) * 1.3f);
 					pData->m_groundSubType = 0;
 					pData->m_groundType = 3;
@@ -3544,13 +3536,13 @@ void CQuadTree::HoleProcess(float elapsed) {
 			// Hits the pole.
 			ball.m_flags &= ~0x73;
 			ball.m_pos += move * pointT;
-			move = GetHoleCupPos() - ball.m_pos;
-			move.y = 0.0f;
-			move.Normalize();
-			ball.m_velocity = move * (ball.m_velocity.Magnitude() * 0.3f);
+			WVector toCup = GetHoleCupPos() - ball.m_pos;
+			toCup.y = 0.0f;
+			toCup.Normalize();
+			ball.m_velocity = toCup * (ball.m_velocity.Magnitude() * 0.3f);
 			pData->m_groundSubType = 0;
 			pData->m_groundType = 3;
-			pData->m_contactVector = move;
+			pData->m_contactVector = toCup;
 			strcpy(pData->m_sound, "\xc3\xe6\xb5\xb9_pole");
 		} else {
 			ball.m_pos += move;
@@ -3566,14 +3558,14 @@ void CQuadTree::HoleProcess(float elapsed) {
 			if (ball.m_pos.y < GetHoleCupPos().y) {
 				if (t < 1.0f) {
 					ball.m_pos = GetHoleCupPos();
-					ball.m_pos.y = m_cupBottom + ball.m_radius;
+					ball.m_pos.y = ball.m_radius + m_cupBottom;
 					HoleIn();
 					return;
 				}
 
 				// Below the rim: back against the cup's wall.
 				float y = ball.m_pos.y;
-				ball.m_pos = GetHoleCupPos() - d.Normalize() * (m_holeCupRadius - ball.m_radius);
+				ball.m_pos = GetHoleCupPos() - (m_holeCupRadius - ball.m_radius) * d.Normalize();
 				ball.m_pos.y = y;
 				ball.m_velocity *= -0.3f;
 				ball.m_flags &= ~0x73;
@@ -3620,7 +3612,7 @@ void CQuadTree::HoleProcess(float elapsed) {
 						dir.Normalize();
 
 						ball.m_pos.y = rimY;
-						ball.m_velocity = dir * (ball.m_velocity.Magnitude() * 0.3f);
+						ball.m_velocity = (ball.m_velocity.Magnitude() * 0.3f) * dir;
 						ball.m_flags &= ~0x73;
 					}
 				}
@@ -3628,9 +3620,9 @@ void CQuadTree::HoleProcess(float elapsed) {
 		} else {
 			// The spin took hold: keep the ball against the cup's wall.
 			float y = ball.m_pos.y;
-			ball.m_pos = GetHoleCupPos() - d.Normalize() * (m_holeCupRadius - ball.m_radius);
+			ball.m_pos = GetHoleCupPos() - (m_holeCupRadius - ball.m_radius) * d.Normalize();
 			ball.m_pos.y = y;
-			ball.m_velocity = d.Normalize() * (ball.m_velocity.Magnitude() * 0.3f);
+			ball.m_velocity = (ball.m_velocity.Magnitude() * 0.3f) * d.Normalize();
 		}
 	}
 }
@@ -3962,8 +3954,9 @@ bool CQuadTree::OverlappedWithObject(WVector pos, float radius) {
 
 			// The scene box grown by the radius horizontally.
 			Waabb box(pModel->m_sceneAabb);
-			box.min = box.min - WVector(radius, 0.0f, radius);
-			box.max.x += radius; box.max.z += radius;
+			WVector grow = WVector(1.0f, 0.0f, 1.0f) * radius;
+			box.min -= grow;
+			box.max += grow;
 
 			if (pos.x > box.min.x && pos.x < box.max.x && pos.z > box.min.z && pos.z < box.max.z)
 				return true;
@@ -4070,7 +4063,7 @@ WVector CQuadTree::DistanceBetweenRayNSegment(const WVector &rayOrig, const WVec
 	float sN, sD;
 	float tN, tD;
 
-	if (WAbsBySign(D) < data_a11514[3]) {
+	if (WAbsBySign(D) < g_EPSILON) {
 		sN = 0.0f;
 		tN = e;
 	} else {
@@ -4106,13 +4099,13 @@ WVector CQuadTree::DistanceBetweenRayNSegment(const WVector &rayOrig, const WVec
 	}
 
 	float sc;
-	if (WAbsBySign(sN) < data_a11514[3])
+	if (WAbsBySign(sN) < g_EPSILON)
 		sc = 0.0f;
 	else
 		sc = sN / sD;
 
 	float tc;
-	if (WAbsBySign(tN) < data_a11514[3])
+	if (WAbsBySign(tN) < g_EPSILON)
 		tc = 0.0f;
 	else
 		tc = tN / tD;
@@ -4600,10 +4593,10 @@ void CQuadTree::TraceOBB(const WVector &start, const WVector &end, const Waabb &
 	if (IsLocalContent((localContentType_t)0x56)) {
 		WPlane plane;
 		WPlane hitPlane;
-		memset(pTrace, 0, sizeof(trace_s));
 		Waabb startBox;
 		Waabb endBox;
 		Waabb sweep;
+		memset(pTrace, 0, sizeof(trace_s));
 
 		if (WisEqual(start, end, 0.00001f)) {
 			pTrace->m_endPos = end;
@@ -4727,20 +4720,20 @@ void CQuadTree::DrawDebugTraceAABB(const WVector &start, const WVector &end, con
 		if (pModel->m_reservedByte & 1)
 			continue;
 
-		WPuppet *pPuppet = pModel->m_pPuppet;
-		if (!pPuppet)
+		if (!pModel->m_pPuppet)
 			continue;
 
 		int count = 0;
-		if (pPuppet->m_bbList.Find("char1")) {
+		if (pModel->m_pPuppet->m_bbList.Find("char1")) {
 			// The boxes "char0", "char1", ... of the object, at its position.
-			w_bound_box *pBox = pPuppet->m_bbList.Find("char0");
+			w_bound_box *pBox = pModel->m_pPuppet->m_bbList.Find("char0");
 			while (pBox) {
 				count++;
-				Waabb charBox = pBox->info->aabb + pPuppet->m_mat.pivot;
+				Waabb charBox = pBox->info->aabb + pModel->m_pPuppet->m_mat.pivot;
 				g_view->DrawAABB(charBox, 0xFFFF0000, false, 0);
 
-				pBox = pModel->m_pPuppet->m_bbList.Find(MakeStr("char%d", count));
+				const char *name = MakeStr("char%d", count);
+				pBox = pModel->m_pPuppet->m_bbList.Find(name);
 			}
 		} else {
 			g_view->DrawAABB(pModel->m_sceneAabb, 0xFFFF0000, false, 0);
@@ -4998,13 +4991,15 @@ WVector CQuadTree::GetRayIntersectionWall(WVector from, WVector dir) {
 	for (int i = 0; i < 1500; i++) {
 		int faceNum = m_pPolySoup->m_models[0]->m_pPuppet->GetFaceNum();
 
-		for (int j = 0; j < faceNum; j++) {
-			float d = Min(intersection::IntersectRayTriangle(from, step, m_pPolySoup->m_models[0]->m_pTriangles[j].m_vertex), t);
-			if (d > 0.0f)
-				t = d;
+		if (faceNum > 0) {
+			for (int j = 0; j < faceNum; j++) {
+				float d = Min(intersection::IntersectRayTriangle(from, step, m_pPolySoup->m_models[0]->m_pTriangles[j].m_vertex), t);
+				if (d > 0.0f)
+					t = d;
+			}
+			if (t < 1.0f)
+				break;
 		}
-		if (t < 1.0f)
-			break;
 
 		from += step;
 	}
@@ -5338,10 +5333,9 @@ void CQuadTree::TraceOBB_Avatar_genPosition(const WVector &start, const WVector 
 			Wobb avatarObb;
 			avatarObb = pCenter->bone->GetMatrix();
 			avatarObb *= (m_avatarBox.max - m_avatarBox.min) * 0.5f;
-			avatarObb.center = (m_avatarBox.max + m_avatarBox.min) * 0.5f;
+			avatarObb.center.x = (m_avatarBox.max.x + m_avatarBox.min.x) * 0.5f; avatarObb.center.y = (m_avatarBox.max.y + m_avatarBox.min.y) * 0.5f; avatarObb.center.z = (m_avatarBox.max.z + m_avatarBox.min.z) * 0.5f;
 
-			w_bound_box *pBox = pModel->m_pPuppet->m_bbList.Find("char0");
-			while (pBox) {
+			for (w_bound_box *pBox = pModel->m_pPuppet->m_bbList.Find("char0"); pBox; pBox = pModel->m_pPuppet->m_bbList.Find(MakeStr("char%d", ++count))) {
 				Wobb obb;
 				WMatrix &mat = pBox->bone->GetMatrix(); obb.extend[0] = mat.xa; obb.extend[1] = mat.ya; obb.extend[2] = mat.za;
 				WVector half = (pBox->info->aabb.max - pBox->info->aabb.min) * 0.5f;
@@ -5368,8 +5362,6 @@ void CQuadTree::TraceOBB_Avatar_genPosition(const WVector &start, const WVector 
 					return;
 				}
 
-				count++;
-				pBox = pModel->m_pPuppet->m_bbList.Find(MakeStr("char%d", count));
 			}
 		}
 
@@ -5785,7 +5777,7 @@ void CQuadTree::TraceOBB_Wall(const WVector &start, const WVector &end, trace_s 
 		WVector delta;
 		delta = end - start;
 
-		if (strcmp(m_pPolySoup->m_models[0]->m_name, pModel->m_name) == 0) {
+		if (strcmp(m_pPolySoup->m_models.front()->m_name, pModel->m_name) == 0) {
 			pTrace->m_endPos = start;
 			return;
 		}
@@ -5833,8 +5825,8 @@ void CQuadTree::TraceOBB_Wall(const WVector &start, const WVector &end, trace_s 
 
 					moved += delta;
 					if (TestIntersectionOBB(charObb, moved)) {
-						WVector dir = delta;
 						bHit = true;
+						WVector dir = delta;
 						dir.Normalize();
 						if (option == 0)
 							dir.y = 0.0f;

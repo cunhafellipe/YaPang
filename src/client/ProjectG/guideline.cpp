@@ -162,16 +162,17 @@ void CGuideLine::Display(void) {
 	}
 
 	for (int i = 0; i < m_segmentCount - 1; i++) {
+		int next = i + 1;
 		m_vertex[0].SetPosition(m_road[i].m_left);
 		m_vertex[0].tu = 0;
 		m_vertex[0].tv = i * 0.1f;
 		m_vertex[1].SetPosition(m_road[i].m_right);
 		m_vertex[1].tu = 1.0f;
 		m_vertex[1].tv = i * 0.1f;
-		m_vertex[2].SetPosition(m_road[i + 1].m_left);
+		m_vertex[2].SetPosition(m_road[next].m_left);
 		m_vertex[2].tu = 0;
 		m_vertex[2].tv = (i + 1.0f) * 0.1f;
-		m_vertex[3].SetPosition(m_road[i + 1].m_right);
+		m_vertex[3].SetPosition(m_road[next].m_right);
 		m_vertex[3].tu = 1.0f;
 		m_vertex[3].tv = (i + 1.0f) * 0.1f;
 		g_view->DrawPolygonFan(m_pVertex, (m_texture & 0x7FF) | 0x20B00000, 0x400, false);
@@ -194,13 +195,14 @@ void CGuideLine::CalcSegment(void) {
 	float yaw;
 	SendMsg(this, "Player", 0x110, (intptr_t)&yaw, 0, 0, 0);
 
-	GolfBall().m_velocity = power * RotMat(yaw, 1).za;
+	WVector dir = power * RotMat(yaw, 1).za;
+	GolfBall().m_velocity = dir;
 	GolfBall().m_state = 3;
 	GolfBall().m_eventPreDataIndex[7] = 0;
 
 	m_alpha = 1.0f;
 
-	WVector dir, toNext, toBall;
+	WVector toNext, toBall;
 	m_segmentCount = 0;
 	SetPoint(GOLFDOC()->GetCameraData().m_matrix.za * 1.6f);
 	while (m_segmentCount < 80 && GolfBall().m_state == 3) {

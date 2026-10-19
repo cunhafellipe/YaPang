@@ -617,7 +617,7 @@ void FrApproachResultDlg::ShowPet(void) {
 
 	sRivalData* pResult = &WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(pData->m_uid)];
 
-	if (WSingleton<CSharedDoc>::Instance()->IsCurrentMissionBlind() && pResult->m_uid != WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid) {
+	if (WSingleton<CSharedDoc>::Instance()->IsCurrentMissionBlind() && pResult->m_uid != MyGuid(false)) {
 		return;
 	}
 

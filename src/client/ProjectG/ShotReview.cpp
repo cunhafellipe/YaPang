@@ -216,8 +216,7 @@ void FirstBoundHistory::DrawIndicator(const WVector& pos, unsigned long color) {
 	ground.x = vtx.x;
 	ground.y = vtx.y;
 	WRECT dst = { ground.x - 10.0f, ground.y - 20.0f, 20.0f, 20.0f };
-	WRECT src = { 0.0f, 0.0f, 1.0f, 1.0f };
-	m_pIndicator->Render(g_view, src, dst, 0, color, 0, 0);
+	m_pIndicator->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), dst, 0, color, 0, 0);
 
 	WVector ballPos = pos;
 
@@ -381,7 +380,7 @@ void ShotReview::HandleMsg(const MsgObject &msg) {
 				GetPVS().GetGroundType(pos, true, 0);
 
 				if (groundIndex == -1 || fabs(pos.y - prevHeight) > 20.0f) {
-					pos.y = (float)sqrt((pos.x - start.x) * (pos.x - start.x) + (pos.z - start.z) * (pos.z - start.z)) / distance * height;
+					pos.y = WVector2D(pos.x - start.x, pos.z - start.z).Magnitude() / distance * height;
 				}
 
 				trace.push_back(pos);

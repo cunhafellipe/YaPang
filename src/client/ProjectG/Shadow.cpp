@@ -394,17 +394,18 @@ void CShadowCaster::UpdateBSphere(WView *view, float minAngle, float minDist) {
 	float farDist = nearDist + minDist;
 
 	// The double tan(): the original rounds both tangents to float in memory.
-	float tanY = (float)tan((double)(fov * 0.5f));
-	float tanX = (float)tan((double)(view->GetRatio() * fov * 0.5f));
+	// The near corner is a named vector (its products are spilled first);
+	// the far corner stays an expression the radius shares.
+	float tanFov = (float)tan((double)(fov * 0.5f));
+	float tanRatioFov = (float)tan((double)(view->GetRatio() * fov * 0.5f));
 
-	float nearY = tanY * nearDist;
-	float nearX = tanX * nearDist;
-	float c = (WVector(tanX * farDist, tanY * farDist, farDist).SquareMagnitude()
-		- WVector(nearX, nearY, nearDist).SquareMagnitude()) / (minDist * 2.0f);
+	WVector nearV(tanFov * nearDist, tanRatioFov * nearDist, nearDist);
+	float c = (WVector(tanFov * farDist, tanRatioFov * farDist, farDist).SquareMagnitude()
+		- nearV.SquareMagnitude()) / (minDist * 2.0f);
 
 	m_bsphere.pos = c * view->camera.za + view->camera.pivot;
 
-	m_bsphere.radius = WVector(farDist - c, tanX * farDist, tanY * farDist).Magnitude();
+	m_bsphere.radius = WVector(tanFov * farDist, tanRatioFov * farDist, farDist - c).Magnitude();
 }
 
 // shadow.cpp:840

@@ -142,10 +142,10 @@ void CRealMyRoomData::OnLoad(void) {
 				memset(&furniture, 0, sizeof(furniture));
 				furniture.m_typeId = it->second.m_typeId;
 				furniture.m_id = rand() % 100;
+				furniture.m_flags &= ~1;
 				furniture.m_pos.x = it->second.m_pos[0];
 				furniture.m_pos.y = it->second.m_pos[1];
 				furniture.m_pos.z = it->second.m_pos[2];
-				furniture.m_flags &= ~1;
 				furniture.m_angle = it->second.m_angle;
 				furniture.m_number = it->second.m_dayPrices[0];
 
@@ -154,7 +154,8 @@ void CRealMyRoomData::OnLoad(void) {
 			}
 		}
 	} else if (CSharedDoc::Instance()->m_furnitureList.size() != 0) {
-		for (std::list<sFurniture_List>::iterator it = CSharedDoc::Instance()->m_furnitureList.begin(); it != CSharedDoc::Instance()->m_furnitureList.end(); ++it) {
+		std::list<sFurniture_List>::iterator it;
+		for (it = CSharedDoc::Instance()->m_furnitureList.begin(); it != CSharedDoc::Instance()->m_furnitureList.end(); ++it) {
 			IFF_STRUCT::sFurniture *pFurniture = ItemManager()->FindFurniture(it->m_typeId);
 			if (pFurniture) {
 				sprintf(modelName, "%s.pet", pFurniture->m_model);
@@ -1146,9 +1147,7 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 		m_pSelectModel->m_pModelData->m_basePos += step;
 		m_pSelectModel->m_pModelData->m_obb.center += step;
 
-		m_pSelectModel->m_pModelData->m_matrix.pivot.x = m_pSelectModel->m_pModelData->m_basePos.x;
-		m_pSelectModel->m_pModelData->m_matrix.pivot.y = m_pSelectModel->m_pModelData->m_basePos.y;
-		m_pSelectModel->m_pModelData->m_matrix.pivot.z = m_pSelectModel->m_pModelData->m_basePos.z;
+		m_pSelectModel->SetPosition(m_pSelectModel->m_pModelData->m_basePos);
 		m_pSelectModel->m_pModelData->m_aabb.min += step;
 		m_pSelectModel->m_pModelData->m_aabb.max += step;
 
@@ -1365,9 +1364,7 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 				m_pSelectModel->m_pModelData->m_basePos += delta;
 				m_pSelectModel->m_pModelData->m_obb.center += delta;
 
-				m_pSelectModel->m_pModelData->m_matrix.pivot.x = m_pSelectModel->m_pModelData->m_basePos.x;
-				m_pSelectModel->m_pModelData->m_matrix.pivot.y = m_pSelectModel->m_pModelData->m_basePos.y;
-				m_pSelectModel->m_pModelData->m_matrix.pivot.z = m_pSelectModel->m_pModelData->m_basePos.z;
+				m_pSelectModel->SetPosition(m_pSelectModel->m_pModelData->m_basePos);
 
 				m_pSelectModel->OBBToAABB();
 
@@ -1634,9 +1631,7 @@ void CRealMyRoomData::SetModelPosition(void) {
 			pModel->m_pModelData->m_aabb.max += delta;
 			pModel->m_pModelData->m_obb.center += delta;
 
-			pModel->m_pModelData->m_matrix.pivot.x = pModel->m_pModelData->m_basePos.x;
-			pModel->m_pModelData->m_matrix.pivot.y = pModel->m_pModelData->m_basePos.y;
-			pModel->m_pModelData->m_matrix.pivot.z = pModel->m_pModelData->m_basePos.z;
+			pModel->SetPosition(pModel->m_pModelData->m_basePos);
 
 			pModel->Apply_ChangeModelData();
 			return;
@@ -1829,9 +1824,9 @@ void cModel::OBBToAABB() {
 	// Each corner goes through a temporary copied into the array, and the
 	// sums are grouped per corner as the original adds them (the ext1/ext2
 	// pair is shared between corners).
-	WVector n1 = ext1 * -1.0f;
 	WVector n2 = ext2 * -1.0f;
 	WVector n0 = ext0 * -1.0f;
+	WVector n1 = ext1 * -1.0f;
 	WVector corner[8];
 	corner[0] = WVector(center.x + (n0.x + (ext1.x + n2.x)), center.y + (n0.y + (ext1.y + n2.y)), center.z + (n0.z + (ext1.z + n2.z)));
 	corner[1] = WVector(center.x + (n0.x + (n1.x + n2.x)), center.y + (n0.y + (n1.y + n2.y)), center.z + (n0.z + (n1.z + n2.z)));

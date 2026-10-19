@@ -970,9 +970,20 @@ public:
 	void SetInviteMode(int mode);                   // shareddoc.h:1060
 	int IsInviteMode(void);                         // shareddoc.h:1061
 
-	// Emitted by golfrule.cpp, defined out of line there.
+	// Class-body inlines in the original. GolfRule emitted the copies the
+	// linker kept: GolfRule.cpp defines GOLFRULE_SHAREDDOC_INLINE before its
+	// first include and defines them out of line.
+#ifndef GOLFRULE_SHAREDDOC_INLINE
+	// shareddoc.h:1018
+	void SetReplayState(int state) { m_replayState = state; }
+	// shareddoc.h:1019
+	int GetReplayState(void) { return m_replayState; }
+#else
 	void SetReplayState(int state);                 // shareddoc.h:1018
 	int GetReplayState(void);                       // shareddoc.h:1019
+#endif
+
+	// Emitted by golfrule.cpp, defined out of line there.
 	char *GetFileName(void);                        // shareddoc.h:1021
 	int GetReplayPlayType(void);                    // shareddoc.h:1022
 	void SetReplayPlayType(int type);               // shareddoc.h:1023

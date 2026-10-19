@@ -195,7 +195,11 @@ bool cHttp::DownLoad2(const char* fileName, const char* remoteFile, const char* 
 	InternetCloseHandle(m_hUrl);
 	InternetCloseHandle(m_hInternet);
 
-	return m_downloaded == size ? true : false;
+	if (m_downloaded == size) {
+		return true;
+	}
+
+	return false;
 }
 
 // chttp.cpp:247

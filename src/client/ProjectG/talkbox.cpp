@@ -30,7 +30,6 @@ CTalkBox::~CTalkBox(void) {
 void CTalkBox::SetText(const char* text, float showTime) {
 	std::string all;
 	sLine line;
-	int len = 0;
 	int i;
 
 	if (text == NULL || *text == '\0') {
@@ -42,9 +41,10 @@ void CTalkBox::SetText(const char* text, float showTime) {
 	m_lineCount = 0;
 	strcpy(m_text, text);
 
-	i = 0;
+	int len = 0;
 	line.color = 0;
 	line.text[0] = '\0';
+	i = 0;
 
 	while (m_text[i] != '\0') {
 		bool doubleByte = false;
@@ -74,12 +74,12 @@ void CTalkBox::SetText(const char* text, float showTime) {
 			line.text[len] = '\0';
 			line.width = m_pFont->GetTextWidth(g_view, line.text);
 			m_lines.push_back(line);
-			all += line.text;
 			len = 0;
+			all += line.text;
 		} else {
 			if (m_text[i] & 0x80) {
-				line.text[len++] = m_text[i++];
 				doubleByte = true;
+				line.text[len++] = m_text[i++];
 			}
 			line.text[len++] = m_text[i++];
 
@@ -101,8 +101,8 @@ void CTalkBox::SetText(const char* text, float showTime) {
 			m_lines.push_back(line);
 			m_lineCount++;
 
-			all += line.text;
 			len = 0;
+			all += line.text;
 		}
 	}
 
@@ -116,7 +116,7 @@ void CTalkBox::Process(float fDelta) {
 
 // talkbox.cpp:154
 void CTalkBox::Render(WView* pView, float x, float y, int align) {
-	unsigned long color;
+	unsigned long color = 0;
 	unsigned long alpha;
 	float maxWidth;
 	float width;
@@ -135,7 +135,6 @@ void CTalkBox::Render(WView* pView, float x, float y, int align) {
 	}
 
 	alpha = (int)(m_transparency * 255.0f) << 24;
-	color = 0;
 
 	// The widest line sets the balloon's width.
 	maxWidth = 0.0f;

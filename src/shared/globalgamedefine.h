@@ -146,7 +146,7 @@ struct sItemInfo {
 		short m_clubStatLevel[5]; // 0x0C, the club's upgrade level of each stat (FrDowngradeDlg)
 	};
 	unsigned char m_reserved16;   // 0x16, cleared by the constructor, otherwise unused so far
-	struct {
+	struct sItemStateBits {
 		unsigned char flag0 : 1;      // bit 0: cleared by the constructor
 		unsigned char expired : 1;    // bit 1: the item's period is over
 		unsigned char flags23 : 2;    // bits 2-3: cleared by the constructor

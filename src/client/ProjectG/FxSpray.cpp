@@ -59,12 +59,6 @@ WVector operator/(const WVector& v, float f);
 // Wangreal (wmath), not declared in wmath.h yet.
 int WisZero(const float& f, float eps);
 
-// Nameless per-unit rdata constants: degrees to radians, and the
-// "no limit" value of the attachment limits.
-extern "C" {
-static const float data_a11894[2] = { 0.017453292f, FLT_MAX };
-}
-
 // fxspray.cpp:20
 CFxParticle::CFxParticle(void) {
 	m_pSprite = 0;
@@ -879,7 +873,7 @@ bool CFxSpray::Process(float fDelta) {
 				// the strength inside.
 				for (std::list<sGravity>::iterator gravity = m_param.m_gravities.begin(); gravity != m_param.m_gravities.end(); ++gravity) {
 					WVector d = GetBgPos() + gravity->m_pos - pos;
-					float dist = sqrtf(d.z * d.z + d.y * d.y + d.x * d.x);
+					float dist = d.Magnitude();
 					if (dist < gravity->m_fRadius) {
 						float sq = dist * dist;
 						if (sq < 0.5f)
@@ -1122,8 +1116,8 @@ void CFxSpray::Display(WView* pView) {
 	if (!m_bActive)
 		return;
 
-	pView->SetScreenCenter(m_fAttachLimitA == data_a11894[1] ? pView->GetWidth() * 0.5f : m_fAttachLimitA,
-		m_fAttachLimitB == data_a11894[1] ? pView->GetHeight() * 0.5f : m_fAttachLimitB);
+	pView->SetScreenCenter(m_fAttachLimitA == g_HUGE ? pView->GetWidth() * 0.5f : m_fAttachLimitA,
+		m_fAttachLimitB == g_HUGE ? pView->GetHeight() * 0.5f : m_fAttachLimitB);
 	pView->UpdateCamera();
 
 	m_displayedCount2 = m_displayedCount = 0;
@@ -1359,8 +1353,8 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 				total += gen->count;
 
 			pParticle->m_basePos.x = m_box.Random(0.0f, m_param.m_area.max.z) - m_param.m_area.max.z * 0.5f;
-			pParticle->m_basePos.y = sinf(angle * data_a11894[0]) * radius;
-			pParticle->m_basePos.z = cosf(angle * data_a11894[0]) * radius;
+			pParticle->m_basePos.y = sinf(angle * g_DEGTORAD) * radius;
+			pParticle->m_basePos.z = cosf(angle * g_DEGTORAD) * radius;
 
 			m_fSphereAngle += 360.0f / total;
 		}
@@ -1395,7 +1389,7 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 	WVector push;
 	if (m_param.m_extOrientation) {
 		if (m_param.m_extOrientation == 7) {
-			push = pParticle->m_fWindScale * m_param.m_wind * ~rot + pParticle->m_dir;
+			push = pParticle->m_dir + pParticle->m_fWindScale * m_param.m_wind * ~rot;
 			pParticle->m_dir = pParticle->m_dir * rot;
 		}
 		else {

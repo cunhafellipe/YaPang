@@ -191,6 +191,8 @@ static void MoveLoadingBalls(sLoadingBall* balls, float elapsed) {
 
 // Loads bitmap resource id into a 24-bit DIB section selected into a new
 // memory DC (one source line in the original: a macro).
+// The BITMAPINFO is a byte buffer: /GS places it with the character arrays,
+// next to the security cookie.
 #define LOAD_24BIT_DIB(id, bits, pitch, dc, oldBmp) \
 	bits = NULL; \
 	hBitmap = LoadBitmapA(hRes, MAKEINTRESOURCEA(id)); \
@@ -198,19 +200,20 @@ static void MoveLoadingBalls(sLoadingBall* balls, float elapsed) {
 	if (!GetObjectA(hBitmap, sizeof(BITMAP), &bm)) { \
 		DeleteObject(hBitmap); \
 	} else { \
-		BITMAPINFO bmi; \
-		memset(&bmi, 0, sizeof(bmi)); \
-		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); \
-		bmi.bmiHeader.biWidth = (WORD)bm.bmWidth; \
-		bmi.bmiHeader.biHeight = (WORD)bm.bmHeight; \
-		bmi.bmiHeader.biPlanes = 1; \
-		bmi.bmiHeader.biBitCount = 24; \
-		bmi.bmiHeader.biCompression = BI_RGB; \
-		bmi.bmiHeader.biClrUsed = 0; \
-		bmi.bmiHeader.biClrImportant = 0; \
-		bmi.bmiHeader.biSizeImage = 0; \
+		unsigned char bmiBuf[sizeof(BITMAPINFO)]; \
+		memset(bmiBuf, 0, sizeof(bmiBuf)); \
+		BITMAPINFO* pBmi = (BITMAPINFO*)bmiBuf; \
+		pBmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER); \
+		pBmi->bmiHeader.biWidth = (WORD)bm.bmWidth; \
+		pBmi->bmiHeader.biHeight = (WORD)bm.bmHeight; \
+		pBmi->bmiHeader.biPlanes = 1; \
+		pBmi->bmiHeader.biBitCount = 24; \
+		pBmi->bmiHeader.biCompression = BI_RGB; \
+		pBmi->bmiHeader.biClrUsed = 0; \
+		pBmi->bmiHeader.biClrImportant = 0; \
+		pBmi->bmiHeader.biSizeImage = 0; \
 		HDC hScreenDC = GetDC(NULL); \
-		hDib = CreateDIBSection(hScreenDC, &bmi, DIB_RGB_COLORS, (void**)&bits, NULL, 0); \
+		hDib = CreateDIBSection(hScreenDC, pBmi, DIB_RGB_COLORS, (void**)&bits, NULL, 0); \
 		ReleaseDC(NULL, hScreenDC); \
 		DIBSECTION ds; \
 		GetObjectA(hDib, sizeof(DIBSECTION), &ds); \

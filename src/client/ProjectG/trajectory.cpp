@@ -855,25 +855,27 @@ void CComet::Display(void) {
 	}
 
 	if (m_bHeadPoint && m_fNumPoint >= 1.0f) {
-		m_vertex[0].SetPosition(m_vHeadLeft);
-		m_vertex[0].tu = 0.0f;
-		m_vertex[0].diffuse = dwColor;
-		m_vertex[0].tv = 1.0f;
+		WTVertex *v = m_vertex;
 
-		m_vertex[1].SetPosition(m_vHeadRight);
-		m_vertex[1].tu = 0.0f;
-		m_vertex[1].tv = 0.0f;
-		m_vertex[1].diffuse = dwColor;
+		v[0].SetPosition(m_vHeadLeft);
+		v[0].tu = 0.0f;
+		v[0].diffuse = dwColor;
+		v[0].tv = 1.0f;
 
-		m_vertex[2].SetPosition(m_point[m_nHead][0]);
-		m_vertex[2].tv = 1.0f;
-		m_vertex[2].diffuse = dwColor;
-		m_vertex[2].tu = 1.0f / (m_fNumPoint + 1.0f);
+		v[1].SetPosition(m_vHeadRight);
+		v[1].tu = 0.0f;
+		v[1].tv = 0.0f;
+		v[1].diffuse = dwColor;
 
-		m_vertex[3].SetPosition(m_point[m_nHead][1]);
-		m_vertex[3].tv = 0.0f;
-		m_vertex[3].diffuse = dwColor;
-		m_vertex[3].tu = 1.0f / (m_fNumPoint + 1.0f);
+		v[2].SetPosition(m_point[m_nHead][0]);
+		v[2].tu = 1.0f / (m_fNumPoint + 1.0f);
+		v[2].tv = 1.0f;
+		v[2].diffuse = dwColor;
+
+		v[3].SetPosition(m_point[m_nHead][1]);
+		v[3].tu = 1.0f / (m_fNumPoint + 1.0f);
+		v[3].tv = 0.0f;
+		v[3].diffuse = dwColor;
 
 		g_view->DrawPolygonFan(m_pVertex, (m_hTailTexture & 0x7FF) | 0x20C00000, 0x400, false);
 	}

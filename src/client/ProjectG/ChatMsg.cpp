@@ -77,11 +77,12 @@ void CChatMsg::Init(void) {
 	m_pOverlays[1] = g_resrcmng->GetOverlay("{chat_m.png", 0);
 	m_pOverlays[2] = g_resrcmng->GetOverlay("{chat_r.png", 0);
 
+	m_openSpeed = 3000.0f;
+
 	m_overlayDst[0] = WRect(0.0f, 0.0f, 0.54296875f, 1.0f);
 	m_overlayDst[1] = WRect(0.0f, 0.0f, 1.0f, 1.0f);
 	m_overlayDst[2] = WRect(0.0f, 0.0f, 1.0f, 1.0f);
 
-	m_openSpeed = 3000.0f;
 	m_backupUiAlpha = 0xFF;
 	m_caretVisible = true;
 	m_caretBlinkTime = 0.0f;
@@ -726,8 +727,8 @@ void CChatMsg::DeleteCharacter(void) {
 
 // chatmsg.cpp:1355
 void CChatMsg::DeleteSelected(void) {
-	m_inputWidth -= m_selectedWidth;
 	m_inputLength -= m_selectedLength;
+	m_inputWidth -= m_selectedWidth;
 
 	if (m_selBeginPos < m_selEndPos) {
 		memmove(&m_inputText[m_selBeginPos], &m_inputText[m_selEndPos], m_selectedLength);

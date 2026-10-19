@@ -27,11 +27,6 @@
 #include "gamedatadb.h"
 #include "gdeventnotice.h"
 
-// Nameless per-unit rdata constant: the 1e-5 epsilon of Display.
-extern "C" {
-static const float data_a0a0a8 = 0.00001f;
-}
-
 // winnernotice.cpp:18
 CWinnerNotice::CWinnerNotice(void) {
 	WinnerNotice_Init();
@@ -134,7 +129,7 @@ void CWinnerNotice::Display(void) {
 	if (m_pOverlayLeft && m_pOverlayMid && m_pOverlayRight) {
 
 		float alpha = (m_posY + 50.0f) * 0.02f;
-		if (WAbsBySign(alpha) < data_a0a0a8)
+		if (WAbsBySign(alpha) < g_EPSILON)
 			return;
 
 

@@ -37,6 +37,11 @@ namespace S5 {
 	bool IsUsableCalipers(void);
 }
 
+// Nameless per-unit rdata constant: degrees to radians (AddClub, AddClubSet).
+extern "C" {
+static const float data_9eb1f0 = 0.017453292f;
+}
+
 // The club names AddClub looks a club's id up in (17, then a NULL), and the
 // bar speed of each id.
 char *clubName[] = {
@@ -370,7 +375,7 @@ void CClub::AddClub(char *name, float range, float lie, float power, float curve
 	if (club) {
 
 		club->m_range = range;
-		club->m_lie = lie * 0.0174532925f;
+		club->m_lie = lie * data_9eb1f0;
 
 		club->m_type = type;
 		club->m_power = power;
@@ -387,7 +392,7 @@ void CClub::AddClub(char *name, float range, float lie, float power, float curve
 
 		club->m_pointFactor = 1.0f;
 		club->m_range = range;
-		club->m_lie = lie * 0.0174532925f;
+		club->m_lie = lie * data_9eb1f0;
 		club->m_type = type;
 		club->m_power = power;
 		club->m_curve = curve;
@@ -805,8 +810,8 @@ float CClub::GetPower(void) {
 	} else {
 
 
-		CCardManager::Instance()->SetPlayerIndex(GOLFDOC()->m_myPlayerIndex);
 		bool withPowerRange = false;
+		CCardManager::Instance()->SetPlayerIndex(GOLFDOC()->m_myPlayerIndex);
 		if (GolfClub().PowerShotType())
 			withPowerRange = true;
 
@@ -849,8 +854,8 @@ float CClub::GetPower(void) {
 
 		break;
 	case 1:
-		return (powerShot / m_pClub->m_range + 1.0f) * m_pClub->m_power
-			+ (float)m_pClub->m_power / m_pClub->m_range * aux * 1.3f;
+		power = (powerShot / m_pClub->m_range + 1.0f) * m_pClub->m_power;
+		return power + (float)m_pClub->m_power / m_pClub->m_range * aux * 1.3f;
 
 
 
@@ -927,11 +932,6 @@ void CClub::SetClub(unsigned char index) {
 	m_clubIndex = m_pClub->m_index;
 }
 
-
-// Nameless per-unit rdata constant: degrees to radians.
-extern "C" {
-static const float data_9eb1f0 = 0.017453292f;
-}
 
 // club.cpp:990
 // Returns the club set of a typeid, loading it the first time: the normal

@@ -815,11 +815,11 @@ void CGolfCaddie::TalkProcess(float delta) {
 		SetBubble(0x1C, false, 0);
 
 	if (CSharedDoc::Instance()->m_roomType == 1) {
-		if (GetHoleIndex(GOLFDOC()->m_currentHole) < CSharedDoc::Instance()->m_holes) {
+		if (GetHoleIndex(GOLFDOC()->m_currentHole) < GetHoles()) {
 			if (TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_resetCount
-				>= TEAM(1 - PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_resetCount - GetHoleIndex(GOLFDOC()->m_currentHole) + CSharedDoc::Instance()->m_holes) {
+				>= TEAM(1 - PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_resetCount + GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole)) {
 				SetBubble(TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_resetCount
-					!= TEAM(1 - PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_resetCount - GetHoleIndex(GOLFDOC()->m_currentHole) + CSharedDoc::Instance()->m_holes ? 0x20 : 0x1F, false, 0);
+					!= TEAM(1 - PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_resetCount + GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole) ? 0x20 : 0x1F, false, 0);
 
 				if (GolfBall().m_groundType == 2
 					&& TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1]
@@ -830,7 +830,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 
 		if (TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1) {
 			for (int i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
-				if (GOLFDOC()->GetPlayer(i)->m_attribute != PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute && GOLFDOC()->GetPlayer(i)->m_rivalLevel == 1) {
+				if (PLAYER(i)->m_attribute != PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute && GOLFDOC()->GetPlayer(i)->m_rivalLevel == 1) {
 					SetBubble(0x12, false, 0);
 					return;
 				}
@@ -867,9 +867,9 @@ void CGolfCaddie::TalkProcess(float delta) {
 
 		if (CSharedDoc::Instance()->m_holes == 18 && GOLFDOC()->m_currentHole == CSharedDoc::Instance()->m_holeOrder[17]
 			&& GolfBall().m_groundType == 2
-			&& CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_statistics.bestScore[(CSharedDoc::Instance()->m_pCurCourse ? CSharedDoc::Instance()->m_pCurCourse->courseFlags & 0x0F : 1) - 1] != 0x7F
+			&& CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_statistics.bestScore[GetDifficulty() - 1] != 0x7F
 			&& (unsigned char)(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_totalScore + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1])
-				< (unsigned char)(CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_statistics.bestScore[(CSharedDoc::Instance()->m_pCurCourse ? CSharedDoc::Instance()->m_pCurCourse->courseFlags & 0x0F : 1) - 1] + 72))
+				< (unsigned char)(CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_statistics.bestScore[GetDifficulty() - 1] + 72))
 			SetBubble(0x15, false, 0);
 
 		if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_rivalLevel == 2) {

@@ -9,7 +9,12 @@
 
 // ucccolorpicker.cpp:13
 CUccColorPicker::CUccColorPicker(void) {
-	m_red = m_green = m_blue = 0;
+	// Cleared through references: the original stores the vtable pointer
+	// before the three bytes, which direct member stores do not give.
+	unsigned char& red = m_red;
+	unsigned char& green = m_green;
+	unsigned char& blue = m_blue;
+	red = green = blue = 0;
 }
 
 // ucccolorpicker.cpp:17

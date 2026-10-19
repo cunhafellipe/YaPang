@@ -2060,8 +2060,10 @@ const char *CSharedDoc::GetPrevChatTarget(const char *target) {
 		if (it != m_recentWhisperList.end()) {
 			if (it != m_recentWhisperList.begin()) {
 				--it;
+				return it->c_str();
 			}
-			return it->c_str();
+
+			return m_recentWhisperList.front().c_str();
 		}
 	}
 

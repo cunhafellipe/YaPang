@@ -1141,8 +1141,7 @@ void CSceneManager::Render_RenderDropPosition(WView* pView) {
 				for (int j = 0; j < 4; j++) {
 					float r = (j & 2) ? radius + 1.0f : radius;
 					float angle = (float)(((j & 1) + i) % 128) * (3.14159265f / 64.0f);
-					cup = GetHoleCupPos();
-					vtr[j].SetPosition(cup + WVector(cosf(angle), 0.0f, sinf(angle)) * r);
+					vtr[j].SetPosition(GetHoleCupPos() + WVector(cosf(angle), 0.0f, sinf(angle)) * r);
 				}
 				pView->DrawPolygonFan(vtx, 0x300000, 0x400, false);
 			}

@@ -4504,9 +4504,8 @@ void WDirect3D8::FixTexturePart(int texHandle, const tagRECT& rc, tagBITMAPINFO*
 			} else if (tex->bitmap->bi->bmiHeader.biBitCount == src->bmiHeader.biBitCount) {
 				int srcPitch = (src->bmiHeader.biWidth * cps + 3) & ~3;
 
-				for (int i = 0; i < rc.bottom - rc.top; i++) {
-					memcpy(dst + tex->bitmap->pitch * i, data, src->bmiHeader.biWidth * cps); data = (unsigned char*)data + srcPitch;
-				}
+				for (int i = 0; i < rc.bottom - rc.top; i++, data = (unsigned char*)data + srcPitch)
+					memcpy(dst + tex->bitmap->pitch * i, data, src->bmiHeader.biWidth * cps);
 			}
 
 			tex->updateType = (tex->updateType & 0x80000) | type;

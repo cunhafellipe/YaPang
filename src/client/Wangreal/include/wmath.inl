@@ -14,7 +14,7 @@ inline float WAbsBySign(const float& f) {
 #define WMATH_EPSILON 1e-5f
 
 // wmath.inl:12
-GOLFDOC_WMATH_INLINE int WisEqual(const WVector& a, const WVector& b, float eps) {
+inline int WisEqual(const WVector& a, const WVector& b, float eps) {
 	if (WisEqual(a.x, b.x, eps) && WisEqual(a.y, b.y, eps) && WisEqual(a.z, b.z, eps))
 		return 1;
 	else
@@ -53,7 +53,7 @@ inline WVector operator*(float f, const WVector& v) {
 
 // wmath.inl:72
 inline int operator==(const WVector& a, const WVector& b) {
-	return WisEqual(a, b, g_EPSILON);
+	return WisEqual(a, b, WMATH_EPSILON);
 }
 
 // wmath.inl:82
@@ -140,8 +140,8 @@ inline float WVector::Magnitude(void) const {
 }
 
 // wmath.inl:177
-GOLFDOC_WMATH_INLINE WVector& WVector::Normalize(void) {
-	if (WisEqual(*this, ZERO, g_EPSILON))
+inline WVector& WVector::Normalize(void) {
+	if (WisEqual(*this, ZERO, WMATH_EPSILON))
 		*this *= 0.0f;
 	else
 		*this *= (float)((1.0f / (Magnitude())));
@@ -526,8 +526,8 @@ CAMERAWORK_WMATH_INLINE WQuat WQuaternionSlerp(const WQuat& from, const WQuat& t
 		return WQuat(scale0 * q.x + scale1 * to.x, scale0 * q.y + scale1 * to.y,
 		             scale0 * q.z + scale1 * to.z, scale0 * q.w + scale1 * to.w);
 	} else {
-		scale0 = sinf((1.0f - t) * data_9eb420[1]);
-		scale1 = sinf(t * data_9eb420[1]);
+		scale0 = sinf((1.0f - t) * g_PI_DIV_2);
+		scale1 = sinf(t * g_PI_DIV_2);
 		return WQuat(scale0 * q.x - scale1 * q.y, scale0 * q.y + scale1 * q.x,
 		             scale0 * q.z - scale1 * q.w, scale0 * q.w + scale1 * q.z);
 	}

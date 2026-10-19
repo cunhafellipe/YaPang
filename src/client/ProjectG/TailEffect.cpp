@@ -164,7 +164,6 @@ void CTailEffect::Display(void) {
 	for (int i = 0; i < length - 1; ++i) {
 		int at = (m_tail + i) % m_maxEdges;
 		float alpha = i / (float)length;
-		unsigned long color = ((int)(255.0f * alpha) << 24) | 0xffffff;
 
 		for (int j = 0; j < 4; ++j) {
 			int edge = (j & 2) ? (at + 1) % m_maxEdges : at;
@@ -174,7 +173,7 @@ void CTailEffect::Display(void) {
 			v[j].tu = (j & 2) ? (i + 1) / (float)length : alpha;
 			v[j].tv = (j & 1) ? 0.0f : 1.0f;
 
-			v[j].diffuse = color;
+			v[j].diffuse = ((int)(255.0f * alpha) << 24) | 0xffffff;
 		}
 
 		g_view->DrawPolygonFan(vl, (m_texture & 0x7ff) | 0x20C00000, 0x400, false);

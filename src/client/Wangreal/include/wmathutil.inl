@@ -15,13 +15,17 @@ AVATAR_AVATAR_WMATH_INLINE float RayIntersectAABB(const Waabb& aabb, const WVect
 	for (i = 0; i < 3; i = i == 0 ? 2 : (i == 1 ? 3 : 1)) {
 		if (!(Wabs(moveDelta.p[i]) < g_EPSILON)) {
 			if (moveDelta.p[i] > 0.0f) {
-				if (aabb.max.p[i] + radius < pos.p[i] || pos.p[i] + moveDelta.p[i] < aabb.min.p[i] - radius)
+				if (aabb.max.p[i] + radius < pos.p[i])
+					return 1.0f;
+				if (pos.p[i] + moveDelta.p[i] < aabb.min.p[i] - radius)
 					return 1.0f;
 				if (pos.p[i] > aabb.min.p[i] - radius)
 					continue;
 				t = (aabb.min.p[i] - radius - pos.p[i]) / moveDelta.p[i];
 			} else {
-				if (aabb.min.p[i] - radius > pos.p[i] || pos.p[i] + moveDelta.p[i] > aabb.max.p[i] + radius)
+				if (aabb.min.p[i] - radius > pos.p[i])
+					return 1.0f;
+				if (pos.p[i] + moveDelta.p[i] > aabb.max.p[i] + radius)
 					return 1.0f;
 				if (pos.p[i] < aabb.max.p[i] + radius)
 					continue;
@@ -67,7 +71,7 @@ QUADTREE_WMATH_INLINE float RayIntersectAABBSolid(const Waabb& aabb, const WVect
 	float hit;
 
 	for (i = 0; i < 3; i = i == 0 ? 2 : (i == 1 ? 3 : 1)) {
-		if (Wabs(moveDelta.p[i]) >= g_EPSILON) {
+		if (!(Wabs(moveDelta.p[i]) < g_EPSILON)) {
 			if (moveDelta.p[i] > 0.0f) {
 				if (aabb.max.p[i] + radius < pos.p[i] || pos.p[i] + moveDelta.p[i] < aabb.min.p[i] - radius)
 					return 1.0f;
@@ -94,7 +98,7 @@ QUADTREE_WMATH_INLINE float RayIntersectAABBSolid(const Waabb& aabb, const WVect
 							pReturnPlane->normal.p[j] = 0.0f;
 						} else {
 							pReturnPlane->normal.p[j] = moveDelta.p[i] < 0.0f ? 1.0f : -1.0f;
-							pReturnPlane->dis = -((pos.p[i] + moveDelta.p[i] * t) * pReturnPlane->normal.p[i]);
+							pReturnPlane->dis = -((pos.p[i] + moveDelta.p[i] * t) * pReturnPlane->normal.p[j]);
 						}
 					}
 				}

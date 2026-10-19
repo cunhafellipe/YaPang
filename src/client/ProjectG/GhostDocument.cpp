@@ -120,10 +120,7 @@ LEVEL_INFO LEVEL_TABLE[71] = {
 };
 
 // The exception log written next to a ghost file and zipped into it.
-// Defined after Export: Export reads the pointer from memory instead of
-// folding the literal. (Already inside the file's anonymous namespace, which
-// the definition below reopens.)
-extern const char *const GHOST_EXCEPTION_LOG_FILENAME;
+const char *GHOST_EXCEPTION_LOG_FILENAME = "ghost_exception_log.txt";
 
 // ghostdocument.cpp:27
 // Copies the bits of a value into a variable of another type of the same
@@ -749,7 +746,8 @@ unsigned int memory_buffer::length(void) const { return m_length; }
 
 // ghostdocument.cpp:730
 void CGhostDocument::Export(const std::string &fileName) {
-	GHOST_DATA_HEADER header = { 0 };
+	GHOST_DATA_HEADER header;
+	memset(&header, 0, sizeof(header));
 	header.m_version = 1001;
 	header.m_userDataSize = sizeof(GHOST_USER_DATA);
 	header.m_gameDataSize = sizeof(GHOST_GAME_DATA);
@@ -759,7 +757,8 @@ void CGhostDocument::Export(const std::string &fileName) {
 	header.m_cardCount = m_cardList.size();
 
 	for (int hole = 0; hole < 18; hole++) {
-		header.m_shotCount += m_pHoleData[hole].GetShotDataList().size();
+		const std::list<GHOST_SHOT_DATA *> &shotDataList = m_pHoleData[hole].GetShotDataList();
+		header.m_shotCount += shotDataList.size();
 	}
 
 	unsigned int size = sizeof(GHOST_DATA_HEADER) + header.GetDataBodySize();
@@ -785,7 +784,7 @@ void CGhostDocument::Export(const std::string &fileName) {
 		std::list<GHOST_SHOT_DATA *>::const_iterator it = shotDataList.begin();
 		while (it != shotDataList.end()) {
 			buffer.encode(*it, sizeof(GHOST_SHOT_DATA));
-			++it;
+			it++;
 		}
 	}
 
@@ -884,10 +883,6 @@ bool CGhostDocument::Import(unsigned char *data, unsigned int size) {
 	}
 
 	return true;
-}
-
-namespace {
-const char *const GHOST_EXCEPTION_LOG_FILENAME = "ghost_exception_log.txt";
 }
 
 // ghostdocument.cpp:940

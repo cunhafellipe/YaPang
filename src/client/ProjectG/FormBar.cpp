@@ -54,8 +54,12 @@ sFRESH_ENTRY FrFormBar::_MsgEntries[] = {
 FrFormBar::FrFormBar(void)
 	: m_pGaugeArea(0), m_pGaugeImg(0), m_pFrameImg(0), m_min(0.0f), m_max(100.0f), m_pos(0.0f),
 	  m_pivot(1.0f, 1.0f), m_pBtnOK(0), m_pBtnNO(0), m_pEdMsg(0), m_autoCloseTime(0.0f), m_autoCloseTimer(0.0f) {
-	m_pBtnNO = 0;
-	m_pBtnOK = 0;
+	// Cleared again through references: cl 13.10 then keeps the init-list
+	// stores of both members, as the original does.
+	FrButton*& no = m_pBtnNO;
+	FrButton*& ok = m_pBtnOK;
+	no = 0;
+	ok = 0;
 }
 
 // formbar.cpp:36

@@ -135,7 +135,7 @@ ShotPreview::PangCoin::~PangCoin(void) {
 
 // shotpreview.cpp:64
 void ShotPreview::PangCoin::Update(float delta) {
-	m_angle += delta * 3.1415927f;
+	m_angle += delta * g_PI;
 
 	if (m_pPuppet && m_visible) {
 		if (GOLFDOC()->GameMode() & 0x80) {
@@ -329,8 +329,7 @@ void ShotPreview::OnProcess(float delta) {
 	}
 
 	std::for_each(m_predictButtons.begin(), m_predictButtons.end(),
-		std::bind2nd(std::mem_fun(&FrWnd::SetVisible),
-			GetOptionFlag() != 0 ? true : false));
+		std::bind2nd(std::mem_fun(&FrWnd::SetVisible), GetOptionFlag()));
 
 	if (m_updateElapsed > 0.5f) {
 
@@ -434,30 +433,26 @@ void ShotPreview::DrawIndicator(const WVector& pos, unsigned long color, float s
 		return;
 	}
 
-	float half = size * 0.5f;
 	vl[0] = &vtx[0];
-	vtx[0].x = screen.x - half;
+	vtx[0].x = screen.x - size * 0.5f;
 	vtx[0].z = screen.z;
 	vtx[0].y = screen.y;
 	vtx[0].rhw = 1.0f;
 	vtx[0].diffuse = color;
-
 	vl[1] = &vtx[1];
-	vtx[1].x = screen.x - half;
+	vtx[1].x = screen.x - size * 0.5f;
 	vtx[1].z = screen.z;
 	vtx[1].y = screen.y - size;
 	vtx[1].rhw = 1.0f;
 	vtx[1].diffuse = color;
-
 	vl[2] = &vtx[2];
-	vtx[2].x = screen.x + half;
+	vtx[2].x = size * 0.5f + screen.x;
 	vtx[2].z = screen.z;
 	vtx[2].y = screen.y - size;
 	vtx[2].rhw = 1.0f;
 	vtx[2].diffuse = color;
-
 	vl[3] = &vtx[3];
-	vtx[3].x = screen.x + half;
+	vtx[3].x = size * 0.5f + screen.x;
 	vtx[3].z = screen.z;
 	vtx[3].y = screen.y;
 	vtx[3].rhw = 1.0f;

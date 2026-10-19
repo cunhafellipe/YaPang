@@ -20,10 +20,6 @@
 #include "GolfTask.h"
 #include "onelineboard.h"
 
-// 1e-5f in .rdata, read from storage rather than a __real literal (a named
-// const float in the original; only CNoticeBoard::Display references it).
-extern "C" const float data_a08d80;
-
 // noticeboard.cpp:28
 CNoticeBoard::CNoticeBoard(void) {
 	m_pOverlayLeft = g_resrcmng->GetOverlay("notice_l.tga", 0);
@@ -98,7 +94,7 @@ void CNoticeBoard::Process(float elapsed) {
 void CNoticeBoard::Display(void) {
 	if (m_pOverlayLeft != NULL && m_pOverlayMid != NULL && m_pOverlayRight != NULL) {
 		float alpha = (m_posY + 50.0f) * 0.02f;
-		if (!(WAbsBySign(alpha) < data_a08d80)) {
+		if (!(WAbsBySign(alpha) < g_EPSILON)) {
 			WRect src(0.0f, 0.0f, 1.0f, 1.0f);
 			WRect dst(g_view->GetWidth() * 0.5f - 150.0f - 20.0f, m_posY, m_pOverlayLeft->GetWidth(), m_pOverlayLeft->GetHeight());
 			m_pOverlayLeft->Render(g_view, src, dst, 0, 0xA0FFFFFF, 0.0f, 0);

@@ -47,7 +47,8 @@ static const float s_turnRate = 3.1415927f;
 // the value into a parameter slot and multiplies it again); no header line
 // marks name it.
 static inline float Square(float x) {
-	return x * x;
+	x *= x;
+	return x;
 }
 
 IObject* CSpotMakeInstance(void) {

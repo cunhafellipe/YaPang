@@ -45,32 +45,32 @@ void WTitleFontEx::Print(float x, float y, const char* text, eTITLEFONTALINE ali
 	switch (align) {
 	case TITLEFONT_ALIGN_CENTER:
 		for (; *p; ) {
-			char c = *p++;
+			int c = *p++;
 			const char* pos = strchr(charSet, c);
 			offset += m_pFont->GetCharWidth(g_view, pos - charSet) + space * scale;
 		}
-		p = text;
 		offset -= space;
 		offset *= 0.5f;
 		break;
 	case TITLEFONT_ALIGN_RIGHT:
 		for (; *p; ) {
-			char c = *p++;
+			int c = *p++;
 			const char* pos = strchr(charSet, c);
 			offset += m_pFont->GetCharWidth(g_view, pos - charSet) + space * scale;
 		}
-		p = text;
 		offset -= space;
 		break;
 	}
 
 	x -= offset;
 
-	while (*p) {
-		char c = *p++;
+	const char* q = text;
+	while (*q) {
+		int c = *q++;
 		const char* pos = strchr(charSet, c);
 		float width = m_pFont->PutChar(g_view, x, y, pos - charSet, 0, m_color);
-		x += width + space;
+		width += space;
+		x += width;
 	}
 
 	m_pFont->SetScale(oldScale);

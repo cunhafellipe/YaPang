@@ -315,17 +315,18 @@ void CConsole::InputProcess(float elapsed) {
 				strcpy(word, result);
 			}
 		} else {
-			char c;
 			char *end = strchr(word, 0);
 			if (isalnum(end[-1])) {
 				while ((*end = PopFromBsStack()) != 0) {
 					end++;
 				}
 			} else {
+				char c;
+				char *dst = end;
 				while ((c = PopFromBsStack()) != 0) {
 					if (isalnum(c)) {
-						*end = c;
-						while ((*++end = PopFromBsStack()) != 0) {
+						*dst = c;
+						while ((*++dst = PopFromBsStack()) != 0) {
 						}
 						break;
 					}
@@ -1192,10 +1193,8 @@ void CConsole::Command(const char *line) {
 						sprintf(text, "%d : -", player);
 					} else {
 						WVector &ball = GOLFDOC()->GetPlayer(player)->m_ballPos;
-						WVector cup = GetHoleCupPos();
-						float dx = cup.x - ball.x;
-						float dz = cup.z - ball.z;
-						float dist = sqrtf(dx * dx + dz * dz);
+						WVector cup(GetHoleCupPos().p);
+						float dist = sqrtf((cup.x - ball.x) * (cup.x - ball.x) + (cup.z - ball.z) * (cup.z - ball.z));
 						sprintf(text, "%d : %.2fy(%.2f)", player, dist * 0.3125f, dist);
 					}
 					AddText(text);
@@ -1309,9 +1308,9 @@ void CConsole::Command(const char *line) {
 
 					GOLFDOC()->m_currentHole = hole;
 					CTaskManager::Instance()->PostMsg(0, "GolfBg", 0x140, 0, 0, 0, 0);
-					return;
+				} else {
+					AddText("Invalid Argument");
 				}
-				AddText("Invalid Argument");
 				return;
 			}
 			// console.cpp:1895
