@@ -48,6 +48,23 @@
 #define PG_ENUM_DEF(name) enum name {
 #endif
 
+// Declarations the port spells differently from the original. Access and
+// constness are part of the decorated names, so the original build keeps the
+// original spelling. PG_PROTECTED: a `protected:` label whose members the
+// port reaches from outside the class. PG_PORT_CONST: `const` on a reference
+// parameter the original declares non-const (clang and GCC bind temporaries
+// only to const references). PG_ORIG_CONST: `const` the original has and
+// the port drops.
+#ifdef PG_PORT
+#define PG_PROTECTED public
+#define PG_PORT_CONST const
+#define PG_ORIG_CONST
+#else
+#define PG_PROTECTED protected
+#define PG_PORT_CONST
+#define PG_ORIG_CONST const
+#endif
+
 // cl 13.10 (Visual C++ .NET 2003) has no static_assert, so the layout checks
 // use the negative-array-size idiom. A failing check reads
 // "error C2118: negative subscript" on the line of the check.

@@ -101,7 +101,7 @@ void CBeach::Render(void) {
 					unsigned char index = ((k >> 1) & 1) + j;
 					bool edge = index == 0 || index == m_wavelets.size() - 1;
 
-					WVector dir = m_wavelets[index].dir * (((k & 1) ? 0.1f : (edge ? 0.5f : 1.0f)) * m_layers[(oldest + i) % m_layers.size()].m_offset);
+					WVector dir = (((k & 1) ? 0.1f : (edge ? 0.5f : 1.0f)) * m_layers[(oldest + i) % m_layers.size()].m_offset) * m_wavelets[index].dir;
 					pos = GetPVS().GetGroundPoint(m_wavelets[index].pos[k & 1] - dir, true, NULL, true);
 					pos.y += (k & 1) ? 1.5f : 1.0f;
 

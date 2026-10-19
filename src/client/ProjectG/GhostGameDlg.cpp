@@ -505,7 +505,7 @@ void FrGhostGameMapDlg::Init(unsigned long ghostUserId, const std::string& ghost
 			if (mapId == 0x11 || mapId == 0xc)
 				continue;
 
-			IFF_STRUCT::sCourse* pCourse = ItemManager()->FindCourse(0x28000000 | ((mapId > 0x7F && mapId != 0xFD) ? mapId - 0x80 : mapId));
+			IFF_STRUCT::sCourse* pCourse = CSharedDoc::Instance()->m_itemManager.FindCourse(0x28000000 | ((mapId > 0x7F && mapId != 0xFD) ? mapId - 0x80 : mapId));
 			if (pCourse == 0)
 				continue;
 
@@ -561,14 +561,14 @@ void FrGhostGameMapDlg::Init(unsigned long ghostUserId, const std::string& ghost
 
 		for (std::list<int>::iterator it = playableMaps.begin(); it != playableMaps.end(); ++it) {
 
-			IFF_STRUCT::sCourse* pCourse = ItemManager()->FindCourse(0x28000000 | ((*it > 0x7F && *it != 0xFD) ? *it - 0x80 : *it));
+			IFF_STRUCT::sCourse* pCourse = CSharedDoc::Instance()->m_itemManager.FindCourse(0x28000000 | ((*it > 0x7F && *it != 0xFD) ? *it - 0x80 : *it));
 			if (pCourse)
 				m_pSelMapList->AddItem(pCourse);
 		}
 
 		for (std::list<int>::iterator it = lockedMaps.begin(); it != lockedMaps.end(); ++it) {
 
-			IFF_STRUCT::sCourse* pCourse = ItemManager()->FindCourse(0x28000000 | ((*it > 0x7F && *it != 0xFD) ? *it - 0x80 : *it));
+			IFF_STRUCT::sCourse* pCourse = CSharedDoc::Instance()->m_itemManager.FindCourse(0x28000000 | ((*it > 0x7F && *it != 0xFD) ? *it - 0x80 : *it));
 			if (pCourse)
 				m_pSelMapList->AddItem(pCourse);
 		}
@@ -1098,8 +1098,8 @@ void FrGhostAward::Init(bool bWin) {
 	EnableDrag(false);
 	SetCaption("\xb0\xed\xbd\xba\xc6\xae \xb0\xd4\xc0\xd3\xb0\xe1\xb0\xfa");   // "Ghost game result"
 
-	int ghostPang = GOLFDOC()->GetPlayer(1)->m_ghostAward;
-	int myPang = GOLFDOC()->GetPlayer(0)->m_ghostAward;
+	int ghostPang = PLAYER(1)->m_ghostAward;
+	int myPang = PLAYER(0)->m_ghostAward;
 
 	CGhostGameBonusUtil bonusUtil;
 	bool isUserWin = bonusUtil.IsUserWin(PLAYER(0)->m_ghostResult, myPang,

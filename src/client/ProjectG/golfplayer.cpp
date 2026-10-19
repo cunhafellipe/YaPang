@@ -85,7 +85,7 @@ CGolfPlayer::sClub::sClub(void) {
 
 // golfplayer.h:139
 CGolfPlayer::sPetInfo::sPetInfo(void)
-	: m_motionTime(0), m_pMotion(0), m_unk38(false), m_unk5C(0), m_unk60(0),
+	: m_motionTime(0), m_pMotion(0), m_unk38(false), m_petFlags(0), m_unk60(0),
 	  m_pTexPart(0), m_pAppliedTexPart(0), m_scale(1.0f), m_unkB0(0) {
 	for (int i = 2; i >= 0; --i) { m_worldMatrix.p[i * 4] = 1.0f; m_worldMatrix.p[i * 4 + 1] = m_worldMatrix.p[i * 4 + 2] = m_worldMatrix.p[i * 4 + 3] = 0.0f; }
 	m_nextMotion[0] = '\0';
@@ -290,7 +290,7 @@ void CGolfPlayer::OnLoad(void) {
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
 		for (int i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
 			if (i == MyIndex()
-				|| (GOLFDOC()->GetPlayer(MyIndex())->m_partnerIndex != 0xFF && i == GOLFDOC()->GetPlayer(MyIndex())->m_partnerIndex)
+				|| (PLAYER(MyIndex())->m_partnerIndex != 0xFF && i == PLAYER(MyIndex())->m_partnerIndex)
 				|| !WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT)) {
 				MakeStr("PLAYER_%d", i);
 			}
@@ -352,7 +352,7 @@ bool CGolfPlayer::ShowAbilityParts(CPartTidList *pTidList) {
 
 	for (int i = 0; i < count; i++) {
 		std::pair<unsigned long, unsigned long> part = m_abilityParts[i];
-		if (((part.first >> 18) & 0xFF) == (pTidList->m_tidChar & 0x3FFFFFF)) {
+		if ((pTidList->m_tidChar & 0x3FFFFFF) == ((part.first >> 18) & 0xFF)) {
 			if (pTidList->IsEquipped(part.first, 0) == true) {
 				pTidList->SetTid(part.second, 0, 0, 0);
 				shown = true;
@@ -410,14 +410,14 @@ void CGolfPlayer::InputProcess(float dt) {
 	if (g_input->Get(0x45)) {
 		if (m_headAngle < 1.0471976f) {
 			m_headAngle += dt * 12.566371f;
-			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x200;
+			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x200;
 		}
 	}
 
 	if (g_input->Get(0x51)) {
 		if (m_headAngle > -1.0471976f) {
 			m_headAngle -= dt * 12.566371f;
-			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x200;
+			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x200;
 		}
 	}
 }
@@ -532,7 +532,7 @@ void CGolfPlayer::OnProcess(float dt) {
 				}
 			} else {
 				m_pPetInfos[i].m_motionTime = m_pPetInfos[i].m_pMotion->s;
-				m_pPetInfos[i].m_unk5C &= ~2;
+				m_pPetInfos[i].m_petFlags &= ~2;
 			}
 		}
 	}
@@ -541,15 +541,18 @@ void CGolfPlayer::OnProcess(float dt) {
 		ParseBoundingBoxScript(GOLFDOC()->m_myPlayerIndex, true, false, true);
 		SetSwingType();
 		SearchGround();
-		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x21;
+		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x21;
 	}
 
 	if (m_unk15C) {
 		m_pTailEffect->Process(dt);
 
 		if (m_pTailSpots[0] && m_pTailSpots[1]) {
-			WVector from = m_pTailSpots[0]->info->spherePivot * m_pTailSpots[0]->bone->GetMatrix();
-			WVector to = m_pTailSpots[1]->info->spherePivot * m_pTailSpots[1]->bone->GetMatrix();
+			WVector from;
+			WVector to;
+
+			from = m_pTailSpots[0]->info->spherePivot * m_pTailSpots[0]->bone->GetMatrix();
+			to = m_pTailSpots[1]->info->spherePivot * m_pTailSpots[1]->bone->GetMatrix();
 
 			m_pTailEffect->PutSpot(from, to);
 		}
@@ -583,7 +586,7 @@ void CGolfPlayer::OnDisplay(void) {
 		return;
 	}
 
-	if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C & 1) {
+	if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags & 1) {
 		if (GOLFDOC()->GameMode() & 0x3000) {
 			WMatrix &mat = m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_worldMatrix;
 
@@ -609,7 +612,7 @@ void CGolfPlayer::OnDisplay(void) {
 		}
 	}
 
-	if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C & 3) {
+	if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags & 3) {
 		m_pPetFrames[GOLFDOC()->m_myPlayerIndex].GetBonePet()->ApplyBones(m_pPetFrames[GOLFDOC()->m_myPlayerIndex].GetCurAniPet()->GetBones(NULL, m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_motionTime, 0, NULL, false), m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_worldMatrix);
 		m_pPetFrames[GOLFDOC()->m_myPlayerIndex].GetBonePet()->UpdateBound(true, true);
 	}
@@ -622,7 +625,7 @@ void CGolfPlayer::OnDisplay(void) {
 		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_worldMatrix.pivot.y = pos.y;
 	}
 
-	if (!(GOLFDOC()->GameMode() & 0x4000) && (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C & 0xB)) {
+	if (!(GOLFDOC()->GameMode() & 0x4000) && (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags & 0xB)) {
 		for (int i = 0; i < 2; i++) {
 			if (m_pFootBones[i]) {
 				m_pFootBones[i]->SetMatrix(convMatInv * GetFootMatrix(i), NULL);
@@ -630,7 +633,7 @@ void CGolfPlayer::OnDisplay(void) {
 		}
 	}
 
-	if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C & 0x203) {
+	if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags & 0x203) {
 		if (m_pHeadBone) {
 			m_pHeadBone->SetMatrix(convMatInv * GetHeadMatrix(), NULL);
 		}
@@ -642,8 +645,8 @@ void CGolfPlayer::OnDisplay(void) {
 		WSingleton<CHeadIcon>::Instance()->SetPlayerPos(GOLFDOC()->m_myPlayerIndex, pos);
 	}
 
-	if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C & 3) {
-		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x30;
+	if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags & 3) {
+		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x30;
 	}
 
 	WPuppet *pPet = m_pPetFrames[GOLFDOC()->m_myPlayerIndex].GetBonePet();
@@ -653,12 +656,12 @@ void CGolfPlayer::OnDisplay(void) {
 	WPuppet *pClub = pClubSet->m_puppet[0][GolfClub().GetType()];
 
 	if (g_view->InFrustum(pPet->GetBoundSphere())) {
-		if ((m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C >> 4) & 1) {
-			if ((m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C >> 6) & 1) {
+		if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].TestFlag(4)) {
+			if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].TestFlag(6)) {
 				SetLight();
 			}
 
-			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C &= ~0x10;
+			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags &= ~0x10;
 			m_pPetFrames[GOLFDOC()->m_myPlayerIndex].UpdateLightSource(&m_lightSet, false, NULL);
 		}
 
@@ -690,7 +693,7 @@ void CGolfPlayer::OnDisplay(void) {
 		}
 	}
 
-	if (!((m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C >> 7) & 1)) {
+	if (!m_pPetInfos[GOLFDOC()->m_myPlayerIndex].TestFlag(7)) {
 		CPartTidList &tidList = GOLFDOC()->GetPartTidList(GOLFDOC()->m_myPlayerIndex);
 		IFF_STRUCT::sChar *pChar = ItemManager()->FindChar(tidList.m_tidChar);
 		float scale;
@@ -703,7 +706,7 @@ void CGolfPlayer::OnDisplay(void) {
 
 		WMatrix mat;
 
-		if ((m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C >> 8) & 1) {
+		if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].TestFlag(8)) {
 			mat.xa = m_fixedClubMatrix.xa * scale;
 			mat.ya = m_fixedClubMatrix.ya * scale;
 			mat.za = m_fixedClubMatrix.za * scale;
@@ -731,12 +734,12 @@ void CGolfPlayer::OnDisplay(void) {
 			m_pClubPuppet = pClub;
 		}
 
-		if ((m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C >> 5) & 1) {
-			if ((m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C >> 6) & 1) {
+		if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].TestFlag(5)) {
+			if (m_pPetInfos[GOLFDOC()->m_myPlayerIndex].TestFlag(6)) {
 				SetLight();
 			}
 
-			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C &= ~0x20;
+			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags &= ~0x20;
 		}
 
 		pClub->UpdateLightSource(&m_lightSet, false, NULL);
@@ -748,7 +751,7 @@ void CGolfPlayer::OnDisplay(void) {
 		m_pTailEffect->Display();
 	}
 
-	m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C &= ~0x209;
+	m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags &= ~0x209;
 
 	m_extendedEffect.Update(&m_pPetFrames[GOLFDOC()->m_myPlayerIndex]);
 }
@@ -800,12 +803,12 @@ void CGolfPlayer::ScoreEvent(void) {
 				continue;
 			}
 
-			if ((m_pPetInfos[i].m_unk5C >> 7) & 1) {
+			if (m_pPetInfos[i].TestFlag(7)) {
 				continue;
 			}
 		}
 
-		if ((m_pPetInfos[i].m_unk5C >> 8) & 1) {
+		if (m_pPetInfos[i].TestFlag(8)) {
 			m_pClubPuppet->ApplyBones(NULL, m_fixedClubMatrix);
 		} else {
 			w_bound_box *pBox = m_pPetFrames[i].GetBonePet()->FindBoundBox("club");
@@ -813,8 +816,7 @@ void CGolfPlayer::ScoreEvent(void) {
 
 			mat = pBox->bone->GetMatrix();
 			mat.pivot = pBox->info->spherePivot * pBox->bone->GetMatrix();
-			float grip = m_clubs[i][GolfClub().GetType()].m_gripPos;
-			mat.pivot += mat.xa * grip;
+			mat.pivot += m_clubs[i][GolfClub().GetType()].m_gripPos * mat.xa;
 			m_pClubPuppet->ApplyBones(NULL, mat);
 		}
 
@@ -831,14 +833,13 @@ WMatrix CGolfPlayer::GetHeadMatrix(void) {
 
 	if (pBone == NULL) {
 		mat.Reset();
-		return mat;
-	}
-
-	if (WAbsBySign(m_headAngle) < data_9ef200[3]) {
-		mat = convMat * pBone->GetMatrix();
 	} else {
-		mat = RotMat(m_headAngle, 1);
-		mat = mat * convMat * pBone->GetMatrix();
+		if (WAbsBySign(m_headAngle) < data_9ef200[3]) {
+			mat = convMat * pBone->GetMatrix();
+		} else {
+			mat = RotMat(m_headAngle, 1);
+			mat = mat * convMat * pBone->GetMatrix();
+		}
 	}
 
 	return mat;
@@ -851,14 +852,13 @@ WMatrix CGolfPlayer::GetFootMatrix(int foot) {
 
 	if (pBone == NULL) {
 		mat.Reset();
-		return mat;
-	}
-
-	if (WAbsBySign(m_footAngle) < data_9ef200[3]) {
-		mat = convMat * pBone->GetMatrix();
 	} else {
-		mat = RotMat(m_footAngle, 0);
-		mat = mat * convMat * pBone->GetMatrix();
+		if (WAbsBySign(m_footAngle) < data_9ef200[3]) {
+			mat = convMat * pBone->GetMatrix();
+		} else {
+			mat = RotMat(m_footAngle, 0);
+			mat = mat * convMat * pBone->GetMatrix();
+		}
 	}
 
 	return mat;
@@ -918,7 +918,11 @@ void CGolfPlayer::ParseBoundingBoxScript(int player, bool clear, bool, bool) {
 
 			bool needPart = false;
 
-			while (token[0] == '&') {
+			do {
+				if (token[0] != '&') {
+					break;
+				}
+
 				needPart = true;
 				unsigned long tid = atoi(&token[1]);
 
@@ -927,11 +931,8 @@ void CGolfPlayer::ParseBoundingBoxScript(int player, bool clear, bool, bool) {
 					break;
 				}
 
-				unsigned long *pAuxTids = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_characterInfo.auxParts.tids;
-				int k;
-
-				for (k = 0; k < 5; k++) {
-					if (pAuxTids[k] == tid) {
+				for (int k = 0; k < 5; k++) {
+					if (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_characterInfo.auxParts.tids[k] == tid) {
 						needPart = false;
 						break;
 					}
@@ -948,11 +949,7 @@ void CGolfPlayer::ParseBoundingBoxScript(int player, bool clear, bool, bool) {
 
 				cur = GetStrConst(cur, token);
 				len = strlen(token);
-
-				if (len == 0 || len >= 0x40) {
-					break;
-				}
-			}
+			} while (len != 0 && len < 0x40);
 
 			if (needPart) {
 				continue;
@@ -1025,7 +1022,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 	case 0x1A1:
 		if (!m_unk18F) {
 			if (GolfClub().PowerShotType() && GolfClub().GetType() != 3) {
-				if (GolfClub().PowerShotType() == 1 || GolfClub().GetType() == 0) {
+				if (GolfClub().PowerShotType() == 1 || GolfClub().GetType() != 0) {
 					SetMotion(MakeStr("%s\xB0\xD4\xB0\xC9\xC0\xBD\xC6\xC4\xBF\xF6", m_swingTypeName), 0.0f, -1);
 				} else {
 					SetMotion(MakeStr("%s\xB0\xD4\xB0\xC9\xC0\xBD\xC6\xC4\xBF\xF6" "2", m_swingTypeName), 0.0f, -1);
@@ -1054,7 +1051,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 		}
 		SearchGround();
 
-		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x40;
+		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x40;
 
 		if (IsMyTurn(false)) {
 			if (m_standBlocked) {
@@ -1146,12 +1143,12 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 		float angle = *(float *)msg.m_param1;
 		m_displayMatrix = RotMat(m_unk140 = angle + data_9ef200[0], 1);
 		SearchGround();
-		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x248;
+		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x248;
 		break;
 	}
 	case 0x2719:
 		m_position = *(WVector *)msg.m_param1;
-		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x249;
+		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x249;
 		break;
 	case 0x127:
 		if (msg.m_param2 == 1) {
@@ -1260,8 +1257,8 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 		m_displayMatrix = RotMat(m_unk140 = angle + data_9ef200[0], 1);
 		SearchGround();
 
-		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x40;
-		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C &= ~0x180;
+		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x40;
+		m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags &= ~0x180;
 
 		m_pTailSpots[0] = m_pPetFrames[GOLFDOC()->m_myPlayerIndex].GetBonePet()->FindBoundBox("club_near");
 		m_pTailSpots[1] = m_pPetFrames[GOLFDOC()->m_myPlayerIndex].GetBonePet()->FindBoundBox("club_far");
@@ -1361,7 +1358,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 				strcpy(m_shotMotionName, MakeStr("%s%s\xB4\xCA\xC0\xBA\xC7\xEA\xBD\xBA\xC0\xAE", m_swingTypeName, GolfClub().PowerShotType() ? "\xC6\xC4\xBF\xF6" : ""));
 			}
 		} else if (GolfClub().PowerShotType()) {
-			if (GolfClub().PowerShotType() == 1 || GolfClub().GetType() == 0) {
+			if (GolfClub().PowerShotType() == 1 || GolfClub().GetType() != 0) {
 				strcpy(m_shotMotionName, MakeStr("%s\xC6\xC4\xBF\xF6", m_swingTypeName));
 			} else {
 				strcpy(m_shotMotionName, MakeStr("%s\xC6\xC4\xBF\xF6" "2", m_swingTypeName));
@@ -1416,7 +1413,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 
 				if (changed) {
 					m_pPetFrames[GOLFDOC()->m_myPlayerIndex].CalcBVolume();
-					m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x13;
+					m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x13;
 				}
 
 				ParseBoundingBoxScript(GOLFDOC()->m_myPlayerIndex, true, false, true);
@@ -1449,7 +1446,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 		break;
 	case 0x118:
 		for (int i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
-			if (PLAYER(i)->m_state == 3) {
+			if (PLAYER(i)->m_state != 3) {
 				m_pPetFrames[GOLFDOC()->m_myPlayerIndex].GetBonePet()->SetRenderMode(msg.m_param1);
 			}
 		}
@@ -1558,7 +1555,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 			}
 			CSceneManager::Instance()->SetPuppet("\xC5\xAC\xB7\xB4", m_pClubPuppet);
 
-			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x269;
+			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x269;
 
 			m_ballDist = m_clubs[GOLFDOC()->m_myPlayerIndex][GolfClub().GetType()].m_ballPos.x;
 		}
@@ -1602,7 +1599,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 
 		m_pPetFrames[MyIndex()].GetBonePet()->ApplyBones(m_pPetFrames[MyIndex()].GetCurAniPet()->GetBones(NULL, m_pPetInfos[MyIndex()].m_motionTime, 0, NULL, false), m_pPetInfos[MyIndex()].m_worldMatrix);
 
-		m_pPetInfos[MyIndex()].m_unk5C |= 0x48;
+		m_pPetInfos[MyIndex()].m_petFlags |= 0x48;
 
 		CSceneManager::Instance()->SetVisible(MakeStr("PLAYER_%d", MyIndex()), true);
 
@@ -1654,7 +1651,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 
 		m_pPetFrames[MyIndex()].GetBonePet()->ApplyBones(m_pPetFrames[MyIndex()].GetCurAniPet()->GetBones(NULL, m_pPetInfos[MyIndex()].m_motionTime, 0, NULL, false), m_pPetInfos[MyIndex()].m_worldMatrix);
 
-		m_pPetInfos[MyIndex()].m_unk5C |= 0x48;
+		m_pPetInfos[MyIndex()].m_petFlags |= 0x48;
 
 		for (int i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
 			m_pPetInfos[i].m_unk38 = i == MyIndex();
@@ -1736,7 +1733,7 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 			info.m_unk38 = true;
 			frame.GetBonePet()->ApplyBones(frame.GetCurAniPet()->GetBones(NULL, info.m_motionTime, 0, NULL, false), info.m_worldMatrix);
 
-			m_pPetInfos[player].m_unk5C |= 0x48;
+			m_pPetInfos[player].m_petFlags |= 0x48;
 
 			CSceneManager::Instance()->SetVisible(MakeStr("PLAYER_%d", player), true);
 
@@ -1812,10 +1809,10 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 	}
 	case 0x125:
 		if (msg.m_param1 == 0) {
-			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0x80;
+			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0x80;
 			CSceneManager::Instance()->SetVisible("\xC5\xAC\xB7\xB4", false);
 		} else {
-			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C &= ~0x80;
+			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags &= ~0x80;
 			CSceneManager::Instance()->SetVisible("\xC5\xAC\xB7\xB4", true);
 		}
 		break;
@@ -1913,9 +1910,9 @@ void CGolfPlayer::SetMotion(const char *name, float time, int player) {
 		m_pPetInfos[player].m_motionTime = Min(time + m_pPetInfos[player].m_pMotion->s, m_pPetInfos[player].m_pMotion->e);
 	}
 
-	m_pPetInfos[player].m_unk5C |= 0x33;
-	m_unk2F0 = ((m_pPetInfos[player].m_unk5C >> 8) & 1) != 0;
-	m_pPetInfos[player].m_unk5C &= ~0x180;
+	m_pPetInfos[player].m_petFlags |= 0x33;
+	m_unk2F0 = ((m_pPetInfos[player].m_petFlags >> 8) & 1) != 0;
+	m_pPetInfos[player].m_petFlags &= ~0x180;
 
 	m_pPetFrames[player].SetInvisible(false);
 
@@ -2038,7 +2035,7 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 	const char *cur = script;
 	unsigned long value;
 
-	do {
+	while (cur) {
 		cur = strchr(cur, '*');
 
 		if (cur == NULL) {
@@ -2093,16 +2090,17 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 				break;
 			case 2: {
 				int j;
+				const sSwingTable::sTail *pTail = data_a804a8.m_tails;
 
-				for (j = 0; j < 3; j++) {
-					if (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_clubSet.typeId == data_a804a8.m_tails[j].m_clubSetId) {
-						m_pTailEffect->ChangeTexture(std::string(data_a804a8.m_tails[j].m_texName));
+				for (j = 0; j < 3; j++, pTail++) {
+					if (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_clubSet.typeId == pTail->m_clubSetId) {
+						m_pTailEffect->ChangeTexture(pTail->m_texName);
 						break;
 					}
 				}
 
 				if (j == 3) {
-					m_pTailEffect->ChangeTexture(std::string("~swinglight01.jpg"));
+					m_pTailEffect->ChangeTexture("~swinglight01.jpg");
 				}
 
 				m_unk15C = true;
@@ -2110,12 +2108,12 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 				break;
 			}
 			case 3:
-				m_pPetInfos[player].m_unk5C &= ~0x80;
+				m_pPetInfos[player].m_petFlags &= ~0x80;
 				// "club" in Korean
 				CSceneManager::Instance()->SetVisible("\xC5\xAC\xB7\xB4", true);
 				break;
 			case 4:
-				m_pPetInfos[player].m_unk5C |= 0x80;
+				m_pPetInfos[player].m_petFlags |= 0x80;
 				CSceneManager::Instance()->SetVisible("\xC5\xAC\xB7\xB4", false);
 				break;
 			case 5:
@@ -2128,7 +2126,7 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 					m_fixedClubMatrix.pivot += m_clubs[player][GolfClub().GetType()].m_gripPos * m_fixedClubMatrix.xa;
 				}
 
-				m_pPetInfos[player].m_unk5C |= 0x100;
+				m_pPetInfos[player].m_petFlags |= 0x100;
 				break;
 			case 7: {
 				if (skip) {
@@ -2419,7 +2417,7 @@ void CGolfPlayer::ParsePuppetScript(char *script, int player, bool skip) {
 				break;
 			}
 		}
-	} while (cur);
+	}
 
 	m_unk2F0 = false;
 }
@@ -2480,8 +2478,8 @@ void CGolfPlayer::PlayShotSfx(int player) {
 	}
 
 	int score = WSingleton<CSharedDoc>::Instance()->m_roomType == 1
-		? TEAM(GOLFDOC()->GetPlayer(player)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1]
-		: GOLFDOC()->GetPlayer(player)->m_holes[GOLFDOC()->m_currentHole - 1];
+		? TEAM(PLAYER(player)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1]
+		: PLAYER(player)->m_holes[GOLFDOC()->m_currentHole - 1];
 
 	if (GolfClub().PowerShotType()) {
 		g_audio->PlaySfx("swing_powershot_effect", 0, 0, 0, 0, 0.5f, 200.0f);
@@ -2494,8 +2492,8 @@ void CGolfPlayer::PlayShotSfx(int player) {
 		strength = 2;
 	}
 
-	IFF_STRUCT::sClubSet *pClubSet = ItemManager()->FindClubSet(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_clubSet.typeId);
 	int special = 0;
+	IFF_STRUCT::sClubSet *pClubSet = ItemManager()->FindClubSet(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_clubSet.typeId);
 
 	if (pClubSet) {
 		if ((pClubSet->m_typeId & 0x3FFFFFF) == 8) {
@@ -2644,18 +2642,17 @@ void CGolfPlayer::SearchGround(void) {
 	WVector nextGround;
 
 	dir = m_ballDist * RotMat(m_unk140, 1).xa;
-	float t = 0.0f;
+	float t;
 
-	do {
+	for (t = 0.0f; t < 1.0f; t += 0.1f) {
 		ground = GetPVS().GetGroundPoint(m_position + dir * t, true, NULL, false);
 		nextGround = GetPVS().GetGroundPoint(m_position + dir * (t + 0.1f), true, NULL, false);
 
-		if ((WVectorLen(ground - m_position) - m_ballDist) * (WVectorLen(nextGround - m_position) - m_ballDist) <= 0.0f) {
+		float diff = (ground - m_position).Magnitude() - m_ballDist;
+		if (diff * ((nextGround - m_position).Magnitude() - m_ballDist) <= 0.0f) {
 			break;
 		}
-
-		t += 0.1f;
-	} while (t < 1.0f);
+	}
 
 	float end = t + 0.1f;
 
@@ -2663,7 +2660,7 @@ void CGolfPlayer::SearchGround(void) {
 		ground = GetPVS().GetGroundPoint(m_position + dir * s, true, NULL, false);
 		nextGround = GetPVS().GetGroundPoint(m_position + dir * (s + 0.01f), true, NULL, false);
 
-		if ((WVectorLen(ground - m_position) - m_ballDist) * (WVectorLen(nextGround - m_position) - m_ballDist) <= 0.0f) {
+		if (((ground - m_position).Magnitude() - m_ballDist) * ((nextGround - m_position).Magnitude() - m_ballDist) <= 0.0f) {
 			m_displayMatrix.xa = nextGround - m_position;
 			m_displayMatrix.xa.Normalize();
 
@@ -2681,7 +2678,7 @@ void CGolfPlayer::SearchGround(void) {
 			SendMsg(this, "GolfRule", 0x77, m_standBlocked == false, 0, 0, 0);
 			SendMsg(this, "GolfRule", 7, m_standBlocked == false, 0, 0, 0);
 			m_footAngle = asin(m_displayMatrix.xa.y) * -1.0f;
-			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0xB;
+			m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0xB;
 			return;
 		}
 	}
@@ -2691,7 +2688,7 @@ void CGolfPlayer::SearchGround(void) {
 	SendMsg(this, "GolfRule", 0x77, 0, 0, 0, 0);
 	m_footAngle = 0.0f;
 
-	m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk5C |= 0xB;
+	m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_petFlags |= 0xB;
 }
 
 // golfplayer.cpp:3860
@@ -2702,9 +2699,9 @@ bool CGolfPlayer::SearchGround(const WVector &pos, float angle) {
 	WVector dir;
 
 	dir = m_ballDist * RotMat(angle, 1).xa;
-	float t = 0.0f;
+	float t;
 
-	do {
+	for (t = 0.0f; t < 1.0f; t += 0.1f) {
 		ground = GetPVS().GetGroundPoint(pos + dir * t, true, NULL, false);
 		nextGround = GetPVS().GetGroundPoint(pos + dir * (t + 0.1f), true, &objId, false);
 
@@ -2712,12 +2709,11 @@ bool CGolfPlayer::SearchGround(const WVector &pos, float angle) {
 			return false;
 		}
 
-		if ((WVectorLen(ground - pos) - m_ballDist) * (WVectorLen(nextGround - pos) - m_ballDist) <= 0.0f) {
+		float diff = WVectorLen(ground - pos) - m_ballDist;
+		if (diff * (WVectorLen(nextGround - pos) - m_ballDist) <= 0.0f) {
 			break;
 		}
-
-		t += 0.1f;
-	} while (t < 1.0f);
+	}
 
 	float end = t + 0.1f;
 
@@ -2850,8 +2846,8 @@ void CGolfPlayer::Shot_PowerShot(void) {
 						m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk60 = 0;
 						SetMotion(MakeStr("%s\xC1\xD8\xBA\xF1", m_swingTypeName), 0.0f, -1);
 
-						int screenParam = 0;
-						SendMsg(this, "Screen", 0x1AA, (intptr_t)&screenParam, 0, 0, 0);
+						float ratio = 0.0f;
+						SendMsg(this, "Screen", 0x1AA, (intptr_t)&ratio, 0, 0, 0);
 					} else {
 						g_audio->PlaySfx("powershot_ready", 0, 0, "powershot_ready", 0, 0.5f, 200.0f);
 						m_pPetInfos[GOLFDOC()->m_myPlayerIndex].m_unk60 = 3;
@@ -2882,24 +2878,22 @@ void CGolfPlayer::Shot_PowerShot(void) {
 							GolfClub().m_calcRandomPower = false;
 						}
 
-						IObject *pSpike;
-						IObject *pCobra;
-						IObject *pTomahawk;
-						IObject *pNormal;
-						SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_normal", (intptr_t)&pNormal, 0, 0);
-						SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_tomahwak", (intptr_t)&pTomahawk, 0, 0);
-						SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_cobra", (intptr_t)&pCobra, 0, 0);
-						SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_spike", (intptr_t)&pSpike, 0, 0);
+						IObject *pPredict[4];
+						SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_normal", (intptr_t)&pPredict[0], 0, 0);
+						SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_tomahwak", (intptr_t)&pPredict[1], 0, 0);
+						SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_cobra", (intptr_t)&pPredict[2], 0, 0);
+						SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_spike", (intptr_t)&pPredict[3], 0, 0);
 
-						FrButton *pNormalButton = DYNAMIC_CAST(FrButton, pNormal);
-						FrButton *pTomahawkButton = DYNAMIC_CAST(FrButton, pTomahawk);
-						FrButton *pCobraButton = DYNAMIC_CAST(FrButton, pCobra);
-						FrButton *pSpikeButton = DYNAMIC_CAST(FrButton, pSpike);
+						FrButton *pButtons[4];
+						pButtons[0] = DYNAMIC_CAST(FrButton, pPredict[0]);
+						pButtons[1] = DYNAMIC_CAST(FrButton, pPredict[1]);
+						pButtons[2] = DYNAMIC_CAST(FrButton, pPredict[2]);
+						pButtons[3] = DYNAMIC_CAST(FrButton, pPredict[3]);
 
-						if (pNormalButton) pNormalButton->SetStatus(FrButton::NORMAL);
-						if (pTomahawkButton) pTomahawkButton->SetStatus(FrButton::PRESSED);
-						if (pCobraButton) pCobraButton->SetStatus(FrButton::NORMAL);
-						if (pSpikeButton) pSpikeButton->SetStatus(FrButton::NORMAL);
+						if (pButtons[0]) pButtons[0]->SetStatus(FrButton::NORMAL);
+						if (pButtons[1]) pButtons[1]->SetStatus(FrButton::PRESSED);
+						if (pButtons[2]) pButtons[2]->SetStatus(FrButton::NORMAL);
+						if (pButtons[3]) pButtons[3]->SetStatus(FrButton::NORMAL);
 
 						SendMsg(this, "ShotPreview", -1, (intptr_t)"CHANGE_PREDICT_TYPE", 1, 0, 0);
 					}

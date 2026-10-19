@@ -217,7 +217,7 @@ void CGuideLine::CalcSegment(void) {
 
 		toBall = m_road[m_segmentCount - 1].m_point - GolfBall().m_pos;
 
-		while (m_segmentCount < 80 && toBall.x * toNext.x + toBall.z * toNext.z > 0.0f) {
+		while (m_segmentCount < 80 && toNext.x * toBall.x + toNext.z * toBall.z > 0.0f) {
 			SetPoint(dir);
 
 			toNext = (m_road[m_segmentCount - 1].m_point + dir) - GolfBall().m_pos;

@@ -245,9 +245,10 @@ void FrMessengerChatDlg::AddChatLine(std::string nick, std::string text) {
 			if (!(len > end))
 				end = len - 1;
 
-			wchar_t* p = &wideText[end];
 			bool bOpen = true;
-			for (int j = 0; j < 4; j++, p--) {
+			int j = 0;
+			wchar_t* p = &wideText[end];
+			for (; j < 4; j++, p--) {
 				if (*p == ')')
 					bOpen = false;
 

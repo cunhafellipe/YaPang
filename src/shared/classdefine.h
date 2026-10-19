@@ -415,8 +415,8 @@ struct sMatch {
 	unsigned char m_active;          // 0x0
 	UNKNOWN(0x1, 0x4);
 	unsigned long m_typeId;          // 0x4
-	char m_name[0x28];               // 0x8, the match name (FrResultTeamDlg::OnMatchInit)
-	UNKNOWN(0x30, 0x59);
+	char m_name[0x50];               // 0x8, the match name (FrResultTeamDlg::OnMatchInit; CheckItemName bounds it at 0x4F)
+	UNKNOWN(0x58, 0x59);
 	char m_trophyIcon[3][0x28];      // 0x59, the trophy model/icon names, indexed by rank - 1 (CExhibition::SetModel); entry 0 is the icon (GetIconName)
 	UNKNOWN(0xD1, 0x14C);
 };

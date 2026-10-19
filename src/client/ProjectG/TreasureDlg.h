@@ -39,16 +39,16 @@ class CBoxOpener {
 public:
 	// A gift shown in the gift list (size 0x14).
 	struct sTGift {
-		sTGift(void) { itemIdx = -1; m_unknown4 = 0; m_unknown8 = 0; m_unknownc = 0; m_unknowne = 0; m_unknownf = 0; m_unknown10 = 0; }   // treasuredlg.h:482
-		void Reset(void) { itemIdx = -1; m_unknown4 = 0; m_unknown8 = 0; m_unknownc = 0; m_unknowne = 0; m_unknownf = 0; m_unknown10 = 0; }   // treasuredlg.h:483
+		sTGift(void) { itemIdx = -1; m_emoticonFrame = 0; m_typeId = 0; m_count = 0; m_isMine = 0; m_revealed = 0; m_state = 0; }   // treasuredlg.h:482
+		void Reset(void) { itemIdx = -1; m_emoticonFrame = 0; m_typeId = 0; m_count = 0; m_isMine = 0; m_revealed = 0; m_state = 0; }   // treasuredlg.h:483
 
 		int itemIdx;                 // 0x0, -1 when empty
-		float m_unknown4;            // 0x4, emoticon frame DrawGiftList advances by 15 per second
-		int m_unknown8;              // 0x8
-		unsigned short m_unknownc;   // 0xc
-		unsigned char m_unknowne;    // 0xe
-		unsigned char m_unknownf;    // 0xf
-		int m_unknown10;             // 0x10, 1 once ProcInit ran
+		float m_emoticonFrame;      // 0x4, emoticon frame DrawGiftList advances by 15 per second
+		int m_typeId;               // 0x8, item type id (0 = no item)
+		unsigned short m_count;     // 0xc, item count drawn once opened
+		unsigned char m_isMine;     // 0xe, 1 when the gift is the local player's
+		unsigned char m_revealed;   // 0xf, 1 once ProcCreate opened it
+		int m_state;                // 0x10, 1 ProcInit, 2/3 ProcCreate (empty/item), 4 ProcMyItemOpen
 	};
 
 	// Opening sequence steps (ChangeSequence); names from their Proc* handlers.
@@ -101,11 +101,11 @@ private:
 	PADDING(0x55, 0x5c);
 	int m_openGiftIdx;                   // 0x5c, next gift ProcCreate/ProcMyItemOpen opens
 	int m_giftCount;                     // 0x60, gifts in the list
-	int m_unknown64;                     // 0x64
+	int m_slotCount;                     // 0x64, gift grid slots (8, 16 or 24)
 	unsigned long m_seqDuration;         // 0x68, ms the current step lasts
 	unsigned long m_seqStartTime;        // 0x6c, timeGetTime() at the step's start
 	float m_dt;                          // 0x70, last OnProc delta
-	unsigned char m_unknown74;           // 0x74
+	unsigned char m_approachMode;        // 0x74, 1 after FrTreasureGift::SetApproachMode
 	PADDING(0x75, 0x78);
 	WTitleFont* m_pTitleFont;            // 0x78
 };
@@ -123,7 +123,7 @@ BEGIN_LAYOUT_CHECK(CBoxOpener)
 	CHECK_FIELD(CBoxOpener, m_nextSeq, 0x4c);
 	CHECK_FIELD(CBoxOpener, m_boxBitmaps, 0x34);
 	CHECK_FIELD(CBoxOpener, m_boxBitmapIdx, 0x54);
-	CHECK_FIELD(CBoxOpener, m_unknown64, 0x64);
+	CHECK_FIELD(CBoxOpener, m_slotCount, 0x64);
 	CHECK_FIELD(CBoxOpener, m_seqStartTime, 0x6c);
 	CHECK_FIELD(CBoxOpener, m_dt, 0x70);
 	CHECK_FIELD(CBoxOpener, m_pTitleFont, 0x78);
@@ -278,14 +278,14 @@ class FrTreasureCourse : public FrForm {
 public:
 	// A drifting cloud of the course map (size 0x20).
 	struct sCloud {
-		sCloud(void) { srcRect.x = 0; srcRect.y = 0; srcRect.w = 1.0f; srcRect.h = 1.0f; m_unknown10 = 0; m_unknown14 = 0; m_unknown18 = 0; alpha = 0; m_unknown1d = false; }   // treasuredlg.h:165
+		sCloud(void) { srcRect.x = 0; srcRect.y = 0; srcRect.w = 1.0f; srcRect.h = 1.0f; m_speed = 0; m_unknown14 = 0; m_scale = 0; alpha = 0; m_startVisible = false; }   // treasuredlg.h:165
 
 		WRect srcRect;          // 0x0, source rect in m_pCloudOverlay (scrolled along x by ProcCloud)
-		float m_unknown10;      // 0x10
+		float m_speed;          // 0x10, horizontal drift per second
 		float m_unknown14;      // 0x14
-		float m_unknown18;      // 0x18
+		float m_scale;          // 0x18, size factor (0.25, 0.5 or 1)
 		unsigned char alpha;    // 0x1c, ShiftAlpha fades it
-		bool m_unknown1d;       // 0x1d
+		bool m_startVisible;    // 0x1d, spawned inside the area: no fade-in
 	};
 
 	// Cloud fade direction (ShiftAlpha).
@@ -576,7 +576,7 @@ public:
 	WPoint GetCalcPoint(void);
 	void SetPointByFrameHeight(void);
 	void SetState(bool bState);
-	void SetApproachMode(void) { m_boxOpener.m_unknown74 = 1; }   // treasuredlg.h:554
+	void SetApproachMode(void) { m_boxOpener.m_approachMode = 1; }   // treasuredlg.h:554
 
 protected:
 	static sFRESH_MSGMAP _MsgMap;
@@ -601,8 +601,8 @@ private:
 	CTFrame m_frame1;               // 0x124
 	CTFrame m_frame2;               // 0x138
 	FrArea* m_pGridArea;            // 0x14c
-	unsigned char m_unknown150;     // 0x150, 8 at construction
-	unsigned char m_unknown151;     // 0x151, 1 at construction
+	unsigned char m_gridColumns;    // 0x150, 8 at construction
+	unsigned char m_gridRows;       // 0x151, m_slotCount / 8 (1 at construction)
 	bool m_bState;                  // 0x152, shown state (SetState)
 	PADDING(0x153, 0x154);
 	CBoxOpener m_boxOpener;         // 0x154
@@ -614,8 +614,8 @@ BEGIN_LAYOUT_CHECK(FrTreasureGift)
 	CHECK_FIELD(FrTreasureGift, m_frame1, 0x124);
 	CHECK_FIELD(FrTreasureGift, m_frame2, 0x138);
 	CHECK_FIELD(FrTreasureGift, m_pGridArea, 0x14c);
-	CHECK_FIELD(FrTreasureGift, m_unknown150, 0x150);
-	CHECK_FIELD(FrTreasureGift, m_unknown151, 0x151);
+	CHECK_FIELD(FrTreasureGift, m_gridColumns, 0x150);
+	CHECK_FIELD(FrTreasureGift, m_gridRows, 0x151);
 	CHECK_FIELD(FrTreasureGift, m_bState, 0x152);
 	CHECK_FIELD(FrTreasureGift, m_boxOpener, 0x154);
 END_LAYOUT_CHECK

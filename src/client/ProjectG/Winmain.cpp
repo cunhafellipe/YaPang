@@ -77,7 +77,7 @@ static void FillBlackRect(HDC hdc, int x, int y, int width, int height) {
 // winmain.cpp:279: copies a w x h block of a 24-bit bottom-up DIB into
 // another, skipping black (the color key).
 static void BlitColorKey(unsigned char* dst, int dstHeight, int x, int y, int w, int h, int dstPitch,
-	unsigned char* src, unsigned int srcX, unsigned int srcY, unsigned int srcW, unsigned int srcH, int srcPitch) {
+	unsigned char* src, int srcX, int srcY, int srcW, int srcH, int srcPitch) {
 	if (!dst || !src)
 		return;
 
@@ -93,8 +93,7 @@ static void BlitColorKey(unsigned char* dst, int dstHeight, int x, int y, int w,
 
 	int xEnd = srcX + srcW;
 	if (xEnd >= dstPitch / 3) xEnd = dstPitch / 3;
-	int yEnd = srcY + srcH;
-	if (yEnd >= h * dstPitch / 3) yEnd = h * dstPitch / 3;
+	int yEnd = (srcY + srcH < h * dstPitch / 3) ? srcY + srcH : h * dstPitch / 3;
 
 	for (unsigned int j = srcY; j < yEnd; j++) {
 		for (unsigned int i = srcX; i < xEnd; i++) {
@@ -196,7 +195,9 @@ static void MoveLoadingBalls(sLoadingBall* balls, float elapsed) {
 	bits = NULL; \
 	hBitmap = LoadBitmapA(hRes, MAKEINTRESOURCEA(id)); \
 	GetObjectA(hBitmap, sizeof(BITMAP), &bm); \
-	if (GetObjectA(hBitmap, sizeof(BITMAP), &bm)) { \
+	if (!GetObjectA(hBitmap, sizeof(BITMAP), &bm)) { \
+		DeleteObject(hBitmap); \
+	} else { \
 		BITMAPINFO bmi; \
 		memset(&bmi, 0, sizeof(bmi)); \
 		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); \
@@ -223,13 +224,13 @@ static void MoveLoadingBalls(sLoadingBall* balls, float elapsed) {
 		BitBlt(dc, 0, 0, bm.bmWidth, bm.bmHeight, hSrcDC, 0, 0, SRCCOPY); \
 		DeleteObject(SelectObject(hSrcDC, hOldSrc)); \
 		DeleteDC(hSrcDC); \
-	} \
-	DeleteObject(hBitmap)
+		DeleteObject(hBitmap); \
+	}
 
 // Loads bitmap resource id selected into a new DC compatible with the window
 // (a macro in the original, likewise).
-#define LOAD_BITMAP_DC(id, dc, oldBmp) \
-	hTmp = LoadBitmapA(hRes, MAKEINTRESOURCEA(id)); \
+#define LOAD_BITMAP_DC(res, dc, oldBmp) \
+	hTmp = LoadBitmapA(hRes, res); \
 	dc = CreateCompatibleDC(hdc); \
 	oldBmp = SelectObject(dc, hTmp)
 
@@ -302,29 +303,29 @@ unsigned int __stdcall DrawLoadingByThread(void* pParam) {
 		HGDIOBJ oldBall;
 		LOAD_24BIT_DIB(0x65, ballBits, ballPitch, ballDC, oldBall);
 
-		int bgId;
+		LPCSTR bgRes;
 		if (bgType == 0)
-			bgId = 0x81;
+			bgRes = MAKEINTRESOURCEA(0x81);
 		else
-			bgId = bgType == 1 ? 0x82 : 0x83;
+			bgRes = bgType == 1 ? MAKEINTRESOURCEA(0x82) : MAKEINTRESOURCEA(0x83);
 
 		HGDIOBJ hTmp;
 		HDC bgDC;
 		HGDIOBJ oldBg;
-		LOAD_BITMAP_DC(bgId, bgDC, oldBg);
+		LOAD_BITMAP_DC(bgRes, bgDC, oldBg);
 		HDC textDC;
 		HGDIOBJ oldText;
-		LOAD_BITMAP_DC(0x67, textDC, oldText);
+		LOAD_BITMAP_DC(MAKEINTRESOURCEA(0x67), textDC, oldText);
 		HDC digitsDC;
 		HGDIOBJ oldDigits;
-		LOAD_BITMAP_DC(0x6D, digitsDC, oldDigits);
+		LOAD_BITMAP_DC(MAKEINTRESOURCEA(0x6D), digitsDC, oldDigits);
 
 		HDC logoDC;
 		HGDIOBJ oldLogo;
-		LOAD_BITMAP_DC(0x7A, logoDC, oldLogo);
+		LOAD_BITMAP_DC(MAKEINTRESOURCEA(0x7A), logoDC, oldLogo);
 		HDC frameDC;
 		HGDIOBJ oldFrame;
-		LOAD_BITMAP_DC(0x7B, frameDC, oldFrame);
+		LOAD_BITMAP_DC(MAKEINTRESOURCEA(0x7B), frameDC, oldFrame);
 
 		FillRect(backDC, &rcClient, (HBRUSH)GetStockObject(BLACK_BRUSH));
 
@@ -521,7 +522,8 @@ HANDLE __stdcall GetPangYaMutex(void) {
 	if (hMutex) {
 		DWORD dwError = GetLastError();
 
-		if (dwError != ERROR_ALREADY_EXISTS && dwError != ERROR_ACCESS_DENIED)
+		// The original compares with 182 (ERROR_INVALID_ORDINAL), one below ERROR_ALREADY_EXISTS.
+		if (dwError != ERROR_INVALID_ORDINAL && dwError != ERROR_ACCESS_DENIED)
 			return hMutex;
 
 		HWND hWnd = FindWindowA(class_name, NULL);

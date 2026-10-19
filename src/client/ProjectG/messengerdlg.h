@@ -254,6 +254,19 @@ END_LAYOUT_CHECK
 // list's _Buynode copies 0x17 dwords and a byte into a 0x68 node).
 struct MSNServerInfo : public sGameServerInfo {
 	bool m_tried;                        // 0x5C, GetConnectServerInfo skips it
+
+	// messengerdlg.h:266. TaskManager emits this constructor (the
+	// std::list<MSNServerInfo> node construction). The inlined base
+	// constructor clears name and m_address first; the original
+	// attributes those two stores to the line of this signature, then
+	// clears m_tried on line 268.
+	//
+	// A new entry has not been tried yet: GetConnectServerInfo sets
+	// m_tried on the server it picks.
+	MSNServerInfo(void) {
+		// untried
+		m_tried = false;
+	}
 };
 CHECK_SIZE(MSNServerInfo, 0x5D);
 BEGIN_LAYOUT_CHECK(MSNServerInfo)

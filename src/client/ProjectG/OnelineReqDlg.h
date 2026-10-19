@@ -22,8 +22,7 @@ public:
 	FrOnelineReqDlg(void);
 	virtual ~FrOnelineReqDlg(void);
 
-	// onelinereqdlg.h:13, emitted by taskmain.cpp
-	const char* GetInputString(void);
+	const char* GetInputString(void);   // onelinereqdlg.h:13, defined below
 
 	void SetLanguage(bool bEnglish);
 
@@ -51,6 +50,18 @@ private:
 };
 
 CHECK_SIZE(FrOnelineReqDlg, 0x120);
+
+// taskmain.cpp defines TASKMAIN_ONELINEREQDLG_INLINE empty before its
+// includes: the original holds the out-of-line copy of GetInputString in
+// taskmain's object; every other includer inlines it.
+#ifndef TASKMAIN_ONELINEREQDLG_INLINE
+#define TASKMAIN_ONELINEREQDLG_INLINE inline
+#endif
+
+// onelinereqdlg.h:13
+TASKMAIN_ONELINEREQDLG_INLINE const char* FrOnelineReqDlg::GetInputString(void) {
+	return m_pChatInput->GetLine(1, false);
+}
 BEGIN_LAYOUT_CHECK(FrOnelineReqDlg)
 	CHECK_FIELD(FrOnelineReqDlg, m_pChatInput, 0x110);
 	CHECK_FIELD(FrOnelineReqDlg, m_pLanguage, 0x114);

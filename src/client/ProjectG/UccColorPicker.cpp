@@ -118,9 +118,9 @@ void CUccColorBrightness::GenerateBrightnessMap(unsigned char red, unsigned char
 
 	// lower half: from the colour down to black
 	r = red; g = green; b = blue;
-	dr = r * (-1.0 / 11.0);
-	dg = g * (-1.0 / 11.0);
-	db = b * (-1.0 / 11.0);
+	dr = red * (-1.0 / 11.0);
+	dg = green * (-1.0 / 11.0);
+	db = blue * (-1.0 / 11.0);
 
 	y = lastY;
 

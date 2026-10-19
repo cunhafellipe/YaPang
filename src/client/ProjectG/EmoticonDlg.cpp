@@ -67,8 +67,10 @@ FrEmoticonDlg::~FrEmoticonDlg(void) {
 void FrEmoticonDlg::OnOK(void) {
 	FrEmoticon* pEmoticon = g_pFresh->GetManager()->GetEmoticon();
 
-	if (pEmoticon && m_pList->GetItemUnderCursor()) {
-		const char* name = pEmoticon->GetIconName((intptr_t)m_pList->GetItemUnderCursor()->pData);
+	FrListItem* pItem = m_pList->GetItemUnderCursor();
+
+	if (pEmoticon && pItem) {
+		const char* name = pEmoticon->GetIconName((intptr_t)pItem->pData);
 		if (name) {
 			if (IsLocalCountry(30)) {
 				static const char* szOpen = EMOTICON_OPEN;
@@ -132,10 +134,10 @@ void FrEmoticonDlg::OnListOwnerDraw(PG_MSGARG param) {
 	if (!pItem)
 		return;
 
-	intptr_t index = (intptr_t)pItem->pData;
-
 	pEmoticon->SetAnim(true);
 	pEmoticon->SetAnimTime(m_dwOpenTime);
+
+	intptr_t index = (intptr_t)pItem->pData;
 
 	if (m_pList->GetItemUnderCursor() == pItem) {
 		pEmoticon->Draw(index, WRect(pItem->pos.x - 3.0f, pItem->pos.y - 3.0f, (float)pEmoticon->GetWidth() + 6.0f, (float)pEmoticon->GetHeight() + 6.0f), 0xffffffff, g_input->Get("LSHIFT", false) || g_input->Get("RSHIFT", false));

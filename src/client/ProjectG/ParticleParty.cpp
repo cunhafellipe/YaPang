@@ -240,15 +240,15 @@ void CLightColumn::Process(float fElapsed) {
 	m_fFrame -= fElapsed * 2.0f;
 
 	if (m_nFade == 1) {
-		m_byAlpha = (unsigned char)Min(255, m_byAlpha + 20);
+		m_byAlpha = (unsigned char)(m_byAlpha + 20 < 255 ? m_byAlpha + 20 : 255);
 		m_byTargetAlpha = (unsigned char)Min(255, m_byTargetAlpha + 20);
 
 		if (m_byAlpha == 0xFF && m_byTargetAlpha == 0x50) {
 			m_nFade = 0;
 		}
 	} else if (m_nFade == 2) {
-		m_byAlpha = (unsigned char)Max(0, m_byAlpha - 20);
-		m_byTargetAlpha = (unsigned char)Max(0, m_byTargetAlpha - 20);
+		m_byAlpha = (unsigned char)(m_byAlpha - 20 > 0 ? m_byAlpha - 20 : 0);
+		m_byTargetAlpha = (unsigned char)(m_byTargetAlpha - 20 > 0 ? m_byTargetAlpha - 20 : 0);
 
 		if (m_byAlpha == 0 && m_byTargetAlpha == 0) {
 			m_nFade = 0;
@@ -291,14 +291,14 @@ void CLightColumn::Display(void) {
 	vBack = vBack.Normalize() * 0.5f;
 
 	WVector vBase[2] = { GetHoleCupPos(), GetHoleCupPos() - vBack };
-	float fTexV[2] = { 0.0f, m_fFrame };
 	WVector vWidth[2] = { vSide * (m_fDistance * 0.5f), vSide * (m_fDistance * 0.25f) };
+	float fTexV[2] = { 0.0f, m_fFrame };
+	float fStart[3] = { 0.0f, 50.0f, m_fHeight * 0.6f };
+	float fLength[3] = { 50.0f, m_fHeight * 0.6f - 50.0f, m_fHeight * 0.4f };
 	unsigned char byAlpha[2] = { m_byTargetAlpha, m_byAlpha };
 	unsigned long nTex[2] = { (m_hEffectTex[nIndex] & 0x7FF) | 0x20400000, (m_hScreenTex & 0x7FF) | 0x20C00000 };
 	float fTexScale[2] = { 2.0f, 400.0f };
 	int nSegments[3] = { 10, 1, 1 };
-	float fStart[3] = { 0.0f, 50.0f, m_fHeight * 0.6f };
-	float fLength[3] = { 50.0f, m_fHeight * 0.6f - 50.0f, m_fHeight * 0.4f };
 
 	m_buffers[0].m_fU = 0.0f;
 	m_buffers[1].m_fU = 0.0f;
@@ -322,7 +322,9 @@ void CLightColumn::Display(void) {
 						float fSide = (i & 2) ? 1.0f : -1.0f;
 
 						vPoint += fSide * vWidth[k];
-						m_buffers[i].m_vPos = vPoint;
+						m_buffers[i].m_vPos.z = vPoint.z;
+						m_buffers[i].m_vPos.x = vPoint.x;
+						m_buffers[i].m_vPos.y = vPoint.y;
 						m_buffers[i].m_fV = (m_fHeight - fY) / m_fHeight * fTexScale[k] + fTexV[k];
 						if (j <= 1) {
 							m_buffers[i].m_nColor = ((int)byLayerAlpha << 24) | 0xFFFFFF;
@@ -577,7 +579,7 @@ void CBunkerShotParticle::MakeParticle(void) {
 
 	Generate();
 
-	m_fRemain = m_fDuration = 1.0f; g_audio->PlaySfx("\xBA\xA1\xC4\xBF\xB8\xF0\xB7\xA1\xB3\xAF\xB8\xB2", NULL, 0, NULL, NULL, 0.5f, 200.0f);
+	m_fDuration = m_fRemain = 1.0f; g_audio->PlaySfx("\xBA\xA1\xC4\xBF\xB8\xF0\xB7\xA1\xB3\xAF\xB8\xB2", NULL, 0, NULL, NULL, 0.5f, 200.0f);
 
 	m_bActive = true;
 }
@@ -761,16 +763,16 @@ void CFragment::MakeParticle(void) {
 	m_pAniSpr->SetResourceManager(g_resrcmng);
 	m_pAniSpr->LoadTexture(m_texHandle, 32.0f, 32.0f);
 
-	WVector vRight(1.0f, 0.0f, 0.0f);
-	WVector vUp(0.0f, 1.0f, 0.0f);
-	WVector vForward(0.0f, 0.0f, 1.0f);
+	// Local frame of the fragments: xa right, ya the surface normal, za forward.
+	WMatrix matAxis;
+	matAxis.Reset();
 
 	if (!(WAbsBySign(m_vNormal.y - 1.0f) < g_EPSILON)) {
-		vUp = m_vNormal;
-		vRight = WCrossProduct(vUp, WVector::UNIT_POS_Y);
-		vRight.Normalize();
-		vForward = WCrossProduct(vRight, vUp);
-		vForward.Normalize();
+		matAxis.ya = m_vNormal;
+		matAxis.xa = WCrossProduct(matAxis.ya, WVector::UNIT_POS_Y);
+		matAxis.xa.Normalize();
+		matAxis.za = WCrossProduct(matAxis.xa, matAxis.ya);
+		matAxis.za.Normalize();
 	}
 
 	for (int i = 0; i < m_nFrags; i++) {
@@ -783,7 +785,7 @@ void CFragment::MakeParticle(void) {
 		m_pFrags[i].m_vVelocity.y = (1.0f - fRatio) * 2.0f + fRatio * 5.0f;
 
 		WVector v = m_pFrags[i].m_vVelocity * Max(2.0f, GolfBall().m_velocity.Magnitude() * 0.1f);
-		m_pFrags[i].m_vVelocity = WVector(vForward.x * v.z + vUp.x * v.y + vRight.x * v.x, vRight.y * v.x + vForward.y * v.z + vUp.y * v.y, vRight.z * v.x + vUp.z * v.y + vForward.z * v.z);
+		m_pFrags[i].m_vVelocity = RotVec(v, matAxis);
 	}
 
 	m_fAlpha = 255.0f;
@@ -989,8 +991,8 @@ void CRipple::Display(void) {
 				float fX = vPos.x + ((j & 2) ? 1.0f : -1.0f) * m_pRipples[i].m_fRadius * 0.5f;
 				float fZ = vPos.z + ((j & 1) ? 1.0f : -1.0f) * m_pRipples[i].m_fRadius * 0.5f;
 				m_buffers[j].m_vPos.x = fX;
-				m_buffers[j].m_vPos.y = vPos.y;
 				m_buffers[j].m_vPos.z = fZ;
+				m_buffers[j].m_vPos.y = vPos.y;
 				m_buffers[j].m_fU = (j & 2) ? 1.0f : 0.0f;
 				m_buffers[j].m_fV = (j & 1) ? 0.0f : 1.0f;
 				m_buffers[j].m_nColor = ((int)m_pRipples[i].m_fPrevX << 24) | 0xFFFFFF;
@@ -1022,7 +1024,7 @@ CCoin::~CCoin(void) {
 	}
 	if (m_pCoins) { delete[] m_pCoins; m_pCoins = NULL; }
 	if (m_pSparks) { delete[] m_pSparks; m_pSparks = NULL; }
-	m_nCoins = m_nSparks = 0;
+	m_nSparks = m_nCoins = 0;
 }
 
 // particleparty.cpp:1673
@@ -1063,24 +1065,26 @@ void CCoin::Generate(void) {
 		pCoin->m_vVelocity = WVector(0.3f, pCoin->m_fBounceSpeed, 0.0f) * RotMat(6.2831855f / (float)(rand() % 32 + 1), 1);
 	}
 
-	for (int i = 1; i < m_nCoins; i++) {
-		sCoin* pCoin = &m_pCoins[i];
+	if (m_nCoins > 1) {
+		for (int i = 1; i < m_nCoins; i++) {
+			sCoin* pCoin = &m_pCoins[i];
 
-		if (!pCoin->m_pBody) {
-			if (IsLocalContent((localContentType_t)0x17)) {
-				pCoin->m_pBody = new CPetBody("*pet coin2.pet *shadow 0", false);
-			} else {
-				pCoin->m_pBody = new CPetBody("*pet coin.pet *shadow 0", false);
+			if (!pCoin->m_pBody) {
+				if (IsLocalContent((localContentType_t)0x17)) {
+					pCoin->m_pBody = new CPetBody("*pet coin2.pet *shadow 0", false);
+				} else {
+					pCoin->m_pBody = new CPetBody("*pet coin.pet *shadow 0", false);
+				}
+				pCoin->m_pBody->GetPet()->CalcBound(NULL, true);
 			}
-			pCoin->m_pBody->GetPet()->CalcBound(NULL, true);
+
+			pCoin->m_pBody->SetPos(m_vOrigin);
+
+			pCoin->m_fSpin = (float)(rand() % 32) * 0.19634955f;
+			pCoin->m_fBounceSpeed = (float)(rand() % 5 - 2) * 0.1f + 1.3f;
+			pCoin->m_vVelocity = WVector((float)(rand() % 51 - 25) * 0.005f + 0.25f, pCoin->m_fBounceSpeed, 0.0f)
+				* RotMat((float)i * 6.2831855f / (m_nCoins - 1), 1);
 		}
-
-		pCoin->m_pBody->SetPos(m_vOrigin);
-
-		pCoin->m_fSpin = (float)(rand() % 32) * 0.19634955f;
-		pCoin->m_fBounceSpeed = (float)(rand() % 5 - 2) * 0.1f + 1.3f;
-		pCoin->m_vVelocity = WVector((float)(rand() % 51 - 25) * 0.005f + 0.25f, pCoin->m_fBounceSpeed, 0.0f)
-			* RotMat((float)i * 6.2831855f / (m_nCoins - 1), 1);
 	}
 
 	for (int j = 0; j < m_nSparks; j++) {
@@ -1172,7 +1176,7 @@ void CCoin::Process(float fElapsed) {
 		if (pSpark->m_bAlive) {
 			if (pSpark->m_fLife < pSpark->m_fSlowTime) {
 				pSpark->m_vVelocity *= pSpark->m_fLife / pSpark->m_fSlowTime * 0.8f;
-				pSpark->m_fAlpha *= pSpark->m_fLife / pSpark->m_fSlowTime;
+				pSpark->m_fAlpha = pSpark->m_fAlpha * (pSpark->m_fLife / pSpark->m_fSlowTime);
 			}
 
 			pSpark->m_vPos += pSpark->m_vVelocity * 7.0f * fElapsed;
@@ -1439,7 +1443,7 @@ void CStarDust::Process(float fElapsed) {
 		WPuppet* pPuppet;
 		int nCount;
 
-		if (GolfBall().m_pos.y < -1.0f) {
+		if (GolfBall().m_velocity.y < -1.0f) {
 			m_fGenTime += Min(fElapsed, fElapsed * m_fAlpha * 0.005f);
 			m_fAlpha = Max(0.0f, m_fAlpha - fElapsed * 127.0f);
 
@@ -1487,7 +1491,7 @@ void CStarDust::Process(float fElapsed) {
 			}
 		}
 
-		m_fFade -= fElapsed * 18.78f;
+		m_fFade -= fElapsed * (g_PI * 6.0f);
 	}
 }
 

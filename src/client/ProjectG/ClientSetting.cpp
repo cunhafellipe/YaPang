@@ -194,9 +194,9 @@ int sOption::vGetOverallLvl(const char* text) {
 // clientsetting.cpp:295
 const char* sOption::vGetTnlText(int level) {
 	if (level == 0)
-		return "\xBC\xD2\xC7\xC1\xC6\xAE\xBF\xFE\xBE\xEE TnL"; // "Software TnL"
+		return K2L_Compatibility("\xBC\xD2\xC7\xC1\xC6\xAE\xBF\xFE\xBE\xEE TnL"); // "Software TnL"
 	else if (level == 1)
-		return "\xC7\xCF\xB5\xE5\xBF\xFE\xBE\xEE TnL"; // "Hardware TnL"
+		return K2L_Compatibility("\xC7\xCF\xB5\xE5\xBF\xFE\xBE\xEE TnL"); // "Hardware TnL"
 
 	return "";
 }
@@ -612,7 +612,7 @@ void COption::Init(void) {
 
 	// Write the default of every value missing from the registry.
 	char szValue[128] = { 0 };
-	for (int i = 0; i != 63; i++) {
+	for (unsigned char i = 0; i < 63; i++) {
 		if (strlen(ms_szReg[i][0]) != 0 && !ReadReg(i, szValue, sizeof(szValue))) {
 			WriteReg(i, ms_szReg[i][1]);
 		}
@@ -1160,12 +1160,11 @@ int COption::gGetRestore(void) {
 	check = (char)(check << 2 | ((m_option.m_restore >> 14) & 3));
 	check = (char)(check << 2 | ((m_option.m_restore >> 6) & 3));
 
-	// The ID's bytes summed (MyId(), shareddoc.inl:487).
-	const char* id = WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().id;
-	unsigned int len = strlen(id);
+	// The ID's bytes summed.
+	unsigned int len = strlen(MyId());
 	char sum = 0;
 	for (unsigned int i = 0; i < len; i++)
-		sum += id[i];
+		sum += MyId()[i];
 
 	if (check != sum) {
 		gResetRestore();
@@ -1184,12 +1183,11 @@ void COption::gSetRestore(void) {
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 10)
 		return;
 
-	// The ID's bytes summed (MyId(), shareddoc.inl:487).
-	const char* id = WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().id;
-	unsigned int len = strlen(id);
+	// The ID's bytes summed.
+	unsigned int len = strlen(MyId());
 	char sum = 0;
 	for (unsigned int i = 0; i < len; i++)
-		sum += id[i];
+		sum += MyId()[i];
 
 	SYSTEMTIME time;
 	GetLocalTime(&time);
@@ -1432,7 +1430,7 @@ void COption::CheckPendingChanges(void) {
 	m_option.m_mipmapParam2 = m_newOption.m_mipmapParam2;
 	m_option.m_particleLevel = m_newOption.m_particleLevel;
 
-	if (!(WAbsBySign(m_option.m_gamma - m_newOption.m_gamma) < WMATH_EPSILON))
+	if (!(Wabs(m_option.m_gamma - m_newOption.m_gamma) < g_EPSILON))
 		m_option.m_gamma = m_newOption.m_gamma;
 
 	if (m_option.m_shadowEnabled != m_newOption.m_shadowEnabled) {
@@ -1488,14 +1486,14 @@ void COption::CheckPendingChanges(void) {
 	}
 
 	if (m_option.m_mssEnabled) {
-		if (!(WAbsBySign(m_option.m_sfxVolume - m_newOption.m_sfxVolume) < WMATH_EPSILON))
+		if (!(Wabs(m_option.m_sfxVolume - m_newOption.m_sfxVolume) < g_EPSILON))
 			aSetSfxVolume(m_newOption.m_sfxVolume);
 
-		if (!(WAbsBySign(m_option.m_bgmVolume - m_newOption.m_bgmVolume) < WMATH_EPSILON))
+		if (!(Wabs(m_option.m_bgmVolume - m_newOption.m_bgmVolume) < g_EPSILON))
 			aSetBgmVolume(m_newOption.m_bgmVolume);
 	}
 
-	if (!(WAbsBySign(m_option.m_mouseSensitivity - m_newOption.m_mouseSensitivity) < WMATH_EPSILON))
+	if (!(Wabs(m_option.m_mouseSensitivity - m_newOption.m_mouseSensitivity) < g_EPSILON))
 		gSetMouseSensitivity(m_newOption.m_mouseSensitivity);
 
 	if (m_option.m_whisperAllowed != m_newOption.m_whisperAllowed) {

@@ -330,7 +330,7 @@ int NetResourceManager::WorkUploadThread(void)
 		const char *response = http.QueryHTTPResponse();
 
 		if (requested && strstr(response, "PANGYA_UPDATE_OK") == response) {
-			if ((res.type >= RESOURCE_TYPE_UCC_CLOTHES && res.type <= RESOURCE_TYPE_EMBLEM) || res.type == RESOURCE_TYPE_UCC_TEMP_CLOTHES) {
+			if (res.type >= RESOURCE_TYPE_UCC_CLOTHES && (res.type <= RESOURCE_TYPE_EMBLEM || res.type == RESOURCE_TYPE_UCC_TEMP_CLOTHES)) {
 				if (SetUploadStatus(res.id, res.key, res.type)) {
 					EnterCriticalSection(&m_uploadLock);
 
@@ -366,8 +366,8 @@ int NetResourceManager::WorkUploadThread(void)
 							WSendPacket packet(GCT_UCC_INFO_REQUEST);
 							packet.Encode1(0);
 							packet.Encode4(res.id);
-							packet.EncodeStr(std::string(res.key));
-							packet.EncodeStr(std::string(res.data));
+							packet.EncodeStr(res.key);
+							packet.EncodeStr(res.data);
 							packet.Send(SEND_TO_DEFAULT);
 						}
 						break;
@@ -377,7 +377,7 @@ int NetResourceManager::WorkUploadThread(void)
 							WSendPacket packet(GCT_UCC_INFO_REQUEST);
 							packet.Encode1(3);
 							packet.Encode4(res.id);
-							packet.EncodeStr(std::string(res.key));
+							packet.EncodeStr(res.key);
 							packet.Send(SEND_TO_DEFAULT);
 						}
 						break;
@@ -944,10 +944,7 @@ bool NetResourceManager::IsFailedToUpload(unsigned long id, const char *key, eRe
 
 	LeaveCriticalSection(&m_uploadLock);
 
-	if (failed && notRequested) {
-		return true;
-	}
-	return false;
+	return failed && notRequested;
 }
 
 // netresourcemanager.cpp:1280

@@ -211,7 +211,10 @@ protected:
 	unsigned long m_selectedTid;           // 0x53C, the selected recipe's type id (ClickRecycleItem)
 	unsigned long m_selectedPart;          // 0x540, FrSelectPartDlg's result (0 when cancelled)
 	bool m_partSelected;                   // 0x544
-	UNKNOWN(0x545, 0x550);
+	bool m_reserved545;                    // 0x545, cleared by the constructor only
+	UNKNOWN(0x546, 0x548);
+	unsigned long m_reserved548;           // 0x548, cleared by the constructor only
+	unsigned long m_reserved54C;           // 0x54C, cleared by the constructor only
 	FrButton* m_pSelectPartBn;             // 0x550 ("selectpart")
 	FrArea* m_pCardSlot;                   // 0x554 ("cardslot")
 	FrArea* m_pCardSlotResult;             // 0x558
@@ -252,6 +255,9 @@ BEGIN_LAYOUT_CHECK(FrRecycleDlg)
 	CHECK_FIELD(FrRecycleDlg, m_arrowRightDown, 0x515);
 	CHECK_FIELD(FrRecycleDlg, m_selectedPart, 0x540);
 	CHECK_FIELD(FrRecycleDlg, m_partSelected, 0x544);
+	CHECK_FIELD(FrRecycleDlg, m_reserved545, 0x545);
+	CHECK_FIELD(FrRecycleDlg, m_reserved548, 0x548);
+	CHECK_FIELD(FrRecycleDlg, m_reserved54C, 0x54C);
 	CHECK_FIELD(FrRecycleDlg, m_pCardSlot, 0x554);
 	CHECK_FIELD(FrRecycleDlg, m_pSelectPartDlg, 0x55C);
 	CHECK_FIELD(FrRecycleDlg, m_haveItemMap, 0x620);

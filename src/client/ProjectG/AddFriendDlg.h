@@ -21,8 +21,8 @@ public:
 	virtual const WRTTI* GetRTTI(void) const { return &m_RTTI; }   // addfrienddlg.h:9
 
 	FrAddFriendDlg(void)                                            // addfrienddlg.h:15
-		: m_pIdEdit(0), m_pNickEdit(0), m_elapsed(0), m_bFocused(false), m_pEmoticonDlg(0) {
-		m_findUID = (unsigned long)-1;
+		: m_pIdEdit(0), m_pNickEdit(0), m_findUID((unsigned long)-1), m_elapsed(0), m_bFocused(false),
+		  m_pEmoticonDlg(0) {
 	}
 
 	void SetNick(const char* nick);

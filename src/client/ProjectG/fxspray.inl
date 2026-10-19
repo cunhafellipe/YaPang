@@ -30,12 +30,12 @@ inline WVector& CFxSpray::Vel(void) {
 
 // fxspray.inl:84
 inline WVector& CFxSpray::InitialMinVel(void) {
-	return m_param.m_initialMinVel;
+	return m_param.m_initialVel.min;
 }
 
 // fxspray.inl:91
 inline WVector& CFxSpray::InitialMaxVel(void) {
-	return m_param.m_initialMaxVel;
+	return m_param.m_initialVel.max;
 }
 
 // fxspray.inl:107

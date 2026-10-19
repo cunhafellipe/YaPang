@@ -310,6 +310,7 @@ void CPost_SendDlg::OnPostListInit(intptr_t param) {
 
 // post_senddlg.cpp:315
 void CPost_SendDlg::OnPostListOwnerDraw(intptr_t param) {
+	int i = 0;
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem == 0)
 		return;
@@ -384,7 +385,7 @@ void CPost_SendDlg::OnPostListOwnerDraw(intptr_t param) {
 		const char* text = MakeStr("%d", count);
 		float x = pItem->pos.x + 54.0f;
 
-		for (int i = 0; i < strlen(text); i++)
+		for (i = 0; i < strlen(text); i++)
 			x -= m_pTitleFont->GetCharWidthA(g_view, text[i] - '0');
 
 		m_pTitleFont->Print(g_view, x, pItem->pos.y + 42.0f, text, 0, 0xFFFFFFFF, 0);
@@ -558,21 +559,33 @@ void CPost_SendDlg::OnOK(void) {
 		CallErrorMsg("\xb8\xde\xbd\xc3\xc1\xf6\xb3\xaa \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xc3\xb7\xba\xce\xc7\xcf\xbc\xc5\xbe\xdf \xbf\xec\xc6\xed\xb9\xb0\xc0\xbb \xba\xb8\xb3\xbe \xbc\xf6 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.");
 	} else if (listSize == 0 && WSingleton<CSharedDoc>::Instance()->m_myPang < 100) {
 		CallErrorMsg("\xbc\xf6\xbc\xf6\xb7\xe1\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.");
-	} else if ((__int64)(listSize * 500) > WSingleton<CSharedDoc>::Instance()->m_myPang) {
-		CallErrorMsg("\xbc\xf6\xbc\xf6\xb7\xe1\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.");
-		CTransferableItem::Instance()->ResetRegistrationItemList();
-		m_pPostList->ClearItem();
-	} else if (msgLen > 800) {
-		CallErrorMsg("\xc6\xed\xc1\xf6 \xb3\xbb\xbf\xeb\xc0\xba 800\xc0\xda\xb8\xa6 \xc3\xca\xb0\xfa\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
-	} else if (!VerifySendItemList()) {
-		CallErrorMsg("\xc3\xb7\xba\xce\xc7\xd1 \xbe\xc6\xc0\xcc\xc5\xdb\xb5\xe9 \xc1\xdf\xbf\xa1 \xb5\xa5\xc0\xcc\xc5\xcd\xb0\xa1 \xc0\xdf\xb8\xf8\xb5\xc8 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xcc \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.");
-		CTransferableItem::Instance()->ResetRegistrationItemList();
-		m_pPostList->ClearItem();
-	} else if (!VerifyIncludeSameItem()) {
-		CallErrorMsg("\xb0\xb0\xc0\xba \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xb5\xce \xb0\xa1\xc1\xf6 \xc0\xcc\xbb\xf3 \xc3\xb7\xba\xce\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
-		CTransferableItem::Instance()->ResetRegistrationItemList();
-		m_pPostList->ClearItem();
 	} else {
+		if ((__int64)(listSize * 500) > WSingleton<CSharedDoc>::Instance()->m_myPang) {
+			CallErrorMsg("\xbc\xf6\xbc\xf6\xb7\xe1\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.");
+			CTransferableItem::Instance()->ResetRegistrationItemList();
+			m_pPostList->ClearItem();
+			return;
+		}
+
+		if (msgLen > 800) {
+			CallErrorMsg("\xc6\xed\xc1\xf6 \xb3\xbb\xbf\xeb\xc0\xba 800\xc0\xda\xb8\xa6 \xc3\xca\xb0\xfa\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+			return;
+		}
+
+		if (!VerifySendItemList()) {
+			CallErrorMsg("\xc3\xb7\xba\xce\xc7\xd1 \xbe\xc6\xc0\xcc\xc5\xdb\xb5\xe9 \xc1\xdf\xbf\xa1 \xb5\xa5\xc0\xcc\xc5\xcd\xb0\xa1 \xc0\xdf\xb8\xf8\xb5\xc8 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xcc \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.");
+			CTransferableItem::Instance()->ResetRegistrationItemList();
+			m_pPostList->ClearItem();
+			return;
+		}
+
+		if (!VerifyIncludeSameItem()) {
+			CallErrorMsg("\xb0\xb0\xc0\xba \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xb5\xce \xb0\xa1\xc1\xf6 \xc0\xcc\xbb\xf3 \xc3\xb7\xba\xce\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+			CTransferableItem::Instance()->ResetRegistrationItemList();
+			m_pPostList->ClearItem();
+			return;
+		}
+
 		FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "rmr_notify", 0);
 		pForm->SetMessage(MakeStr("\xbc\xf6\xbc\xf6\xb7\xe1\xb0\xa1 %d \xc0\xd4\xb4\xcf\xb4\xd9. \n\xbf\xec\xc6\xed\xb9\xb0\xc0\xbb \xba\xb8\xb3\xbb\xbd\xc3\xb0\xda\xbd\xc0\xb4\xcf\xb1\xee?", GetSendServiceCharge()), false);
 		pForm->Open((FRESH_RESULT_CALLBACK)&CPost_SendDlg::OnSendQuestionResult, 2);
@@ -688,9 +701,11 @@ void CPost_SendDlg::SetReceiverInfo(unsigned long uid, const sPangYaUserInfo& in
 	m_receiverNick = info.nickname;
 	m_receiverName = info.id;
 
-	if (IsLocalContent((localContentType_t)16)
-		&& info.nameByEdit == 1) {
-		m_receiverName = m_pReciveUserEdit->GetLine(1, false);
+	if (IsLocalContent((localContentType_t)16)) {
+		if (info.nameByEdit == 1)
+			m_receiverName = m_pReciveUserEdit->GetLine(1, false);
+		else
+			m_receiverName = info.nickname;
 	} else {
 		m_receiverName = info.nickname;
 	}
@@ -983,9 +998,8 @@ void CPost_MyItemList::OnPost_ItemListOwnerDraw(intptr_t param) {
 	WRect rcLine;
 	GetClientRect(rc);
 	for (int row = 0; row < 2; row++) {
-		float y = row * 110.0f + 87.0f;
 		for (int col = 0; col < 3; col++) {
-			rcLine = WRect(col * 92.0f + rc.x + 126.0f, y + rc.y, m_pLineBitmap->Width(), m_pLineBitmap->Height());
+			rcLine = WRect(col * 92.0f + rc.x + 126.0f, row * 110.0f + 87.0f + rc.y, m_pLineBitmap->Width(), m_pLineBitmap->Height());
 
 			pGDI->DrawTexture(m_pLineBitmap, rcLine, 0xFFFFFFFF, 0);
 		}
@@ -1342,12 +1356,13 @@ void CPost_MyItemList::OnPostBtnArrayButtonUp(void) {
 
 // post_senddlg.cpp:1734
 void CPost_MyItemList::DrawItem(WPoint pos, sTradeItem* pTrade, unsigned char flag) {
+	int i = 0;
 	if (pTrade == 0)
 		return;
 
+	unsigned long typeId = pTrade->typeId;
 	int count = pTrade->count;
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
-	unsigned long typeId = pTrade->typeId;
 
 	if (pGDI == 0)
 		return;
@@ -1394,7 +1409,7 @@ void CPost_MyItemList::DrawItem(WPoint pos, sTradeItem* pTrade, unsigned char fl
 			const char* text = MakeStr("%d", count);
 			float x = pos.x + 54.0f;
 
-			for (int i = 0; i < strlen(text); i++)
+			for (i = 0; i < strlen(text); i++)
 				x -= m_pCountFont->GetCharWidthA(g_view, text[i] - '0');
 
 			m_pCountFont->Print(g_view, x, pos.y + 42.0f, text, 0, 0xFFFFFFFF, 0);
@@ -1425,7 +1440,7 @@ void CPost_MyItemList::DrawPang(void) {
 	if (!m_pPangFont)
 		return;
 
-	char buf[32] = ""; WPoint pos(m_rect.x, m_rect.y);
+	char buf[32] = ""; WRect pos = GetRect();
 	static int s_fontWidth = m_pPangFont->GetFontInfo()->fontw;
 	static float s_textWidth;
 

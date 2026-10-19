@@ -245,9 +245,7 @@ void CRealMyRoomMain::OnInit(void) {
 	}
 
 	m_characterMap = CSharedDoc::Instance()->m_characterMap;
-	// realmyroommain.cpp:322 copies the 0x6C-byte equipment block of
-	// CSharedDoc (0x628, m_myCaddieId...) into m_caddieId (0x974) as one
-	// structure assignment; the structure is not declared yet.
+	m_equip = CSharedDoc::Instance()->m_myEquip;
 
 	if (CMouseCursor::Instance() != NULL) {
 		CMouseCursor::Instance()->SetActive(true);
@@ -282,6 +280,7 @@ static const float data_9fa708 = 0.017453292f;
 void CRealMyRoomMain::OnLoad(void) {
 	sSlotInfo slotInfo;
 	sCharacterInfo charInfo;
+	WVector pos;
 
 	CCameraWork::Instance()->Load();
 
@@ -364,7 +363,7 @@ void CRealMyRoomMain::OnLoad(void) {
 		if (point == 0)
 			point = GOLFDOC()->m_pPolySoup->FindPoint(MakeStr("\xbd\xc3\xc0\xdb\xc1\xa1"));
 
-		WVector pos = point->m_pos;
+		pos = point->m_pos;
 		pos = GetPVS().GetGroundPoint(pos, false, 0, false);
 		m_cameraDropOrigin = pos;
 
@@ -451,26 +450,25 @@ void CRealMyRoomMain::OnLoad(void) {
 
 	CSceneManager::Instance()->ToogleNoOverlapCamera();
 
-	const Waabb& aabb = GetPVS().m_pBaseModel->m_aabb;
-	WVector boxMin = aabb.min;
-	WVector boxMax = aabb.max;
+	Waabb box;
+	GetPVS().GetAABB(box);
 
-	float top = boxMax.y;
+	float top = box.max.y;
 	WPolySoup::sModel* wall = GOLFDOC()->m_pPolySoup->FindModel("wall_a.pet");
 	if (wall)
 		top = wall->m_aabb.max.y;
 
-	m_debugLineFrom = WVector(boxMax.x, top, boxMin.z);
+	m_debugLineFrom = WVector(box.max.x, top, box.min.z);
 
-	m_debugLineTo = WVector(boxMax.x, boxMin.y, boxMin.z);
-	m_debugLineMid = WVector(boxMax.x, (boxMin.y + top) * 0.5f, boxMin.z);
+	m_debugLineTo = WVector(box.max.x, box.min.y, box.min.z);
+	m_debugLineMid = WVector(box.max.x, (box.min.y + top) * 0.5f, box.min.z);
 
-	m_debugLine2From = WVector(boxMin.x, top, boxMin.z);
-	m_debugLine2To = WVector(boxMin.x, boxMin.y, boxMin.z);
-	m_debugLine2Mid = WVector(boxMin.x, (boxMin.y + top) * 0.5f, boxMin.z);
+	m_debugLine2From = WVector(box.min.x, top, box.min.z);
+	m_debugLine2To = WVector(box.min.x, box.min.y, box.min.z);
+	m_debugLine2Mid = WVector(box.min.x, (box.min.y + top) * 0.5f, box.min.z);
 
-	m_debugLine3From = WVector((boxMin.x + boxMax.x) * 0.5f, top, boxMin.z);
-	m_debugLine3To = WVector((boxMin.x + boxMax.x) * 0.5f, boxMin.y, boxMin.z);
+	m_debugLine3From = WVector((box.min.x + box.max.x) * 0.5f, top, box.min.z);
+	m_debugLine3To = WVector((box.min.x + box.max.x) * 0.5f, box.min.y, box.min.z);
 
 	m_pGenderIcons[0] = g_resrcmng->GetOverlay("i_male.tga", 0);
 	m_pGenderIcons[1] = g_resrcmng->GetOverlay("i_female.tga", 0);
@@ -569,10 +567,14 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 		int leftButton = g_input->GetButton(LEFT_BUTTON);
 		int rightButton = g_input->GetButton(RIGHT_BUTTON);
 		int middleButton = g_input->GetButton(MIDDLE_BUTTON);
-		WVector mouseDelta = g_input->GetMouseDelta();
+		WVector mouseDelta;
+		mouseDelta = g_input->GetMouseDelta();
 
 		WVector mouse = g_input->GetMousePoint();
 		WVector rayFrom, rayDir;
+		WVector target;
+		int groundIndex;
+		WVector wallHit;
 		g_view->GetScreen2World(mouse.x, mouse.y, rayFrom, rayDir);
 
 		if (m_pRightMenuWnd) {
@@ -584,10 +586,7 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 			}
 		}
 
-		float topViewSpeed = m_cameraFov * 0.0010416667f;
-		if (!(topViewSpeed > 0.1f)) {
-			topViewSpeed = 0.1f;
-		}
+		float topViewSpeed = Max(0.1f, m_cameraFov * 0.0010416667f);
 
 		if (!data_af5a9f) {
 			s_cameraFront = g_view->camera.xa;
@@ -627,18 +626,19 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 				if (leftButton == 1) {
 					if (!m_topViewMode && CRealMyRoom_AvatarManager::Instance()->CheckClick(mouse.x, mouse.y)) {
 					} else {
-						WVector target = GetPVS().GetRayIntersection(rayFrom, rayDir);
-						int groundIndex;
-						WVector ground = GetPVS().GetGroundPoint(target, true, &groundIndex, true);
-						WVector wallHit = GetPVS().GetRayIntersectionWall(rayFrom, rayDir);
+						WVector ray = GetPVS().GetRayIntersection(rayFrom, rayDir);
+						WVector ground = GetPVS().GetGroundPoint(ray, true, &groundIndex, true);
+						WVector wall = GetPVS().GetRayIntersectionWall(rayFrom, rayDir);
 
-						WVector decalX(4.8f, 0.0f, 0.0f);
-						WVector decalZ(0.0f, 0.0f, 4.8f);
+						WVector decalX;
+						decalX = WVector(4.8f, 0.0f, 0.0f);
+						WVector decalZ;
+						decalZ = WVector(0.0f, 0.0f, 4.8f);
 
 						GetPVS().DrawDecal(m_decalTexture, ground, decalX, decalZ, 0.5f, 1.0f, (enumPolyBlend)0x800000, false);
 
 						if (CRealMyRoomData::Instance()->m_pSelectModel && (CRealMyRoomData::Instance()->m_pSelectModel->m_pFurniture->m_typeId & 0x3FF800) != 0x7000) {
-							CRealMyRoomData::Instance()->SetTargetPosition(wallHit, 1);
+							CRealMyRoomData::Instance()->SetTargetPosition(wall, 1);
 						}
 
 						if (CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar && !(CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar->m_state & 0x7E)) {
@@ -665,9 +665,6 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 				} else if (leftButton == 3) {
 					// Dragging a picked furniture model moves it along the walls.
 					if (CRealMyRoomData::Instance()->GetState() == 2) {
-						WVector target;
-						int groundIndex;
-						WVector wallHit;
 
 						data_af5a9d = true;
 						target = GetPVS().GetRayIntersection(rayFrom, rayDir);
@@ -687,9 +684,6 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 				} else if (leftButton == 2) {
 					if (CRealMyRoomData::Instance()->GetState() == 2) {
 						if (data_af5a9d) {
-							WVector target;
-							int groundIndex;
-							WVector wallHit;
 
 							target = GetPVS().GetRayIntersection(rayFrom, rayDir);
 							target = GetPVS().GetGroundPoint(target, true, &groundIndex, true);
@@ -710,9 +704,6 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 				} else {
 					if (CRealMyRoomData::Instance()->GetState() == 2) {
 						if (CRealMyRoomData::Instance()->m_pSelectModel && (CRealMyRoomData::Instance()->m_pSelectModel->m_pFurniture->m_typeId & 0x3FF800) == 0x7000) {
-							WVector target;
-							int groundIndex;
-							WVector wallHit;
 
 							data_af5a9d = true;
 							target = GetPVS().GetRayIntersection(rayFrom, rayDir);
@@ -797,7 +788,6 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 				if (g_input->GetButton(LEFT_BUTTON) && g_input->GetButton(RIGHT_BUTTON)) {
 					if (!m_topViewMode && !CChatMsg::Instance()->IsOpenning()) {
 						if (CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar) {
-							WVector target;
 							target = CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar->m_position;
 							target += s_keyMoveDir * 4.1f;
 
@@ -850,7 +840,6 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 				control = false;
 			}
 
-			WVector target;
 			if (CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar) {
 				target = CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar->m_position;
 			}
@@ -863,17 +852,16 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 						target.z += s_keyMoveDir.z * 4.1f;
 					}
 					if (g_input->Get("\xc7\xcf", true)) {
-						target.z += s_keyMoveDir.z * -4.1f;
+						target.z += (s_keyMoveDir * -4.1f).z;
 					}
 					if (g_input->Get("\xc1\xc2", true)) {
-						target.x += s_cameraFront.x * -4.1f;
+						target.x += (s_cameraFront * -4.1f).x;
 					}
 					if (g_input->Get("\xbf\xec", true)) {
 						target.x += s_cameraFront.x * 4.1f;
 					}
 
 					if (target.z > -8.0f) {
-						int groundIndex;
 						target = GetPVS().GetGroundPoint(target, true, &groundIndex, true);
 						if (groundIndex < 0) {
 							if (CRealMyRoom_AvatarManager::Instance()->m_pMyAvatar) {
@@ -892,13 +880,13 @@ void CRealMyRoomMain::OnProcess(float elapsed) {
 						}
 					}
 					if (g_input->Get("\xc7\xcf", true)) {
-						m_cameraOffset.z += -s_keyMoveDir.z;
+						m_cameraOffset.z += (-s_keyMoveDir).z;
 						if (m_cameraOffset.z < -3.0f) {
 							m_cameraOffset.z = -3.0f;
 						}
 					}
 					if (g_input->Get("\xc1\xc2", true)) {
-						m_cameraOffset.x += -s_cameraFront.x;
+						m_cameraOffset.x += (-s_cameraFront).x;
 						if (m_cameraOffset.x < -3.0f) {
 							m_cameraOffset.x = -3.0f;
 						}

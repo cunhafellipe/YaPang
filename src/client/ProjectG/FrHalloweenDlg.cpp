@@ -12,6 +12,7 @@
 #include "contentsdoc.h"
 #include "SharedDoc.h"
 #include <string.h>
+#include <algorithm>
 
 // frhalloweendlg.cpp:11 (run-time type and factory registration of FrHalloweenEventGiftDlg)
 const WRTTI FrHalloweenEventGiftDlg::m_RTTI("FrHalloweenEventGiftDlg", &FrForm::m_RTTI);
@@ -69,9 +70,15 @@ void FrHalloweenEventGiftDlg::OnInitFrame01(intptr_t param) {
 
 
 
-		if (pEvent && pEvent->GetGiftCnt() > 1) {
-			m_pFrame01->Enable(false);
-			m_pFrame01->SetVisible(false);
+		if (pEvent) {
+
+			if (pEvent->GetGiftCnt() > 1) {
+				m_pFrame01->Enable(false);
+				m_pFrame01->SetVisible(false);
+			} else {
+				m_pFrame01->Enable(true);
+				m_pFrame01->SetVisible(true);
+			}
 		} else {
 			m_pFrame01->Enable(true);
 			m_pFrame01->SetVisible(true);
@@ -90,9 +97,15 @@ void FrHalloweenEventGiftDlg::OnInitFrameCover(intptr_t param) {
 
 
 
-		if (pEvent && pEvent->GetGiftCnt() > 1) {
-			m_pFrameCover->Enable(true);
-			m_pFrameCover->SetVisible(true);
+		if (pEvent) {
+
+			if (pEvent->GetGiftCnt() > 1) {
+				m_pFrameCover->Enable(true);
+				m_pFrameCover->SetVisible(true);
+			} else {
+				m_pFrameCover->Enable(false);
+				m_pFrameCover->SetVisible(false);
+			}
 		} else {
 			m_pFrameCover->Enable(false);
 			m_pFrameCover->SetVisible(false);
@@ -352,7 +365,7 @@ bool FrHalloweenEventDlg::OnInit(void) {
 	candyType[3] = 0x4c;
 
 	for (int i = 0; i < 4; i++) {
-		CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance(); std::list<sItemInfo>::iterator it = pDoc->m_itemInfoList.begin(); while (it != pDoc->m_itemInfoList.end() && (*it).m_typeId != (candyType[i] | 0x1A000000)) ++it;
+		CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance(); std::list<sItemInfo>::iterator it = std::find(pDoc->m_itemInfoList.begin(), pDoc->m_itemInfoList.end(), candyType[i] | 0x1A000000);
 		if (it != pDoc->m_itemInfoList.end()) {
 
 			m_currentItemCount[i] = (*it).m_count;

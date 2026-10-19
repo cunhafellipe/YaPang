@@ -391,16 +391,16 @@ void CUccBase::Draw(int x, int y, Bitmap* pBrush, bool bRefresh) {
 				m_pTexture32->SetPixel(i, j, result.r, result.g, result.b, result.a);
 
 				if (m_zoomRate > 1 && m_pZoomed != NULL) {
-					int zoomLeft = (int)((i - m_zoomArea.x) * m_zoomRate);
-					zoomLeft = zoomLeft > 0 ? zoomLeft : 0;
-					int zoomTop = (int)((j - m_zoomArea.y) * m_zoomRate);
-					zoomTop = zoomTop > 0 ? zoomTop : 0;
+					IPoint zoomStart;
+					zoomStart.x = Max(0, (int)((i - m_zoomArea.x) * m_zoomRate));
+					zoomStart.y = Max(0, (int)((j - m_zoomArea.y) * m_zoomRate));
 
-					int zoomRight = Min((int)m_pZoomed->Width(), zoomLeft + m_zoomRate);
-					int zoomBottom = Min((int)m_pZoomed->Height(), zoomTop + m_zoomRate);
+					IPoint zoomEnd;
+					zoomEnd.x = Min((int)m_pZoomed->Width(), zoomStart.x + m_zoomRate);
+					zoomEnd.y = Min((int)m_pZoomed->Height(), zoomStart.y + m_zoomRate);
 
-					for (int zy = zoomTop; zy < zoomBottom; zy++) {
-						for (int zx = zoomLeft; zx < zoomRight; zx++) {
+					for (int zy = zoomStart.y; zy < zoomEnd.y; zy++) {
+						for (int zx = zoomStart.x; zx < zoomEnd.x; zx++) {
 							m_pZoomed->SetPixel(zx, zy, result.r, result.g, result.b, result.a);
 						}
 					}
@@ -411,16 +411,16 @@ void CUccBase::Draw(int x, int y, Bitmap* pBrush, bool bRefresh) {
 				m_pTexture32->SetPixel(i, j, result.r, result.g, result.b, result.a);
 
 				if (m_zoomRate > 1 && m_pZoomed != NULL) {
-					int zoomLeft = (int)((i - m_zoomArea.x) * m_zoomRate);
-					zoomLeft = zoomLeft > 0 ? zoomLeft : 0;
-					int zoomTop = (int)((j - m_zoomArea.y) * m_zoomRate);
-					zoomTop = zoomTop > 0 ? zoomTop : 0;
+					IPoint zoomStart;
+					zoomStart.x = Max(0, (int)((i - m_zoomArea.x) * m_zoomRate));
+					zoomStart.y = Max(0, (int)((j - m_zoomArea.y) * m_zoomRate));
 
-					int zoomRight = Min((int)m_pZoomed->Width(), zoomLeft + m_zoomRate);
-					int zoomBottom = Min((int)m_pZoomed->Height(), zoomTop + m_zoomRate);
+					IPoint zoomEnd;
+					zoomEnd.x = Min((int)m_pZoomed->Width(), zoomStart.x + m_zoomRate);
+					zoomEnd.y = Min((int)m_pZoomed->Height(), zoomStart.y + m_zoomRate);
 
-					for (int zy = zoomTop; zy < zoomBottom; zy++) {
-						for (int zx = zoomLeft; zx < zoomRight; zx++) {
+					for (int zy = zoomStart.y; zy < zoomEnd.y; zy++) {
+						for (int zx = zoomStart.x; zx < zoomEnd.x; zx++) {
 							m_pZoomed->SetPixel(zx, zy, result.r, result.g, result.b, result.a);
 						}
 					}
@@ -613,29 +613,28 @@ void CUccBase::MakeZoomedArea(int x, int y) {
 	}
 
 	IPoint offset((int)m_pTexture32->Width() / 2, (int)m_pTexture32->Height() / 2);
+	IPoint pos(x, y);
 	if (x == -1 && y == -1) {
-		IPoint center((int)(m_zoomArea.x + m_zoomArea.w * 0.5f), (int)(m_zoomArea.y + m_zoomArea.h * 0.5f));
-
-		x = center.x;
-		y = center.y;
+		pos.x = (int)(m_zoomArea.x + m_zoomArea.w * 0.5f);
+		pos.y = (int)(m_zoomArea.y + m_zoomArea.h * 0.5f);
 	}
 	else {
-		if (m_zoomRate * x < 128) {
-			x = 256 / (m_zoomRate * 2);
+		if (m_zoomRate * pos.x < 128) {
+			pos.x = 256 / (m_zoomRate * 2);
 		}
-		if ((m_pTexture->Width() - x) * m_zoomRate < 128) {
-			x = m_pTexture->Width() - 256 / (m_zoomRate * 2);
+		if ((m_pTexture->Width() - pos.x) * m_zoomRate < 128) {
+			pos.x = m_pTexture->Width() - 256 / (m_zoomRate * 2);
 		}
-		if (m_zoomRate * y < 128) {
-			y = 256 / (m_zoomRate * 2);
+		if (m_zoomRate * pos.y < 128) {
+			pos.y = 256 / (m_zoomRate * 2);
 		}
-		if ((m_pTexture->Height() - y) * m_zoomRate < 128) {
-			y = m_pTexture->Height() - 256 / (m_zoomRate * 2);
+		if ((m_pTexture->Height() - pos.y) * m_zoomRate < 128) {
+			pos.y = m_pTexture->Height() - 256 / (m_zoomRate * 2);
 		}
 	}
 
-	offset.x = x - offset.x;
-	offset.y = y - offset.y;
+	offset.x = pos.x - offset.x;
+	offset.y = pos.y - offset.y;
 
 	int width = m_pTexture32->Width();
 	int height = m_pTexture32->Height();

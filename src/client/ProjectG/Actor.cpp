@@ -73,7 +73,7 @@ struct __sIActor {
 static __sIActor s_registerIActor;
 
 // actor.cpp:93
-IActor::IActor(void) : m_flag(0), m_priority(2), m_skipLayer(0), m_pTask(0), m_pDocument(0)
+IActor::IActor(void) : m_priority(2), m_skipLayer(0), m_pTask(0), m_pDocument(0)
 {
 	m_skipLayer = m_defaultSkipLayer;
 }

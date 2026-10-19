@@ -362,7 +362,7 @@ int GetHoleinCoinCount(int coinCount, int holeinCount) {
 
 // utilities.cpp:537
 bool IsEventServerControl(eGameServerProperty property) {
-	return (WSingleton<CSharedDoc>::Instance()->m_serverProperty & property) ? true : false;
+	return WSingleton<CSharedDoc>::Instance()->m_serverProperty.GetFlag(property);
 }
 
 // utilities.cpp:542

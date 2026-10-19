@@ -265,7 +265,7 @@ void FrMakeRoomDlg::OnMakeChaosInit(PG_MSGARG param) {
 
 // makeroomdlg.cpp:332
 void FrMakeRoomDlg::OnMakeChaosDown(void) {
-	AfxGetTask()->SendGlobalMsg(MsgObject(0, 0x23, (intptr_t)MakeStr("\xbd\xba\xc6\xf3\xbc\xc8 \xbc\xc5\xc7\xc3 \xb8\xf0\xb5\xe5 \xb9\xe6\xc0\xbb \xb8\xb8\xb5\xe9 \xb6\xa7, \n\\c0xffff0000\\c%s\\c0xff000000\\c\xc0\xcc \xbc\xd2\xb8\xf0 \xb5\xcb\xb4\xcf\xb4\xd9.", ItemManager()->GetItemName(0x1A0000F7)), 0, 0, 0, 0));
+	AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("\xbd\xba\xc6\xf3\xbc\xc8 \xbc\xc5\xc7\xc3 \xb8\xf0\xb5\xe5 \xb9\xe6\xc0\xbb \xb8\xb8\xb5\xe9 \xb6\xa7, \n\\c0xffff0000\\c%s\\c0xff000000\\c\xc0\xcc \xbc\xd2\xb8\xf0 \xb5\xcb\xb4\xcf\xb4\xd9.", ItemManager()->GetItemName(0x1A0000F7)), 0, 0, 0, 0));
 
 	ChangeGameType(14, true);
 }
@@ -1285,9 +1285,9 @@ void FrMakeRoomDlg::OnHoleTypeOwnerDraw(PG_MSGARG param) {
 	front.w = (float)m_pHoleTypeImg[0]->Width();
 	front.h = (float)m_pHoleTypeImg[0]->Height();
 
-	WRect back(front.x + front.w, front.y, m_pHoleTypeImg[2]->Width(), front.h);
-	WRect random(back.x + back.w, front.y, m_pHoleTypeImg[4]->Width(), front.h);
-	WRect shuffle(random.x + random.w, front.y, m_pHoleTypeImg[6]->Width(), front.h);
+	WRect back(front.x + front.w, front.y, (float)m_pHoleTypeImg[2]->Width(), front.h);
+	WRect random(back.x + back.w, front.y, (float)m_pHoleTypeImg[4]->Width(), front.h);
+	WRect shuffle(random.x + random.w, front.y, (float)m_pHoleTypeImg[6]->Width(), front.h);
 
 	if (m_gameType == 10) {
 		DrawHoleTypeButton(pDevice, (eHoleType)0, front, false);

@@ -296,11 +296,11 @@ void CGolfDoc::SendReport(void) {
 	}
 }
 
-// The current hole's tee and cup positions by value: the original copies the
-// vector into a temporary at each use (MakeTopViewCameraMatrix), as an inline getter returning WVector would. Its name
-// and home header are not known (no line record, never emitted out of line).
+// The current hole's tee position by value: the original copies the vector
+// into a temporary at each use (MakeTopViewCameraMatrix), as the cup's
+// shareddoc.inl GetHoleCupPos() does. Its name and home header are not known
+// (no line record, never emitted out of line).
 static WVector TeePosOf(CGolfDoc *doc) { return doc->GetHoleData().m_teePos; }
-static WVector CupPosOf(CGolfDoc *doc) { return doc->GetHoleData().m_cupPos; }
 
 // golfdoc.cpp:250
 WMatrix CGolfDoc::MakeTopViewCameraMatrix(bool keepCamera) {
@@ -312,14 +312,14 @@ WMatrix CGolfDoc::MakeTopViewCameraMatrix(bool keepCamera) {
 	mat.ya.Normalize();
 	mat.xa = WCrossProduct(mat.ya, mat.za);
 
-	WVector toCup = CupPosOf(pDoc) - pDoc->GetPlayer(pDoc->m_myPlayerIndex)->m_ballPos;
+	WVector toCup = GetHoleCupPos() - pDoc->GetPlayer(pDoc->m_myPlayerIndex)->m_ballPos;
 	float dist = (float)sqrt(toCup.z * toCup.z + toCup.x * toCup.x);
 
 	if (g_input->Get("LCONTROL", true) || g_input->Get("RCONTROL", true)) {
 		// the whole hole: halfway between the tee and the cup, high enough to see both
-		mat.pivot = (CupPosOf(GOLFDOC()) + TeePosOf(GOLFDOC())) * 0.5f;
-		mat.pivot.y = Max(CupPosOf(GOLFDOC()).y, TeePosOf(GOLFDOC()).y)
-			+ (Abs(CupPosOf(GOLFDOC()).z - TeePosOf(GOLFDOC()).z) + 480.0f) * 0.5f
+		mat.pivot = (GetHoleCupPos() + TeePosOf(GOLFDOC())) * 0.5f;
+		mat.pivot.y = Max(GetHoleCupPos().y, TeePosOf(GOLFDOC()).y)
+			+ (Abs(GetHoleCupPos().z - TeePosOf(GOLFDOC()).z) + 480.0f) * 0.5f
 			/ ((float)tan(g_view->GetFOV() * 0.5f) * g_view->GetRatio());
 	} else if ((g_input->Get("LSHIFT", true) || g_input->Get("RSHIFT", true) || g_input->Get(1)) && IsMyTurn(true)) {
 		// over the club's landing point

@@ -108,21 +108,19 @@ void CNPC::HandleMsg(const MsgObject &msg) {
 
 	case 386: // switch off the active creatures
 		for (std::list<CCreature *>::iterator it = m_creatures.begin(); it != m_creatures.end(); ++it) {
-			CCreature *creature = *it;
-			if ((creature->m_flags & 1) && creature->GetType() != 9) {
-				if (creature->GetActive())
-					creature->SetActive(false);
+			if (((*it)->m_flags & 1) && (*it)->GetType() != 9) {
+				if ((*it)->GetActive())
+					(*it)->SetActive(false);
 			}
 		}
 		break;
 
 	case 387: // play the event of the creatures whose area holds the ball
 		for (std::list<CCreature *>::iterator it = m_creatures.begin(); it != m_creatures.end(); ++it) {
-			CCreature *creature = *it;
-			if (creature->m_flags & 1) {
-				Waabb area = creature->GetArea();
+			if ((*it)->m_flags & 1) {
+				Waabb area = (*it)->GetArea();
 				if (area.IsInclude(GolfBall().m_pos)) {
-					creature->PlayEvent();
+					(*it)->PlayEvent();
 					break;
 				}
 			}
@@ -131,9 +129,8 @@ void CNPC::HandleMsg(const MsgObject &msg) {
 
 	case 388: // param1 = whether the ball is inside the area of a creature
 		for (std::list<CCreature *>::iterator it = m_creatures.begin(); it != m_creatures.end(); ++it) {
-			CCreature *creature = *it;
-			if (creature->m_flags & 1) {
-				Waabb area = creature->GetArea();
+			if ((*it)->m_flags & 1) {
+				Waabb area = (*it)->GetArea();
 				if (area.IsInclude(GolfBall().m_pos)) {
 					*(int *)msg.m_param1 = 0;
 					break;
@@ -166,6 +163,8 @@ void CNPC::HandleMsg(const MsgObject &msg) {
 
 // npc.cpp:189
 void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
+	CCreature *creature;
+
 	if (strstr(name, "santa")) {
 		if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT)) {
 			CSharedDoc *shared = WSingleton<CSharedDoc>::Instance();
@@ -176,33 +175,25 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 				return;
 		}
 
-		WSliceStr slice(name);
 		float radius;
+		WSliceStr slice(name);
 		if (!slice.Get("*r", "%f", &radius))
 			radius = 32.0f;
 
 		int i;
 		for (i = 0; i < 3; i++) {
-			CSanta *santa = new CSanta("NPC_Mozzi.pet");
-			santa->SetRadius(radius);
-			santa->SetArea(points, (float)i * -0.05f, 0);
-			santa->SetType(7);
-			m_creatures.push_back(santa);
+			creature = new CSanta("NPC_Mozzi.pet");
+			creature->SetRadius(radius);
+			creature->SetArea(points, (float)i * -0.05f, 0);
+			creature->SetType(7);
+			m_creatures.push_back(creature);
 		}
 
-		CSanta *santa = new CSanta("NPC_Santa.pet");
-		santa->SetRadius(radius);
-		santa->SetArea(points, (float)(i + 1) * -0.05f, 0);
-		santa->SetType(7);
-		m_creatures.push_back(santa);
-		return;
-	}
-
-	CCreature *creature;
-	WSliceStr slice(name);
-	float value;
-
-	if (strstr(name, "flight")) {
+		creature = new CSanta("NPC_Santa.pet");
+		creature->SetRadius(radius);
+		creature->SetArea(points, (float)(i + 1) * -0.05f, 0);
+		creature->SetType(7);
+	} else if (strstr(name, "flight")) {
 		creature = new CFighter("NPC_Fighter.pet");
 		creature->SetArea(points, 0, 0);
 		creature->SetType(8);
@@ -215,21 +206,26 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		creature->SetArea(points, 0, 0);
 		creature->SetType(0xC);
 	} else if (strstr(name, "drg")) {
+		float value;
+		WSliceStr slice(name);
 		if (!slice.Get("*d", "%f", &value))
 			value = 0;
 		creature = new ntNpc_Dragon("NPC_dragon.pet", value);
 		creature->SetArea(points, 0, 0);
 		creature->SetType(0xF);
 	} else if (strstr(name, "ship")) {
+		float value;
+		WSliceStr slice(name);
 		if (!slice.Get("*d", "%f", &value))
 			value = 0;
 		creature = new ntNpc_PolaShip("NPC_ship.pet", value);
 		creature->SetArea(points, 0, 0);
 		creature->SetType(0x11);
 	} else if (strstr(name, "vessel")) {
+		float value = 0;
+		WSliceStr slice(name);
 		char petName[64] = "";
 		int index = 2;
-		value = 0;
 		if (strstr(name, "vessel4"))
 			index = 4;
 		if (!slice.Get("*t", "%f", &value))
@@ -239,6 +235,8 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		creature->SetArea(points, 0, 0);
 		creature->SetType(0x14);
 	} else if (strstr(name, "walex")) {
+		float value;
+		WSliceStr slice(name);
 		char petName[64] = "";
 		int index = 1;
 		value = 0;
@@ -251,6 +249,8 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		creature->SetArea(points, 0, 0);
 		creature->SetType(0x17);
 	} else if (strstr(name, "herald")) {
+		float value;
+		WSliceStr slice(name);
 		if (!slice.Get("*vel", "%f", &value))
 			value = 1.0f;
 		if (strstr(name, "herald01"))
@@ -260,10 +260,12 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 		creature->SetArea(points, 0, 0);
 		creature->SetType(0x17);
 	} else if (strstr(name, "crn") || strstr(name, "gns") || strstr(name, "pnd") || strstr(name, "toy")) {
-		char petName[256] = "";
+		float value;
+		WSliceStr slice(name);
 		char prefix[32] = "";
-		bool tortoise = false;
+		char petName[256] = "";
 		value = 0;
+		bool tortoise = false;
 
 		if (!slice.Get("*v", "%f", &value))
 			value = 1.0f;
@@ -281,7 +283,7 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 
 		std::string full(name);
 		std::string suffix("");
-		std::string::size_type pos = full.find(strstr(name, "*") ? '*' : '#');
+		std::string::size_type pos = strstr(name, "*") ? full.find('*') : full.find('#');
 		if (pos == 0)
 			pos = full.length();
 		suffix = full.substr(7, pos - 7);
@@ -297,7 +299,9 @@ void CNPC::SetNPC(const std::vector<WVector> &points, const char *name) {
 			creature->SetType(0x14);
 		}
 	} else if (strstr(name, "npc_t")) {
+		float value;
 		const char *petName = "";
+		WSliceStr slice(name);
 		value = 1.0f;
 		slice.Get("*v", "%f", &value);
 
@@ -576,7 +580,7 @@ void CCreature::SetArea(const std::vector<WVector> &points, float radius, unsign
 
 	m_nodes.assign(points.begin(), points.end());
 
-	m_matrix.za = (m_nodes[1] - m_nodes[0]).Normalize() * -1.0f;
+	m_matrix.za = -1.0f * (m_nodes[1] - m_nodes[0]).Normalize();
 	m_matrix.ya = WVector::UNIT_POS_Y;
 	m_matrix.xa = WCrossProduct(m_matrix.ya, m_matrix.za);
 
@@ -604,7 +608,7 @@ void CCreature::Display(void) {
 
 		if (g_view->InFrustum(m_pPet->GetBoundSphere())) {
 			m_pPet->UpdateLightSource(&g_lightset, false, 0);
-			WPuppet *pet = m_pPet; WView *view = g_view; pet->Render(view, true, 1.0f, view->InFrustumSafe(pet->GetBoundBox()), false, false);
+			m_pPet->Render(g_view, true, 1.0f, g_view->InFrustumSafe(m_pPet->GetBoundBox()), false, false);
 		}
 	}
 }
@@ -707,8 +711,9 @@ void CCreature::SetMotion(const char *name, float time) {
 		if (motion) {
 			m_pMotion = motion;
 			if (time >= 0.0f) {
+				float end = motion->e;
 				time += motion->s;
-				m_motionTime = time > motion->e ? motion->e : time;
+				m_motionTime = time > end ? end : time;
 			} else {
 				m_motionTime = Random(motion->s, motion->e, -1);
 			}
@@ -746,7 +751,7 @@ void CCreature::ScriptProcess(const w_motion_data *motion, float from, float to)
 	// The motion looped: process the part past its end from its start.
 	if (origTo > motion->e) {
 		from = motion->s * 30.0f;
-		to = MinOf(origTo - motion->e, motion->e) * 30.0f;
+		to = MinOf(motion->e, origTo - motion->e) * 30.0f;
 		first = Ceil(from, 0.03f);
 		last = to == (float)floor(to) ? float2int(to) - 1 : float2int((float)floor(to));
 
@@ -767,9 +772,14 @@ void CCreature::ParsePuppetScript(const char *script) {
 	char boneName[0x40];
 
 	if (script) {
-		const char *p = strchr(script, '*');
+		const char *p = script;
 
 		while (p) {
+			p = strchr(p, '*');
+
+			if (p == NULL)
+				break;
+
 			int len = 0;
 
 			while (p[len]) {
@@ -828,14 +838,11 @@ void CCreature::ParsePuppetScript(const char *script) {
 							attacher.m_pOffset[count] = &box->info->spherePivot;
 						}
 					}
-				} while (++count < 4);
+				} while (++count < sizeof(attacher.m_pMatrix) / sizeof(attacher.m_pMatrix[0]));
 
 				if (count > 0)
 					WSingleton<CFx>::Instance()->Attach(attacher, name, true, 0);
 			}
-
-			if (p == NULL)
-				break;
 		}
 	}
 }
@@ -845,9 +852,10 @@ void CCreature::CheckTarget(float dt) {
 	if ((m_matrix.pivot - m_pos).Magnitude() < 1.0f) {
 		if (m_replayIndex >= m_recordedPath.size() || m_recorded) {
 			int tries = 0;
-			int nx, ny, nz;
+			int cell[3];
 			int index;
 			int i;
+			bool found;
 
 			do {
 				tries++;
@@ -857,31 +865,34 @@ void CCreature::CheckTarget(float dt) {
 					rnd[i] = rand() % 3 - 1;
 				}
 
-				int cur = ((int *)m_pBuffer)[0];
-				int x = cur % m_gridX;
-				int y = cur / (m_gridZ * m_gridX);
-				int z = cur % (m_gridZ * m_gridX) / m_gridX;
+				int pos[3];
+				pos[0] = ((int *)m_pBuffer)[0] % m_gridX;
+				pos[1] = ((int *)m_pBuffer)[0] / (m_gridZ * m_gridX);
+				pos[2] = ((int *)m_pBuffer)[0] % (m_gridZ * m_gridX) / m_gridX;
 
-				nx = Between(0, rnd[0] + x, m_gridX - 1);
-				ny = Between(0, rnd[1] + y, m_gridY - 1);
-				nz = Between(0, rnd[2] + z, m_gridZ - 1);
-				index = (m_gridZ * ny + nz) * m_gridX + nx;
+				cell[0] = Between(0, rnd[0] + pos[0], m_gridX - 1);
+				cell[1] = Between(0, rnd[1] + pos[1], m_gridY - 1);
+				cell[2] = Between(0, rnd[2] + pos[2], m_gridZ - 1);
+				index = (m_gridZ * cell[1] + cell[2]) * m_gridX + cell[0];
 
+				found = false;
 				for (i = 0; i < m_gridCount; i++) {
-					if (((int *)m_pBuffer)[i] == index)
+					if (index == ((int *)m_pBuffer)[i]) {
+						found = true;
 						break;
+					}
 				}
-			} while (i < m_gridCount && tries < 5);
+			} while (found && tries < 5);
 
 			for (i = m_gridCount - 1; i >= 1; i--) {
 				((int *)m_pBuffer)[i] = ((int *)m_pBuffer)[i - 1];
 			}
 			((int *)m_pBuffer)[0] = index;
 
-			m_pos.x = Random(0.0f, m_cellX, -1) + nx * m_cellX + m_area.min.x;
+			m_pos.x = Random(0.0f, m_cellX, -1) + cell[0] * m_cellX + m_area.min.x;
 			if (m_gridY > 1)
-				m_pos.y = Random(0.0f, m_cellY, -1) + ny * m_cellY + m_area.min.y;
-			m_pos.z = Random(0.0f, m_cellZ, -1) + nz * m_cellZ + m_area.min.z;
+				m_pos.y = Random(0.0f, m_cellY, -1) + cell[1] * m_cellY + m_area.min.y;
+			m_pos.z = Random(0.0f, m_cellZ, -1) + cell[2] * m_cellZ + m_area.min.z;
 
 			if (m_recorded)
 				m_recordedPath.push_back(m_pos);
@@ -892,7 +903,7 @@ void CCreature::CheckTarget(float dt) {
 	}
 
 	if (m_gridY > 1) {
-		m_matrix.pivot += (m_pos - m_matrix.pivot).Normalize() * m_unk74 * dt;
+		m_matrix.pivot += m_unk74 * (m_pos - m_matrix.pivot).Normalize() * dt;
 	} else {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
@@ -906,8 +917,7 @@ void CCreature::CheckTarget(float dt) {
 				m_motionParam = 0;
 			}
 
-			float limit = dt * m_turnRate;
-			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		} else if (Abs(m_motionParam) > 0) {
 			if (Abs(m_motionParam) > dt * m_rollRate)
 				m_motionParam += (m_motionParam > 0 ? -m_rollRate : m_rollRate) * dt;
@@ -997,7 +1007,7 @@ void CCreature::Replay(void) {
 CGull::CGull(const char *name) {
 	m_unk74 = 10.0f;
 	Init(name, 0);
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_unk84 = 48.0f;
 }
 
@@ -1063,7 +1073,8 @@ void CDuck::Process(float dt) {
 
 		float angle = Between(dt * m_turnRate * -0.7f, CalcDeltaAngle(m_pMatrices[i - 1].pivot - m_pMatrices[i].pivot, m_pMatrices[i].za * -1.0f), dt * m_turnRate * 0.7f);
 
-		m_pMatrices[i] = RotMat(angle, 1) * m_pMatrices[i];
+		WMatrix &matrix = m_pMatrices[i];
+		matrix = RotMat(angle, 1) * matrix;
 		m_pMatrices[i].pivot += m_pMatrices[i].za * -1.0f * m_unk74 * dt;
 	}
 }
@@ -1107,7 +1118,7 @@ void CMole::PlayEvent(void) {
 	if (GetPVS().GetGroundType(m_matrix.pivot, true, 0) == 3) {
 		return;
 	}
-	m_matrix.za = GolfBall().m_pos - (m_area.max + m_area.min) * 0.5f;
+	m_matrix.za = GolfBall().m_pos - 0.5f * (m_area.max + m_area.min);
 
 	m_matrix.za.y = 0; m_matrix.za.Normalize();
 
@@ -1167,7 +1178,7 @@ void CSparrow::PlayEvent(void) {
 	m_count = (int)(m_maxCount / GolfBall().PreData(0)->m_velocity.Magnitude() * speed);
 	for (int i = 0; i < m_count; i++) {
 		m_pMatrices[i] = RotMat(Random(-180.0f, 180.0f, -1) * data_9f0fc0, 1);
-		m_pMatrices[i].pivot = (m_area.max + m_area.min) * 0.5f;
+		m_pMatrices[i].pivot = (m_area.min + m_area.max) * 0.5f;
 	}
 }
 
@@ -1193,7 +1204,7 @@ CSanta::CSanta(const char *name) {
 	Init(name, 0);
 	m_nodeIndex = 1;
 	m_unk74 = 120.0f;
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_turnRate = 2.0943952f;
 	m_climbRate = 0;
 	m_rollRate = 1.5707964f;
@@ -1308,7 +1319,7 @@ CFighter::CFighter(const char *name) {
 	Init(name, 0);
 	m_nodeIndex = 1;
 	m_unk74 = 320.0f;
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_turnRate = 2.0943952f;
 	m_climbRate = 0;
 	m_rollRate = 1.5707964f;
@@ -1390,7 +1401,7 @@ CUfo::CUfo(const char *name) {
 	Init(name, 0);
 	m_nodeIndex = 1;
 	m_unk74 = 2.857143f;
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_turnRate = 2.0943952f;
 	m_climbRate = 0;
 	m_rollRate = 1.5707964f;
@@ -1493,7 +1504,7 @@ ntPenguin::ntPenguin(const char *name) {
 	Init(name, 0);
 	m_nodeIndex = 1;
 	m_unk74 = 2.857143f;
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_turnRate = 2.0943952f;
 	m_climbRate = 0;
 	m_rollRate = 1.5707964f;
@@ -1552,8 +1563,7 @@ void ntPenguin::CheckTarget(float dt) {
 	float angle = CalcDeltaAngle(d, m_matrix.za * -1.0f);
 
 	if (Abs(angle) > data_9f0fc0) {
-		float limit = dt * m_turnRate;
-		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+		m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 	}
 
 	m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -1565,7 +1575,7 @@ void ntPenguin::CheckTarget(float dt) {
 ntPenguin_Sailor::ntPenguin_Sailor(const char *name) {
 	m_unk74 = 2.0f;
 	Init(name, 0);
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_unk84 = 48.0f;
 	SetMotion("NPC_Act0", 0);
 	m_scale = Random(0.7f, 1.0f, -1);
@@ -1645,7 +1655,7 @@ void ntPenguin_Sailor::Display(void) {
 
 		if (g_view->InFrustum(m_pPet->GetBoundSphere())) {
 			m_pPet->UpdateLightSource(&g_lightset, false, 0);
-			WPuppet *pet = m_pPet; WView *view = g_view; pet->Render(view, true, 1.0f, view->InFrustumSafe(pet->GetBoundBox()), false, false);
+			m_pPet->Render(g_view, true, 1.0f, g_view->InFrustumSafe(m_pPet->GetBoundBox()), false, false);
 		}
 	}
 }
@@ -1655,9 +1665,10 @@ void ntPenguin_Sailor::CheckTarget(float dt) {
 	if ((m_matrix.pivot - m_pos).Magnitude() < 1.0f) {
 		if (m_replayIndex >= m_recordedPath.size() || m_recorded) {
 			int tries = 0;
-			int nx, ny, nz;
+			int cell[3];
 			int index;
 			int i;
+			bool found;
 
 			do {
 				tries++;
@@ -1667,31 +1678,34 @@ void ntPenguin_Sailor::CheckTarget(float dt) {
 					rnd[i] = rand() % 3 - 1;
 				}
 
-				int cur = ((int *)m_pBuffer)[0];
-				int x = cur % m_gridX;
-				int y = cur / (m_gridZ * m_gridX);
-				int z = cur % (m_gridZ * m_gridX) / m_gridX;
+				int pos[3];
+				pos[0] = ((int *)m_pBuffer)[0] % m_gridX;
+				pos[1] = ((int *)m_pBuffer)[0] / (m_gridZ * m_gridX);
+				pos[2] = ((int *)m_pBuffer)[0] % (m_gridZ * m_gridX) / m_gridX;
 
-				nx = Between(0, rnd[0] + x, m_gridX - 1);
-				ny = Between(0, rnd[1] + y, m_gridY - 1);
-				nz = Between(0, rnd[2] + z, m_gridZ - 1);
-				index = (m_gridZ * ny + nz) * m_gridX + nx;
+				cell[0] = Between(0, rnd[0] + pos[0], m_gridX - 1);
+				cell[1] = Between(0, rnd[1] + pos[1], m_gridY - 1);
+				cell[2] = Between(0, rnd[2] + pos[2], m_gridZ - 1);
+				index = (m_gridZ * cell[1] + cell[2]) * m_gridX + cell[0];
 
+				found = false;
 				for (i = 0; i < m_gridCount; i++) {
-					if (((int *)m_pBuffer)[i] == index)
+					if (index == ((int *)m_pBuffer)[i]) {
+						found = true;
 						break;
+					}
 				}
-			} while (i < m_gridCount && tries < 5);
+			} while (found && tries < 5);
 
 			for (i = m_gridCount - 1; i >= 1; i--) {
 				((int *)m_pBuffer)[i] = ((int *)m_pBuffer)[i - 1];
 			}
 			((int *)m_pBuffer)[0] = index;
 
-			m_pos.x = Random(0.0f, m_cellX, -1) + nx * m_cellX + m_area.min.x;
+			m_pos.x = Random(0.0f, m_cellX, -1) + cell[0] * m_cellX + m_area.min.x;
 			if (m_gridY > 1)
-				m_pos.y = Random(0.0f, m_cellY, -1) + ny * m_cellY + m_area.min.y;
-			m_pos.z = Random(0.0f, m_cellZ, -1) + nz * m_cellZ + m_area.min.z;
+				m_pos.y = Random(0.0f, m_cellY, -1) + cell[1] * m_cellY + m_area.min.y;
+			m_pos.z = Random(0.0f, m_cellZ, -1) + cell[2] * m_cellZ + m_area.min.z;
 
 			if (m_recorded)
 				m_recordedPath.push_back(m_pos);
@@ -1702,13 +1716,12 @@ void ntPenguin_Sailor::CheckTarget(float dt) {
 	}
 
 	if (m_gridY > 1) {
-		m_matrix.pivot += (m_pos - m_matrix.pivot).Normalize() * m_unk74 * dt;
+		m_matrix.pivot += m_unk74 * (m_pos - m_matrix.pivot).Normalize() * dt;
 	} else {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
 		if (Abs(angle) > data_9f0fc0) {
-			float limit = dt * m_turnRate;
-			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		}
 
 		m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -1806,7 +1819,8 @@ void ntPenguin_Duck::Process(float dt) {
 				if (!(toPrev.Magnitude() < 4.16f)) {
 					float angle = Between(dt * m_turnRate * -0.7f, CalcDeltaAngle(m_pMatrices[i - 1].pivot - m_pMatrices[i].pivot, m_pMatrices[i].za * -1.0f), dt * m_turnRate * 0.7f);
 
-					m_pMatrices[i] = RotMat(angle, 1) * m_pMatrices[i];
+					WMatrix &matrix = m_pMatrices[i];
+					matrix = RotMat(angle, 1) * matrix;
 					m_pMatrices[i].pivot += m_pMatrices[i].za * -1.0f * m_unk74 * dt;
 					m_pMatrices[i].pivot = GetPVS().GetGroundPoint(m_pMatrices[i].pivot, true, 0, false);
 				}
@@ -1834,7 +1848,7 @@ void ntPenguin_Duck::Display(void) {
 
 			if (g_view->InFrustum(m_pPet->GetBoundSphere())) {
 				m_pPet->UpdateLightSource(&g_lightset, false, 0);
-				WPuppet *pet = m_pPet; WView *view = g_view; pet->Render(view, false, 1.0f, view->InFrustumSafe(pet->GetBoundBox()), true, false);
+				m_pPet->Render(g_view, false, 1.0f, g_view->InFrustumSafe(m_pPet->GetBoundBox()), true, false);
 			}
 		}
 	}
@@ -1927,7 +1941,7 @@ void ntNpc_Dragon::SetArea(const std::vector<WVector> &points, float radius, uns
 ntNpc_BlackSparrow::ntNpc_BlackSparrow(const char *name) {
 	m_unk74 = 5.5f;
 	Init(name, 0);
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_unk84 = 48.0f;
 	SetMotion("NPC_Default", 0);
 	m_defaultMotion = true;
@@ -1999,7 +2013,7 @@ void ntNpc_BlackSparrow::Display(void) {
 
 		if (g_view->InFrustum(m_pPet->GetBoundSphere())) {
 			m_pPet->UpdateLightSource(&g_lightset, false, 0);
-			WPuppet *pet = m_pPet; WView *view = g_view; pet->Render(view, true, 1.0f, view->InFrustumSafe(pet->GetBoundBox()), false, false);
+			m_pPet->Render(g_view, true, 1.0f, g_view->InFrustumSafe(m_pPet->GetBoundBox()), false, false);
 		}
 	}
 }
@@ -2009,9 +2023,10 @@ void ntNpc_BlackSparrow::CheckTarget(float dt) {
 	if ((m_matrix.pivot - m_pos).Magnitude() < 1.0f) {
 		if (m_replayIndex >= m_recordedPath.size() || m_recorded) {
 			int tries = 0;
-			int nx, ny, nz;
+			int cell[3];
 			int index;
 			int i;
+			bool found;
 
 			do {
 				tries++;
@@ -2021,31 +2036,34 @@ void ntNpc_BlackSparrow::CheckTarget(float dt) {
 					rnd[i] = rand() % 3 - 1;
 				}
 
-				int cur = ((int *)m_pBuffer)[0];
-				int x = cur % m_gridX;
-				int y = cur / (m_gridZ * m_gridX);
-				int z = cur % (m_gridZ * m_gridX) / m_gridX;
+				int pos[3];
+				pos[0] = ((int *)m_pBuffer)[0] % m_gridX;
+				pos[1] = ((int *)m_pBuffer)[0] / (m_gridZ * m_gridX);
+				pos[2] = ((int *)m_pBuffer)[0] % (m_gridZ * m_gridX) / m_gridX;
 
-				nx = Between(0, rnd[0] + x, m_gridX - 1);
-				ny = Between(0, rnd[1] + y, m_gridY - 1);
-				nz = Between(0, rnd[2] + z, m_gridZ - 1);
-				index = (m_gridZ * ny + nz) * m_gridX + nx;
+				cell[0] = Between(0, rnd[0] + pos[0], m_gridX - 1);
+				cell[1] = Between(0, rnd[1] + pos[1], m_gridY - 1);
+				cell[2] = Between(0, rnd[2] + pos[2], m_gridZ - 1);
+				index = (m_gridZ * cell[1] + cell[2]) * m_gridX + cell[0];
 
+				found = false;
 				for (i = 0; i < m_gridCount; i++) {
-					if (((int *)m_pBuffer)[i] == index)
+					if (index == ((int *)m_pBuffer)[i]) {
+						found = true;
 						break;
+					}
 				}
-			} while (i < m_gridCount && tries < 5);
+			} while (found && tries < 5);
 
 			for (i = m_gridCount - 1; i >= 1; i--) {
 				((int *)m_pBuffer)[i] = ((int *)m_pBuffer)[i - 1];
 			}
 			((int *)m_pBuffer)[0] = index;
 
-			m_pos.x = Random(0.0f, m_cellX, -1) + nx * m_cellX + m_area.min.x;
+			m_pos.x = Random(0.0f, m_cellX, -1) + cell[0] * m_cellX + m_area.min.x;
 			if (m_gridY > 1)
-				m_pos.y = Random(0.0f, m_cellY, -1) + ny * m_cellY + m_area.min.y;
-			m_pos.z = Random(0.0f, m_cellZ, -1) + nz * m_cellZ + m_area.min.z;
+				m_pos.y = Random(0.0f, m_cellY, -1) + cell[1] * m_cellY + m_area.min.y;
+			m_pos.z = Random(0.0f, m_cellZ, -1) + cell[2] * m_cellZ + m_area.min.z;
 
 			if (m_recorded)
 				m_recordedPath.push_back(m_pos);
@@ -2056,13 +2074,12 @@ void ntNpc_BlackSparrow::CheckTarget(float dt) {
 	}
 
 	if (m_gridY > 1) {
-		m_matrix.pivot += (m_pos - m_matrix.pivot).Normalize() * m_unk74 * dt;
+		m_matrix.pivot += m_unk74 * (m_pos - m_matrix.pivot).Normalize() * dt;
 	} else {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
 		if (Abs(angle) > data_9f0fc0) {
-			float limit = dt * m_turnRate;
-			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		}
 
 		m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2187,8 +2204,7 @@ void ntNpc_PolaPenguin1::CheckTarget(float dt) {
 	float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
 	if (Abs(angle) > data_9f0fc0) {
-		float limit = dt * m_turnRate;
-		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+		m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 	}
 
 	m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2267,7 +2283,7 @@ void ntNpc_PolaPenguin2::Display(void) {
 
 		if (g_view->InFrustum(m_pPet->GetBoundSphere())) {
 			m_pPet->UpdateLightSource(&g_lightset, false, 0);
-			WPuppet *pet = m_pPet; WView *view = g_view; pet->Render(view, true, 1.0f, view->InFrustumSafe(pet->GetBoundBox()), false, false);
+			m_pPet->Render(g_view, true, 1.0f, g_view->InFrustumSafe(m_pPet->GetBoundBox()), false, false);
 		}
 	}
 }
@@ -2282,8 +2298,7 @@ void ntNpc_PolaPenguin2::CheckTarget(float dt) {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
 		if (Abs(angle) > data_9f0fc0) {
-			float limit = dt * m_turnRate;
-			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		}
 
 		m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2373,8 +2388,7 @@ void CNPC_BIRD::CheckTarget(float dt) {
 	float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
 	if (Abs(angle) > data_9f0fc0) {
-		float limit = dt * m_turnRate;
-		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+		m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 	}
 
 	m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2394,7 +2408,7 @@ void CNPC_BIRD::FindTarget(void) {
 CNPC_PARROT::CNPC_PARROT(const char *name) {
 	m_unk74 = 10.0f;
 	Init(name, 0);
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_unk84 = 48.0f;
 }
 
@@ -2407,7 +2421,7 @@ CNPC_TORTOISE::CNPC_TORTOISE(const char *name, float speed) {
 	Init(name, 0);
 	m_nodeIndex = 1;
 	m_unk74 = speed * 2.0f;
-	m_unk7C = 0.785398f;
+	m_unk7C = 0.7853982f;
 	m_turnRate = 2.0943952f;
 	m_climbRate = 0;
 	m_rollRate = 1.5707964f;
@@ -2466,8 +2480,7 @@ void CNPC_TORTOISE::CheckTarget(float dt) {
 	float angle = CalcDeltaAngle(d, m_matrix.za * -1.0f);
 
 	if (Abs(angle) > data_9f0fc0) {
-		float limit = dt * m_turnRate;
-		m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+		m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 	}
 
 	m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2576,7 +2589,7 @@ void ntNpc_AreaWalker::Process(float dt) {
 	if (m_pPet && m_active) {
 		float time = dt + m_motionTime;
 		m_motionTime = time;
-		if (time >= 0.0f) {
+		if (!(time < 0.0f)) {
 			ScriptProcess(m_pMotion, time - dt, time);
 			if (m_motionTime > m_pMotion->e) {
 				if (m_flags & 1) {
@@ -2601,8 +2614,7 @@ void ntNpc_AreaWalker::CheckTarget(float dt) {
 		float angle = CalcDeltaAngle(m_pos - m_matrix.pivot, m_matrix.za * -1.0f);
 
 		if (Abs(angle) > data_9f0fc0) {
-			float limit = dt * m_turnRate;
-			m_matrix = RotMat(Between(-limit, angle, limit), 1) * m_matrix;
+			m_matrix = RotMat(Between(-(dt * m_turnRate), angle, dt * m_turnRate), 1) * m_matrix;
 		}
 
 		m_matrix.pivot += m_matrix.za * -1.0f * m_unk74 * dt;
@@ -2633,7 +2645,8 @@ void ntNpc_AreaWalker::FindTarget(void) {
 
 // npc.cpp:3543
 void ntNpc_AreaWalker::AddWalkingMotion(const char *name) {
-	std::vector<std::string>::iterator it = std::find(m_walkingMotions.begin(), m_walkingMotions.end(), name);
+	std::vector<std::string>::iterator it;
+	it = std::find(m_walkingMotions.begin(), m_walkingMotions.end(), name);
 	if (it == m_walkingMotions.end()) {
 		m_walkingMotions.push_back(name);
 	}
@@ -2655,9 +2668,9 @@ void ntNpc_AreaWalker::SelectNextMotion(void) {
 
 			if (name) {
 				SetMotion(name, 0);
+				char *const &motionName = m_pMotion->name;
 				std::vector<std::string>::iterator walking = m_walkingMotions.begin();
 				std::vector<std::string>::iterator last = m_walkingMotions.end();
-				char *const &motionName = m_pMotion->name;
 				for (; walking != last; ++walking) {
 					if (*walking == motionName)
 						break;
@@ -2766,7 +2779,8 @@ void ntNpc_NodeWalker::MakeSpline(const std::vector<WVector> &points, float &len
 		pTimes[i] = pTimes[i - 1] + (points[i] - points[i - 1]).Magnitude();
 	}
 
-	length = pTimes[count - 1];
+	// The original reads the second-to-last time, not the total.
+	length = pTimes[count - 2];
 
 	spline.Init(pPoints, pTimes, count);
 }
@@ -2835,8 +2849,10 @@ void COnGameNet::Process(float dt) {
 void COnGameNet::CheckTarget(float dt) {
 	if (GolfBall().m_preDataIndex >= 0 && GOLFDOC()->GameMode() != 0x1000) return;
 
-	MsgObject msg(0, 0x124, m_playerIndex, (intptr_t)&m_playerMatrix, 0, 0, 0);
-	(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Player") << msg;
+	{
+		MsgObject msg(0, 0x124, m_playerIndex, (intptr_t)&m_playerMatrix, 0, 0, 0);
+		(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Player") << msg;
+	}
 
 	WVector dir = m_playerMatrix.za;
 
@@ -2852,7 +2868,7 @@ void COnGameNet::CheckTarget(float dt) {
 	float dist = dir.Magnitude();
 	float t = MinOf(dist * 0.15625f, 1.0f);
 
-	m_matrix.za = dir * t + (GolfBall().m_pos - m_matrix.pivot) * (1.0f - t);
+	m_matrix.za = (1.0f - t) * (GolfBall().m_pos - m_matrix.pivot) + t * dir;
 
 	m_matrix.za.y = 0.0f; m_matrix.za.Normalize();
 	m_matrix.za *= -1.0f;
@@ -2893,7 +2909,8 @@ bool ntCatmullRom::Init(const WVector *points, const float *times, int count) {
 	m_pPoints = new WVector[count];
 	m_pTimes = new float[count];
 	m_count = count;
-	for (int i = 0; i < count; i++) {
+	unsigned int i;
+	for (i = 0; i < count; i++) {
 		m_pPoints[i] = points[i];
 		m_pTimes[i] = times[i];
 	}
@@ -2901,7 +2918,7 @@ bool ntCatmullRom::Init(const WVector *points, const float *times, int count) {
 	int segments = count - 1;
 	m_pLengths = new float[segments];
 	m_totalLength = 0;
-	for (int i = 0; i < segments; i++) {
+	for (i = 0; i < segments; i++) {
 		m_pLengths[i] = SegmentArcLength(i, 0.0f, 1.0f);
 		m_totalLength += m_pLengths[i];
 	}
@@ -3032,12 +3049,10 @@ WVector ntCatmullRom::Acceleration(float t) {
 
 // npc.cpp:4088
 float ntCatmullRom::FindParameterByDistance(float t, float distance) {
-	int count = m_count;
-	const float &end = m_pTimes[count - 1];
-	if (ArcLength(t, end) < distance)
-		return end;
+	if (ArcLength(t, m_pTimes[m_count - 1]) < distance)
+		return m_pTimes[m_count - 1];
 
-	float range = m_pTimes[count - 1] - m_pTimes[0];
+	float range = m_pTimes[m_count - 1] - m_pTimes[0];
 
 	float u = t + range / m_totalLength * distance;
 

@@ -80,18 +80,20 @@ bool GGC_Helper::StackError(unsigned long code, bool critical) {
 			return StackCriticalError(code);
 		}
 		return StackCriticalError(code);
+	} else {
+		switch (code) {
+		case 1001:
+		case 1002:
+		case 1011:
+		case 1012:
+		case 1013:
+		case 1014:
+		case 1015:
+			return StackCriticalError(code);
+		default:
+			return true;
+		}
 	}
-	switch (code) {
-	case 1001:
-	case 1002:
-	case 1011:
-	case 1012:
-	case 1013:
-	case 1014:
-	case 1015:
-		return StackCriticalError(code);
-	}
-	return true;
 }
 
 // ggc_helper.cpp:127

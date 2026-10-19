@@ -554,15 +554,15 @@ void FrTicketExchangeDlg::SetCountImage(unsigned int count) {
 		count = 9999;
 	}
 
-	unsigned int pos = 0;
 	char num[5] = { 0 };
+	unsigned int pos = 0;
 	sprintf(num, "%d", count);
 	unsigned int len = strlen(num);
 
 	WRect rect;
 	rect = WRect(457.0f, 69.0f, 14.0f, 19.0f);
 
-	rect.x += (4.0f - len) * 0.5f * rect.w;
+	rect.x += rect.w * ((4.0f - len) * 0.5f);
 
 	WRect wndRect = GetRect();
 

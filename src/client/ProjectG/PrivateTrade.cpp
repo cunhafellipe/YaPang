@@ -314,8 +314,8 @@ void CPrivateTrade::HandleMsg(const MsgObject& msg) {
 		unsigned long guid = msg.m_param2;
 		const char* nick = (const char*)msg.m_param3;
 
-		if (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid != guid && m_impl->m_state == _ePrivateTradeState_None) {
-			m_impl->m_state = (_ePrivateTradeState)2;
+		if (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid != guid && m_impl->GetState() == _ePrivateTradeState_None) {
+			m_impl->SetState((_ePrivateTradeState)2);
 
 			WSendPacket packet(GCT_PRIVATE_TRADE);
 			packet.Encode1(0);
@@ -324,47 +324,47 @@ void CPrivateTrade::HandleMsg(const MsgObject& msg) {
 			packet.Send(SEND_TO_DEFAULT);
 
 			m_impl->OpenAcceptWaitWnd(std::string(nick));
-			m_impl->m_traderGuid = guid;
-			m_impl->m_traderNick = std::string(nick);
+			m_impl->SetTraderGuid(guid);
+			m_impl->SetTraderNick(nick);
 		}
 		break;
 	}
 	case 1: {
-		m_impl->m_state = (_ePrivateTradeState)3;
+		m_impl->SetState((_ePrivateTradeState)3);
 
 		const void* items = (const void*)msg.m_param2;
 
 		WSendPacket packet(GCT_PRIVATE_TRADE);
 		packet.Encode1(5);
-		packet.Encode4(m_impl->m_traderGuid);
-		packet.EncodeStr(m_impl->m_traderNick);
+		packet.Encode4(m_impl->GetTraderGuid());
+		packet.EncodeStr(m_impl->GetTraderNick());
 		packet.EncodeBuffer(items, 0x368);
 		packet.Send(SEND_TO_DEFAULT);
 		break;
 	}
 	case 2: {
-		m_impl->m_state = (_ePrivateTradeState)4;
+		m_impl->SetState((_ePrivateTradeState)4);
 
 		const void* items = (const void*)msg.m_param2;
 
 		WSendPacket packet(GCT_PRIVATE_TRADE);
 		packet.Encode1(6);
-		packet.Encode4(m_impl->m_traderGuid);
-		packet.EncodeStr(m_impl->m_traderNick);
+		packet.Encode4(m_impl->GetTraderGuid());
+		packet.EncodeStr(m_impl->GetTraderNick());
 		packet.EncodeBuffer(items, 0x368);
 		packet.Send(SEND_TO_DEFAULT);
 		break;
 	}
 	case 3: {
-		m_impl->m_state = (_ePrivateTradeState)5;
+		m_impl->SetState((_ePrivateTradeState)5);
 
 		const void* myItems = (const void*)msg.m_param2;
 		const void* traderItems = (const void*)msg.m_param3;
 
 		WSendPacket packet(GCT_PRIVATE_TRADE);
 		packet.Encode1(7);
-		packet.Encode4(m_impl->m_traderGuid);
-		packet.EncodeStr(m_impl->m_traderNick);
+		packet.Encode4(m_impl->GetTraderGuid());
+		packet.EncodeStr(m_impl->GetTraderNick());
 		packet.EncodeBuffer(myItems, 0x368);
 		packet.EncodeBuffer(traderItems, 0x368);
 		packet.Send(SEND_TO_DEFAULT);
@@ -380,16 +380,16 @@ void CPrivateTrade::OnPacket(WReceivedPacket* pPacket) {
 		unsigned long guid = pPacket->Decode4();
 		std::string nick = pPacket->DecodeStr();
 
-		if (m_impl->m_state != _ePrivateTradeState_None) {
+		if (m_impl->GetState() != _ePrivateTradeState_None) {
 			WSendPacket packet(GCT_PRIVATE_TRADE);
 			packet.Encode1(3);
 			packet.Encode4(guid);
 			packet.EncodeStr(nick);
 			packet.Send(SEND_TO_DEFAULT);
 		} else {
-			m_impl->m_state = _ePrivateTradeState_Wait;
-			m_impl->m_traderGuid = guid;
-			m_impl->m_traderNick = nick;
+			m_impl->SetState(_ePrivateTradeState_Wait);
+			m_impl->SetTraderGuid(guid);
+			m_impl->SetTraderNick(nick);
 
 			m_impl->OpenRequestWaitWnd(nick);
 		}

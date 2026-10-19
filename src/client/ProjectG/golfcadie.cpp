@@ -276,9 +276,10 @@ CGolfCaddie::sCaddie *CGolfCaddie::AddCaddie(unsigned long typeId, unsigned long
 	std::list<sCaddie *>::iterator it;
 
 	if (find) {
-		caddie = (it = std::find_if(m_caddies.begin(), m_caddies.end(), sFindCaddie(typeId, cadItemTypeId))) != m_caddies.end() ? *it : 0;
-		if (caddie)
-			return caddie;
+		sCaddie *found = (it = std::find_if(m_caddies.begin(), m_caddies.end(), sFindCaddie(typeId, cadItemTypeId))) != m_caddies.end() ? *it : 0;
+
+		if ((caddie = found) != 0)
+			return found;
 	}
 
 	IFF_STRUCT::sCaddie *pIffCaddie = ItemManager()->FindCaddie(typeId);
@@ -473,7 +474,7 @@ bool CGolfCaddie::ReadAttribute(sCaddie *caddie) {
 				if (!m_pRing)
 					m_pRing = new CRing(ringTexture);
 
-				m_pRing->SetCenter(WVector(m_position.x, m_position.y + 0.3f, m_position.z));
+				m_pRing->SetCenter(m_position + WVector(0.0f, 0.3f, 0.0f));
 				m_pRing->SetActive(true);
 			}
 
@@ -659,7 +660,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 				SetBubble(4, false, 0);
 			}
 
-			if (Abs(angle) < 0.17453294f) {
+			if (Abs(angle) < 0.17453292f) {
 				if (m_talked[3] || m_talked[4]) {
 					if (Abs(dist) > (GOLFDOC()->m_gameState == 2 ? 89.6f : 44.8f))
 						SetBubble(5, false, 0);
@@ -701,7 +702,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 		SetBubble(9, false, 0);
 
 	if (timeOver && !m_talkFlag) {
-		if (GolfClub().GetType() != 3 && Abs(CalcDeltaAngle(dir, m_position - GolfBall().m_pos)) < 0.08726647f) {
+		if (GolfClub().GetType() != 3 && Abs(CalcDeltaAngle(dir, m_position - GolfBall().m_pos)) < 0.08726646f) {
 			m_talkFlag = true;
 			SetBubble(10, false, 0);
 		}
@@ -729,7 +730,7 @@ void CGolfCaddie::TalkProcess(float delta) {
 			SetBubble(15, false, 0);
 
 		WVector cup = GOLFDOC()->GetHoleData().m_cupPos;
-		if (GolfBall().m_pos.y - GolfBall().m_radius + 1.6f < cup.y && !PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holeIn[GOLFDOC()->m_currentHole - 1]
+		if (GolfBall().m_pos.y - GolfBall().GetRadius() + 1.6f < cup.y && !PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holeIn[GOLFDOC()->m_currentHole - 1]
 			&& CSharedDoc::Instance()->m_shotTimeLimit && GOLFDOC()->m_remainShotTime < CSharedDoc::Instance()->m_shotTimeLimit - 5000)
 			SetBubble(0x16, false, 0);
 	} else {
@@ -1083,7 +1084,7 @@ void CGolfCaddie::HandleMsg(const MsgObject &msg) {
 			m_pCaddie->m_pBody->LookUp(0, true);
 
 			if (m_pRing && m_pCaddie->m_showRing) {
-				m_pRing->SetCenter(WVector(m_position.x, m_position.y + 0.3f, m_position.z));
+				m_pRing->SetCenter(m_position + WVector(0.0f, 0.3f, 0.0f));
 				m_pRing->SetActive(true);
 			}
 
@@ -1119,14 +1120,14 @@ void CGolfCaddie::HandleMsg(const MsgObject &msg) {
 			GetPVS().SetCaddieBox(m_pCaddie->m_pBody->GetBoundBox());
 
 			if (m_pRing && m_pCaddie->m_showRing) {
-				m_pRing->SetCenter(WVector(m_position.x, m_position.y + 0.3f, m_position.z));
+				m_pRing->SetCenter(m_position + WVector(0.0f, 0.3f, 0.0f));
 				m_pRing->SetActive(true);
 			}
 
 			if (IsCurMapSnow()) {
 				Attacher attacher;
 
-				w_bound_box *box = m_pCaddie->m_pBody->GetPet()->m_bbList.Find("Breathe");
+				w_bound_box *box = m_pCaddie->m_pBody->GetPet()->FindBoundBox("Breathe");
 
 				if (box) {
 					attacher.m_pMatrix[0] = &box->bone->GetMatrix();
@@ -1151,7 +1152,7 @@ void CGolfCaddie::HandleMsg(const MsgObject &msg) {
 			m_pCaddie->m_pBody->SetPos(m_position);
 
 			if (m_pRing && m_pCaddie->m_showRing)
-				m_pRing->SetCenter(WVector(m_position.x, m_position.y + 0.3f, m_position.z));
+				m_pRing->SetCenter(m_position + WVector(0.0f, 0.3f, 0.0f));
 		}
 		break;
 	case 0x1E2: {
@@ -1223,7 +1224,7 @@ void CGolfCaddie::HandleMsg(const MsgObject &msg) {
 			CSceneManager::Instance()->SetPuppet("\xc4\xb3\xb5\xf0", m_pCaddie->m_pBody->GetPet());
 
 			if (m_pRing && m_pCaddie->m_showRing) {
-				m_pRing->SetCenter(WVector(m_position.x, m_position.y + 0.3f, m_position.z));
+				m_pRing->SetCenter(m_position + WVector(0.0f, 0.3f, 0.0f));
 				m_pRing->SetActive(true);
 			}
 		} else {
@@ -1260,13 +1261,15 @@ void CGolfCaddie::HandleMsg(const MsgObject &msg) {
 
 		for (std::list<sCaddie *>::iterator it = m_caddies.begin(); it != m_caddies.end(); ++it) {
 			sCaddie *caddie = *it;
-			if (caddie && caddie->m_pInfo) {
-				if (caddie->m_pInfo->typeId == typeId && caddie->m_pInfo->cadItemTypeId == cadItemTypeId) {
-					if (strlen(pCadItem->m_faceTexture))
-						caddie->m_pBody->SetPendingTexPart("face", pCadItem->m_faceTexture);
-					if (strlen(pCadItem->m_bodyTexture))
-						caddie->m_pBody->SetPendingTexPart("body", pCadItem->m_bodyTexture);
-				}
+			if (caddie == NULL || caddie->m_pInfo == NULL) {
+				continue;
+			}
+
+			if (caddie->m_pInfo->typeId == typeId && caddie->m_pInfo->cadItemTypeId == cadItemTypeId) {
+				if (strlen(pCadItem->m_faceTexture))
+					caddie->m_pBody->SetPendingTexPart("face", pCadItem->m_faceTexture);
+				if (strlen(pCadItem->m_bodyTexture))
+					caddie->m_pBody->SetPendingTexPart("body", pCadItem->m_bodyTexture);
 			}
 		}
 		break;

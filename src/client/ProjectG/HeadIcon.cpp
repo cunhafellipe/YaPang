@@ -201,16 +201,14 @@ void CHeadIcon::DisplayOverPlayer(unsigned char index, bool team) {
 		m_srcRect.x = col * 0.25f;
 		m_srcRect.y = row * 0.25f;
 
-		float scale = 1.0f / distance;
-		m_dstRect.x = (float)float2int(head.m_screenPos.x - 60.0f - scale * 200.0f);
-		m_dstRect.y = (float)float2int(head.m_screenPos.y - 52.0f - scale * 800.0f);
+		m_dstRect.x = (float)float2int(head.m_screenPos.x - 60.0f - 1.0f / distance * 200.0f);
+		m_dstRect.y = (float)float2int(head.m_screenPos.y - 52.0f - 1.0f / distance * 800.0f);
 
 		m_emoticonObject->Render(g_view, m_srcRect, m_dstRect, 0, 0xFFFFFFFF, 0.0f, 0);
 	} else if (PLAYER(index)->m_shotItemTypeId != 0) {
-		float scale = 1.0f / distance;
 		m_srcRect.y = 0.0f;
-		m_dstRect.x = (float)float2int(head.m_screenPos.x - 60.0f - scale * 200.0f);
-		m_dstRect.y = (float)float2int(head.m_screenPos.y - 52.0f - scale * 800.0f);
+		m_dstRect.x = (float)float2int(head.m_screenPos.x - 60.0f - 1.0f / distance * 200.0f);
+		m_dstRect.y = (float)float2int(head.m_screenPos.y - 52.0f - 1.0f / distance * 800.0f);
 
 		if (PLAYER(index)->m_shotItemTypeId == 0x1800002D) {
 			m_srcRect.x = 0.5f;

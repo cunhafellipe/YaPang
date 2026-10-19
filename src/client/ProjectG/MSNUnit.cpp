@@ -124,8 +124,8 @@ int MSNUnit::OnConnect(WReceivedPacket &packet) {
 	std::string server = WSingleton<CSharedDoc>::Instance()->m_loginServerAddress;
 
 	WSendPacket send(GCR_CONNECT);
-	send.Encode4(WSingleton<CSharedDoc>::Instance()->m_myUID);
-	send.EncodeStr(WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname);
+	send.Encode4(MyUID());
+	send.EncodeStr(MyNick());
 	send.Send(SEND_TO_MSN);
 
 	return 1;

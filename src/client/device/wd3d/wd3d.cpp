@@ -570,7 +570,7 @@ void WDirect3D::DrawPolygonFan(WTVertex** p, int iType, int iNum, int iType2, un
 			}
 		} else {
 			if (iType & 0x3ffff) {
-				DrawPrimitive(iType & 0xfffc07ff, iNum, D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_SPECULAR | D3DFVF_TEX1, ModifyVertices(p, iNum, 0x80000000 | D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_SPECULAR | D3DFVF_TEX1, false), dptPrimitiveType, iType2);
+				DrawPrimitive(iType & 0xfffc07ff, iNum, D3DFVF_XYZRHW | D3DFVF_SPECULAR | D3DFVF_TEX1, ModifyVertices(p, iNum, 0x80000000 | D3DFVF_XYZRHW | D3DFVF_SPECULAR | D3DFVF_TEX1, false), dptPrimitiveType, iType2);
 			}
 
 			unsigned char* v = (unsigned char*)ModifyVertices(p, iNum, 0x80000000 | D3DFVF_SPECULAR, true);
@@ -578,7 +578,7 @@ void WDirect3D::DrawPolygonFan(WTVertex** p, int iType, int iNum, int iType2, un
 			// The fog pass only when a vertex is fogged (specular alpha below 0xff).
 			for (int i = 0; i < iNum; i++) {
 				if (v[i * 0x1c + 0x13] != 0xff) {
-					Buffering(((iType >> 11) & 0x7f) | 0x69100000, 0, iNum, D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_SPECULAR | D3DFVF_TEX1, v, dptPrimitiveType, 0.0f);
+					Buffering(((iType >> 11) & 0x7f) | 0x69100000, 0, iNum, D3DFVF_XYZRHW | D3DFVF_SPECULAR | D3DFVF_TEX1, v, dptPrimitiveType, 0.0f);
 					break;
 				}
 			}
@@ -772,16 +772,16 @@ void WDirect3D::FlushMultiPass(unsigned long flag) {
 	if (flag & 2) {
 		// Front to back.
 		startIdx = m_bufSortNum - 1;
-		endIdx = -1;
 		typeToRemove = 0x20000000;
 		typeToAdd = 0;
 		increment = -1;
+		endIdx = -1;
 	} else {
-		endIdx = m_bufSortNum;
 		typeToRemove = 0;
 		typeToAdd = 0x20000000;
 		startIdx = 0;
 		increment = 1;
+		endIdx = m_bufSortNum;
 	}
 
 	for (i = startIdx; i != endIdx; i += increment) {
@@ -836,16 +836,16 @@ void WDirect3D::FlushOnePass(unsigned long flag) {
 	if (flag & 2) {
 		// Front to back.
 		startIdx = m_bufSortNum - 1;
-		endIdx = -1;
 		typeToRemove = 0xa0000000;
 		typeToAdd = 0;
 		increment = -1;
+		endIdx = -1;
 	} else {
-		endIdx = m_bufSortNum;
 		typeToRemove = 0x80000000;
 		typeToAdd = 0x20000000;
 		startIdx = 0;
 		increment = 1;
+		endIdx = m_bufSortNum;
 	}
 
 	for (int i = startIdx; i != endIdx; i += increment) {

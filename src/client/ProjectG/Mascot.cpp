@@ -132,8 +132,7 @@ int CMascot::ChangeMascotMsgInTex(const char *msg, const IFF_STRUCT::sMascot *pM
 					pGDI->SetTextStyle(1);
 					pGDI->SetAlpha(1.0f);
 					pGDI->SetTextColor(0xFF000000, 0xFF808080);
-					WPoint pt((float)float2int(pBitmap->Width() * 0.5f), (float)float2int(pBitmap->Height() * 0.5f) - 6.0f);
-					pGDI->PrintText(pt, 1, msg, pBitmap);
+					pGDI->PrintText(WPoint((float)float2int(pBitmap->Width() * 0.5f), (float)float2int(pBitmap->Height() * 0.5f) - 6.0f), 1, msg, pBitmap);
 				}
 
 				g_resrcmng->ChangeTexturePart(handle, pBitmap, rc);
@@ -187,7 +186,8 @@ void CMascot::HandleMsg(const MsgObject &msg) {
 		}
 		break;
 	case 0x4E:
-		if ((unsigned long)msg.m_param1 == MyGuid(true)) {
+		unsigned long guid = msg.m_param1;
+		if (guid == MyGuid(true)) {
 			WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_mascot = *(const sMascotInfo *)msg.m_param2;
 			WSingleton<CSharedDoc>::Instance()->m_myMascotId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_mascot.id;
 		}
@@ -233,7 +233,7 @@ void CCameraBird::Display(void) {
 
 	if (g_view->InFrustum(m_pPet->GetBoundSphere())) {
 		m_pPet->UpdateLightSource(&g_lightset, false, 0);
-		WPuppet *pet = m_pPet; WView *view = g_view; pet->Render(view, true, 1.0f, view->InFrustumSafe(pet->GetBoundBox()), false, false);
+		m_pPet->Render(g_view, true, 1.0f, g_view->InFrustumSafe(m_pPet->GetBoundBox()), false, false);
 	}
 }
 
@@ -241,8 +241,10 @@ void CCameraBird::Display(void) {
 void CCameraBird::CheckTarget(float dt) {
 	if (GolfBall().m_preDataIndex >= 0 && GOLFDOC()->GameMode() != 0x1000) return;
 
-	MsgObject msg(0, 0x124, m_playerIndex, (intptr_t)&m_playerMatrix, 0, 0, 0);
-	(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Player") << msg;
+	{
+		MsgObject msg(0, 0x124, m_playerIndex, (intptr_t)&m_playerMatrix, 0, 0, 0);
+		(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Player") << msg;
+	}
 
 	WVector dir = m_playerMatrix.za;
 
@@ -255,7 +257,7 @@ void CCameraBird::CheckTarget(float dt) {
 	float dist = dir.Magnitude();
 	float t = dist * 0.15625f > 1.0f ? 1.0f : dist * 0.15625f;
 
-	m_matrix.za = (GolfBall().m_pos - m_matrix.pivot) * (1.0f - t) + dir * t;
+	m_matrix.za = (1.0f - t) * (GolfBall().m_pos - m_matrix.pivot) + t * dir;
 
 	m_matrix.za.y = 0.0f; m_matrix.za.Normalize();
 	m_matrix.za *= -1.0f;

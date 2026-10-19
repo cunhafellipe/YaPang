@@ -736,7 +736,7 @@ void CConsole::Command(const char *line) {
 				std::map<unsigned int, IFF_STRUCT::sPart>::const_iterator part;
 				for (part = parts.begin(); part != parts.end(); part++) {
 					unsigned long tid = part->second.m_typeId;
-					if (((tid >> 18) & 0xFF) == (tids.m_tidChar & 0x3FFFFFF) && (tid & 0x600) == 0) {
+					if ((tids.m_tidChar & 0x3FFFFFF) == ((tid >> 18) & 0xFF) && (tid & 0x600) == 0) {
 						fprintf(fp, "%d(%2d): %s\n", tid, index, part->second.m_name);
 						AddText(MakeStr("%d(%2d): %s", part->second.m_typeId, index, part->second.m_name));
 						index++;
@@ -860,7 +860,7 @@ void CConsole::Command(const char *line) {
 
 				if (pin >= 0 && pin <= 3) {
 					// 0: a random pin position per hole, 1-3: that position on every hole
-					for (int hole = 0; hole < 18; hole++) {
+					for (unsigned char hole = 0; hole < 18; hole++) {
 						CSharedDoc::Instance()->m_holePin[hole] = pin == 0 ? rand() % 3 : pin - 1;
 					}
 					return;
@@ -983,7 +983,13 @@ void CConsole::Command(const char *line) {
 				sscanf(line + len + 1, "%d", &flags);
 
 				if (CSceneManager::Instance()) {
-					CSceneManager::Instance()->m_debugDraw = flags;
+#ifdef PG_PORT
+					CSceneManager::Instance()->m_debugDraw = std::bitset<32>((unsigned long)flags);
+#else
+					// The whole word is stored unmasked (one mov), not rebuilt bit by
+					// bit by bitset(unsigned long); 32-bit layout only.
+					CSceneManager::Instance()->m_debugDraw = reinterpret_cast<std::bitset<32> &>(flags);
+#endif
 				}
 				return;
 			}
@@ -991,22 +997,22 @@ void CConsole::Command(const char *line) {
 			case 40: // "lowest"
 				if (CSceneManager::Instance()) {
 
-					if (CSceneManager::Instance()->m_debugDraw >> 4 & 1) {
-						CSceneManager::Instance()->m_debugDraw &= ~0x10;
+					if (CSceneManager::Instance()->m_debugDraw.test(4)) {
+						CSceneManager::Instance()->m_debugDraw.reset(4);
 						return;
 					}
-					CSceneManager::Instance()->m_debugDraw |= 0x10;
+					CSceneManager::Instance()->m_debugDraw.set(4);
 				}
 				return;
 			// console.cpp:1518
 			case 41: // "highest"
 				if (CSceneManager::Instance()) {
 
-					if (CSceneManager::Instance()->m_debugDraw >> 5 & 1) {
-						CSceneManager::Instance()->m_debugDraw &= ~0x20;
+					if (CSceneManager::Instance()->m_debugDraw.test(5)) {
+						CSceneManager::Instance()->m_debugDraw.reset(5);
 						return;
 					}
-					CSceneManager::Instance()->m_debugDraw |= 0x20;
+					CSceneManager::Instance()->m_debugDraw.set(5);
 				}
 				return;
 			// console.cpp:1528
@@ -1198,19 +1204,22 @@ void CConsole::Command(const char *line) {
 			}
 			// console.cpp:1749
 			case 0: // "help"
-				for (int k = 1; k < 0x59; k++) {
+				for (unsigned int k = 1; k < 0x59; k++) {
 					AddText(command_table[k].usage);
 				}
 				return;
 			// console.cpp:1755
-			case 1: // "clear"
-				for (char *text = m_lines.Start(); text != NULL; text = m_lines.Next()) {
-					delete text;
+			case 1: { // "clear"
+				char *text = m_lines.Start();
+				while (text != NULL) {
+					if (text) delete text;
+					text = m_lines.Next();
 				}
 				m_lines.Reset();
 
 				m_lineOffset = 0;
 				return;
+			}
 			// console.cpp:1769
 			case 2: { // "caddie"
 				int serial;
@@ -1254,6 +1263,9 @@ void CConsole::Command(const char *line) {
 				if (map == -1) {
 					// List the courses.
 					for (int course = 0; course < ItemManager()->GetCourseNum(); course++) {
+						if (course >= ItemManager()->GetCourseNum()) {
+							continue;
+						}
 						char text[64];
 						int number = (course > 0x7F && course != 0xFD) ? course - 0x80 : course;
 						IFF_STRUCT::sCourse *info = ItemManager()->FindCourse(0x28000000 | number);
@@ -1267,21 +1279,20 @@ void CConsole::Command(const char *line) {
 					return;
 				}
 
-				if (!SetCurMap(map)) {
+				if (SetCurMap(map)) {
+					g_audio->StopSfx(NULL);
+
+					for (int hole = 1; hole <= 18; hole++) {
+						GOLFDOC()->GetHoleData(hole).m_kind = 0;
+						GOLFDOC()->GetHoleData(hole).m_mapState = 3;
+						GOLFDOC()->m_pPolySoup->LoadMapCheckData(hole);
+					}
+
+					CTaskManager::Instance()->PostMsg(0, "GolfBg", 0x140, 0, 0, 0, 0);
+					CTaskManager::Instance()->PostMsg(0, "GolfBg", 0x13E, 0, 0, 0, 0);
+				} else {
 					AddText("map [serial no.]");
-					return;
 				}
-
-				g_audio->StopSfx(NULL);
-
-				for (int hole = 1; hole <= 18; hole++) {
-					GOLFDOC()->GetHoleData(hole).m_kind = 0;
-					GOLFDOC()->GetHoleData(hole).m_mapState = 3;
-					GOLFDOC()->m_pPolySoup->LoadMapCheckData(hole);
-				}
-
-				CTaskManager::Instance()->PostMsg(0, "GolfBg", 0x140, 0, 0, 0, 0);
-				CTaskManager::Instance()->PostMsg(0, "GolfBg", 0x13E, 0, 0, 0, 0);
 				return;
 			}
 			// console.cpp:1876
@@ -1347,10 +1358,10 @@ void CConsole::Command(const char *line) {
 
 				if (doc->m_roomType == 1) {
 					// The team's gauge.
-					TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_teamRate = Between(0.0f, combo + TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_teamRate, doc->GetComboGaugeLimit(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute));
+					TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_teamRate = Between(0.0f, TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_teamRate + combo, doc->GetComboGaugeLimit(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute));
 					return;
 				}
-				PLAYER(GOLFDOC()->m_myPlayerIndex)->m_comboGauge = Between(0.0f, combo + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_comboGauge, CSharedDoc::Instance()->GetComboGaugeLimit(GOLFDOC()->m_myPlayerIndex));
+				PLAYER(GOLFDOC()->m_myPlayerIndex)->m_comboGauge = Between(0.0f, PLAYER(GOLFDOC()->m_myPlayerIndex)->m_comboGauge + combo, CSharedDoc::Instance()->GetComboGaugeLimit(GOLFDOC()->m_myPlayerIndex));
 				return;
 			}
 			// console.cpp:1949
@@ -1405,7 +1416,7 @@ void CConsole::Command(const char *line) {
 			case 19: // "timeout"
 				if (CSharedDoc::Instance()->m_shotTimeLimit == 0) {
 					CSharedDoc::Instance()->m_shotTimeLimit = 40000;
-					GOLFDOC()->m_remainShotTime = CSharedDoc::Instance()->m_shotTimeLimit;
+					GOLFDOC()->m_remainShotTime = 40000;
 					AddText("TIME LIMIT ON");
 					return;
 				}
@@ -1697,7 +1708,7 @@ void CConsole::Command(const char *line) {
 			}
 			// console.cpp:2429
 			case 79: { // "posmask"
-				CTask *pTask = AfxGetTask();
+				CTask *pTask = !CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask();
 				if (((__rtti_obj = pTask) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CShopTask::m_RTTI) : false)
 					|| ((__rtti_obj = pTask) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CRealMyRoomTask::m_RTTI) : false)) {
 					unsigned long typeId = 0;
@@ -1714,7 +1725,7 @@ void CConsole::Command(const char *line) {
 			}
 			// console.cpp:2444
 			case 80: { // "texname"
-				CTask *pTask = AfxGetTask();
+				CTask *pTask = !CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask();
 				if (((__rtti_obj = pTask) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CShopTask::m_RTTI) : false)
 					|| ((__rtti_obj = pTask) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CRealMyRoomTask::m_RTTI) : false)) {
 					unsigned long typeId = 0;
@@ -1733,7 +1744,7 @@ void CConsole::Command(const char *line) {
 			}
 			// console.cpp:2464
 			case 81: { // "petname"
-				CTask *pTask = AfxGetTask();
+				CTask *pTask = !CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask();
 				if (((__rtti_obj = pTask) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CShopTask::m_RTTI) : false)
 					|| ((__rtti_obj = pTask) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CRealMyRoomTask::m_RTTI) : false)) {
 					char petName[256] = { 0 };

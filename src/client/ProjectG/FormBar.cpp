@@ -142,20 +142,20 @@ void FrFormBar::SetPos(float pos) {
 
 // formbar.cpp:124
 void FrFormBar::SetGaugeFrameSize(const WSize& size) {
-	WSize wndSize(m_rect.w, m_rect.h);
+	WRect wndRect = GetRect();
 
-	if (wndSize.w > size.w) {
+	if (wndRect.w > size.w) {
 		m_frameSize.w = size.w;
 	}
 	else {
-		m_frameSize.w = wndSize.w - 2.0f;
+		m_frameSize.w = wndRect.w - 2.0f;
 	}
 
-	if (wndSize.h > size.h) {
+	if (wndRect.h > size.h) {
 		m_frameSize.h = size.h;
 	}
 	else {
-		m_frameSize.h = wndSize.h - 2.0f;
+		m_frameSize.h = wndRect.h - 2.0f;
 	}
 
 	ReCalcRects();
@@ -175,7 +175,7 @@ void FrFormBar::OnProc(const float dt) {
 
 		if (m_autoCloseTimer > 0.0f && (m_autoCloseTimer -= dt) < 0.0f) m_autoCloseTimer = 0.0f;
 
-		m_pos = m_autoCloseTimer / m_autoCloseTime * m_max;
+		m_pos = m_max * (m_autoCloseTimer / m_autoCloseTime);
 
 		if (m_autoCloseTimer == 0.0f) {
 
@@ -265,7 +265,7 @@ void FrFormBar::OnDrawGaugeArea(void) {
 	WRect gauge = m_gaugeRect;
 
 	if (m_max != m_min && pos < m_max) {
-		gauge.w = pos / (m_max - m_min) * gauge.w;
+		gauge.w = gauge.w * (pos / (m_max - m_min));
 	}
 
 	pGDI->DrawTexture(m_pGaugeImg, gauge, 0xFFFFFFFF, 0);

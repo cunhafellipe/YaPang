@@ -3,6 +3,8 @@
 #define AVATAR_AVATAR_SPECIALPRIZEITEM_INLINE
 #define AVATAR_AVATAR_QUADTREE_INLINE
 #define AVATAR_AVATAR_BALLOONTEXT_INLINE
+#define AVATAR_AVATAR_SHAREDDOC_INLINE
+#define AVATAR_AVATAR_AVATAR_AVATAR_INLINE
 #include "NetworkSystem.h"
 #include <mmsystem.h>
 #include <math.h>
@@ -74,9 +76,6 @@ extern LightSet g_lightset;
 // other way); its header is unknown, as for camerawork.cpp's MinOf.
 template <class T> T MinOf(T a, T b) { return a > b ? b : a; }
 
-// A frame time this close to a whole frame counts as the previous frame.
-const float kScriptFrameEpsilon = 1e-5f;
-
 // Nameless .rdata floats Process reads through memory: pi, 2 pi, (unused
 // here), epsilon; like wmath.h's data_9eb420, their source is not known.
 extern "C" const float data_9f4084[4];
@@ -110,11 +109,6 @@ float RadianDelta(float a, float b) {
 // wmath.inl:77
 int operator!=(const WVector &a, const WVector &b) {
 	return !WisEqual(a, b, 0.00001f);
-}
-
-// avatar_avatar.h:128
-const WVector &ntAvatar::GetPosition() const {
-	return m_position;
 }
 
 // avatar_avatar.h:151
@@ -257,22 +251,21 @@ bool ntAvatar::IsClickable(float x, float y) const {
 					width = 100;
 				}
 
-				int left = screenX - width / 2;
+				RECT rc;
+				rc.left = screenX - width / 2;
 
-				int top = screenY - 8;
-				if (left < x && x < left + width && top < y && y < top + 29) {
+				rc.top = screenY - 8;
+				if (rc.left < x && x < rc.left + width && rc.top < y && y < rc.top + 29) {
 					return true;
 				}
 
 				// The state icon drawn above the head.
 				WOverlay *pIcon = m_pChatMain->m_stateIcon01N;
 
-				int iconWidth = pIcon->GetWidth();
-				int iconHeight = pIcon->GetHeight();
-				left = screenX - iconWidth / 2;
-				top = screenY - iconHeight / 2 - 36;
+				rc.left = screenX - pIcon->GetWidth() / 2;
+				rc.top = screenY - pIcon->GetHeight() / 2 - 36;
 
-				if (left < x && x < left + iconWidth && top < y && y < top + iconHeight) {
+				if (rc.left < x && x < rc.left + pIcon->GetWidth() && rc.top < y && y < rc.top + pIcon->GetHeight()) {
 					return true;
 				}
 			}
@@ -728,8 +721,7 @@ static bool SlideMove(const WVector &velocity, const WVector &pos, CQuadTree *pP
 			continue;
 		}
 
-		planes[numPlanes].normal = trace.m_plane.normal;
-		planes[numPlanes].dis = trace.m_plane.dis;
+		planes[numPlanes] = trace.m_plane;
 		numPlanes++;
 
 		for (i = 0; i < numPlanes; i++) {
@@ -893,11 +885,11 @@ void ntAvatar::Process(float elapsed) {
 				m_position = newPos;
 			}
 			else if (this == WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar) {
-				move = WVector(0.0f, 0.0f, 0.0f);
+				move.Reset();
 			}
 		}
 		else {
-			move = WVector(0.0f, 0.0f, 0.0f);
+			move.Reset();
 		}
 	}
 
@@ -977,7 +969,6 @@ void ntAvatar::Process(float elapsed) {
 		m_time = 1.0f - (cameraDist - 160.0f) * 0.03125f;
 	}
 	else {
-		bool faded = false;
 		if (IsLocalContent((localContentType_t)10)) {
 			CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
 			int guid = m_guid;
@@ -985,12 +976,15 @@ void ntAvatar::Process(float elapsed) {
 
 			if ((*it).second.identityBits.administrator) {
 				if (!(*it).second.invisible) {
-					faded = true;
+					m_time = 0.1f;
+				}
+				else {
+					m_time = 1.0f;
 				}
 			}
-		}
-		if (faded) {
-			m_time = 0.1f;
+			else {
+				m_time = 1.0f;
+			}
 		}
 		else {
 			m_time = 1.0f;
@@ -1168,8 +1162,9 @@ void ntAvatar::RenderOverlay(bool detail) {
 		return;
 	}
 
-	float y = screen.y - 4.0f - 22.0f;
+	float y = screen.y - 4.0f;
 	FrEmoticon *pEmoticon = g_pFresh->GetManager()->GetEmoticon();
+	y -= 22.0f;
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 
 	WOverlay *pIcon;
@@ -1185,13 +1180,17 @@ void ntAvatar::RenderOverlay(bool detail) {
 
 	float x = screen.x - (pIcon->GetWidth() + pEmoticon->GetTextWidth(m_nickName) + (float)(m_pEmblem != NULL ? m_pEmblem->Width() : 0)) * 0.5f;
 
-	WRECT iconSrc = { 0.0f, 0.0f, 1.0f, 1.0f };
 	WRect iconRect;
-	iconRect = WRect(x, y - 7.0f, (float)pIcon->GetWidth(), (float)pIcon->GetHeight());
-	x += pIcon->GetWidth();
-	unsigned long alphaBits = (unsigned char)(int)(alpha * 255.0f) << 24;
-	unsigned long color = alphaBits | 0xFFFFFF;
-	pIcon->Render(g_view, iconSrc, iconRect, 0, color, 0.0f, 0);
+	unsigned long alphaBits;
+	unsigned long color;
+	{	// the emblem's rect temporary reuses iconSrc's stack slot
+		WRECT iconSrc = { 0.0f, 0.0f, 1.0f, 1.0f };
+		iconRect = WRect(x, y - 7.0f, (float)pIcon->GetWidth(), (float)pIcon->GetHeight());
+		x += pIcon->GetWidth();
+		alphaBits = (unsigned char)(int)(alpha * 255.0f) << 24;
+		color = alphaBits | 0xFFFFFF;
+		pIcon->Render(g_view, iconSrc, iconRect, 0, color, 0.0f, 0);
+	}
 
 	if (m_pEmblem != NULL) {
 		iconRect = WRect(x + 0.5f / m_pEmblem->Width(),
@@ -1243,11 +1242,9 @@ void ntAvatar::RenderOverlay(bool detail) {
 			width = 100;
 		}
 
-		int halfWidth = width / 2;
-
 		tagRECT bar;
+		bar.left = (int)(screen.x - width / 2);
 		bar.right = width;
-		bar.left = (int)(screen.x - halfWidth);
 		bar.bottom = 29;
 		bar.top = (int)(y - 8.0f);
 		WOverlay::DrawFrameOverlay9(g_view, m_pChatMain->m_stateBars, bar, WSingleton<ntAvatarManager>::Instance()->m_pHighlightAvatar == this ? 0xFF808080 : 0xFFFFFFFF);
@@ -1323,7 +1320,7 @@ void ntAvatar::ScriptProcess(const w_motion_data *data, float from, float to, bo
 	} else {
 		to = MinOf(data->e, to) * 30.0f;
 		start = Ceil(from, 0.03f);
-		end = WAbsBySign((float)floor(to) - to) < kScriptFrameEpsilon ? (int)to - 1 : (int)floor(to);
+		end = WAbsBySign((float)floor(to) - to) < data_9f4084[3] ? (int)to - 1 : (int)floor(to);
 
 		if (start == (int)floor(data->s * 30.0f + 0.5f)) {
 			start++;
@@ -1499,10 +1496,11 @@ void ntAvatar::ParsePuppetScript(const char *script) {
 				if (this != WSingleton<ntAvatarManager>::Instance()->m_pMyAvatar) {
 					CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
 					int guid = m_guid;
-					const sBriefUserInfo &info = (*pDoc->m_userMap.find(guid)).second;
+					std::map<unsigned long, sBriefUserInfo>::iterator it;
+					it = pDoc->m_userMap.find(guid);
 
 					if (m_canKick) {
-						if (!sBriefUserInfo(info).invisible) {
+						if (!sBriefUserInfo((*it).second).invisible) {
 							continue;
 						}
 					}
@@ -2003,10 +2001,4 @@ void SpecialPrizeItem::InitalizeItem() {
 	m_value = 1.0f;
 }
 
-// shareddoc.inl:549
-int IsAdministrator(unsigned long identity) {
-	if (identity == 0xFFFFFFFF)
-		identity = WSingleton<CSharedDoc>::Instance()->m_userInfo.identity;
-
-	return (identity & 4) == 4;
-}
+// shareddoc.inl:549 IsAdministrator: defined in SharedDoc.h (AVATAR_AVATAR_SHAREDDOC_INLINE).

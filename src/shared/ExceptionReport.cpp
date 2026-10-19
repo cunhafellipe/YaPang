@@ -178,7 +178,7 @@ static const char *GetExceptionDescription(const EXCEPTION_RECORD *pRecord) {
 // exceptionreport.cpp:225
 // Writes a minidump of the process to pszFileName.
 static void WriteMiniDump(const char *pszFileName, EXCEPTION_POINTERS *pExceptionInfo) {
-	HANDLE hFile = CreateFileA(pszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+	HANDLE hFile = CreateFileA(pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS,
 		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return;
@@ -640,7 +640,12 @@ void CExceptionReport::DumpStackTrace(const CONTEXT *pContext) const {
 
 	// The original reads the stack base (TIB StackBase, fs:[4]) in inline
 	// assembly: one instruction per line mark, the global stored from eax.
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_IX86)
+	__asm mov eax, fs:[4]
+	__asm mov g_dwStackBottom, eax
+#else
 	g_dwStackBottom = g_dwStack; // port: no TIB stack base
+#endif
 
 	g_dwStackBottom &= ~0x1F;
 
@@ -746,11 +751,92 @@ void CExceptionReport::DumpMemory(const CONTEXT *pContext) const {
 // written mostly in inline assembly (its own prologue and epilogue, segment
 // register reads, one line mark per instruction), so it is reproduced as such
 // (the AGENTS.md Rule 14 exception for functions the original wrote in asm).
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_IX86)
+__declspec(naked) unsigned long SnapCurrentContext(CONTEXT *pContext) {
+	CONTEXT context;
+	unsigned long result;
+
+	__asm {
+		push ebp
+		mov ebp, esp
+		sub esp, __LOCAL_SIZE
+
+		mov context.Eax, eax
+		mov context.Ebx, ebx
+		mov context.Ecx, ecx
+		mov context.Edx, edx
+		mov context.Edi, edi
+		mov context.Esi, esi
+
+		xor eax, eax
+		mov ax, gs
+		mov context.SegGs, eax
+		mov ax, fs
+		mov context.SegFs, eax
+		mov ax, es
+		mov context.SegEs, eax
+		mov ax, ds
+		mov context.SegDs, eax
+		mov ax, cs
+		mov context.SegCs, eax
+		mov ax, ss
+		mov context.SegSs, eax
+
+		mov eax, [ebp]
+		mov context.Ebp, eax
+
+		mov eax, ebp
+		add eax, 8
+		mov context.Esp, eax
+
+		push esi
+		push edi
+		push ebx
+		push ecx
+		push edx
+	}
+
+	memset(pContext, 0, sizeof(CONTEXT));
+	pContext->ContextFlags = CONTEXT_ALL;
+	if (GetThreadContext(CExceptionReport::GetCurrentThread(), pContext)) {
+		pContext->Eax = context.Eax;
+		pContext->Ebx = context.Ebx;
+		pContext->Ecx = context.Ecx;
+		pContext->Edx = context.Edx;
+		pContext->Edi = context.Edi;
+		pContext->Esi = context.Esi;
+		pContext->SegGs = context.SegGs;
+		pContext->SegFs = context.SegFs;
+		pContext->SegEs = context.SegEs;
+		pContext->SegDs = context.SegDs;
+		pContext->SegCs = context.SegCs;
+		pContext->SegSs = context.SegSs;
+		pContext->Ebp = context.Ebp;
+		pContext->Eip = (unsigned long)_ReturnAddress();
+		result = TRUE;
+	} else {
+		result = FALSE;
+	}
+
+	__asm {
+		pop edx
+		pop ecx
+		pop ebx
+		pop edi
+		pop esi
+		mov eax, result
+		mov esp, ebp
+		pop ebp
+		ret
+	}
+}
+#else
 unsigned long SnapCurrentContext(CONTEXT *pContext) {
 	memset(pContext, 0, sizeof(CONTEXT));
 	pContext->Eip = (DWORD)(uintptr_t)__builtin_return_address(0);
 	return TRUE;
 }
+#endif
 
 // exceptionreport.cpp:1024
 void CExceptionReport::DumpExceptionReport(EXCEPTION_POINTERS *pExceptionInfo) {

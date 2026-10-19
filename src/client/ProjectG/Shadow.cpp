@@ -169,24 +169,26 @@ void CShadow::RenderProjectionShadow(WView *view, const LightSet &light, const W
 
 // shadow.cpp:270
 bool CShadow::CheckFrustum(WView *view, const WMatrix &cam, float fov, float nearDist, float farDist) {
-	WVector v[8];
+	// The first corner is a separate local: the original keeps it in registers
+	// and its frame (0x84) holds only the seven other corners.
+	WVector v[7];
 
 	float t = (float)tan(fov * 0.5f);
 	float nearH = nearDist * t;
-	v[0] = WVector(-nearH, -nearH, nearDist) * cam;
-	v[1] = WVector(nearH, -nearH, nearDist) * cam;
-	v[2] = WVector(-nearH, nearH, nearDist) * cam;
-	v[3] = WVector(nearH, nearH, nearDist) * cam;
+	WVector first = WVector(-nearH, -nearH, nearDist) * cam;
+	v[0] = WVector(nearH, -nearH, nearDist) * cam;
+	v[1] = WVector(-nearH, nearH, nearDist) * cam;
+	v[2] = WVector(nearH, nearH, nearDist) * cam;
 	float farH = farDist * t;
-	v[4] = WVector(-farH, -farH, farDist) * cam;
-	v[5] = WVector(farH, -farH, farDist) * cam;
-	v[6] = WVector(-farH, farH, farDist) * cam;
-	v[7] = WVector(farH, farH, farDist) * cam;
+	v[3] = WVector(-farH, -farH, farDist) * cam;
+	v[4] = WVector(farH, -farH, farDist) * cam;
+	v[5] = WVector(-farH, farH, farDist) * cam;
+	v[6] = WVector(farH, farH, farDist) * cam;
 
 	// The original inlines Waabb::AddPoint (wmath.h:171) here; our build
 	// keeps the call out of line, so its body is written out.
-	Waabb aabb(v[0], v[0]);
-	for (int i = 1; i < 8; i++) {
+	Waabb aabb(first, first);
+	for (int i = 0; i < 7; i++) {
 		if (v[i].x > aabb.max.x) aabb.max.x = v[i].x;
 		if (v[i].x < aabb.min.x) aabb.min.x = v[i].x;
 		if (v[i].y > aabb.max.y) aabb.max.y = v[i].y;
@@ -391,22 +393,18 @@ void CShadowCaster::UpdateBSphere(WView *view, float minAngle, float minDist) {
 	float nearDist = view->GetClipNearValue();
 	float farDist = nearDist + minDist;
 
-	float tanY = (float)tan(fov * 0.5f);
-	float tanX = (float)tan(view->GetRatio() * fov * 0.5f);
+	// The double tan(): the original rounds both tangents to float in memory.
+	float tanY = (float)tan((double)(fov * 0.5f));
+	float tanX = (float)tan((double)(view->GetRatio() * fov * 0.5f));
 
 	float nearY = tanY * nearDist;
 	float nearX = tanX * nearDist;
-	float farY = tanY * farDist;
-	float farX = tanX * farDist;
-
-	float farSq = WVector(farX, farY, farDist).SquareMagnitude();
-	float nearSq = WVector(nearX, nearY, nearDist).SquareMagnitude();
-	float c = (farSq - nearSq) / (minDist * 2.0f);
+	float c = (WVector(tanX * farDist, tanY * farDist, farDist).SquareMagnitude()
+		- WVector(nearX, nearY, nearDist).SquareMagnitude()) / (minDist * 2.0f);
 
 	m_bsphere.pos = c * view->camera.za + view->camera.pivot;
 
-	float g = farDist - c;
-	m_bsphere.radius = sqrtf(g * g + farX * farX + farY * farY);
+	m_bsphere.radius = WVector(farDist - c, tanX * farDist, tanY * farDist).Magnitude();
 }
 
 // shadow.cpp:840

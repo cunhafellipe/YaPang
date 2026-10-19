@@ -52,8 +52,9 @@ float __cdecl ObbIntersect(const Waabb &src, const WVector &direction, const Wob
 
 float RayIntersectAABB(const Waabb &aabb, const WVector &pos, const WVector &moveDelta, WPlane *pReturnPlane, float radius);
 
-// The x extent below which a segment counts as running along z (no symbol).
-extern float data_00a11520;
+// File-local float table in .rdata (no symbol): {pi, degrees to radians,
+// FLT_MAX, epsilon}; [3] is the epsilon the zero tests below compare with.
+extern "C" const float data_a11514[4];
 
 
 namespace intersection {
@@ -109,7 +110,7 @@ WVector intersection::closestPointOnLine(const WVector &a, const WVector &b, con
 	WVector c = p - a;
 	WVector V = (b - a).Normalize();
 	float d = (a - b).Magnitude();
-	float t = V.x * c.x + V.y * c.y + V.z * c.z;
+	float t = V.x * c.x + c.y * V.y + c.z * V.z;
 
 	if (t < 0.0f)
 		return a;
@@ -145,11 +146,12 @@ WVector intersection::closestPointOnTriangle(const WVector &p, const WVector &a,
 
 // quadtree.cpp:77
 float intersection::intersectPolygon(const WVector &pos, const WVector &center, const WVector &dir, const float &radius) {
+	float t[2];
 	WVector rayDir = dir * -1.0f;
 	WVector diff = pos - center;
-	float a = rayDir.x * rayDir.x + rayDir.y * rayDir.y + rayDir.z * rayDir.z;
-	float b = diff.x * rayDir.x + diff.y * rayDir.y + diff.z * rayDir.z;
-	float c = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+	float a = WDotProduct(rayDir, rayDir);
+	float b = WDotProduct(diff, rayDir);
+	float c = WDotProduct(diff, diff);
 	float disc = b * b - a * (c - radius * radius);
 
 	if (disc < 0.0f)
@@ -157,14 +159,14 @@ float intersection::intersectPolygon(const WVector &pos, const WVector &center, 
 
 	float root = sqrtf(disc);
 	float inv = 1.0f / a;
-	float t1 = (-1.0f * b - root) * inv;
-	float t2 = (root - b) * inv;
+	t[0] = (-1.0f * b - root) * inv;
+	t[1] = (root - b) * inv;
 
-	if (t1 < 0.0f) {
-		if (t2 > 0.0f && t2 < 1.0f)
-			return t2;
-	} else if (t1 < 1.0f) {
-		return t1;
+	if (t[0] < 0.0f) {
+		if (t[1] > 0.0f && t[1] < 1.0f)
+			return t[1];
+	} else if (t[0] < 1.0f) {
+		return t[0];
 	}
 
 	return 1.0f;
@@ -177,26 +179,26 @@ float intersection::IntersectRayTriangle(const WVector &orig, const WVector &dir
 	edge1 = tri[1] - tri[0];
 	edge2 = tri[2] - tri[0];
 	pvec = WCrossProduct(dir, edge2);
-	float det = edge1.x * pvec.x + edge1.y * pvec.y + edge1.z * pvec.z;
+	float det = pvec.x * edge1.x + pvec.y * edge1.y + pvec.z * edge1.z;
 
-	if (WAbsBySign(det) < WMATH_EPSILON)
+	if (WAbsBySign(det) < data_a11514[3])
 		return 1.0f;
 
 	det = 1.0f / det;
 
 	tvec = orig - tri[0];
 
-	float u = tvec.x * (pvec.x * det) + tvec.y * (pvec.y * det) + tvec.z * (pvec.z * det);
+	float u = WDotProduct(tvec, pvec * det);
 	if (u < 0.0f || u > 1.0f)
 		return 1.0f;
 
 	qvec = WCrossProduct(tvec, edge1);
 
-	float v = dir.x * (qvec.x * det) + dir.y * (qvec.y * det) + dir.z * (qvec.z * det);
+	float v = WDotProduct(qvec * det, dir);
 	if (v < 0.0f || v > 1.0f)
 		return 1.0f;
 
-	float t = edge2.x * (qvec.x * det) + edge2.y * (qvec.y * det) + edge2.z * (qvec.z * det);
+	float t = WDotProduct(qvec * det, edge2);
 
 	return Min(t, 1.0f);
 }
@@ -207,7 +209,7 @@ bool intersection::SameSide(const WVector &p1, const WVector &p2, const WVector 
 	cp1 = WCrossProduct(b - a, p1 - a);
 	cp2 = WCrossProduct(b - a, p2 - a);
 
-	if (cp2.x * cp1.x + cp2.y * cp1.y + cp2.z * cp1.z > 0.0f
+	if (cp1.x * cp2.x + cp1.y * cp2.y + cp1.z * cp2.z > 0.0f
 		|| WisEqual(cp1, WVector::ZERO, WMATH_EPSILON) || WisEqual(cp2, WVector::ZERO, WMATH_EPSILON))
 		return true;
 
@@ -226,7 +228,7 @@ bool intersection::PointInTriangle(const WVector &p, const WVector &a, const WVe
 float intersection::IntersectPlane(const WVector &orig, const WVector &dir, const WPlane &plane, bool bothSides) {
 	float d1 = orig.x * plane.x + orig.y * plane.y + orig.z * plane.z + plane.dis;
 	WVector end = orig + dir;
-	float d2 = end.x * plane.x + end.y * plane.y + end.z * plane.z + plane.dis;
+	float d2 = WDotProduct(end, plane.normal) + plane.dis;
 
 	if (!(dir.x * plane.x + dir.y * plane.y + dir.z * plane.z > 0.0f)) {
 		if (bothSides && d1 < 0.0f)
@@ -241,7 +243,7 @@ float intersection::IntersectPlane(const WVector &orig, const WVector &dir, cons
 
 // quadtree.cpp:188
 void ReflectVector(const WVector &normal, WVector &v) {
-	v = v - normal * (2.0f * (normal.x * v.x + normal.y * v.y + normal.z * v.z));
+	v = v - normal * (2.0f * WDotProduct(normal, v));
 }
 
 // quadtree.cpp:574
@@ -476,7 +478,7 @@ void CQuadTree::ResetHoleData(void) {
 		pos.y = m_pBaseModel->m_aabb.min.y;
 	m_greenCenter = pos;
 
-	pos = GOLFDOC()->GetHoleData().m_cupPos;
+	pos = GetHoleCupPos();
 	m_cupBottom = pos.y - GolfBall().GetRadius() * 6.0f;
 
 	m_frameTime = 0.0f;
@@ -1026,7 +1028,7 @@ bool CQuadTree::ObjColTest(const WVector &dir, short objIndex, WPlane *pPlane, f
 		if (m_pPolySoup->GetProperty(pModel->m_pTriangles[tri].m_propIndex).m_penetrable) {
 			if ((GolfBall().m_flags & 0x10)
 					|| ((GolfBall().m_flags & 0x20) && GolfBall().m_eventPreDataIndex[9] < 0)
-					|| WAbsBySign(m_pPolySoup->GetProperty(pModel->m_pTriangles[tri].m_propIndex).m_bounceCoeff - 1.0f) < data_00a11520)
+					|| WAbsBySign(m_pPolySoup->GetProperty(pModel->m_pTriangles[tri].m_propIndex).m_bounceCoeff - 1.0f) < data_a11514[3])
 				continue;
 
 			if (GolfBall().m_flags & 0x40)
@@ -1269,11 +1271,11 @@ WVector CQuadTree::ColObject(const WVector &pos, bool bBase, int *pIndex, bool b
 		if (ny < 0.1f)
 			continue;
 
-		WVector a = pModel->m_pTriangles[index].m_vertex[0];
-		WVector b = pModel->m_pTriangles[index].m_vertex[1];
-		WVector c = pModel->m_pTriangles[index].m_vertex[2];
+		WVector v[3];
+		for (int k = 0; k < 3; k++)
+			v[k] = pModel->m_pTriangles[index].m_vertex[k];
 
-		if (intersection::SameSide(result, a, b, c) && intersection::SameSide(result, b, a, c) && intersection::SameSide(result, c, a, b)) {
+		if (intersection::SameSide(result, v[0], v[1], v[2]) && intersection::SameSide(result, v[1], v[0], v[2]) && intersection::SameSide(result, v[2], v[0], v[1])) {
 			float y = (result.x * tri.m_plane.normal.x + result.z * tri.m_plane.normal.z + tri.m_plane.dis) / tri.m_plane.normal.y * -1.0f;
 
 			if (y > result.y) {
@@ -1386,31 +1388,31 @@ int CQuadTree::GetObjIndex(const WVector &pos, bool bAll) {
 		if (!pTri->m_doubleSided && pTri->m_plane.normal.y < 0.0f)
 			continue;
 
-		WVector a = pTri->m_vertex[0];
-		a.y = pos.y;
-		WVector b = pTri->m_vertex[1];
-		b.y = pos.y;
-		WVector c = pTri->m_vertex[2];
-		c.y = pos.y;
+		WVector v[3];
+		for (int k = 0; k < 3; k++) {
+			v[k] = m_pPolySoup->m_models[m_objList[i]]->m_pTriangles->m_vertex[k];
+			v[k].y = pos.y;
+		}
 
-		if (PointInTriangle(pos, a, b, c))
+		if (PointInTriangle(pos, v[0], v[1], v[2]))
 			candidates.push_back(m_objList[i]);
 	}
 
-	if (candidates.size() == 1)
-		return m_objList[0];
+	if (candidates.size() == 1) {
+		result = m_objList[0];
+	} else {
+		int count = candidates.size();
+		for (int i = 0; i < count; i++) {
+			const WPolySoup::sTriangle *pTri = m_pPolySoup->m_models[candidates[i]]->m_pTriangles;
 
-	int count = candidates.size();
-	for (int i = 0; i < count; i++) {
-		const WPolySoup::sTriangle *pTri = m_pPolySoup->m_models[candidates[i]]->m_pTriangles;
+			float dist = pos * pTri->m_plane;
+			if (dist < 0.0f && pTri->m_doubleSided)
+				dist *= -1.0f;
 
-		float dist = pos * pTri->m_plane;
-		if (dist < 0.0f && pTri->m_doubleSided)
-			dist *= -1.0f;
-
-		if (fabs(dist) < fabs(best)) {
-			best = dist;
-			result = candidates[i];
+			if (fabs(dist) < fabs(best)) {
+				best = dist;
+				result = candidates[i];
+			}
 		}
 	}
 
@@ -1450,7 +1452,7 @@ WVector CQuadTree::GetGroundPoint(WVector pos, bool bBase, int *pIndex, bool bWa
 	if (pos.y < m_pBaseModel->m_aabb.min.y) {
 		pos.y = m_pBaseModel->m_aabb.min.y;
 		if (pIndex != 0) {
-			*pIndex = Min(*pIndex, -1);
+			*pIndex = Min(-1, *pIndex);
 		}
 	}
 
@@ -1573,7 +1575,7 @@ void CQuadTree::GetMeshList(WVector pos, const WVector &dir) {
 	int numCols = maxCol - minCol + 1, numRows = maxRow - minRow + 1;
 	int *pGrid = new int[numCols * numRows];
 
-	if (Wabs(dir.x) < data_00a11520) {
+	if (Wabs(dir.x) < data_a11514[3]) {
 		// A segment along z: the quads of one column.
 		int i;
 		for (i = 0; i < numRows; i++)
@@ -1716,7 +1718,7 @@ void CQuadTree::GetObjList(WVector pos, const WVector &dir) {
 	int numCols = maxCol - minCol + 1, numRows = maxRow - minRow + 1;
 	int *pGrid = new int[numCols * numRows];
 
-	if (Wabs(dir.x) < data_00a11520) {
+	if (Wabs(dir.x) < data_a11514[3]) {
 		int i;
 		for (i = 0; i < numRows; i++)
 			pGrid[i] = 1;
@@ -2277,20 +2279,17 @@ void CQuadTree::ParsePuppetScript(int index, const char *script) {
 					sprintf(alias, "sound%d", index);
 					p = GetStrConst(p, name);
 
-					CAniObj *pAni = m_aniObjs[index];
 					loop = 0;
-					sscanf(name, "%s %d", pAni->m_sound, &loop);
+					sscanf(name, "%s %d", m_aniObjs[index]->m_sound, &loop);
 
 					if (g_audio->IsPlaying(alias))
 						g_audio->StopSfx(alias);
 
 					WPolySoup::sModel *pModel = m_pPolySoup->m_models[m_aniObjs[index]->m_objIndex];
-					float dx = pModel->m_matrix.pivot.x - g_camera.pivot.x;
-					float dy = pModel->m_matrix.pivot.y - g_camera.pivot.y;
-					float dz = pModel->m_matrix.pivot.z - g_camera.pivot.z;
+					WVector d = pModel->m_matrix.pivot - g_camera.pivot;
 
 					g_audio->PlaySfx(m_aniObjs[index]->m_sound, NULL, loop != 0, alias, NULL, 0.5f, 200.0f);
-					float volume = 1.0f - (float)sqrt(dx * dx + dy * dy + dz * dz) / (m_aniObjs[index]->m_speed * 3.2f);
+					float volume = 1.0f - (float)sqrt(d.x * d.x + d.y * d.y + d.z * d.z) / (m_aniObjs[index]->m_speed * 3.2f);
 					g_audio->SetSFXVolumeWhilePlaying(alias, (0.0f < volume) ? volume : 0.0f);
 					break;
 				}
@@ -2459,31 +2458,28 @@ bool CQuadTree::IsValid(const WVector &pos) {
 WVector CQuadTree::ApplyForce(void) {
 	WVector force(0.0f, 0.0f, 0.0f);
 
-	if (!(WAbsBySign(GolfBall().m_curve) < data_00a11520) && GolfBall().m_eventPreDataIndex[9] < 0) {
-		force = WVector(GolfBall().m_velocity.z * -1.0f, 0.0f, GolfBall().m_velocity.x).Normalize() * (GolfClub().GetCurve() * GolfBall().m_curve * 0.75f);
-	} else if (!(WAbsBySign(GolfBall().m_curve) < data_00a11520) && GolfBall().m_eventPreDataIndex[12] < 0) {
-		force = WVector(GolfBall().m_velocity.z * -1.0f, 0.0f, GolfBall().m_velocity.x).Normalize() * (GolfClub().GetCurve() * GolfBall().m_curve * 0.75f);
+	if (!(WAbsBySign(GolfBall().m_curve) < data_a11514[3]) && GolfBall().m_eventPreDataIndex[9] < 0) {
+		force = (GolfClub().GetCurve() * GolfBall().m_curve * 0.75f) * WVector(GolfBall().m_velocity.z * -1.0f, 0.0f, GolfBall().m_velocity.x).Normalize();
+	} else if (!(WAbsBySign(GolfBall().m_curve) < data_a11514[3]) && GolfBall().m_eventPreDataIndex[12] < 0) {
+		force = (GolfClub().GetCurve() * GolfBall().m_curve * 0.75f) * WVector(GolfBall().m_velocity.z * -1.0f, 0.0f, GolfBall().m_velocity.x).Normalize();
 	}
 
-	if ((GolfBall().m_flags & 0x20) && GolfBall().m_eventPreDataIndex[9] < 0)
-		return force;
+	if (!((GolfBall().m_flags & 0x20) && GolfBall().m_eventPreDataIndex[9] < 0)
+			&& !((GolfBall().m_flags & 0x40) && GolfBall().m_eventPreDataIndex[12] < 0)) {
+		if (m_applyForce) {
+			if (GolfBall().m_flags & 0x40)
+				force += Wind().GetWind(GolfBall().m_pos) * 0.01f;
+			else
+				force += Wind().GetWind(GolfBall().m_pos) * 0.02f;
+		}
 
-	if ((GolfBall().m_flags & 0x40) && GolfBall().m_eventPreDataIndex[12] < 0)
-		return force;
+		CGolfBall &ball = GolfBall();
 
-	if (m_applyForce) {
-		if (GolfBall().m_flags & 0x40)
-			force += Wind().GetWind(GolfBall().m_pos) * 0.01f;
-		else
-			force += Wind().GetWind(GolfBall().m_pos) * 0.02f;
+		force.y -= m_gravity * ball.m_mass * 34.295296f;
+		if (!(WAbsBySign(GolfBall().m_spin) < data_a11514[3]))
+			force.y += GolfClub().GetSpin() * GolfBall().m_spin * 3.0f;
+		force -= (GolfBall().m_velocity.Magnitude() * 0.00008f) * GolfBall().m_velocity;
 	}
-
-	CGolfBall &ball = GolfBall();
-
-	force.y -= m_gravity * ball.m_mass * 34.295296f;
-	if (!(WAbsBySign(GolfBall().m_spin) < data_00a11520))
-		force.y += GolfClub().GetSpin() * GolfBall().m_spin * 3.0f;
-	force -= GolfBall().m_velocity * (GolfBall().m_velocity.Magnitude() * 0.00008f);
 	return force;
 }
 
@@ -2579,7 +2575,7 @@ void CQuadTree::BounceProcess(float elapsed) {
 	if ((GolfBall().m_flags & 0x40) && GolfBall().m_eventPreDataIndex[1] >= 0 && GolfBall().m_eventPreDataIndex[1] + 60 > GolfBall().m_preDataCount)
 		return;
 
-	ball.m_velocity += ApplyForce() * (1.0f / ball.m_mass) * elapsed;
+	ball.m_velocity += ApplyForce() / ball.m_mass * elapsed;
 
 	if (GolfBall().m_flags & 0x40)
 		GolfBall();     // the original reaches the ball here and does nothing with it
@@ -2602,7 +2598,7 @@ void CQuadTree::BounceProcess(float elapsed) {
 	else
 		ball.m_rotation.y += elapsed * ball.m_spin * 25.132742f;
 
-	if (ball.m_groundArea >= 0 && WDotProduct(ball.PreDataToWrite(ball.m_preDataCount - 1)->m_contactVector, ball.m_velocity) < 0.0f) {
+	if (ball.m_groundArea >= 0 && WDotProduct(ball.m_velocity, ball.PreDataToWrite(ball.m_preDataCount - 1)->m_contactVector) < 0.0f) {
 		// On the ground: drop the velocity into the ground and put the ball on it.
 		ball.m_velocity -= ball.PreDataToWrite(ball.m_preDataCount - 1)->m_contactVector * WDotProduct(ball.m_velocity, ball.PreDataToWrite(ball.m_preDataCount - 1)->m_contactVector);
 		{ WVector pos = ball.m_pos; CQuadTree &pvs = GetPVS(); pvs.GetMeshList(pos); int hit; WVector ground = pvs.ColTest(pos, false, &hit, true); if (ground.y < pvs.m_pBaseModel->m_aabb.min.y) ground.y = pvs.m_pBaseModel->m_aabb.min.y; ball.m_pos = ground; }
@@ -3085,7 +3081,8 @@ void CQuadTree::RollProcess(float elapsed) {
 	ball.m_velocity += GetFriction() / ball.m_mass * elapsed;
 
 	if (ball.m_state == 0) {
-		WVector d = ball.m_pos - GOLFDOC()->GetHoleData().m_cupPos;
+		WVector d;
+		d = ball.m_pos - GetHoleCupPos();
 
 		if ((float)sqrt(d.z * d.z + d.x * d.x) < m_holeCupRadius) {
 			ball.m_pos = GetHoleCupPos();
@@ -3108,7 +3105,8 @@ void CQuadTree::RollProcess(float elapsed) {
 		return;
 	}
 
-	WVector move = ball.m_velocity * elapsed;
+	WVector move;
+	move = ball.m_velocity * elapsed;
 	WPlane plane;
 	float t = IntersectObj(ball.m_pos, move, &plane);
 
@@ -3355,7 +3353,7 @@ void CQuadTree::ObjResponse(const WVector &dir, float t, const WVector &contactV
 
 		WPolySoup::sTriangle *pTri = &m_pPolySoup->m_models[response.m_ball.m_lastContactId]->m_pTriangles[response.m_ball.m_lastContactIndex];
 
-		if (WAbsBySign(pTri->m_plane.normal.y) < data_00a11520) {
+		if (WAbsBySign(pTri->m_plane.normal.y) < data_a11514[3]) {
 			response.m_ball.m_velocity.x = response.m_ball.m_velocity.y = response.m_ball.m_velocity.z = 0.0f;
 			response.m_ball.m_state = 0;
 		} else {
@@ -3417,12 +3415,10 @@ void CQuadTree::Display(void) {
 	WTVertex *vl[4] = { &vtx[0], &vtx[1], &vtx[2], 0 };
 
 	if (m_markedTriangle >= 0) {
-		vtx[0].SetPosition(m_pBaseModel->m_pTriangles[m_markedTriangle].m_vertex[0]);
-		vtx[0].diffuse = 0xFFFFFFFF;
-		vtx[1].SetPosition(m_pBaseModel->m_pTriangles[m_markedTriangle].m_vertex[1]);
-		vtx[1].diffuse = 0xFFFFFFFF;
-		vtx[2].SetPosition(m_pBaseModel->m_pTriangles[m_markedTriangle].m_vertex[2]);
-		vtx[2].diffuse = 0xFFFFFFFF;
+		for (int i = 0; i < 3; i++) {
+			vtx[i].SetPosition(m_pBaseModel->m_pTriangles[m_markedTriangle].m_vertex[i]);
+			vtx[i].diffuse = 0xFFFFFFFF;
+		}
 
 		g_view->DrawPolygonFan(vl, 0x4300000, 0x400, false);
 	}
@@ -3476,7 +3472,7 @@ void CQuadTree::HoleProcess(float elapsed) {
 
 	float side = nextHeight * height;
 	float t;
-	if (side < 0.0f && ball.m_velocity.y < 0.0f && !(WAbsBySign(height) < g_EPSILON))
+	if (side < 0.0f && ball.m_velocity.y < 0.0f && !(WAbsBySign(height) < data_a11514[3]))
 		t = height / (height - nextHeight);
 	else
 		t = 1.0f;
@@ -3487,10 +3483,11 @@ void CQuadTree::HoleProcess(float elapsed) {
 		ball.m_lastEventPreDataIndex = m_pBaseModel->m_pTriangles[ball.m_groundArea].m_propIndex;
 
 	// How far the ball is outside the cup's rim, now and after the step.
-	WVector d = ball.m_pos - GOLFDOC()->GetHoleData().m_cupPos;
+	WVector d;
+	d = ball.m_pos - GetHoleCupPos();
 	d.y = 0.0f;
 	float over = (float)sqrt(d.z * d.z + d.x * d.x) - (m_holeCupRadius - ball.m_radius);
-	d = move + ball.m_pos - GOLFDOC()->GetHoleData().m_cupPos;
+	d = move + ball.m_pos - GetHoleCupPos();
 	d.y = 0.0f;
 	float nextOver = (float)sqrt(d.z * d.z + d.x * d.x) - (m_holeCupRadius - ball.m_radius);
 
@@ -3558,13 +3555,13 @@ void CQuadTree::HoleProcess(float elapsed) {
 		}
 	}
 
-	d = GOLFDOC()->GetHoleData().m_cupPos - ball.m_pos;
+	d = GetHoleCupPos() - ball.m_pos;
 	d.y = 0.0f;
 
 	float dist = (float)sqrt(d.z * d.z + d.x * d.x);
 	if (dist > m_holeCupRadius - ball.m_radius) {
 		if (ball.m_eventPreDataIndex[7] < 0) {
-			if (ball.m_pos.y < GOLFDOC()->GetHoleData().m_cupPos.y) {
+			if (ball.m_pos.y < GetHoleCupPos().y) {
 				if (t < 1.0f) {
 					ball.m_pos = GetHoleCupPos();
 					ball.m_pos.y = m_cupBottom + ball.m_radius;
@@ -3629,7 +3626,7 @@ void CQuadTree::HoleProcess(float elapsed) {
 		} else {
 			// The spin took hold: keep the ball against the cup's wall.
 			float y = ball.m_pos.y;
-			ball.m_pos = GOLFDOC()->GetHoleData().m_cupPos - d.Normalize() * (m_holeCupRadius - ball.m_radius);
+			ball.m_pos = GetHoleCupPos() - d.Normalize() * (m_holeCupRadius - ball.m_radius);
 			ball.m_pos.y = y;
 			ball.m_velocity = d.Normalize() * (ball.m_velocity.Magnitude() * 0.3f);
 		}
@@ -3649,13 +3646,13 @@ float CQuadTree::IntersectPoint(WVector dir) {
 			m_holeCupRadius = GolfBall().m_radius * 3.0f;
 	}
 
-	WVector cup = GOLFDOC()->GetHoleData().m_cupPos;
-	WVector d = GolfBall().m_pos - cup;
+	WVector d = GolfBall().m_pos - GetHoleCupPos();
 
 	float a = dir.x * dir.x + dir.z * dir.z;
-	float b = d.x * dir.x + dir.z * d.z;
+	float b = d.x * dir.x + d.z * dir.z;
 	float radius = GolfBall().m_radius;
-	float disc = b * b - a * ((d.z * d.z + d.x * d.x) - (m_holeCupRadius - GolfBall().m_radius) * (m_holeCupRadius - radius));
+	CGolfBall &ball = GolfBall();
+	float disc = b * b - a * ((d.z * d.z + d.x * d.x) - (m_holeCupRadius - ball.m_radius) * (m_holeCupRadius - radius));
 	if (disc < 0.0f)
 		return 1.0f;
 
@@ -3961,8 +3958,10 @@ bool CQuadTree::OverlappedWithObject(WVector pos, float radius) {
 			if (pModel->m_sceneAabb.min.y - 10.0f > pos.y)
 				continue;
 
-			Waabb box(pModel->m_sceneAabb.min - WVector(radius, 0.0f, radius),
-				pModel->m_sceneAabb.max + WVector(radius, 0.0f, radius));
+			// The scene box grown by the radius horizontally.
+			Waabb box(pModel->m_sceneAabb);
+			box.min = box.min - WVector(radius, 0.0f, radius);
+			box.max.x += radius; box.max.z += radius;
 
 			if (pos.x > box.min.x && pos.x < box.max.x && pos.z > box.min.z && pos.z < box.max.z)
 				return true;
@@ -4069,7 +4068,7 @@ WVector CQuadTree::DistanceBetweenRayNSegment(const WVector &rayOrig, const WVec
 	float sN, sD;
 	float tN, tD;
 
-	if (WAbsBySign(D) < data_00a11520) {
+	if (WAbsBySign(D) < data_a11514[3]) {
 		sN = 0.0f;
 		tN = e;
 	} else {
@@ -4105,13 +4104,13 @@ WVector CQuadTree::DistanceBetweenRayNSegment(const WVector &rayOrig, const WVec
 	}
 
 	float sc;
-	if (WAbsBySign(sN) < data_00a11520)
+	if (WAbsBySign(sN) < data_a11514[3])
 		sc = 0.0f;
 	else
 		sc = sN / sD;
 
 	float tc;
-	if (WAbsBySign(tN) < data_00a11520)
+	if (WAbsBySign(tN) < data_a11514[3])
 		tc = 0.0f;
 	else
 		tc = tN / tD;
@@ -4126,8 +4125,7 @@ bool CQuadTree::SimpleColTest(const WVector &pos, const WVector &dir) {
 	GetObjList(pos, dir);
 
 	for (unsigned char i = 0; i < m_objNum; i++) {
-		WPolySoup::sModel *pModel = m_pPolySoup->m_models[m_objList[i]];
-		if (RayIntersectAABB(pModel->m_aabb, pos, dir, 0, 0) < 1.0f)
+		if (RayIntersectAABB(m_pPolySoup->m_models[m_objList[i]]->m_aabb, pos, dir, 0, 0) < 1.0f)
 			return true;
 	}
 
@@ -4486,7 +4484,8 @@ void CQuadTree::DrawDecal(int texture, const WVector &pos, const WVector &normal
 	n.Normalize();
 	WVector t = tangent;
 	t.Normalize();
-	WVector b(t.z * n.y - n.z * t.y, n.z * t.x - t.z * n.x, t.y * n.x - n.y * t.x);
+	WVector b;
+	b = WCrossProduct(n, t);
 	b.Normalize();
 
 	// the box the decal covers
@@ -4857,23 +4856,24 @@ WVector CQuadTree::GetRayIntersection(WVector from, WVector dir) {
 	float t = 1.0f;
 
 	for (int step = 0; step < 1500; step++) {
-		WVector next = from + dir;
-		WVector probe = next; GetMeshList(next); int index = -1; probe = ColTest(probe, true, &index, true); if (index == -1) probe.y = m_pBaseModel->m_aabb.min.y; if (probe.y < m_pBaseModel->m_aabb.min.y) probe.y = m_pBaseModel->m_aabb.min.y; WVector ground = probe; if (next.y < ground.y) {
+		WVector probe; probe = from + dir; GetMeshList(probe); int index = -1; probe = ColTest(probe, true, &index, true); if (index == -1) probe.y = m_pBaseModel->m_aabb.min.y; if (probe.y < m_pBaseModel->m_aabb.min.y) probe.y = m_pBaseModel->m_aabb.min.y; WVector ground = probe; if (ground.y > (from + dir).y) {
 			GetMeshList(from, dir);
 
-			for (int i = 0; i < m_meshNum; i++) {
-				float hit = intersection::IntersectRayTriangle(from, dir, m_pBaseModel->m_pTriangles[m_meshList[i]].m_vertex);
-				if (hit > t)
-					continue;
-				t = hit;
-			}
+			if (m_meshNum > 0) {
+				for (int i = 0; i < m_meshNum; i++) {
+					float hit = intersection::IntersectRayTriangle(from, dir, m_pBaseModel->m_pTriangles[m_meshList[i]].m_vertex);
+					if (hit > t)
+						continue;
+					t = hit;
+				}
 
-			if (t < 1.0f) {
-				break;
+				if (t < 1.0f) {
+					break;
+				}
 			}
 		}
 
-		from = next;
+		from += dir;
 	}
 
 	WVector point = from + dir * t;
@@ -5253,13 +5253,13 @@ bool CQuadTree::TraceAABB_BackGround(const WVector &start, const WVector &end, c
 int CQuadTree::CheckCamera(void) {
 	int result = -1;
 	int index = 0;
-	bool visible;
+	bool visible = false;
 	int i;
 
 	if (!IsLocalContent((localContentType_t)0x56))
 		return -1;
 
-	WPuppet *pPuppet = m_pPolySoup->m_models[0]->m_pPuppet;
+	WPuppet *pPuppet = m_pPolySoup->m_models.front()->m_pPuppet;
 	if (pPuppet != 0) {
 		w_bound_box *pCenter = pPuppet->m_bbList.Find("center");
 
@@ -5270,9 +5270,7 @@ int CQuadTree::CheckCamera(void) {
 					pBox->info->aabb.min,
 					pBox->info->aabb.min, pBox->info->aabb.min, pBox->info->aabb.min
 				};
-				const WVector &vMax = pBox->info->aabb.max;
-
-				corners[0].y = vMax.y; corners[1].x = vMax.x; corners[1].y = vMax.y; corners[2].x = vMax.x;
+				corners[0].y = pBox->info->aabb.max.y; corners[1].x = pBox->info->aabb.max.x; corners[1].y = pBox->info->aabb.max.y; corners[2].x = pBox->info->aabb.max.x;
 
 				for (i = 0; i < 4; i++) {
 					visible = g_view->InFrustum(corners[i]);
@@ -5343,27 +5341,26 @@ void CQuadTree::TraceOBB_Avatar_genPosition(const WVector &start, const WVector 
 			w_bound_box *pBox = pModel->m_pPuppet->m_bbList.Find("char0");
 			while (pBox) {
 				Wobb obb;
-				obb.extend[0] = pBox->bone->GetMatrix().xa; obb.extend[1] = pBox->bone->GetMatrix().ya; obb.extend[2] = pBox->bone->GetMatrix().za;
+				WMatrix &mat = pBox->bone->GetMatrix(); obb.extend[0] = mat.xa; obb.extend[1] = mat.ya; obb.extend[2] = mat.za;
 				WVector half = (pBox->info->aabb.max - pBox->info->aabb.min) * 0.5f;
-				obb.extend[0] *= half.x; obb.extend[1] *= half.y; obb.extend[2] *= half.z;
-				obb.center = pBox->info->spherePivot * pBox->bone->GetMatrix();
+				obb.extend[0] *= half.x; obb.extend[1] *= half.y; obb.extend[2] *= half.z; obb.center = pBox->info->spherePivot * mat;
 
 				delta.y = 0.0f;
 				Wobb moved = obb;
-				moved.center = WVector(moved.center.x + delta.x, moved.center.y, moved.center.z + delta.z);
+				moved.center = WVector(delta.x + moved.center.x, moved.center.y, delta.z + moved.center.z);
 
 				if (TestIntersectionOBB(avatarObb, moved)) {
 					WVector dir = delta;
 					dir.Normalize();
 
 					moved = obb;
-					moved.center = WVector(moved.center.x + dir.x, moved.center.y, moved.center.z + dir.z);
+					moved.center = WVector(dir.x + moved.center.x, moved.center.y, dir.z + moved.center.z);
 
 					WVector pos;
 					if (TestIntersectionOBB(avatarObb, moved)) {
 						pos = start;
 					} else {
-						pos = WVector(start.x + dir.x, start.y, start.z + dir.z);
+						pos = WVector(dir.x + start.x, start.y, dir.z + start.z);
 					}
 					pTrace->m_endPos = pos;
 					return;
@@ -5598,10 +5595,10 @@ int CQuadTree::Get_WallSlidingAngle(const WVector &pos, WPolySoup::sModel *pMode
 	WVector cand[3];
 	memset(cand, 0, sizeof(cand));
 	WVector low, high;
-	Waabb charBox, objBox;
-	int count = 0;
 
 	WPuppet *pPuppet = m_pPolySoup->m_models[0]->m_pPuppet;
+	int count = 0;
+	Waabb charBox, objBox;
 	if (pPuppet == 0)
 		return -1;
 
@@ -5664,7 +5661,7 @@ int CQuadTree::Get_WallSlidingAngle(const WVector &pos, WPolySoup::sModel *pMode
 				for (int k = 0; k < 3; k++) {
 					dir = cand[k];
 
-					if (sqrtf(dir.z * dir.z + dir.x * dir.x) < sqrtf(low.z * low.z + low.x * low.x) && sqrtf(dir.z * dir.z + dir.x * dir.x) != 0.0) {
+					if (sqrtf(dir.x * dir.x + dir.z * dir.z) < sqrtf(low.z * low.z + low.x * low.x) && sqrtf(dir.x * dir.x + dir.z * dir.z) != 0.0) {
 						low = cand[k];
 						count = k;
 					}
@@ -5693,18 +5690,18 @@ void CQuadTree::OBBToAABB(Wobb obb, Waabb &aabb, WVector &center) {
 	WVector ext2 = obb.extend[2];
 
 	box.max.y = 0.0f;
-	WVector corner[8];
 	WVector ny = ext1 * -1.0f;
 	WVector nz = ext2 * -1.0f;
 	WVector nx = ext0 * -1.0f;
-	corner[0] = c + nx + ext1 + nz;
-	corner[1] = c + nx + ny + nz;
-	corner[2] = c + ext0 + ny + nz;
-	corner[3] = c + ext0 + ext1 + nz;
-	corner[4] = c + nx + ext1 + ext2;
-	corner[5] = c + nx + ny + ext2;
-	corner[6] = c + ext0 + ny + ext2;
-	corner[7] = c + ext0 + ext1 + ext2;
+	WVector corner[8];
+	corner[0] = WVector(c.x + (nx.x + (ext1.x + nz.x)), c.y + (nx.y + (ext1.y + nz.y)), c.z + (nx.z + (ext1.z + nz.z)));
+	corner[1] = WVector(c.x + (nx.x + (ny.x + nz.x)), c.y + (nx.y + (ny.y + nz.y)), c.z + (nx.z + (ny.z + nz.z)));
+	corner[2] = WVector(c.x + (ext0.x + (ny.x + nz.x)), c.y + (ext0.y + (ny.y + nz.y)), c.z + (ext0.z + (ny.z + nz.z)));
+	corner[3] = WVector(c.x + (ext0.x + (ext1.x + nz.x)), c.y + (ext0.y + (ext1.y + nz.y)), c.z + (ext0.z + (ext1.z + nz.z)));
+	corner[4] = WVector(c.x + (nx.x + (ext1.x + ext2.x)), c.y + (nx.y + (ext1.y + ext2.y)), c.z + (nx.z + (ext1.z + ext2.z)));
+	corner[5] = WVector(c.x + (nx.x + (ny.x + ext2.x)), c.y + (nx.y + (ny.y + ext2.y)), c.z + (nx.z + (ny.z + ext2.z)));
+	corner[6] = WVector(c.x + (ext0.x + (ny.x + ext2.x)), c.y + (ext0.y + (ny.y + ext2.y)), c.z + (ext0.z + (ny.z + ext2.z)));
+	corner[7] = WVector(c.x + (ext0.x + (ext1.x + ext2.x)), c.y + (ext0.y + (ext1.y + ext2.y)), c.z + (ext0.z + (ext1.z + ext2.z)));
 
 	WVector *pCorner = corner;
 	for (int count = 8; count != 0; count--, pCorner++) {
@@ -5740,14 +5737,14 @@ float CQuadTree::GetObbPos(Wobb &obb, bool bAll, int option) {
 	WVector nx = ax * -1.0f;
 
 	WVector corners[8];
-	corners[0] = center + nx + ay + nz;
-	corners[1] = center + nx + ny + nz;
-	corners[2] = center + ax + ny + nz;
-	corners[3] = center + ax + ay + nz;
-	corners[4] = center + nx + ay + az;
-	corners[5] = center + nx + ny + az;
-	corners[6] = center + ax + ny + az;
-	corners[7] = center + ax + ay + az;
+	corners[0] = WVector(center.x + (nx.x + (ay.x + nz.x)), center.y + (nx.y + (ay.y + nz.y)), center.z + (nx.z + (ay.z + nz.z)));
+	corners[1] = WVector(center.x + (nx.x + (ny.x + nz.x)), center.y + (nx.y + (ny.y + nz.y)), center.z + (nx.z + (ny.z + nz.z)));
+	corners[2] = WVector(center.x + (ax.x + (ny.x + nz.x)), center.y + (ax.y + (ny.y + nz.y)), center.z + (ax.z + (ny.z + nz.z)));
+	corners[3] = WVector(center.x + (ax.x + (ay.x + nz.x)), center.y + (ax.y + (ay.y + nz.y)), center.z + (ax.z + (ay.z + nz.z)));
+	corners[4] = WVector(center.x + (nx.x + (ay.x + az.x)), center.y + (nx.y + (ay.y + az.y)), center.z + (nx.z + (ay.z + az.z)));
+	corners[5] = WVector(center.x + (nx.x + (ny.x + az.x)), center.y + (nx.y + (ny.y + az.y)), center.z + (nx.z + (ny.z + az.z)));
+	corners[6] = WVector(center.x + (ax.x + (ny.x + az.x)), center.y + (ax.y + (ny.y + az.y)), center.z + (ax.z + (ny.z + az.z)));
+	corners[7] = WVector(center.x + (ax.x + (ay.x + az.x)), center.y + (ax.y + (ay.y + az.y)), center.z + (ax.z + (ay.z + az.z)));
 
 	int i;
 	if (bAll) {
@@ -5791,7 +5788,7 @@ void CQuadTree::TraceOBB_Wall(const WVector &start, const WVector &end, trace_s 
 			return;
 		}
 
-		WPuppet *pPuppet = m_pPolySoup->m_models[0]->m_pPuppet;
+		WPuppet *pPuppet = m_pPolySoup->m_models.front()->m_pPuppet;
 		if (!pPuppet) {
 			pTrace->m_endPos = start;
 			return;
@@ -5880,112 +5877,114 @@ void CQuadTree::TraceOBB_Wall(const WVector &start, const WVector &end, trace_s 
 // Moves the box of pModel's "char" boxes from start toward end against the
 // other objects' "char" boxes; true when it is blocked.
 bool CQuadTree::TraceOBB_Object(const WVector &start, const WVector &end, const Waabb &box, trace_s *pTrace, WPolySoup::sModel *pModel, bool bAll) {
-	if (!IsLocalContent((localContentType_t)0x56))
-		return false;
+	if (IsLocalContent((localContentType_t)0x56)) {
+		memset(pTrace, 0, sizeof(trace_s));
+		bool bHit = false;
+		int count = 0;
+		int charCount = 0;
+		WVector delta;
+		delta = end - start;
+		Waabb sweep;
+		Waabb startBox;
+		Waabb endBox;
 
-	memset(pTrace, 0, sizeof(trace_s));
-	bool bHit = false;
-	int count = 0;
-	int charCount = 0;
-	WVector delta;
-	delta = end - start;
-	Waabb sweep;
-	Waabb startBox;
-	Waabb endBox;
+		if (m_pPolySoup->m_models.front()->m_pPuppet == 0 || strcmp(m_pPolySoup->m_models.front()->m_name, pModel->m_name) == 0) {
+			pTrace->m_endPos = start;
+			return true;
+		}
 
-	if (m_pPolySoup->m_models[0]->m_pPuppet == 0 || strcmp(m_pPolySoup->m_models[0]->m_name, pModel->m_name) == 0) {
-		pTrace->m_endPos = start;
-		return true;
-	}
+		startBox = box + start;
+		endBox = box + end;
 
-	startBox = box + start;
-	endBox = box + end;
+		sweep = ExpandAABB(startBox, endBox);
+		sweep.min -= WVector::ONE;
+		sweep.max += WVector::ONE;
 
-	sweep = ExpandAABB(startBox, endBox);
-	sweep.min -= WVector::ONE;
-	sweep.max += WVector::ONE;
+		GetObjList(sweep);
 
-	GetObjList(sweep);
+		if (pModel->m_pPuppet == 0) {
+			pTrace->m_endPos = start;
+			return true;
+		}
 
-	if (pModel->m_pPuppet == 0) {
-		pTrace->m_endPos = start;
-		return true;
-	}
+		w_bound_box *pModelCenter = pModel->m_pPuppet->m_bbList.Find("center");
+		if (!pModelCenter) {
+			pTrace->m_endPos = start;
+			return true;
+		}
 
-	if (!pModel->m_pPuppet->m_bbList.Find("center")) {
-		pTrace->m_endPos = start;
-		return true;
-	}
+		for (int i = 0; i < m_objNum; i++) {
+			if (!bAll && m_objList[i] <= 0)
+				continue;
 
-	for (int i = 0; i < m_objNum; i++) {
-		if (!bAll && m_objList[i] <= 0)
-			continue;
+			WPolySoup::sModel *pObj = m_pPolySoup->m_models[m_objList[i]];
+			if (strcmp(pObj->m_name, pModel->m_name) == 0)
+				continue;
+			if (pObj->m_pPuppet == 0)
+				continue;
 
-		WPolySoup::sModel *pObj = m_pPolySoup->m_models[m_objList[i]];
-		if (strcmp(pObj->m_name, pModel->m_name) == 0)
-			continue;
-		if (pObj->m_pPuppet == 0)
-			continue;
+			w_bound_box *pCenter = pObj->m_pPuppet->m_bbList.Find("center");
 
-		w_bound_box *pCenter = pObj->m_pPuppet->m_bbList.Find("center");
+			char szPoster[256] = "poster_a.pet";
+			if (stricmp(m_pPolySoup->m_models[m_objList[i]]->m_pPuppet->GetPuppetName(), szPoster) == 0)
+				continue;
+			if (!pCenter)
+				continue;
 
-		char szPoster[256] = "poster_a.pet";
-		if (stricmp(m_pPolySoup->m_models[m_objList[i]]->m_pPuppet->GetPuppetName(), szPoster) == 0)
-			continue;
-		if (!pCenter)
-			continue;
+			w_bound_box *pBox = m_pPolySoup->m_models[m_objList[i]]->m_pPuppet->m_bbList.Find("char0");
+			while (pBox) {
+				Wobb obb;
+				obb = pBox->bone->GetMatrix();
+				obb *= (pBox->info->aabb.max - pBox->info->aabb.min) * 0.5f;
+				obb.center = pBox->info->spherePivot * pBox->bone->GetMatrix();
 
-		w_bound_box *pBox = m_pPolySoup->m_models[m_objList[i]]->m_pPuppet->m_bbList.Find("char0");
-		while (pBox) {
-			Wobb obb;
-			obb = pBox->bone->GetMatrix();
-			obb *= (pBox->info->aabb.max - pBox->info->aabb.min) * 0.5f;
-			obb.center = pBox->info->spherePivot * pBox->bone->GetMatrix();
+				w_bound_box *pChar = pModel->m_pPuppet->m_bbList.Find("char0");
+				while (pChar) {
+					Wobb charObb;
+					charObb = pChar->bone->GetMatrix();
+					charObb *= (pChar->info->aabb.max - pChar->info->aabb.min) * 0.5f;
+					charObb.center = pChar->info->spherePivot * pChar->bone->GetMatrix();
 
-			w_bound_box *pChar = pModel->m_pPuppet->m_bbList.Find("char0");
-			while (pChar) {
-				Wobb charObb;
-				charObb = pChar->bone->GetMatrix();
-				charObb *= (pChar->info->aabb.max - pChar->info->aabb.min) * 0.5f;
-				charObb.center = pChar->info->spherePivot * pChar->bone->GetMatrix();
+					pChar = pModel->m_pPuppet->m_bbList.Find(MakeStr("char%d", ++charCount));
 
-				pChar = pModel->m_pPuppet->m_bbList.Find(MakeStr("char%d", ++charCount));
-
-				Wobb moved;
-				moved = charObb;
-				moved += delta;
-				if (TestIntersectionOBB(obb, moved)) {
-					// Blocked: try sliding horizontally one unit along the path.
-					WVector dir = delta;
-					dir.Normalize();
-
+					Wobb moved;
 					moved = charObb;
-					moved += WVector(dir.x, 0.0f, dir.z);
+					moved += delta;
 					if (TestIntersectionOBB(obb, moved)) {
-						bHit = true;
-						break;
-					} else {
-						pTrace->m_endPos = WVector(dir.x + start.x, start.y, dir.z + start.z);
-						return false;
+						// Blocked: try sliding horizontally one unit along the path.
+						WVector dir = delta;
+						dir.Normalize();
+
+						moved = charObb;
+						moved += WVector(dir.x, 0.0f, dir.z);
+						if (TestIntersectionOBB(obb, moved)) {
+							bHit = true;
+							break;
+						} else {
+							pTrace->m_endPos = WVector(dir.x + start.x, start.y, dir.z + start.z);
+							return false;
+						}
 					}
 				}
+
+				if (bHit)
+					break;
+
+				charCount = 0;
+				pBox = m_pPolySoup->m_models[m_objList[i]]->m_pPuppet->m_bbList.Find(MakeStr("char%d", ++count));
 			}
-
-			if (bHit)
-				break;
-
-			charCount = 0;
-			pBox = m_pPolySoup->m_models[m_objList[i]]->m_pPuppet->m_bbList.Find(MakeStr("char%d", ++count));
 		}
+
+		if (bHit) {
+			pTrace->m_endPos = start;
+		} else if (bAll) {
+			pTrace->m_endPos = start + end;
+		} else {
+			pTrace->m_endPos = end;
+		}
+
+		return bHit;
 	}
 
-	if (bHit) {
-		pTrace->m_endPos = start;
-	} else if (bAll) {
-		pTrace->m_endPos = start + end;
-	} else {
-		pTrace->m_endPos = end;
-	}
-
-	return bHit;
+	return false;
 }

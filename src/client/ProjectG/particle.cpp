@@ -167,10 +167,7 @@ void CParticleEffect::HandleMsg(const MsgObject& msg) {
 			break;
 		}
 		CParticle* pDust = new CDust(1);
-		float radius = GolfBall().m_radius;
-		WVector center = GolfBall().m_pos;
-		center.y -= radius;
-		pDust->SetCenter(center);
+		pDust->SetCenter(GolfBall().m_pos - WVector(0.0f, GolfBall().m_radius, 0.0f));
 		m_pManager->MakeParticle(pDust, "\xb8\xd5\xc1\xf6", false);     // dust
 		break;
 	}
@@ -676,7 +673,7 @@ void CParticleRecv::Generate(void) {
 			m_frags[m_nextFrag].pos += (WVector::UNIT_POS_Z * m_spread * RotMat(6.2831855f * ((rand() % 1023) / 1024.0f), 0)) * RotMat(6.2831855f * ((rand() % 1023) / 1024.0f), 1);
 
 			WVector dir = m_frags[m_nextFrag].pos - m_center;
-			m_frags[m_nextFrag].vel = dir * (1.0f / dir.Magnitude());
+			m_frags[m_nextFrag].vel = (1.0f / dir.Magnitude()) * dir;
 		}
 
 		m_frags[m_nextFrag].vel *= m_speedMin + (m_speedMax - m_speedMin) * (rand() % 1023) / 1024.0f;
@@ -791,12 +788,12 @@ int CParticle2D::Initialize(const std::list<std::string>& bitmapNames, const WRe
 
 		if (!(WAbsBySign(velMax.x - velMin.x) < data_9f16cc)) {
 			float range = velMax.x - velMin.x;
-			pParticle->m_vel.x = velMin.x + rand() % (int)fabs(range);
+			pParticle->m_vel.x = velMin.x + rand() % (int)(float)fabs((double)range);
 		}
 
 		if (!(WAbsBySign(velMax.y - velMin.y) < data_9f16cc)) {
 			float range = velMax.y - velMin.y;
-			pParticle->m_vel.y = velMin.y + rand() % (int)fabs(range);
+			pParticle->m_vel.y = velMin.y + rand() % (int)(float)fabs((double)range);
 		}
 
 		if (m_style == STYLE_BLINK) {
@@ -897,7 +894,7 @@ void CParticle2D::Process(float elapsed) {
 
 		MakeDisplayRect(pParticle);
 
-		if (m_rect.x + m_rect.w <= pParticle->m_dest.x) {
+		if (pParticle->m_dest.x >= m_rect.Right()) {
 			pParticle->m_alive = 0;
 		}
 		if (m_rect.y + m_rect.h <= pParticle->m_dest.y) {
@@ -929,12 +926,12 @@ void CParticle2D::Process(float elapsed) {
 
 		if (!(WAbsBySign(m_velMax.x - m_velMin.x) < data_9f16cc)) {
 			float range = m_velMax.x - m_velMin.x;
-			pParticle->m_vel.x = m_velMin.x + rand() % (int)fabs(range);
+			pParticle->m_vel.x = m_velMin.x + rand() % (int)(float)fabs((double)range);
 		}
 
 		if (!(WAbsBySign(m_velMax.y - m_velMin.y) < data_9f16cc)) {
 			float range = m_velMax.y - m_velMin.y;
-			pParticle->m_vel.y = m_velMin.y + rand() % (int)fabs(range);
+			pParticle->m_vel.y = m_velMin.y + rand() % (int)(float)fabs((double)range);
 		}
 
 		if (m_style == STYLE_BLINK) {

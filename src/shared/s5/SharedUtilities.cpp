@@ -136,7 +136,7 @@ ePwdErrorCode VerifyStringContents_Limit(const std::string &text) {
 
 	char input[9] = { 0, };
 
-	_mbsnbcpy((unsigned char *)input, (const unsigned char *)text.c_str(), 8);
+	const unsigned char *source = (const unsigned char *)text.c_str(); _mbsnbcpy((unsigned char *)input, source, 8);
 
 	char digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 

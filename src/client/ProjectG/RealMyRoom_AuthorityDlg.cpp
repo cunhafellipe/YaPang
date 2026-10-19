@@ -118,20 +118,21 @@ void CRealMyRoom_AuthorityDlg::OnAuth_KindPowerOwnerdraw(intptr_t param) {
 	if (pItem) {
 		const Bitmap* pBitmap;
 		FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
+		int no = pItem->no;
 
 		if (pItem->pData == 0) {
-			pBitmap = m_pButtonImage[pItem->no][2];
+			pBitmap = m_pButtonImage[no][2];
 		}
 		else if (pItem->selected) {
-			pBitmap = m_pButtonImage[pItem->no][2];
+			pBitmap = m_pButtonImage[no][2];
 			pGI->SetTextColor(0xffff0000, 0xffffffff);
 		}
 		else if (pItem->underCursor) {
-			pBitmap = m_pButtonImage[pItem->no][1];
+			pBitmap = m_pButtonImage[no][1];
 			pGI->SetTextColor(0xff000000, 0xffffffff);
 		}
 		else {
-			pBitmap = m_pButtonImage[pItem->no][0];
+			pBitmap = m_pButtonImage[no][0];
 			pGI->SetTextColor(0xff000000, 0xffffffff);
 		}
 

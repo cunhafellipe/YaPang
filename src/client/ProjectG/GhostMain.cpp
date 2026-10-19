@@ -422,8 +422,9 @@ CExhibition *CGhostMain::MakePet(FrArea *area, CPartTidList *parts, int playerIn
 	pet->SetArea(rect.w, rect.h);
 
 	sUserInfo &info = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[playerIndex];
+	sCharacterInfo *character = &info.m_characterInfo;
 
-	switch (info.m_characterInfo.typeId) {
+	switch (character->typeId) {
 	case 0x4000005:
 		pet->SetDistance(9.0f, true, false);
 		break;
@@ -435,10 +436,10 @@ CExhibition *CGhostMain::MakePet(FrArea *area, CPartTidList *parts, int playerIn
 		break;
 	}
 
-	if (!parts->SetTids(&info.m_characterInfo, 0xFF) || !parts->IsComboValid())
+	if (!parts->SetTids(character, 0xFF) || !parts->IsComboValid())
 		parts->SetDefaultTids();
 
-	pet->SetModel(*parts, info.m_characterInfo.auxParts.tids, 0, 3.0f, 0);
+	pet->SetModel(*parts, character->auxParts.tids, 0, 3.0f, 0);
 
 	if (info.m_eventFlags.eventFlag4)
 		pet->AttachAngelWingFx();
@@ -538,8 +539,8 @@ void CGhostMain::OnProcess(float dt) {
 	if (FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop")))
 		return;
 
-	bool equipOpen = (__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("equip")) != 0 && ((IObject *)__rtti_obj)->IsKindOf(&FrEquipDlg::m_RTTI);
-	bool recycleOpen = (__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("recycledlg")) != 0 && ((IObject *)__rtti_obj)->IsKindOf(&FrRecycleDlg::m_RTTI);
+	bool equipOpen = ((__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("equip")) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&FrEquipDlg::m_RTTI) : false) != 0;
+	bool recycleOpen = ((__rtti_obj = g_pFresh->GetManager()->GetDesktop()->FindChildByName("recycledlg")) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&FrRecycleDlg::m_RTTI) : false) != 0;
 
 	if (g_input->GetDown("ESCAPE", true) && !equipOpen && !recycleOpen) {
 		OnExit();
@@ -547,9 +548,8 @@ void CGhostMain::OnProcess(float dt) {
 	}
 
 	if (m_hand.IsWorkDone()) {
-		bool rotate = !equipOpen && !recycleOpen;
 		if (m_userPet) {
-			m_userPet->SetEnableRotate(rotate);
+			m_userPet->SetEnableRotate(!equipOpen && !recycleOpen);
 			m_userPet->Process(dt, false);
 		}
 
@@ -804,9 +804,9 @@ void CGhostMain::OnDownUserEquip(void) {
 			count = WSingleton<CSharedDoc>::Instance()->m_caddieMap.size();
 			break;
 		case 4:
-			if (WSingleton<CSharedDoc>::Instance()->m_myMascotMap.size() == 0)
-				return;
-			break;
+			if (WSingleton<CSharedDoc>::Instance()->m_myMascotMap.size() != 0)
+				break;
+			return;
 		}
 		if (count == 0)
 			return;
@@ -1187,17 +1187,19 @@ void CGhostMain::OnInitGhostMain(PG_MSGARG) {
 // ghostmain.cpp:1485
 void CGhostMain::HandleMsg(const MsgObject &msg) {
 	switch (msg.m_msg) {
-	case 0:
+	case 0: {
 		if (g_pFresh == 0)
 			return;
 
-		g_pFresh->OpenLayout((const char *)msg.m_param1, this, true);
+		const char *layout = (const char *)msg.m_param1;
+		g_pFresh->OpenLayout(layout, this, true);
 		switch (msg.m_param2) {
 		case 1:
 			CGhostHandler::Instance()->OpenNotifyDlg(5);
 			break;
 		}
 		break;
+	}
 
 	case 73:
 		SetUserEquip((PANGYA_ITEM_GROUP)1, ((const sCharacterInfo *)msg.m_param2)->id);

@@ -143,7 +143,7 @@ CSceneManager::CSceneManager(void)
 	: m_beachList(16, 16), m_waveletList(16, 16), m_poolList(16, 16), m_riverList(16, 16),
 	  m_pSea(NULL), m_pMarker(NULL), m_pWeather(NULL), m_pLobbyWeather(NULL),
 	  m_useFog(true), m_useImposter(false), m_skipTransparent(false),
-	  m_drawElementBoxes(false), m_pFont(NULL), m_overlapCamera(true), m_noOverlapCamera(false), m_debugDraw(0) {
+	  m_drawElementBoxes(false), m_pFont(NULL), m_overlapCamera(true), m_noOverlapCamera(false) {
 	m_pMarker = new CMarker;
 
 	// The device tells whether it can draw transparent elements.
@@ -1172,7 +1172,7 @@ void CSceneManager::DrawImposter(WView* pView, const TransparentElement& elem) {
 
 	pView->DrawPolygonFan(vtx, (elem.m_texture & 0x7FF) | 0x28400000, 0, false);
 
-	if ((unsigned char)(m_debugDraw >> 3) & 1) {
+	if (m_debugDraw.test(3)) {
 		pView->DrawPolygonFan(vtx, 0x4000000, 0, false);
 	}
 }
@@ -1181,10 +1181,10 @@ void CSceneManager::DrawImposter(WView* pView, const TransparentElement& elem) {
 void CSceneManager::DrawPuppet(WView* pView, WPuppet* pPuppet, Waabb* pBox) {
 	pPuppet->Render(pView, true, pPuppet->GetMatrix().xa.Magnitude(), pView->InFrustumSafe(pPuppet->GetBoundBox()), false, false);
 
-	if (m_debugDraw & 1) {
+	if (m_debugDraw.test(0)) {
 		pView->DrawAABB(pPuppet->GetBoundBox(), 0xFFFF0000, false, 0);
 	}
-	if ((unsigned char)(m_debugDraw >> 1) & 1) {
+	if (m_debugDraw.test(1)) {
 		w_bound_box* box = pPuppet->m_bbList.Find("char0");
 		if (box) {
 			int index = 0;
@@ -1201,7 +1201,7 @@ void CSceneManager::DrawPuppet(WView* pView, WPuppet* pPuppet, Waabb* pBox) {
 			pView->DrawAABB(*pBox, 0xFF00FF00, false, 0);
 		}
 	}
-	if ((unsigned char)(m_debugDraw >> 2) & 1) {
+	if (m_debugDraw.test(2)) {
 		pView->DrawSphere(pPuppet->GetBoundSphere(), 0xFFFFFF00, 0x18, 0);
 	}
 }
@@ -1398,7 +1398,7 @@ void CSceneManager::SetWeather(unsigned char weather, bool lobby) {
 		if (m_pLobbyWeather) { delete m_pLobbyWeather; m_pLobbyWeather = 0; }
 	}
 
-	if (GetCurMap() == 9 && (__rtti_obj = (!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
+	if (GetCurMap() == 9 && (__rtti_obj = AfxGetTask()) != 0 && ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI)) {
 		if (!m_pWeather) {
 			m_pWeather = new CSnow(0x400, "~GlowGray.jpg", 0, 32, 32);
 			m_pWeather->SetGravity(0.25f);
@@ -1537,7 +1537,7 @@ void CSceneManager::SetLobbyWeather(bool weather) {
 // m_drawElementBoxes is set, the name of every nearby or off-screen element
 // at its projected bounding-box top.
 void CSceneManager::DrawDebugLine(WView* pView) {
-	if ((unsigned char)(m_debugDraw >> 4) & 1) {
+	if (m_debugDraw.test(4)) {
 		Waabb& box = GOLFDOC()->m_pPolySoup->FindModel(0)->m_aabb;
 		for (int j = 0; j < 4; j++) {
 			WVector v;
@@ -1551,7 +1551,7 @@ void CSceneManager::DrawDebugLine(WView* pView) {
 		pView->DrawPolygonFan(vtx, 0, 0, false);
 	}
 
-	if ((unsigned char)(m_debugDraw >> 5) & 1) {
+	if (m_debugDraw.test(5)) {
 		Waabb& box = GOLFDOC()->m_pPolySoup->FindModel(0)->m_aabb;
 		for (int j = 0; j < 4; j++) {
 			WVector v;

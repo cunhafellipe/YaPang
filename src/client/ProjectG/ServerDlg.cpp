@@ -467,20 +467,21 @@ void FrServerDlg::OnCancel(void) {
 
 // serverdlg.cpp:452
 bool FrServerDlg::OnInit(void) {
-	m_textMap[0] = std::string("list_bongdal");
-	m_textMap[1] = std::string("list_pipin");
-	m_textMap[2] = std::string("list_titangboo");
-	m_textMap[3] = std::string("list_dolphiny");
-	m_textMap[4] = std::string("list_lolo");
-	m_textMap[5] = std::string("list_quma");
-	m_textMap[6] = std::string("list_tiki");
-	m_textMap[7] = std::string("list_cadie");
-	m_textMap[8] = std::string("list_caren");
-	m_textMap[9] = std::string("");
-	m_textMap[10] = std::string("");
-	m_textMap[11] = std::string("");
-	m_textMap[120] = std::string("");
-	m_textMap[128] = std::string("");
+	std::map<unsigned int, std::string> &textMap = m_textMap;
+	textMap[0] = std::string("list_bongdal");
+	textMap[1] = std::string("list_pipin");
+	textMap[2] = std::string("list_titangboo");
+	textMap[3] = std::string("list_dolphiny");
+	textMap[4] = std::string("list_lolo");
+	textMap[5] = std::string("list_quma");
+	textMap[6] = std::string("list_tiki");
+	textMap[7] = std::string("list_cadie");
+	textMap[8] = std::string("list_caren");
+	textMap[9] = std::string("");
+	textMap[10] = std::string("");
+	textMap[11] = std::string("");
+	textMap[120] = std::string("");
+	textMap[128] = std::string("");
 
 	m_loginWaitTime = 0;
 
@@ -507,7 +508,7 @@ bool FrServerDlg::OnInit(void) {
 				bAny = true;
 			}
 
-			if (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().flagBlock & 8) {
+			if (WSingleton<CSharedDoc>::Instance()->GetFlagBlock() & 8) {
 				if (bAny)
 					text += MakeStr(", ");
 				else
@@ -1283,10 +1284,12 @@ void FrServerDlg::OnChannelListBtnDown(void) {
 	AfxGetTask()->SendMsgToMainActor(MsgObject(0, 1, 0, 0, 0, 0, 0));
 
 	if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN) && WSingleton<CMessengerInfo>::Instance()->m_serverListRequest == 4) {
-		WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber = 0xFFFF;
+		CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
+
+		pDoc->m_roomInfo.m_roomNumber = 0xFFFF;
 		WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType = 0xFF;
 
-		const sChannelInfo* pSelected = &WSingleton<CSharedDoc>::Instance()->m_selectedChannel;
+		const sChannelInfo* pSelected = &pDoc->m_selectedChannel;
 		sUserPosition position;
 		position.m_userValue = WSingleton<CSharedDoc>::Instance()->m_gameServerUID;
 		position.m_channelId = pSelected->id;
@@ -1401,7 +1404,8 @@ void FrServerDlg::OnChannelListOwnerDraw(intptr_t param) {
 
 
 
-				WOverlay::DrawBox(g_view, WRect(x + i * 6 + 1.0f, y + 1.0f, 6.0f, 4.0f), 0, pChannel->maxUsers > pChannel->curUsers ? 0xfffeaf24 : 0xffff0000, 0);
+				WPoint pt(x + i * 6 + 1.0f, y + 1.0f);
+				WOverlay::DrawBox(g_view, WRect(pt, 6.0f, 4.0f), 0, pChannel->maxUsers > pChannel->curUsers ? 0xfffeaf24 : 0xffff0000, 0);
 			}
 
 
@@ -1542,7 +1546,7 @@ void FrServerDlg::FailedToConnectServer(void) {
 
 	m_state = (gsLoginState_t)0;
 	m_pCurServer->SetCaption(WSingleton<CSharedDoc>::Instance()->m_curServer.name);
-	m_pConnectMessage->SetVisible(true);
+	m_pMessage->SetVisible(true);
 	m_pCurServer->SetVisible(true);
 	m_pChannelList->SetVisible(false);
 

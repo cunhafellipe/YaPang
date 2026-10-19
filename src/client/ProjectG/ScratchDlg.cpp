@@ -939,6 +939,7 @@ void FrScratchDlg::InitChangeScratchCardNumber(int number) {
 
 // scratchdlg.cpp:1010
 void FrScratchDlg::DrawScratchItem(void) {
+	unsigned int j = 0;
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (!pGDI) {
@@ -955,8 +956,8 @@ void FrScratchDlg::DrawScratchItem(void) {
 			char* str = MakeStr("%d", m_scratchItem[0].m_count);
 			float x = m_rectScratchItem[2].x + 40.0f;
 
-			for (unsigned int i = 0; i < strlen(str); i++) {
-				x -= m_pTitleFont->GetCharWidthA(g_view, str[i] - '0');
+			for (j = 0; j < strlen(str); j++) {
+				x -= m_pTitleFont->GetCharWidthA(g_view, str[j] - '0');
 			}
 
 			m_pTitleFont->Print(g_view, x, m_rectScratchItem[2].y + 30.0f, str, 0, 0xFFFFFFFF, 0);
@@ -971,7 +972,7 @@ void FrScratchDlg::DrawScratchItem(void) {
 					char* str = MakeStr("%d", m_scratchItem[i].m_count);
 					float x = m_rectScratchItem[i].x + 40.0f;
 
-					for (unsigned int j = 0; j < strlen(str); j++) {
+					for (j = 0; j < strlen(str); j++) {
 						x -= m_pTitleFont->GetCharWidthA(g_view, str[j] - '0');
 					}
 
@@ -1108,15 +1109,14 @@ void FrScratchDlg::UpdateListMyItem(sBonusBall* pItem) {
 	}
 
 	if ((pItem->m_typeId >> 26) == 7) {
-		sCaddieInfo caddie;
-		memset(&caddie, 0, sizeof(caddie));
+		sCaddieInfo caddie = { pItem->m_serial };
 
 		caddie.days = 30;
 
 		caddie.flags &= 0xfc;
 
-		caddie.id = pItem->m_serial;
 		caddie.typeId = pItem->m_typeId;
+		caddie.reserved = 0;
 		WSingleton<CSharedDoc>::Instance()->m_caddieMap[pItem->m_serial] = caddie;
 	} else if ((pItem->m_typeId >> 26) == 4) {
 		sItemInfo item;
@@ -1127,8 +1127,9 @@ void FrScratchDlg::UpdateListMyItem(sBonusBall* pItem) {
 		WSingleton<CSharedDoc>::Instance()->m_myItemMap[pItem->m_serial] = item;
 	} else if ((pItem->m_typeId >> 26) == 0x12) {
 		unsigned long serial = pItem->m_serial;
+		unsigned long typeId = pItem->m_typeId;
 
-		IFF_STRUCT::sFurniture* pFurniture = ItemManager()->FindFurniture(pItem->m_typeId);
+		IFF_STRUCT::sFurniture* pFurniture = ItemManager()->FindFurniture(typeId);
 		if (!pFurniture) {
 			return;
 		}
@@ -1137,7 +1138,7 @@ void FrScratchDlg::UpdateListMyItem(sBonusBall* pItem) {
 		memset(&furniture, 0, sizeof(furniture));
 
 		furniture.m_id = serial;
-		furniture.m_typeId = pItem->m_typeId;
+		furniture.m_typeId = typeId;
 		furniture.m_pos.x = pFurniture->m_pos[0];
 		furniture.m_pos.y = pFurniture->m_pos[1];
 		furniture.m_pos.z = pFurniture->m_pos[2];
@@ -1158,9 +1159,10 @@ void FrScratchDlg::UpdateListMyItem(sBonusBall* pItem) {
 		}
 
 		item.m_serial = pItem->m_serial;
+		item.m_stateBits.flag0 = 0;
 		item.m_typeId = pItem->m_typeId;
-		memcpy(item.m_clubStatLevel, count, sizeof(count));
 		item.m_reserved16 = 0;
+		memcpy(item.m_clubStatLevel, count, sizeof(count));
 		item.m_stateBits.flag0 = 0;
 		item.m_stateBits.expired = 0;
 		item.m_stateBits.kind = pItem->m_bUnitCount;
@@ -1176,7 +1178,7 @@ void FrScratchDlg::UpdateListMyItem(sBonusBall* pItem) {
 			}
 		}
 
-		switch (pItem->m_typeId >> 26) {
+		switch (item.m_typeId >> 26) {
 		case 2:
 			WSingleton<CSharedDoc>::Instance()->AddMyPartsList(item);
 			break;
@@ -1289,6 +1291,7 @@ void FrScratchResultDlg::OnResultItemIconInit(intptr_t param) {
 
 // scratchdlg.cpp:1375
 void FrScratchResultDlg::OnResultItemIconOwnerDraw(void) {
+	unsigned int j = 0;
 	if (!m_pBmpResultItem[0]) {
 		return;
 	}
@@ -1327,8 +1330,8 @@ void FrScratchResultDlg::OnResultItemIconOwnerDraw(void) {
 			char* str = MakeStr("%d", m_resultItem[0].m_count);
 			float x = rect.x + 40.0f;
 
-			for (unsigned int i = 0; i < strlen(str); i++) {
-				x -= m_pTitleFont->GetCharWidthA(g_view, str[i] - '0');
+			for (j = 0; j < strlen(str); j++) {
+				x -= m_pTitleFont->GetCharWidthA(g_view, str[j] - '0');
 			}
 
 			m_pTitleFont->Print(g_view, x, rect.y + 30.0f, str, 0, 0xFFFFFFFF, 0);
@@ -1344,7 +1347,7 @@ void FrScratchResultDlg::OnResultItemIconOwnerDraw(void) {
 					char* str = MakeStr("%d", m_resultItem[i].m_count);
 					float x = rect.x + 40.0f - 26.0f + i * 70.0f;
 
-					for (unsigned int j = 0; j < strlen(str); j++) {
+					for (j = 0; j < strlen(str); j++) {
 						x -= m_pTitleFont->GetCharWidthA(g_view, str[j] - '0');
 					}
 
@@ -1465,7 +1468,7 @@ void FrScratchResultDlg::SetResultItem(sBonusBall* pItems, int count) {
 
 	const char* statName = "";
 
-	for (int j = 0; j < 5; j++) {
+	for (unsigned char j = 0; j < 5; j++) {
 		if (base.m_value[j] == 0 && slot.m_value[j] == 0)
 			continue;
 

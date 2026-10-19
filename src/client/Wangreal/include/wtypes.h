@@ -55,28 +55,28 @@ class WPoint : public _WPOINT {
 public:
 	WPoint(void) {}                                        // wtypes.h:68
 	WPoint(float px, float py) { x = px; y = py; }         // wtypes.h:69
-	WPoint(const WPoint& pt) { x = pt.x; y = pt.y; }             // wtypes.h:70
+	WPoint(PG_PORT_CONST WPoint& pt) { x = pt.x; y = pt.y; }   // wtypes.h:70
 	WPoint(WPoint* pPt);
 
 	void Offset(float dx, float dy);
 	void Offset(const WPoint& pt);
-	int operator==(const WPoint& pt) const;
-	int operator!=(const WPoint& pt) const { return x != pt.x || y != pt.y; }   // wtypes.h:77
-	void operator+=(const WPoint& pt);
+	int operator==(PG_PORT_CONST WPoint& pt) const;
+	int operator!=(PG_PORT_CONST WPoint& pt) const { return x != pt.x || y != pt.y; }   // wtypes.h:77
+	void operator+=(PG_PORT_CONST WPoint& pt);
 	void operator-=(const WPoint& pt);
-	WPoint operator+(const WPoint& pt) const { return WPoint(x + pt.x, y + pt.y); }   // wtypes.h:82
-	WPoint operator-(const WPoint& pt) const { return WPoint(x - pt.x, y - pt.y); }   // wtypes.h:83
+	WPoint operator+(PG_PORT_CONST WPoint& pt) const { return WPoint(pt.x + x, pt.y + y); }   // wtypes.h:82
+	WPoint operator-(PG_PORT_CONST WPoint& pt) const { return WPoint(x - pt.x, y - pt.y); }   // wtypes.h:83
 	WPoint operator-(void) const;
 };
 CHECK_SIZE(WPoint, 0x8);
 
 // wtypes.h:76
-FRWND_WTYPES_INLINE int WPoint::operator==(const WPoint& pt) const {
+FRWND_WTYPES_INLINE int WPoint::operator==(PG_PORT_CONST WPoint& pt) const {
 	return (x == pt.x && y == pt.y);
 }
 
 // wtypes.h:79
-UCCDRAWDLG_WTYPES_INLINE void WPoint::operator+=(const WPoint& pt) {
+UCCDRAWDLG_WTYPES_INLINE void WPoint::operator+=(PG_PORT_CONST WPoint& pt) {
 	x += pt.x;
 	y += pt.y;
 }
@@ -88,22 +88,16 @@ public:
 	WSize(const WSize& size);
 	WSize(WSize* pSize);
 
-	WSize operator+(const WSize& size) const { return WSize(w + size.w, h + size.h); }   // wtypes.h:101
+	WSize operator+(PG_PORT_CONST WSize& size) const { return WSize(w + size.w, h + size.h); }   // wtypes.h:101
 };
 CHECK_SIZE(WSize, 0x8);
 
 class WRect : public _WRECT {
 public:
 	WRect(void) {}                                         // wtypes.h:110
+	template <class TW, class TH> WRect(float rx, float ry, TW rw, TH rh) { x = rx; y = ry; w = (float)rw; h = (float)rh; }   // wtypes.h:112
 	template <class TW, class TH>
-	WRect(float rx, float ry, TW rw, TH rh) {              // wtypes.h:118
-		x = rx;
-		y = ry;
-		w = (float)rw;
-		h = (float)rh;
-	}
-	template <class TW, class TH>
-	WRect(const WPoint& pt, TW rw, TH rh) {                // wtypes.h:121
+	WRect(const WPoint& pt, TW rw, TH rh) {                // wtypes.h:115
 		x = pt.x;
 		y = pt.y;
 		w = (float)rw;
@@ -119,12 +113,12 @@ public:
 	}
 
 	int operator==(const WRect& rc) const;
-	int operator!=(const WRect& rc) const;
+	int operator!=(PG_PORT_CONST WRect& rc) const;
 	void operator+=(const WSize& size);
 	void operator-=(const WSize& size);
-	WRect operator+(const WRect& rc) const { return WRect(x + rc.x, y + rc.y, w + rc.w, h + rc.h); }   // wtypes.h:141
-	WRect operator+(const WPoint& pt) const { return WRect(x + pt.x, y + pt.y, w, h); }   // wtypes.h:143
-	WRect operator-(const WPoint& pt) const { return WRect(x - pt.x, y - pt.y, w, h); }   // wtypes.h:144
+	WRect operator+(PG_PORT_CONST WRect& rc) const { return WRect(rc.x + x, rc.y + y, rc.w + w, rc.h + h); }   // wtypes.h:141
+	WRect operator+(PG_PORT_CONST WPoint& pt) const { return WRect(pt.x + x, pt.y + y, w, h); }   // wtypes.h:143
+	WRect operator-(PG_PORT_CONST WPoint& pt) const { return WRect(x - pt.x, y - pt.y, w, h); }   // wtypes.h:144
 	WRect operator-(const WRect& rc) const;
 	// wtypes.h:146-149
 	WPoint TopLeft(void) const
@@ -154,7 +148,7 @@ public:
 CHECK_SIZE(WRect, 0x10);
 
 // wtypes.h:138
-FRTOOLTIP_WTYPES_INLINE int WRect::operator!=(const WRect& rc) const {
+FRTOOLTIP_WTYPES_INLINE int WRect::operator!=(PG_PORT_CONST WRect& rc) const {
 	return !(x == rc.x && y == rc.y && w == rc.w && h == rc.h);
 }
 

@@ -562,7 +562,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		unsigned char flag = packet.Decode1();
 		unsigned char enabled = packet.Decode1();
 
-		Wind().m_windEnabled = enabled;
+		Wind().m_windEnabled = true;
 
 		Wind().Init(intensity, direction, flag, enabled);
 		break;
@@ -983,7 +983,8 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		}
 
 		std::list<sSlotInfo>& players = CSharedDoc::Instance()->m_roomPlayerList;
-		std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), uid);
+		std::list<sSlotInfo>::iterator it;
+		it = std::find(players.begin(), players.end(), uid);
 		if (it != players.end()) {
 			unsigned char connection = it->m_connection;
 
@@ -1070,7 +1071,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		break;
 	}
 	case 0x8E:
-		GetActor("GolfRule") << MsgObject(0, 0x94, 0, 0, 0, 0, 0);
+		PassMsgToActor("GolfRule", MsgObject(0, 0x94, 0, 0, 0, 0, 0));
 		break;
 	case 0xA9: {
 		int count = packet.Decode1();
@@ -1090,9 +1091,9 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		// echo of the player's own whisper.
 		unsigned char flags = packet.Decode1();
 		unsigned char gm = flags >> 7;
-		unsigned char kind = flags & 0x7F;
+		flags &= 0x7F;
 
-		bool own = kind == 0;
+		bool own = flags == 0;
 
 		int notify;
 		unsigned long color = 0xFFD2A2FF;
@@ -1108,7 +1109,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		packet.DecodeStr(message);
 
 		if (own) {
-			text = WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname;
+			text = MyNick();
 			text += ">";
 			text += nickname;
 		} else {
@@ -1124,7 +1125,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 			GetActor("GolfRule") << MsgObject(0, 0x3F, (intptr_t)&notify, 0, 0, 0, 0);
 			GetActor("GolfRule") << MsgObject(0, 0x38, (intptr_t)nickname.c_str(), 0, 0, 0, 0);
 
-			text = nickname + ">" + WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname;
+			text = nickname + ">" + MyNick();
 		}
 
 		WSingleton<CSharedDoc>::Instance()->m_chatManager.FilteringHack(message.c_str(), false);
@@ -1184,7 +1185,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		break;
 	case 0x9A: {
 		unsigned char count = packet.Decode1();
-		for (int i = 0; i < count; i++) {
+		for (unsigned char i = 0; i < count; i++) {
 			unsigned long arrow = packet.Decode4();
 			GOLFDOC()->m_commandArrows.push_back(arrow);
 		}
@@ -1280,7 +1281,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 			count = packet.Decode1();
 			CSharedDoc::Instance()->m_roomPlayerList.clear();
 
-			for (int i = 0; i < count; i++) {
+			for (unsigned char i = 0; i < count; i++) {
 				sSlotInfo slot;
 				packet.DecodeBuffer(&slot, sizeof(slot));
 				CSharedDoc::Instance()->m_roomPlayerList.push_back(slot);
@@ -1299,7 +1300,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 					break;
 				}
 
-				for (int i = 0; i < count; i++) {
+				for (unsigned char i = 0; i < count; i++) {
 					packet.DecodeBuffer(&CSharedDoc::Instance()->m_roomPlayers[i], sizeof(sUserInfo));
 
 					if (IsLocalContent((localContentType_t)0x57)) {
@@ -1310,11 +1311,11 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 
 			SetCurMap(packet.Decode1());
 			SetGameType(packet.Decode1());
-			CSharedDoc::Instance()->m_gameKind = packet.Decode1();
-			CSharedDoc::Instance()->m_holes = packet.Decode1();
+			SetHoleType(packet.Decode1());
+			SetHoles(packet.Decode1());
 			CSharedDoc::Instance()->m_matchTypeId = packet.Decode4();
-			CSharedDoc::Instance()->m_shotTimeLimit = packet.Decode4();
-			CSharedDoc::Instance()->m_gameTimeLimit = packet.Decode4();
+			SetShotTimeLimit(packet.Decode4());
+			SetGameTimeLimit(packet.Decode4());
 
 			for (count = 0; count < CSharedDoc::Instance()->m_holes; count++) {
 				CSharedDoc::Instance()->m_holeRandom[count] = packet.Decode4();
@@ -1364,7 +1365,8 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 
 		Wind().Init(intensity, direction, 0, 1);
 
-		unsigned long remainTime = CSharedDoc::Instance()->m_shotTimeLimit - packet.Decode4();
+		unsigned long remainTime = CSharedDoc::Instance()->m_shotTimeLimit;
+		remainTime -= packet.Decode4();
 
 		unsigned long turnUid = packet.Decode4();
 
@@ -1386,7 +1388,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 			PLAYER(i)->m_ballPos.y = data.ballPos.y;
 			PLAYER(i)->m_ballPos.z = data.ballPos.z;
 
-			for (int hole = 0; hole < 18; hole++) {
+			for (unsigned char hole = 0; hole < 18; hole++) {
 				PLAYER(i)->m_holes[hole] = data.holes[hole];
 				PLAYER(i)->m_holeIn[hole] = data.holeIn[hole];
 				PLAYER(i)->m_holeRecord[hole] = (int)data.holeRecord[hole];
@@ -1464,7 +1466,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		memcpy(items, CSharedDoc::Instance()->m_roomPlayers[0].m_equipItem, sizeof(items));
 
 		unsigned char used = 0;
-		for (int i = 0; i < 10; i++) {
+		for (unsigned char i = 0; i < 10; i++) {
 			if (items[i] != 0) {
 				CSharedDoc::Instance()->m_roomPlayers[0].m_equipItem[used++] = items[i];
 			}
@@ -1531,7 +1533,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		pPlayer->m_ballPos.y = data.ballPos.y;
 		pPlayer->m_ballPos.z = data.ballPos.z;
 
-		for (int i = 0; i < 18; i++) {
+		for (unsigned char i = 0; i < 18; i++) {
 			pPlayer->m_holes[i] = data.holes[i];
 			pPlayer->m_holeIn[i] = data.holeIn[i];
 			pPlayer->m_holeRecord[i] = (int)data.holeRecord[i];
@@ -1628,6 +1630,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 	case 0xAC: {
 		// the gallery (spectator) list
 		std::list<sSlotInfo>& gallery = CSharedDoc::Instance()->m_roomPlayerList2;
+		std::list<sSlotInfo>::iterator it;
 
 		unsigned char type = packet.Decode1();
 
@@ -1648,7 +1651,8 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 			sSlotInfo slot;
 			packet.DecodeBuffer(&slot, sizeof(slot));
 
-			if (std::find(gallery.begin(), gallery.end(), slot.m_uid) == gallery.end()) {
+			it = std::find(gallery.begin(), gallery.end(), slot.m_uid);
+			if (it == gallery.end()) {
 				gallery.push_back(slot);
 			}
 			break;
@@ -1656,7 +1660,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		case 2: {
 			unsigned long uid = packet.Decode4();
 
-			std::list<sSlotInfo>::iterator it = std::find(gallery.begin(), gallery.end(), uid);
+			it = std::find(gallery.begin(), gallery.end(), uid);
 			if (it != gallery.end()) {
 				gallery.erase(it);
 			}
@@ -1670,6 +1674,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 	case 0x46: {
 		// the room's player list
 		std::list<sSlotInfo>& players = CSharedDoc::Instance()->m_roomPlayerList;
+		std::list<sSlotInfo>::iterator it;
 
 		unsigned char type = packet.Decode1();
 		packet.Decode2();
@@ -1714,7 +1719,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 				CSharedDoc::Instance()->m_roomSlotMap[slot.m_uid] = roomSlot;
 			}
 
-			std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), slot.m_uid);
+			it = std::find(players.begin(), players.end(), slot.m_uid);
 			if (it == players.end()) {
 				players.push_back(slot);
 			}
@@ -1729,7 +1734,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 				CSharedDoc::Instance()->m_roomSlotMap.erase(slot);
 			}
 
-			std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), uid);
+			it = std::find(players.begin(), players.end(), uid);
 			if (it != players.end()) {
 				unsigned char connection = it->m_connection;
 
@@ -1749,13 +1754,12 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 
 			packet.DecodeBuffer(&slot, sizeof(slot));
 
-			std::find(players.begin(), players.end(), uid);
+			it = std::find(players.begin(), players.end(), uid);
 
-			std::map<unsigned long, sRoomSlot>::iterator it = CSharedDoc::Instance()->m_roomSlotMap.find(uid);
-			if (it != CSharedDoc::Instance()->m_roomSlotMap.end()) {
-				// the angel wing bits (sRoomSlot::m_angelFlag has no bitfield view yet)
-				it->second.m_angelFlag = (unsigned char)((it->second.m_angelFlag & ~2) | (slot.m_angelFlag & 2));
-				it->second.m_angelFlag = (unsigned char)((it->second.m_angelFlag & ~1) | (slot.m_angelFlag & 1));
+			std::map<unsigned long, sRoomSlot>::iterator entry = CSharedDoc::Instance()->m_roomSlotMap.find(uid);
+			if (entry != CSharedDoc::Instance()->m_roomSlotMap.end()) {
+				entry->second.m_angelFlags.flag1 = slot.m_flags57.flag1;
+				entry->second.m_angelFlags.flag0 = slot.m_flags57.flag0;
 			}
 			break;
 		}
@@ -1773,7 +1777,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		}
 
 		if (CSharedDoc::Instance()->AreWePlayingTogether(uid)) {
-			PLAYER(CSharedDoc::Instance()->GetIndex(uid))->m_chatPenalty = penalty != 0;
+			PLAYER(CSharedDoc::Instance()->GetIndex(uid))->m_chatPenalty = penalty;
 		}
 		break;
 	}
@@ -1825,7 +1829,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		break;
 	}
 	case 0xCA: {
-		sPrizeInfo prizes[128] = { 0 };
+		sPrizeInfo prizes[128] = {};
 		unsigned long uid = packet.Decode4();
 		int count = packet.Decode1();
 
@@ -1847,7 +1851,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 
 			unsigned long param1 = packet.Decode4();
 			unsigned long param2 = packet.Decode4();
-			std::string text("");
+			std::string text("\0");
 			packet.DecodeStr(text);
 
 			CApproachDesc approachDesc(missionType, param1, param2, text.c_str());
@@ -1871,7 +1875,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 
 		unsigned char count = packet.Decode1();
 
-		for (int i = 0; i < count; i++) {
+		for (unsigned char i = 0; i < count; i++) {
 			sApproachResultData result;
 			packet.DecodeBuffer(&result, sizeof(result));
 
@@ -1907,7 +1911,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 
 		unsigned char count = packet.Decode1();
 
-		for (int i = 0; i < count; i++) {
+		for (unsigned char i = 0; i < count; i++) {
 			sApproachResultData result;
 			packet.DecodeBuffer(&result, sizeof(result));
 			GOLFDOC()->SetApproachGameResult(result);

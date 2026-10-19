@@ -180,7 +180,7 @@ static bool __stdcall SaveScreenShot(const char* fileName) {
 
 			if (s_logo != NULL) {
 				Bitmap* logo = s_logo;
-				int logoWidth = logo->Width(), logoHeight = logo->Height();
+				int logoHeight = logo->Height(), logoWidth = logo->Width();
 				int left = screen->Width() - logoWidth, top = screen->Height() - logoHeight;
 
 				if (left > 0 && top > 0) {
@@ -190,12 +190,11 @@ static bool __stdcall SaveScreenShot(const char* fileName) {
 							screen->GetPixel(left + x, top + y, r, g, b);
 							unsigned char logoR, logoG, logoB, logoA;
 							logo->GetPixel(x, y, logoR, logoG, logoB, logoA);
-							int alpha = logoA;
 
 							screen->SetPixel(left + x, top + y,
-								(logoR * alpha + r * (255 - alpha)) / 255,
-								(logoG * alpha + g * (255 - alpha)) / 255,
-								(logoB * alpha + b * (255 - alpha)) / 255,
+								(logoR * logoA + r * (255 - logoA)) / 255,
+								(logoG * logoA + g * (255 - logoA)) / 255,
+								(logoB * logoA + b * (255 - logoA)) / 255,
 								0xFF);
 						}
 					}
@@ -754,11 +753,23 @@ void CProjectG::LoadKeyLayout(void) {
 	g_input->ExcludeKey("\xC0\xFA\xBC\xD3");
 }
 
-// projectg.cpp:1112 (the original is inline asm: reads PEB->BeingDebugged)
+// projectg.cpp:1112
+// Returns PEB->BeingDebugged. The original reads it in inline assembly (one
+// line mark per instruction), so it is reproduced as such (the AGENTS.md
+// Rule 14 exception for functions the original wrote in asm).
 int MainLoop(void) {
 	int result = 1;
 
-	result = 0;
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_IX86)
+	__asm {
+		mov eax, fs:[18h]
+		mov eax, [eax+30h]
+		movzx eax, byte ptr [eax+2]
+		mov result, eax
+	}
+#else
+	result = 0; // port: never reports a debugger
+#endif
 
 	return result;
 }
@@ -773,10 +784,10 @@ int CProjectG::MainLoop(int) {
 
 	ProcessRecvPacketQueue();
 
-	bool active = ((m_appFlags >> 1) & 1) != 0;
-	int flags = m_mainFlags;
-	if (!active) flags |= 0x80;
-	return Main(flags);
+	if (IsRecordingAvi())
+		return Main(m_mainFlags);
+	else
+		return Main(m_mainFlags | 0x80);
 }
 
 // The screenshot notice: CheckScreenShot writes the message and the time it
@@ -793,11 +804,11 @@ void CProjectG::CheckScreenShot(void) {
 		if (IsLocalContent((localContentType_t)0x4F) && (CSharedDoc::Instance()->m_replayState == 6 || CSharedDoc::Instance()->m_replayState == 9)) {
 			__int64 freeSpace = CalcHddFreeSpace();
 			if (freeSpace == 0) {
-				CChatMsg::Instance()->AddChatMsg(std::string("\xc7\xcf\xb5\xe5\xc0\xc7 \xbf\xeb\xb7\xae\xc0\xbb \xc3\xbc\xc5\xa9 \xc7\xd2 \xbc\xf6 \xbe\xf8\xc0\xb8\xb9\xc7\xb7\xce \xb5\xbf\xbf\xb5\xbb\xf3 \xc6\xc4\xc0\xcf\xc0\xbb \xbb\xfd\xbc\xba \xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), 0xFFFF7878, true, false);
+				CChatMsg::Instance()->AddChatMsg("\xc7\xcf\xb5\xe5\xc0\xc7 \xbf\xeb\xb7\xae\xc0\xbb \xc3\xbc\xc5\xa9 \xc7\xd2 \xbc\xf6 \xbe\xf8\xc0\xb8\xb9\xc7\xb7\xce \xb5\xbf\xbf\xb5\xbb\xf3 \xc6\xc4\xc0\xcf\xc0\xbb \xbb\xfd\xbc\xba \xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0xFFFF7878, true, false);
 				return;
 			}
 			if (freeSpace < 0x40000000) {
-				CChatMsg::Instance()->AddChatMsg(std::string("\xc7\xcf\xb5\xe5\xc0\xc7 \xbf\xeb\xb7\xae\xc0\xcc \xba\xce\xc1\xb7\xc7\xcf\xbf\xa9 avi\xc6\xc4\xc0\xcf\xc0\xbb \xbb\xfd\xbc\xba\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), 0xFFFF7878, true, false);
+				CChatMsg::Instance()->AddChatMsg("\xc7\xcf\xb5\xe5\xc0\xc7 \xbf\xeb\xb7\xae\xc0\xcc \xba\xce\xc1\xb7\xc7\xcf\xbf\xa9 avi\xc6\xc4\xc0\xcf\xc0\xbb \xbb\xfd\xbc\xba\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0xFFFF7878, true, false);
 				return;
 			}
 
@@ -902,9 +913,10 @@ void CProjectG::CheckScreenShot(void) {
 		ULARGE_INTEGER time;
 		time.LowPart = fileTime.dwLowDateTime;
 		time.HighPart = fileTime.dwHighDateTime;
-		time.QuadPart += (unsigned __int64)(GetTickCount() - CSharedDoc::Instance()->m_serverTimeTick) * 10000;
-		fileTime.dwLowDateTime = time.LowPart;
-		fileTime.dwHighDateTime = time.HighPart;
+		ULARGE_INTEGER now;
+		now.QuadPart = time.QuadPart + (unsigned __int64)(GetTickCount() - CSharedDoc::Instance()->m_serverTimeTick) * 10000;
+		fileTime.dwLowDateTime = now.LowPart;
+		fileTime.dwHighDateTime = now.HighPart;
 
 		SYSTEMTIME systemTime;
 		FileTimeToSystemTime(&fileTime, &systemTime);
@@ -1301,8 +1313,7 @@ void CProjectG::Paint(void) {
 		}
 	}
 
-	bool active = ((m_appFlags >> 1) & 1) != 0;
-	if (active && g_bAviCapture) {
+	if (IsRecordingAvi() && g_bAviCapture) {
 		static Bitmap s_captureBitmap(g_last_screen_width, g_last_screen_height, 24);
 		if (g_resrcmng->VideoReference()->Command(W_VDEV_CAPTURE_SCREEN, 0, (PG_PTRINT)&s_captureBitmap) == 1) {
 			m_aviEncoder.Write(&s_captureBitmap);
@@ -1448,8 +1459,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 			WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_MSN)->m_bConnected = 1;
 			WNetworkSystem::Instance()->SendMessage(WNetworkSystem::NET_UNIT_MSN, NetworkUnit::EVENT_NEXT);
 		} else if (WSAGETSELECTEVENT(lParam) == FD_READ) {
-			WClientSocket* socket = WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_MSN);
-			if (socket && socket->TryRead() == 0) {
+			if (WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_MSN) && WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_MSN)->TryRead() == 0) {
 				CMessengerInfo::Instance()->Close(true);
 				WNetworkSystem::Instance()->ForceShutDown(WNetworkSystem::NET_UNIT_MSN);
 			}
@@ -1472,8 +1482,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 			return 0;
 		}
 		if (WSAGETSELECTEVENT(lParam) == FD_READ) {
-			WClientSocket* socket = WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_LOGIN);
-			if (socket && socket->TryRead() == 0)
+			if (WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_LOGIN) && WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_LOGIN)->TryRead() == 0)
 				OpenDisconDlg("\xb7\xce\xb1\xd7\xc0\xce \xbc\xad\xb9\xf6\xbf\xcd \xbf\xac\xb0\xe1\xc0\xcc \xb2\xf7\xbe\xee\xc1\xb3\xbd\xc0\xb4\xcf\xb4\xd9.", false);
 		} else if (WSAGETSELECTEVENT(lParam) == FD_WRITE) {
 			WClientSocket* socket = WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_LOGIN);
@@ -1495,16 +1504,18 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 			return 0;
 		}
 		if (WSAGETSELECTEVENT(lParam) == FD_READ) {
-			WClientSocket* socket = WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_RANK);
-			if (socket == NULL || socket->TryRead() != 0)
-				return 0;
-		} else if (WSAGETSELECTEVENT(lParam) != FD_CLOSE) {
-			return 0;
+			if (WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_RANK) && WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_RANK)->TryRead() == 0) {
+				CMouseCursor::Instance()->SetActive(false);
+				CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+				CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+				CTaskManager::Instance()->PostMsg(0, "Lobby", 0x1A, 0, 0, 0, 0);
+			}
+		} else if (WSAGETSELECTEVENT(lParam) == FD_CLOSE) {
+			CMouseCursor::Instance()->SetActive(false);
+			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+			CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+			CTaskManager::Instance()->PostMsg(0, "Lobby", 0x1A, 0, 0, 0, 0);
 		}
-		CMouseCursor::Instance()->SetActive(false);
-		CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
-		CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
-		CTaskManager::Instance()->PostMsg(0, "Lobby", 0x1A, 0, 0, 0, 0);
 		return 0;
 
 	case WM_SETFOCUS:
@@ -1522,7 +1533,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 		return 0;
 
 	case WM_NCHITTEST:
-		if (((m_appFlags >> 2) & 1) == 0)
+		if (!IsWindowed())
 			return 1;
 		break;
 
@@ -1533,14 +1544,14 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 		case SC_MAXIMIZE:
 		case SC_KEYMENU:
 		case SC_MONITORPOWER:
-			if (((m_appFlags >> 2) & 1) == 0)
+			if (!IsWindowed())
 				return 1;
 			break;
 		}
 		break;
 
 	case WM_ACTIVATEAPP:
-		if (((m_appFlags >> 2) & 1) == 0) {
+		if (!IsWindowed()) {
 			SetWindowLong(g_hwnd, GWL_STYLE, GetWindowLong(g_hwnd, GWL_STYLE) & ~WS_SYSMENU);
 			if (wParam) ShowWindow(g_hwnd, SW_RESTORE); else ShowWindow(g_hwnd, SW_MINIMIZE);
 			return 1;

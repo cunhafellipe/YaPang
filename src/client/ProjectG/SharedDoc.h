@@ -22,6 +22,7 @@
 #include "parttidlist.h"
 #include "hatManager.h"
 #include "wmath.h"
+#include "wflag.h"
 #include "buddymanager.h"
 
 class CGolfDoc;
@@ -125,20 +126,25 @@ struct sUserInfo {
 	unsigned short m_slot;          // 0x0, callers set it to 0xFFFF (meaning not traced)
 	// 0x2-0x10F: a copy of the player's sPangYaUserInfo (0x10D bytes, SetIndex
 	// copies it as one; the members below mirror its layout).
-	char m_nickname[0x16];          // 0x2, the player's name (FrPlayerDlg::SetState shows it); sPangYaUserInfo::id
-	char m_name[0x16];              // 0x18, the second name (sPangYaUserInfo::nickname; FrPlayerDlg::SetName, the ghost converters)
-	char m_guildName[0x15];         // 0x2E, sPangYaUserInfo::guildName
-	char m_guildMark[0xC];          // 0x43, sPangYaUserInfo::guildMark
-	PADDING(0x4F, 0x53);
-	unsigned long m_identity;       // 0x53, sPangYaUserInfo::identity
-	PADDING(0x57, 0x5B);
-	unsigned long m_guid;           // 0x5B, sPangYaUserInfo::guid
-	PADDING(0x5F, 0x6B);
-	unsigned long m_guildUID;       // 0x6B, sPangYaUserInfo::guildUID (the login reply requests its RSS)
-	PADDING(0x6F, 0x73);
-	sUserEventFlags m_eventFlags;   // 0x73, sPangYaUserInfo::eventFlags
-	PADDING(0x74, 0x10B);
-	unsigned long m_uid;            // 0x10B, the player's UID (sPangYaUserInfo + 0x109)
+	union {
+		struct {
+			char m_nickname[0x16];          // 0x2, the player's name (FrPlayerDlg::SetState shows it); sPangYaUserInfo::id
+			char m_name[0x16];              // 0x18, the second name (sPangYaUserInfo::nickname; FrPlayerDlg::SetName, the ghost converters)
+			char m_guildName[0x15];         // 0x2E, sPangYaUserInfo::guildName
+			char m_guildMark[0xC];          // 0x43, sPangYaUserInfo::guildMark
+			PADDING(0x4F, 0x53);
+			unsigned long m_identity;       // 0x53, sPangYaUserInfo::identity
+			PADDING(0x57, 0x5B);
+			unsigned long m_guid;           // 0x5B, sPangYaUserInfo::guid
+			PADDING(0x5F, 0x6B);
+			unsigned long m_guildUID;       // 0x6B, sPangYaUserInfo::guildUID (the login reply requests its RSS)
+			PADDING(0x6F, 0x73);
+			sUserEventFlags m_eventFlags;   // 0x73, sPangYaUserInfo::eventFlags
+			PADDING(0x74, 0x10B);
+			unsigned long m_uid;            // 0x10B, the player's UID (sPangYaUserInfo + 0x109)
+		};
+		sPangYaUserInfo m_pangyaInfo;   // 0x2, the same block as one struct (FrUserInfoForm::SetContent)
+	};
 	// 0x10F-0x1FA: the player's sPangYaUserStatistics (0xEB bytes, byte-packed;
 	// the ghost converters copy it as one).
 	union {
@@ -274,6 +280,7 @@ typedef sRecordedItemInfo sReplayFileInfo;
 // 0x92, 0x142, 0x155 and 0x15D it skips are natural alignment). Only the
 // members the transcribed functions read are named. sGameResultInfo is the
 // name the callers transcribed first.
+#pragma pack(push, 8)
 struct sRivalData {
 	unsigned long m_id;             // 0x0, the player's id (FrRankForm::OnRankRBtnUp hands it to CUserInfo::SetInfo)
 	unsigned long m_uid;            // 0x4
@@ -282,10 +289,8 @@ struct sRivalData {
 	unsigned char m_team;           // 0x33, 0: red, 1: blue (FrResultDlg::FindWinner sums the team results by it)
 	unsigned short m_level;         // 0x34, the player's level (FrDemonProcessRank)
 	unsigned char m_state;          // 0x36, 2: finished, 3: skipped
-	PADDING(0x37, 0x38);
 	int m_holeScore[18];            // 0x38, one per hole (operator= copies 0x12 dwords; CLobbyTask::OnPacket 0x6B)
 	unsigned char m_holeShots[18];  // 0x80, one per hole (FrScoreDlg GetGuildVersus/GetMyCurHoleInGuildMatch)
-	PADDING(0x92, 0x98);
 	__int64 m_holePang[18];         // 0x98, one per hole (operator= copies them as dword pairs; CLobbyTask::OnPacket 0x6B)
 	__int64 m_pang;                 // 0x128, third sort key (FinalRankCompare)
 	__int64 m_extraPang;            // 0x130, added to m_pang for the result's bonus (FrResultDlg::OnBonusInit)
@@ -296,14 +301,11 @@ struct sRivalData {
 	unsigned char m_value13F;       // 0x13F
 	unsigned char m_sortGroup;      // 0x140, first sort key (FinalRankCompare)
 	unsigned char m_finishOrder;    // 0x141, the lobby's finish sort key (FinishUserCompare)
-	PADDING(0x142, 0x144);
 	WVector m_ballPos;              // 0x144, the player's ball position (CSpot::UpdateRivals copies it)
 	int m_joined;                   // 0x150, set to 1 when SetPlayer adds the player to the result list
 	unsigned char m_present;        // 0x154, set to 1 when SetPlayer adds the player to the result list
-	PADDING(0x155, 0x158);
 	unsigned long m_titleTypeId;    // 0x158, the equipped title's type id (FrDemonProcessRank::GetTitleBitmap)
 	unsigned char m_characterType;  // 0x15C, sSlotInfo::m_attribute >> 5 (GolfRuleTimeattack SetPlayer)
-	PADDING(0x15D, 0x160);
 	int m_hasEmblem;                // 0x160, the player's guild UID (GolfRuleTimeattack SetPlayer; rename pending, FinalRankDlg/ResultDlg test it)
 	char m_emblemName[0xC];         // 0x164 (operator= copies 0xC bytes)
 	unsigned long m_uniteGuildIndex; // 0x170, second sort key of the unite guild result, higher first (UniteGuildIndexCompare)
@@ -314,8 +316,8 @@ struct sRivalData {
 	unsigned long m_mascotTypeId;   // 0x184, sSlotInfo::m_mascotTypeId (SetPlayer)
 	unsigned char m_itemBoostFlags; // 0x188, sSlotInfo::m_itemBoostFlags (SetPlayer)
 	unsigned char m_extraFlags;     // 0x189, sSlotInfo::m_extraFlags (SetPlayer)
-	PADDING(0x18A, 0x190);
 };
+#pragma pack(pop)
 
 // shareddoc.h:211, finds a rival by UID (std::find_if).
 struct sFindRival {
@@ -350,6 +352,16 @@ struct sAwardPlayer {
 	int m_pang;                     // 0x4, the pang won (FrResultDlg::OnPangInit prints it "%d")
 };
 CHECK_SIZE(sAwardPlayer, 0x8);
+
+// A second, 12-byte view of the award players from 0x459E: FrAwardDlg::
+// GetMedalIndex compares the UID of six of them with a 12-byte stride (the
+// static inits walk the same area as sAwardPlayer). The original name is not
+// known.
+struct sMedalWinner {
+	unsigned long m_uid;            // 0x0
+	PADDING(0x4, 0xC);
+};
+CHECK_SIZE(sMedalWinner, 0xC);
 
 // The exp of a caddie level (CSharedDoc 0x4FF8, three of them, 8 bytes;
 // FrCaddieInfoDlg::OnInit reads the first dword by the caddie's level). The
@@ -537,6 +549,7 @@ CHECK_FIELD(sUserInfo, m_slot, 0x0);
 CHECK_FIELD(sUserInfo, m_skinTypeIds, 0x298);
 CHECK_FIELD(sUserInfo, m_skinTypeId, 0x2AC);
 CHECK_FIELD(sUserInfo, m_nickname, 0x2);
+CHECK_FIELD(sUserInfo, m_pangyaInfo, 0x2);
 CHECK_FIELD(sUserInfo, m_name, 0x18);
 CHECK_FIELD(sUserInfo, m_guildName, 0x2E);
 CHECK_FIELD(sUserInfo, m_guildMark, 0x43);
@@ -581,8 +594,8 @@ struct sUserInfoExt : sUserInfo {
 	// globalgamedefine.h:1699
 	sUserInfoExt(void) {
 		memset(&m_characterInfo, 0, sizeof(m_characterInfo));
-		// 0xB28 (0x19 bytes) and 0xB41 (0x12 bytes): the caddie's and the club
-		// set's records, not named yet; zeroed by the original.
+		memset(&m_caddieInfo, 0, sizeof(m_caddieInfo));
+		memset(&m_clubSet, 0, sizeof(m_clubSet));
 		memset(&m_mascot, 0, sizeof(m_mascot));
 		memset(m_nickname, 0, 0x10D);
 		memset(&m_statShots, 0, 0xEB);
@@ -738,6 +751,7 @@ class CSharedDoc : public WSingleton<CSharedDoc> {
 	friend class FrScoreDlg;      // SetGuildPlayer lists the guild match pairings
 	friend class FrUniteResultDlg; // SetDataToRankListBox tests the protected user info's identity
 	friend class CHoleInfo;       // Display prints the local player's best score (m_myMapStatistics/2)
+	friend class FrGhostGameMapDlg; // Init finds the map courses through m_itemManager
 protected:
 	void ClearGameMode(void);
 	void ClearStatistics(void);
@@ -898,7 +912,7 @@ public:
 	// Emitted by taskmain.cpp, defined out of line there.
 	void SetRmrMode(unsigned char mode);            // shareddoc.h:616
 	unsigned char GetRmrMode(void);                 // shareddoc.h:617
-	unsigned long GetFlagBlock(void);               // shareddoc.h:620
+	unsigned long GetFlagBlock(void);               // shareddoc.h:620, inline below (TaskMain's copy)
 	bool IsHaveHalloweenItem(void);                 // shareddoc.h:1011
 	eReplayModeType GetPlayingMode(void);           // shareddoc.h:1024, inline below (TaskMain's copy)
 	std::list<std::string> *GetVisGroup(const char *name); // 0x41a6c0, out of line in shareddoc.cpp (CGolfPlayer::ParseScript_ShowVis)
@@ -1168,15 +1182,17 @@ protected:
 public:
 	unsigned short m_mySlot;                         // 0x3E0, the local player's slot in the room (sUserInfo::m_slot), 0xFFFF outside one (CTaskMain::SendRoomExitPacket)
 
-protected:
-	sPangYaUserInfo m_userInfo;                      // 0x3E2, the local player's (GetPangyaUserInfo)
-
-public:
-	char m_loginId[0x16];                            // 0x46B, a web login whose nickname still equals it must pick one (CLobbyMain::NeedsChangeNick)
-	PADDING(0x481, 0x4EB);
-
-public:
-	unsigned long m_myUID;                           // 0x4EB, the local player's UID (MSNUnit::OnConnect)
+	// 0x3E2-0x4EF: the local player's sPangYaUserInfo (0x10D bytes, SetIndex
+	// copies it whole); m_loginId and m_myUID name two of its members.
+	union {
+		struct {
+			PADDING(0x3E2, 0x46B);
+			char m_loginId[0x16];                    // 0x46B, sPangYaUserInfo::loginId; a web login whose nickname still equals it must pick one (CLobbyMain::NeedsChangeNick)
+			PADDING(0x481, 0x4EB);
+			unsigned long m_myUID;                   // 0x4EB, sPangYaUserInfo::uid, the local player's UID (MSNUnit::OnConnect)
+		};
+		sPangYaUserInfo m_userInfo;                  // 0x3E2, the local player's (GetPangyaUserInfo)
+	};
 	// The local player's statistics (sPangYaUserStatistics at 0x4EF; the flat
 	// names after the Titles_Client checks, m_myStatistics the same block).
 	union {
@@ -1373,7 +1389,10 @@ protected:
 		sAwardPlayer m_awardPlayers[12];
 		struct {
 			sAwardPlayer m_awardPlayersFirstHalf[6];
-			sAwardPlayer m_winnerPlayers[6];         // 0x459E, the winners (FrAwardDlg)
+			union {
+				sAwardPlayer m_winnerPlayers[6];     // 0x459E, the winners (FrAwardDlg)
+				sMedalWinner m_medalWinners[4];     // 0x459E, the same in 12-byte records (GetMedalIndex reads six)
+			};
 		};
 	};
 
@@ -1564,7 +1583,7 @@ protected:
 	unsigned long m_value4D74;                       // 0x4D74, likewise
 
 public:
-	unsigned long m_serverProperty;                  // 0x4D78, eGameServerProperty bits (S5::UTIL::IsEventServerControl)
+	WFlags m_serverProperty;                         // 0x4D78, eGameServerProperty bits (S5::UTIL::IsEventServerControl)
 
 protected:
 	unsigned char m_value4D7C;                       // 0x4D7C, cleared by ClearGameVars
@@ -1700,7 +1719,10 @@ public:
 	// Read directly by the rule classes (no getter call in the original).
 	eReplayModeType m_playingMode;                   // 0x5B9C
 	char m_fileName[0x20];                           // 0x5BA0, the replay file LoadShot opens
-	int m_replayValue5BC0;                           // 0x5BC0, cleared by the constructor
+	// 0x5BC0, the replayed shot's sBar::m_prevAccuracy: GolfRule's LoadShot
+	// restores it, CScreen::DrawHitBarInfo copies it back into the bar; cleared
+	// by the constructor.
+	float m_replayPrevAccuracy;
 	// Set by FrReplayModeDlg::OnOkBtnUp when a replay starts.
 	int m_replayStartA;                              // 0x5BC4, cleared
 	unsigned long m_replayChannelFlags;              // 0x5BC8, the current channel's flags
@@ -1915,6 +1937,7 @@ BEGIN_LAYOUT_CHECK(CSharedDoc)
 	CHECK_FIELD(CSharedDoc, m_holePin, 0x45CE);
 	CHECK_FIELD(CSharedDoc, m_awardPlayers, 0x456E);
 	CHECK_FIELD(CSharedDoc, m_winnerPlayers, 0x459E);
+	CHECK_FIELD(CSharedDoc, m_medalWinners, 0x459E);
 	CHECK_FIELD(CSharedDoc, m_holeCourse, 0x45E0);
 	CHECK_FIELD(CSharedDoc, m_levelExp, 0x4DC0);
 	CHECK_FIELD(CSharedDoc, m_caddieLevelExp, 0x4FF8);
@@ -2007,6 +2030,7 @@ BEGIN_LAYOUT_CHECK(CSharedDoc)
 	CHECK_FIELD(CSharedDoc, m_replayPlayType, 0x5B98);
 	CHECK_FIELD(CSharedDoc, m_playingMode, 0x5B9C);
 	CHECK_FIELD(CSharedDoc, m_fileName, 0x5BA0);
+	CHECK_FIELD(CSharedDoc, m_replayPrevAccuracy, 0x5BC0);
 	CHECK_FIELD(CSharedDoc, m_replayStartA, 0x5BC4);
 	CHECK_FIELD(CSharedDoc, m_replayChannelFlags, 0x5BC8);
 	CHECK_FIELD(CSharedDoc, m_replayStartB, 0x5BCC);
@@ -2165,6 +2189,11 @@ inline void CSharedDoc::SetRmrMode(unsigned char mode) {
 	m_rmrMode = mode;
 }
 
+// shareddoc.h:620 (same arrangement: TaskMain's copy)
+inline unsigned long CSharedDoc::GetFlagBlock(void) {
+	return m_userInfo.flagBlock;
+}
+
 // shareddoc.h:1011 (same arrangement: TaskMain's copy)
 inline bool CSharedDoc::IsHaveHalloweenItem(void) {
 	return m_haveHalloweenItem;
@@ -2203,7 +2232,26 @@ unsigned char GetEndHole(void);
 void SetGameOver(bool gameOver);
 bool IsGameOver(void);
 int IsObserver(unsigned long identity);
-int IsAdministrator(unsigned long identity);
+
+// Avatar_Avatar.cpp defines AVATAR_AVATAR_SHAREDDOC_INLINE empty before its
+// first include, so its object emits the out-of-line copy of IsAdministrator
+// (0x537a70), as the original's did.
+#ifndef AVATAR_AVATAR_SHAREDDOC_INLINE
+#define AVATAR_AVATAR_SHAREDDOC_INLINE inline
+#endif
+
+// shareddoc.inl:549. The result goes through a local: written as one
+// `return (identity & 4) == 4;` the inlined call (IsAdministrator(0xFFFFFFFF)
+// in FrUniteResultDlg::OnInit, FrChangeRoomInfoDlg::OnGameTypeOwnerDraw) folds
+// to `test byte ptr [doc+0x433],4`; the original keeps and/cmp/sete/test eax.
+AVATAR_AVATAR_SHAREDDOC_INLINE int IsAdministrator(unsigned long identity) {
+	if (identity == 0xFFFFFFFF)
+		identity = WSingleton<CSharedDoc>::Instance()->m_userInfo.identity;
+
+	int result = (identity & 4) == 4;
+	return result;
+}
+
 bool IsGameType(unsigned char type);
 bool IsAngelWing(unsigned long typeId);         // shareddoc.inl:562 (SharedDoc's copy, defined in SharedDoc.inl)
 bool IsMannerPlayer(void);                      // shareddoc.inl:602 (RealMyRoomMainUI's copy)
@@ -2238,10 +2286,20 @@ bool CompareItemInfo(const sItemInfo &a, const sItemInfo &b);
 #define SHAREDDOC_INLINE inline
 #endif
 
+// MessengerDlg.cpp defines MESSENGERDLG_SHAREDDOC_DECL_ONLY: the bodies of
+// SetHoles and SetWeather, visible there, change two reloads of
+// CMessengerInfo::AlarmBtnUp although it calls neither.
+#ifndef MESSENGERDLG_SHAREDDOC_DECL_ONLY
+// shareddoc.inl:229
+SHAREDDOC_INLINE void SetHoles(unsigned char holes) {
+	WSingleton<CSharedDoc>::Instance()->m_holes = holes;
+}
+
 // shareddoc.inl:293
 SHAREDDOC_INLINE void SetWeather(unsigned char weather) {
 	WSingleton<CSharedDoc>::Instance()->m_weather = weather;
 }
+#endif
 
 // shareddoc.inl:492
 SHAREDDOC_INLINE char *MyNick(void) {
@@ -2528,9 +2586,15 @@ GOLFRULE_SHAREDDOC_INLINE unsigned char GetHoles(void) {
 	return WSingleton<CSharedDoc>::Instance()->m_holes;
 }
 
+// shareddoc.inl:234
+GOLFRULE_SHAREDDOC_INLINE unsigned char GetStartHole(void) {
+	return WSingleton<CSharedDoc>::Instance()->m_holeOrder[0];
+}
+
 // shareddoc.inl:254, the 1-based play order of a course hole, 19 when it is
-// not played.
-GOLFRULE_SHAREDDOC_INLINE unsigned char GetHoleIndex(unsigned char hole) {
+// not played. A plain inline even in GolfRule, whose calls cl inlines where the
+// original did (DoScoreBoard); the rest still emit its COMDAT there.
+inline unsigned char GetHoleIndex(unsigned char hole) {
 	for (unsigned char i = 0; i < 18; i++) {
 		if (WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] == hole)
 			return i + 1;

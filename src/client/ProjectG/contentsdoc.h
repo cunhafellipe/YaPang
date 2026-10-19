@@ -6,6 +6,7 @@
 #include "padding.h"
 #include "icontentsdoc.h"
 #include "shared/globalgamedefine.h"
+#include "Packet.h"
 
 #include <windows.h>
 
@@ -40,6 +41,14 @@ namespace FieldItem {
 		unsigned long id;                           // 0x4: the GroundItem's id
 		int count;                                  // 0x8
 		eDisposeTextureType disposeTextureType;     // 0xC
+
+		// globalgamedefine.h:6005
+		void EncodeTo(WSendPacket &packet) const {
+			packet.Encode1((unsigned char)itemType);
+			packet.Encode4(id);
+			packet.Encode1((unsigned char)count);
+			packet.Encode1((unsigned char)disposeTextureType);
+		}
 	};
 }
 

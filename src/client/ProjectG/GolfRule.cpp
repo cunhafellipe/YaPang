@@ -1,5 +1,6 @@
 // Original: d:\build\custom\temp\code\client\projectg\golfrule.cpp
 #define GOLFRULE_GOLFDOC_INLINE
+#define GOLFRULE_GLOBALGAMEDEFINE_INLINE
 #define GOLFRULE_CHATMSG_INLINE
 #define GOLFRULE_LOGININFO_INLINE
 #define GOLFRULE_CLUB_INLINE
@@ -270,11 +271,6 @@ void CGolfDoc::SetApproachReloaded(bool reloaded) {
 	m_approachReloaded = reloaded;
 }
 
-// logininfo.h:482
-int IsPcBang(void) {
-	return CLoginInfo::Instance()->IsPcBang();
-}
-
 // treasure.h:97-98: CTHunter::IsReturnLobby / SetReturnLobby, emitted here
 // from Treasure.h (GOLFRULE_TREASURE_INLINE).
 
@@ -341,11 +337,6 @@ bool CSharedDoc::GetGoStopMode(void) {
 // shareddoc.inl:134
 bool IsOthersTurn(bool b) {
 	return !IsMyTurn(b);
-}
-
-// shareddoc.inl:234
-unsigned char GetStartHole(void) {
-	return WSingleton<CSharedDoc>::Instance()->m_holeOrder[0];
 }
 
 // shareddoc.inl:249
@@ -546,7 +537,7 @@ BallSpeedFactor::BallSpeedFactor(unsigned long shotType, const CGolfBall &ball, 
 		return;
 
 	if (GOLFDOC()->GetBar().m_accuracyGrade == 4)
-		m_angle -= m_spin * 0.349066f;
+		m_angle -= m_spin * 0.34906584f;
 
 	CGolfDoc *doc = GOLFDOC();
 	if (doc->GetBar().m_accuracyGrade == 3) {
@@ -557,7 +548,7 @@ BallSpeedFactor::BallSpeedFactor(unsigned long shotType, const CGolfBall &ball, 
 		else
 			ratio = ratio / (doc->GetBar().m_startPosition - (140.0f - GolfClub().GetNarrowAccuracy()));
 
-		m_angle -= m_spin * 0.349066f;
+		m_angle -= m_spin * 0.34906584f;
 
 		if (!IsLocalContent((localContentType_t)0x50) || ball.m_powerFlags == 0)
 			m_spin -= ratio * 0.2f;
@@ -573,9 +564,9 @@ BallSpeedFactor::BallSpeedFactor(unsigned long shotType, const CGolfBall &ball, 
 
 		if (GOLFDOC()->GetBar().m_position > 140.0f) {
 			m_spin *= -1.0f;
-			m_angle -= ratio * 0.174533f;
+			m_angle -= ratio * 0.17453292f;
 		} else {
-			m_angle += ratio * 0.174533f;
+			m_angle += ratio * 0.17453292f;
 		}
 	}
 
@@ -591,14 +582,14 @@ BallSpeedFactor::BallSpeedFactor(unsigned long shotType, const CGolfBall &ball, 
 				m_velocity.Reset();
 			} else {
 				m_velocity = WVector(0.0f, 0.0f, 15.0f);
-				m_angle += 0.698132f;
+				m_angle += 0.69813168f;
 			}
 			break;
 		case 1:
 			if (GOLFDOC()->GetBar().m_position > GOLFDOC()->GetBar().m_startPosition)
 				m_velocity = WVector(0.0f, 0.0f, 20.0f);
 			else
-				m_velocity = RotMat(1.396263f, 0).za * 50.0f;
+				m_velocity = RotMat(1.3962634f, 0).za * 50.0f;
 
 			if (shotType == 0x4000006 || shotType == 0x4000005)
 				m_velocity.Reset();
@@ -607,13 +598,14 @@ BallSpeedFactor::BallSpeedFactor(unsigned long shotType, const CGolfBall &ball, 
 			if (GOLFDOC()->GetBar().m_position > GOLFDOC()->GetBar().m_startPosition)
 				m_velocity = WVector(0.0f, 0.0f, 5.0f);
 			else
-				m_velocity = RotMat(1.396263f, 0).za * 20.0f;
+				m_velocity = RotMat(1.3962634f, 0).za * 20.0f;
 			break;
 		}
 	}
 
-	if (GOLFDOC()->GetBar().m_accuracyGrade > 1) {
-		if (GOLFDOC()->GetBar().m_accuracyGrade == 4 && GOLFDOC()->GetBar().m_stopped && GolfClub().PowerShotType() != 0 && !(ball.m_powerFlags & 0x70) && IsLocalContent((localContentType_t)0x2F) && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000028)
+	int grade = GOLFDOC()->GetBar().m_accuracyGrade;
+	if (grade > 1) {
+		if (grade == 4 && GOLFDOC()->GetBar().m_stopped && GolfClub().PowerShotType() != 0 && !(ball.m_powerFlags & 0x70) && IsLocalContent((localContentType_t)0x2F) && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000028)
 			return;
 
 		// The base's up axis (CBase::HandleMsg 0x1C1 writes a whole WVector).
@@ -963,7 +955,7 @@ bool CGolfRule::OnChatInputEnterKey(PG_MSGARG param) {
 	if (strlen(text)) {
 		if (!GOLFDOC()->IsShowChat()) {
 			// "the chat window is hidden" (CP949)
-			CChatMsg::Instance()->AddChatMsg(std::string("\xC1\xF6\xB1\xDD\xC0\xBA \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xBC\xFB\xB1\xE4 \xBB\xF3\xC5\xC2\xC0\xD4\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
+			CChatMsg::Instance()->AddChatMsg("\xC1\xF6\xB1\xDD\xC0\xBA \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xBC\xFB\xB1\xE4 \xBB\xF3\xC5\xC2\xC0\xD4\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
 			return true;
 		}
 
@@ -971,7 +963,7 @@ bool CGolfRule::OnChatInputEnterKey(PG_MSGARG param) {
 			// "to everyone" (CP949)
 			m_chatEdit->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0);
 			// "wrong whisper target, switched to \"to everyone\"" (CP949)
-			CChatMsg::Instance()->AddChatMsg(std::string("\xB1\xD3\xB8\xBB \xBB\xF3\xB4\xEB\xB0\xA1 \xC0\xDF\xB8\xF8\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9. \"\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4\"\xB7\xCE \xBA\xAF\xB0\xE6\xC7\xD5\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
+			CChatMsg::Instance()->AddChatMsg("\xB1\xD3\xB8\xBB \xBB\xF3\xB4\xEB\xB0\xA1 \xC0\xDF\xB8\xF8\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9. \"\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4\"\xB7\xCE \xBA\xAF\xB0\xE6\xC7\xD5\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
 		}
 
 		if (OnlinePlay()) {
@@ -1042,7 +1034,7 @@ void CGolfRule::OnMyInfoInit(PG_MSGARG param) {
 // golfrule.cpp:1276
 void CGolfRule::OnMyInfoBtnUp(void) {
 	if (CUserInfo::Instance()) {
-		CUserInfo::Instance()->SetInfo(MyUID(), CSharedDoc::Instance()->GetPangyaUserInfo().guid, true, true, false, false, CSharedDoc::Instance()->GetPangyaUserInfo().nickname);
+		CUserInfo::Instance()->SetInfo(CSharedDoc::Instance()->GetPangyaUserInfo().uid, CSharedDoc::Instance()->GetPangyaUserInfo().guid, true, true, false, false, CSharedDoc::Instance()->GetPangyaUserInfo().nickname);
 	}
 	OnBarHoverOff(0);
 }
@@ -1484,7 +1476,7 @@ CGolfRule::CGolfRule(void) {
 	m_pRule = NULL;
 
 	if (IsLocalContent((localContentType_t)0x50)) {
-		m_inputCommandTail = m_inputCommandHead = 0;
+		m_inputCommandHead = m_inputCommandTail = 0;
 		m_value1E8 = 0;
 	}
 
@@ -1506,9 +1498,9 @@ CGolfRule::CGolfRule(void) {
 	m_predictShotUI->Add("Spike", WRect(0.0f, 144.0f, 128.0f, 18.0f), false);
 
 	m_predictNormalShotBtn = NULL;
-	m_predictTomahwakShotBtn = NULL;
 	m_predictCobraShotBtn = NULL;
 	m_predictSpikeShotBtn = NULL;
+	m_predictTomahwakShotBtn = NULL;
 	m_topViewMode = 0;
 }
 
@@ -1862,7 +1854,7 @@ void CGolfRule::RecordPlayerList(void) {
 		switch (WSingleton<CSharedDoc>::Instance()->m_roomType) {
 		case 4:
 		case 5:
-		case 8:
+		case 6:
 		case 9:
 		case 10:
 			for (std::vector<sGameResultInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_gameResultList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_gameResultList.end(); ++it) {
@@ -2708,14 +2700,14 @@ void CGolfRule::ResetRank(void) {
 				if (i == j || PLAYER(j)->m_state == 3)
 					continue;
 
-				if (PLAYER(i)->m_ghostResult < PLAYER(j)->m_ghostResult
-					|| (PLAYER(j)->m_ghostResult == PLAYER(i)->m_ghostResult && PLAYER(j)->m_ghostAward > PLAYER(i)->m_ghostAward)) {
+				if ((int)PLAYER(i)->m_ghostResult < (int)PLAYER(j)->m_ghostResult
+					|| (PLAYER(i)->m_ghostResult == PLAYER(j)->m_ghostResult && PLAYER(i)->m_ghostAward < PLAYER(j)->m_ghostAward)) {
 					PLAYER(i)->m_turnOrder++;
 					PLAYER(i)->m_joinState++;
 				}
 
 				if (PLAYER(i)->m_ghostResult == PLAYER(j)->m_ghostResult
-					&& PLAYER(j)->m_ghostAward == PLAYER(i)->m_ghostAward && PLAYER(i)->m_index > PLAYER(j)->m_index)
+					&& PLAYER(i)->m_ghostAward == PLAYER(j)->m_ghostAward && PLAYER(i)->m_index > PLAYER(j)->m_index)
 					PLAYER(i)->m_turnOrder++;
 			}
 		}
@@ -2733,15 +2725,15 @@ void CGolfRule::ResetRank(void) {
 				if (i == j || PLAYER(j)->m_state == 3)
 					continue;
 
-				if (PLAYER(i)->m_ghostResult > PLAYER(j)->m_ghostResult
+				if ((int)PLAYER(i)->m_ghostResult > (int)PLAYER(j)->m_ghostResult
 					|| (PLAYER(i)->m_ghostResult == PLAYER(j)->m_ghostResult
-						&& PLAYER(j)->m_ghostAward > PLAYER(i)->m_ghostAward)) {
+						&& PLAYER(i)->m_ghostAward < PLAYER(j)->m_ghostAward)) {
 					PLAYER(i)->m_turnOrder++;
 					PLAYER(i)->m_joinState++;
 				}
 
 				if (PLAYER(i)->m_ghostResult == PLAYER(j)->m_ghostResult
-					&& PLAYER(j)->m_ghostAward == PLAYER(i)->m_ghostAward
+					&& PLAYER(i)->m_ghostAward == PLAYER(j)->m_ghostAward
 					&& PLAYER(i)->m_index > PLAYER(j)->m_index)
 					PLAYER(i)->m_turnOrder++;
 			}
@@ -2794,8 +2786,8 @@ void CGolfRule::ResetRank(void) {
 				if (i == j || PLAYER(j)->m_state == 3)
 					continue;
 
-				if (PLAYER(j)->m_holes[GOLFDOC()->m_currentHole - 1] < PLAYER(i)->m_holes[GOLFDOC()->m_currentHole - 1]
-					|| (PLAYER(j)->m_holes[GOLFDOC()->m_currentHole - 1] == PLAYER(i)->m_holes[GOLFDOC()->m_currentHole - 1]
+				if (PLAYER(i)->m_holes[GOLFDOC()->m_currentHole - 1] > PLAYER(j)->m_holes[GOLFDOC()->m_currentHole - 1]
+					|| (PLAYER(i)->m_holes[GOLFDOC()->m_currentHole - 1] == PLAYER(j)->m_holes[GOLFDOC()->m_currentHole - 1]
 						&& PLAYER(i)->m_turnIndex > PLAYER(j)->m_turnIndex))
 					GOLFDOC()->GetHoleData().m_playerRank[i]++;
 			}
@@ -2806,7 +2798,7 @@ void CGolfRule::ResetRank(void) {
 		break;
 
 	case 1:
-		if (TEAM(1 - m_firstTeam)->m_holes[GOLFDOC()->m_currentHole - 1] < TEAM(m_firstTeam)->m_holes[GOLFDOC()->m_currentHole - 1])
+		if (TEAM(m_firstTeam)->m_holes[GOLFDOC()->m_currentHole - 1] > TEAM(1 - m_firstTeam)->m_holes[GOLFDOC()->m_currentHole - 1])
 			m_firstTeam = 1 - m_firstTeam;
 
 		for (unsigned char t = 0; t < 2; t++) {
@@ -2846,21 +2838,22 @@ bool CGolfRule::CanMoveToNextHole(void) {
 		break;
 
 	case 1: {
-		bool team0 = TEAM(0)->m_state == 1;
-		bool team1 = TEAM(1)->m_state == 1;
+		// The two finished flags are an array: cl overlaps it with the
+		// argument temporary of the case 4 GetPlayer call (4-byte frame).
+		bool finished[2];
+		finished[0] = TEAM(0)->m_state == 1;
+		finished[1] = TEAM(1)->m_state == 1;
 
-		if (team0 && team1)
+		if (finished[0] && finished[1])
 			return true;
 
 		unsigned char score0 = TEAM(0)->m_holes[GOLFDOC()->m_currentHole - 1];
 		unsigned char score1 = TEAM(1)->m_holes[GOLFDOC()->m_currentHole - 1];
 
-		if (team0) {
+		if (finished[0]) {
 			if (score0 <= score1)
 				return true;
-		}
-
-		if (team1) {
+		} else if (finished[1]) {
 			if (score0 >= score1)
 				return true;
 		}
@@ -2901,8 +2894,8 @@ void CGolfRule::RecordScoreByPlayer(unsigned char player) {
 
 		RecordPlayerData(player);
 
-		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1 && GOLFDOC()->GetPlayer(player)->m_partnerIndex != 0xFF)
-			RecordPlayerData(GOLFDOC()->GetPlayer(player)->m_partnerIndex);
+		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1 && PLAYER(player)->m_partnerIndex != 0xFF)
+			RecordPlayerData(PLAYER(player)->m_partnerIndex);
 
 		SendHoleStat();
 	}
@@ -2931,7 +2924,7 @@ void CGolfRule::ResetData(const WVector &pos) {
 		if (GOLFDOC()->GetPlayer(i)->m_state == 3)
 			continue;
 
-		GOLFDOC()->GetPlayer(i)->m_ghostAwardBase = 0;
+		GOLFDOC()->GetPlayer(i)->m_ghostAwardBase.Reset();
 		GOLFDOC()->GetPlayer(i)->m_rivalLevel = 0;
 		GOLFDOC()->GetPlayer(i)->m_lastShotPos = pos;
 		GOLFDOC()->GetPlayer(i)->m_ballPos = pos;
@@ -3187,7 +3180,7 @@ void CGolfRule::DoPlayerPreview(float elapsed) {
 			if (!GOLFDOC()->IsTeeShotReady()) {
 				GOLFDOC()->SetTeeShotReady(true);
 
-				if (CSharedDoc::Instance()->m_roomType == 10 || !IsMassGame())
+				if (GetGameType() == 10 || !IsMassGame())
 					SetNetMsgWait(true, 0x1162, "DoPlayerPreview", 20.0f);
 
 				WSendPacket packet((enumClientPacket)0x34);
@@ -4131,7 +4124,7 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 		// "The opponent left, so the match cannot go on; to keep your record, you can
 		// carry on the game with the %d experience and %d pang earned so far.
 		// Finishing the game also earns the clear bonus pang. Continue?"
-		char text[2048];
+		char text[1024];
 		sprintf(text, "\xBB\xF3\xB4\xEB\xB0\xA1 \xC5\xF0\xC0\xE5\xC7\xD8\xBC\xAD \xB4\xF5 \xC0\xCC\xBB\xF3\xC0\xC7 \xB4\xEB\xC0\xFC\xC0\xBA \xBA\xD2\xB0\xA1\xB4\xC9\xC7\xCF\xB3\xAA, \xB0\xB3\xC0\xCE \xB1\xE2\xB7\xCF \xBC\xF6\xB8\xB3\xC0\xBB \xC0\xA7\xC7\xD8\xBC\xAD \xC7\xF6\xC0\xE7\xB1\xEE\xC1\xF6 \xBE\xF2\xC0\xBA\n\\c0xffff0000\\c\xB0\xE6\xC7\xE8\xC4\xA1 %d\\c0xff000000\\c\xBF\xCD \\c0xffff0000\\c%d \xC6\xCE\\c0xff000000\\c\xB8\xB8\xC0\xBB \xB9\xDE\xB0\xED \xB0\xD4\xC0\xD3\xC0\xBB \xB0\xE8\xBC\xD3 \xC1\xF8\xC7\xE0 \xC7\xD2 \xBC\xF6 \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9.\n\xB1\xD7\xB8\xAE\xB0\xED, \xB0\xD4\xC0\xD3\xC0\xBB \xBF\xCF\xC1\xD6\xC7\xCF\xB8\xE9 \xC5\xAC\xB8\xAE\xBE\xEE \xBA\xB8\xB3\xCA\xBD\xBA \xC6\xCE\xC0\xBB \xB9\xDE\xC0\xBB \xBC\xF6 \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9.\n\xB0\xE8\xBC\xD3 \xC1\xF8\xC7\xE0 \xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?", exp, (int)PLAYER(MyIndex())->m_ghostAward);
 		m_goStopDlg->SetMessage(text, false);
 		m_goStopDlg->SetTimeLimit(10.0f);
@@ -4272,7 +4265,7 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 				sprintf(text, "%d\xC8\xA6\xC0\xBA \xB9\xAB\xBD\xC2\xBA\xCE\xB0\xA1 \xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9", hole);
 			}
 
-			CChatMsg::Instance()->AddChatMsg(std::string(text), 0xFFFF7878, true, false);
+			CChatMsg::Instance()->AddChatMsg(text, 0xFFFF7878, true, false);
 
 			if (pRed->m_holeShots[hole - 1] < pBlue->m_holeShots[hole - 1]) {
 				GOLFDOC()->GetHoleData(WSingleton<CSharedDoc>::Instance()->m_holeOrder[hole - 1]).m_mapState = 0;
@@ -4329,20 +4322,19 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 
 // golfrule.cpp:6132
 void CGolfRule::DispatchMatchItems(void) {
-	CSharedDoc *sharedDoc = WSingleton<CSharedDoc>::Instance();
-	unsigned char interval = sharedDoc->m_holes / 9;
+	unsigned char interval = WSingleton<CSharedDoc>::Instance()->m_holes / 9;
 	unsigned char holeIndex = GetHoleIndex(GOLFDOC()->m_currentHole);
 	if (interval == 0)
 		interval = 1;
 
 	if (holeIndex > 0
 		&& holeIndex % interval == 0
-		&& sharedDoc->m_roomType == 3) {
+		&& WSingleton<CSharedDoc>::Instance()->m_roomType == 3) {
 		unsigned long itemId = 0;
 		unsigned long sum = 0;
 		// The ladder round: the hole's position divided by the rounds' interval.
 		unsigned char round = holeIndex / interval;
-		unsigned long rnd = sharedDoc->m_holeRandom[round] % 100;
+		unsigned long rnd = WSingleton<CSharedDoc>::Instance()->m_holeRandom[round] % 100;
 		for (unsigned int i = 0; i < 6; i++) {
 			sum += g_ladderItem[i].rate;
 			if (sum > rnd) {
@@ -6379,7 +6371,7 @@ bool CGolfRule::SetHoleInPose_Match(void) {
 			if (playing[0]) {
 				if (PLAYER(0)->m_holes[GOLFDOC()->m_currentHole - 1] > PLAYER(1)->m_holes[GOLFDOC()->m_currentHole - 1]) {
 					if (PLAYER(0)->m_holes[GOLFDOC()->m_currentHole - 1] != PLAYER(1)->m_holes[GOLFDOC()->m_currentHole - 1] + (unsigned char)1
-						|| (int)PLAYER(0)->m_ghostResult <= (int)PLAYER(1)->m_ghostResult + CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
+						|| (int)PLAYER(0)->m_ghostResult <= (int)PLAYER(1)->m_ghostResult + GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole))
 						return false;
 				}
 
@@ -6388,7 +6380,7 @@ bool CGolfRule::SetHoleInPose_Match(void) {
 			} else {
 				if (PLAYER(0)->m_holes[GOLFDOC()->m_currentHole - 1] < PLAYER(1)->m_holes[GOLFDOC()->m_currentHole - 1]) {
 					if (PLAYER(1)->m_holes[GOLFDOC()->m_currentHole - 1] != PLAYER(0)->m_holes[GOLFDOC()->m_currentHole - 1] + (unsigned char)1
-						|| (int)PLAYER(1)->m_ghostResult <= (int)PLAYER(0)->m_ghostResult + CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
+						|| (int)PLAYER(1)->m_ghostResult <= (int)PLAYER(0)->m_ghostResult + GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole))
 						return false;
 				}
 
@@ -6404,28 +6396,30 @@ bool CGolfRule::SetHoleInPose_Match(void) {
 		char caddieMotion[0x20];
 		char letter[0x20];
 		int result;
+		bool lose = true;
 
 		if (playing[0] && playing[1]) {
-			if (PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] > PLAYER(1 - MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1])
-				result = -1;
-			else
+			if (PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] <= PLAYER(1 - MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1]) {
 				result = PLAYER(1 - MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] != PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1];
+				lose = false;
+			}
 		} else if (playing[MyIndex()]) {
 			result = 1;
-		} else {
-			result = -1;
+			lose = false;
 		}
 
-		if (result == -1) {
+		if (lose) {
 			strcpy(motion, "\xBA\xB8\xB1\xE2\xBD\xC7\xB0\xDD\xBD\xC7\xB8\xC1\xC6\xF7\xC1\xEE");
 			strcpy(caddieMotion, "\xBD\xC7\xB0\xDD");
 			strcpy(letter, "lose");
+
+			result = -1;
 		} else {
 			if (PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1) {
 				strcpy(motion, "\xBE\xCB\xB9\xD9\xC8\xA6\xC0\xCE\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
 				strcpy(caddieMotion, "\xC8\xA6\xC0\xCE\xBF\xF8");
 			} else {
-				int score = PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] - GOLFDOC()->GetHoleData(GOLFDOC()->m_currentHole).m_par;
+				int score = (int)PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] - GOLFDOC()->GetHoleData().m_par;
 
 				switch (score) {
 				case -3:
@@ -6489,7 +6483,7 @@ bool CGolfRule::SetHoleInPose_Match(void) {
 // motion, the partner the rank motion), camera, letter and screen, and the
 // hole in result sent to the server.
 bool CGolfRule::SetHoleInPose_Team(void) {
-	if (CSharedDoc::Instance()->m_roomType != 1)
+	if (GetGameType() != 1)
 		return true;
 
 	unsigned char myTeam = PLAYER(MyIndex())->m_attribute;
@@ -6505,7 +6499,7 @@ bool CGolfRule::SetHoleInPose_Team(void) {
 		if (playing[0]) {
 			if (TEAM(0)->m_holes[GOLFDOC()->m_currentHole - 1] > TEAM(1)->m_holes[GOLFDOC()->m_currentHole - 1]) {
 				if (TEAM(0)->m_holes[GOLFDOC()->m_currentHole - 1] != TEAM(1)->m_holes[GOLFDOC()->m_currentHole - 1] + (unsigned char)1
-					|| TEAM(0)->m_resetCount <= CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole) + TEAM(1)->m_resetCount)
+					|| TEAM(0)->m_resetCount <= GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole) + TEAM(1)->m_resetCount)
 					return false;
 			}
 
@@ -6514,7 +6508,7 @@ bool CGolfRule::SetHoleInPose_Team(void) {
 		} else {
 			if (TEAM(0)->m_holes[GOLFDOC()->m_currentHole - 1] < TEAM(1)->m_holes[GOLFDOC()->m_currentHole - 1]) {
 				if (TEAM(1)->m_holes[GOLFDOC()->m_currentHole - 1] != TEAM(0)->m_holes[GOLFDOC()->m_currentHole - 1] + (unsigned char)1
-					|| TEAM(1)->m_resetCount <= CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole) + TEAM(0)->m_resetCount)
+					|| TEAM(1)->m_resetCount <= GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole) + TEAM(0)->m_resetCount)
 					return false;
 			}
 
@@ -6553,7 +6547,7 @@ bool CGolfRule::SetHoleInPose_Team(void) {
 		if (TEAM(myTeam)->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1) {
 			strcpy(names[0], "\xBE\xCB\xB9\xD9\xC8\xA6\xC0\xCE\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
 		} else {
-			int score = (int)TEAM(myTeam)->m_holes[GOLFDOC()->m_currentHole - 1] - GOLFDOC()->GetHoleData(GOLFDOC()->m_currentHole).m_par;
+			int score = (int)TEAM(myTeam)->m_holes[GOLFDOC()->m_currentHole - 1] - GOLFDOC()->GetHoleData().m_par;
 
 			switch (score) {
 			case -3:
@@ -6713,47 +6707,50 @@ bool CGolfRule::SetHoleInPose_Skins(void) {
 
 		unsigned long winnerUid = GOLFDOC()->m_selectedIndexA;
 
+		// 1 won, 0 drawn (no winner), -1 lost
 		int result;
 		int noItemPose = 1;
-		if (winnerUid != 0xFFFFFFFF) {
-			if (winnerUid != PLAYER(MyIndex())->m_uid) {
-				result = -1;
-				if (GOLFDOC()->m_clearedFlag1AC < 3) {
-					strcpy(playerMotion, "\xBA\xB8\xB1\xE2\xBD\xC7\xB0\xDD\xBD\xC7\xB8\xC1\xC6\xF7\xC1\xEE");
-				} else {
-					strcpy(playerMotion, "3\xB5\xEE\xB8\xF0\xBC\xC7");
-					noItemPose = 0;
-				}
-
-				if (GOLFDOC()->m_clearedFlag1AC < 3)
-					strcpy(caddieMotion, "\xBD\xC7\xB0\xDD");
-				else
-					strcpy(caddieMotion, "\xBA\xA1\xC4\xBF");
-
-				strcpy(cameraName, "\xBA\xB8\xB1\xE2\xBD\xC7\xB0\xDD\xBD\xC7\xB8\xC1\xC6\xF7\xC1\xEE");
-			} else {
-				result = 1;
-				if (GOLFDOC()->m_clearedFlag1AC < 2) {
-					strcpy(playerMotion, "\xB9\xF6\xB5\xF0\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
-				} else if (GOLFDOC()->m_clearedFlag1AC < 4) {
-					strcpy(playerMotion, "1\xB5\xEE\xB8\xF0\xBC\xC7");
-					noItemPose = 0;
-				} else {
-					strcpy(playerMotion, "\xC0\xCC\xB1\xDB\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
-				}
-
-				if (GOLFDOC()->m_clearedFlag1AC < 3)
-					strcpy(caddieMotion, "\xC8\xA6\xC0\xCE");
-				else
-					strcpy(caddieMotion, "\xC8\xA6\xC0\xCE\xBF\xF8");
-
-				if (GOLFDOC()->m_clearedFlag1AC < 3)
-					strcpy(cameraName, "\xB9\xF6\xB5\xF0\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
-				else
-					strcpy(cameraName, "\xC0\xCC\xB1\xDB\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
-			}
-		} else {
+		if (winnerUid == 0xFFFFFFFF)
 			result = 0;
+		else if (winnerUid == PLAYER(MyIndex())->m_uid)
+			result = 1;
+		else
+			result = -1;
+
+		if (result == -1) {
+			if (GOLFDOC()->m_clearedFlag1AC < 3) {
+				strcpy(playerMotion, "\xBA\xB8\xB1\xE2\xBD\xC7\xB0\xDD\xBD\xC7\xB8\xC1\xC6\xF7\xC1\xEE");
+			} else {
+				strcpy(playerMotion, "3\xB5\xEE\xB8\xF0\xBC\xC7");
+				noItemPose = 0;
+			}
+
+			if (GOLFDOC()->m_clearedFlag1AC < 3)
+				strcpy(caddieMotion, "\xBD\xC7\xB0\xDD");
+			else
+				strcpy(caddieMotion, "\xBA\xA1\xC4\xBF");
+
+			strcpy(cameraName, "\xBA\xB8\xB1\xE2\xBD\xC7\xB0\xDD\xBD\xC7\xB8\xC1\xC6\xF7\xC1\xEE");
+		} else if (result == 1) {
+			if (GOLFDOC()->m_clearedFlag1AC < 2) {
+				strcpy(playerMotion, "\xB9\xF6\xB5\xF0\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
+			} else if (GOLFDOC()->m_clearedFlag1AC < 4) {
+				strcpy(playerMotion, "1\xB5\xEE\xB8\xF0\xBC\xC7");
+				noItemPose = 0;
+			} else {
+				strcpy(playerMotion, "\xC0\xCC\xB1\xDB\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
+			}
+
+			if (GOLFDOC()->m_clearedFlag1AC < 3)
+				strcpy(caddieMotion, "\xC8\xA6\xC0\xCE");
+			else
+				strcpy(caddieMotion, "\xC8\xA6\xC0\xCE\xBF\xF8");
+
+			if (GOLFDOC()->m_clearedFlag1AC < 3)
+				strcpy(cameraName, "\xB9\xF6\xB5\xF0\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
+			else
+				strcpy(cameraName, "\xC0\xCC\xB1\xDB\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
+		} else {
 			if (GOLFDOC()->m_clearedFlag1AC < 3) {
 				strcpy(playerMotion, "\xBC\xBC\xC0\xCC\xBA\xEA\xC6\xC4\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
 			} else {
@@ -7080,7 +7077,7 @@ bool CGolfRule::GetShotCntData(void) {
 			// stand-in for sShotData: copy the 0x88 bytes into the hole block.
 			memcpy(&m_hole, &data, sizeof(sShotData)); Wind().SetWind(m_holeWind);
 			CSharedDoc::Instance()->m_shotCountKey = m_shotCountKey;
-			GOLFDOC()->GetPlayer(0)->m_comboGauge = (float)m_comboGauge;
+			GOLFDOC()->GetPlayer(0)->m_comboGauge = m_comboGauge;
 
 			GetPVS().SetFrame(m_shotFrame);
 
@@ -7241,7 +7238,7 @@ void CGolfRule::DoFlyBall_Stopped(float elapsed) {
 				if (toPar <= 0) {
 					int coins = toPar < 0 ? 13 : 6;
 
-					if ((bool)((CSharedDoc::Instance()->m_serverProperty >> 7) & 1))
+					if (CSharedDoc::Instance()->m_serverProperty.GetFlag(0x80))
 						coins = S5::UTIL::GetHoleinCoinCount(coins, 2);
 
 					if (CSharedDoc::Instance()->m_roomType == 7 && GOLFDOC()->m_clearedShort194 == 2) {
@@ -7367,11 +7364,11 @@ void CGolfRule::DoFlyBall_Stopped(float elapsed) {
 			toCup.y = 0.0f;
 
 			// "\xC6\xDB\xC6\xC3\xC8\xC4\xBD\xC7\xB8\xC1\xC6\xF7\xC1\xEE": the disappointed pose after a putt
-			if (!(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ghostAwardBase & 1) && !GolfBall().IsHoleIn() && !m_flag3F0
+			if (!PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ghostAwardBase.GetFlag(1) && !GolfBall().IsHoleIn() && !m_flag3F0
 				&& GetPVS().GetGroundType(ball.PreData(0)->m_pos, true, NULL) == 2
 				&& (GOLFDOC()->m_remainShotTime < 10000 || toCup.Magnitude() < 32.0f
 					|| PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holeIn[GOLFDOC()->m_currentHole - 1] >= (unsigned char)2)) {
-				PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ghostAwardBase |= 1;
+				PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ghostAwardBase.Enable(1);
 				SendMsg(this, "Player", 0x2717, (intptr_t)"\xC6\xDB\xC6\xC3\xC8\xC4\xBD\xC7\xB8\xC1\xC6\xF7\xC1\xEE", 0, 0, 0);
 			}
 
@@ -7561,7 +7558,7 @@ void CGolfRule::CaptureProcess(void) {
 			GetTask()->SetPause(true);
 		}
 
-		if ((g_input->Get("LCONTROL", true) || g_input->Get("RCONTROL", true))
+		if (!g_input->Get("LCONTROL", true) && !g_input->Get("RCONTROL", true)
 			&& g_input->GetDown("FUNC_10", true)) {
 			if (COption::Instance()->vGetTnLMode() == 0) {
 				// "Only possible in HW TnL acceleration mode." / "Notice"
@@ -8295,8 +8292,8 @@ bool CGolfRule::GetBarCondition(void) {
 		GOLFDOC()->GetBar().m_accuracyGrade = 4;
 		g_audio->PlaySfx(g_plSound[1], 0, 0, 0, 0, 0.5f, 200.0f);
 	} else if (IsLocalContent((localContentType_t)0x6E) && halfArea == true
-		&& GOLFDOC()->GetBar().m_position - GOLFDOC()->GetBar().m_startPosition > (pangYaArea + 1.5f) * -1.0f
-		&& !(GOLFDOC()->GetBar().m_position - GOLFDOC()->GetBar().m_startPosition < 0.0f)) {
+		&& (pangYaArea + 1.5f) * -1.0f < GOLFDOC()->GetBar().m_position - GOLFDOC()->GetBar().m_startPosition
+		&& GOLFDOC()->GetBar().m_position - GOLFDOC()->GetBar().m_startPosition < 0.0f) {
 		GOLFDOC()->GetBar().m_accuracyGrade = 4;
 		g_audio->PlaySfx(g_plSound[1], 0, 0, 0, 0, 0.5f, 200.0f);
 	} else if (GolfClub().GetNarrowAccuracy() + 0.5f > error) {
@@ -8312,14 +8309,14 @@ bool CGolfRule::GetBarCondition(void) {
 
 	if (GOLFDOC()->GetBar().m_accuracyGrade == 4 || GOLFDOC()->GetBar().m_accuracyGrade == 3 || GOLFDOC()->GetBar().m_accuracyGrade == 2)
 		return true;
-
-	return false;
+	else
+		return false;
 }
 
 // golfrule.cpp:11626
 void CGolfRule::CalcInputCommand(void) {
 	int count = 0;
-	m_inputCommandTail = m_inputCommandHead = 0;
+	m_inputCommandHead = m_inputCommandTail = 0;
 	if (GOLFDOC()->m_commandArrows.size() > 0 && !(GOLFDOC()->m_commandArrows.back() & 0x40)) {
 		for (std::list<unsigned long>::iterator it = GOLFDOC()->m_commandArrows.begin(); it != GOLFDOC()->m_commandArrows.end(); ++it) {
 			if (count < 2) {
@@ -8528,10 +8525,8 @@ void CGolfRule::DriveGauge(float elapsed, bool click) {
 
 	if (GOLFDOC()->GetBar().m_state == 1) {
 		if (COption::Instance()->dGetClickSystem()) {
-			// DRAFT: the original multiplies by 1/396 (0x3B25E9F7); if cl 13.10
-			// keeps an fdiv for `/ 396.0f`, write `* (1.0f / 396.0f)` or the literal
-			// 0.0025252525f. Min is wutil.h's Min<float>, inlined here.
-			float pos = Min((GOLFDOC()->GetBar().m_accuracy - 105.0f) / 396.0f, 0.5f);
+			// Min is wutil.h's Min<float>, inlined here.
+			float pos = Min((GOLFDOC()->GetBar().m_accuracy - 105.0f) / 395.0f, 0.5f);
 			speed *= pos * pos * 2.0f + 0.5f;
 		}
 	} else if (GOLFDOC()->m_clockHold > 1) {
@@ -9659,7 +9654,7 @@ void CGolfRule::Replay(bool keep) {
 
 	ReactionForShot();
 
-	if ((CSharedDoc::Instance()->m_currentChannel.flags & 0x8000) && !IsMyTurn(true)) {
+	if ((CSharedDoc::Instance()->m_currentChannel.flags & 0x80) && !IsMyTurn(true)) {
 		SendMsg(this, "Screen", 0x1A8, 0, 0, 0, 0);
 	} else {
 		SendMsg(this, "Screen", 0x1A7, 0, 0, 0, 0);
@@ -10066,10 +10061,10 @@ unsigned char CGolfRule::GetNextTurn(void) {
 
 			for (unsigned char i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
 				if (PLAYER(i)->m_state == 0 && i != next) {
-					WVector playerToCup = GetHoleCupPos() - PLAYER(i)->m_ballPos;
-					playerToCup.y = 0.0f;
+					WVector playerToCup;
+					playerToCup = GetHoleCupPos() - PLAYER(i)->m_ballPos;
 
-					float distance = playerToCup.Magnitude();
+					float distance = sqrtf(playerToCup.x * playerToCup.x + playerToCup.z * playerToCup.z);
 					if (distance > farthest) {
 						next = i;
 						farthest = distance;
@@ -10308,7 +10303,7 @@ void CGolfRule::LoadShot(const char *fileName) {
 
 	SetGameType(0);
 
-	CSharedDoc::Instance()->m_replayValue5BC0 = m_shotBarRaw.m_savedReplayValue;
+	CSharedDoc::Instance()->m_replayPrevAccuracy = m_shotBar.m_prevAccuracy;
 
 	CSharedDoc::Instance()->m_replayPlayType = playType;
 
@@ -10507,7 +10502,7 @@ bool CGolfRule::ShotDataLoad(const char *fileName) {
 
 	SetGameType(0);
 
-	CSharedDoc::Instance()->m_replayValue5BC0 = m_shotBarRaw.m_savedReplayValue;
+	CSharedDoc::Instance()->m_replayPrevAccuracy = m_shotBar.m_prevAccuracy;
 
 	CSharedDoc::Instance()->m_replayPlayType = playType;
 
@@ -10949,7 +10944,7 @@ void CGolfRule::AddExtPrize(void) {
 
 	for (int i = 0; i < PLAYER(GOLFDOC()->m_myPlayerIndex)->m_extPrizeCount; i++) {
 		int kind = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_extPrizes[i].m_kind;
-		if (kind >= 3 && kind <= 5)
+		if (IsNoItemPrizeKind(kind))
 			continue;
 
 		unsigned long typeId = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_extPrizes[i].m_typeId;
@@ -11042,7 +11037,7 @@ void CGolfRule::AddExtPrize(void) {
 					sprintf(text, "%s", item->m_name);
 
 				// "Congratulations! %s obtained"
-				CChatMsg::Instance()->AddChatMsg(std::string(MakeStr("\xC3\xE0! %s \xC8\xB9\xB5\xE6", text)), 0xFFFF7878, false, false);
+				CChatMsg::Instance()->AddChatMsg(MakeStr("\xC3\xE0! %s \xC8\xB9\xB5\xE6", text), 0xFFFF7878, false, false);
 			}
 		}
 	}
@@ -11050,16 +11045,23 @@ void CGolfRule::AddExtPrize(void) {
 	PLAYER(GOLFDOC()->m_myPlayerIndex)->m_extPrizeCount = 0;
 }
 
+// The GCT_CLICK payload of a cancelled shot: the bar's start position right
+// after the type byte.
+#pragma pack(push, 1)
+struct sCancelClickData {
+	unsigned char type;         // 0x0
+	float startPosition;        // 0x1
+};
+#pragma pack(pop)
+CHECK_SIZE(sCancelClickData, 0x5);
+
 // golfrule.cpp:15526
 void CGolfRule::CancelShot(void) {
 	timeEndPeriod(1);
 	CFx::Instance()->SetActive(true);
 
 	if (OnlinePlay() && IsMyTurn(false)) {
-		struct {
-			unsigned char type;
-			float startPosition;
-		} __declspec(align(1)) data;
+		sCancelClickData data;
 		data.type = 0;
 		data.startPosition = GOLFDOC()->GetBar().m_startPosition;
 
@@ -11790,7 +11792,8 @@ void CGolfRule::SetCurrentGolfRule(void) {
 	case 11:
 	case 12:
 		m_pRule = new CGolfRuleTutorial(this);
-		WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_currentHole = WSingleton<CSharedDoc>::Instance()->m_value4D98 == 14 ? 2 : 1;
+		// One source line in the original (golfrule.cpp:16535).
+		if (WSingleton<CSharedDoc>::Instance()->m_value4D98 == 14) GOLFDOC()->m_currentHole = 2; else GOLFDOC()->m_currentHole = 1;
 		break;
 	default:
 		m_pRule = NULL;
@@ -11835,7 +11838,7 @@ void CGolfRule::_ImeReset(void) {
 // golfrule.cpp:16596
 void CGolfRule::ReplayBoxOpen(void) {
 	if (!m_replayBox) {
-		float x = 570.0f - (800.0f - g_view->GetWidth());
+		float x = 571.0f - (800.0f - g_view->GetWidth());
 
 		m_replayBox = CreateForm<FrReplayControlDlg>(g_pFresh->GetManager(), this, "replaycontroldlg", 0);
 		m_replayBox->Open((FRESH_RESULT_CALLBACK)&CGolfRule::OnReplayModeDlgResult, WPoint(x, 55.0f), 0x11);
@@ -12258,6 +12261,9 @@ bool CGolfRule::IsLastShotRelplay(void) {
 // or of every team in a team game) by one per combo gauge aux part the
 // player's character wears, within the gauge limit.
 void CGolfRule::HoleComboGaugeSetting(void) {
+	// The aux parts that raise the combo gauge by one each.
+	const unsigned long comboGaugeParts[2] = { 0x70010010, 0x70010012 };
+
 	switch (WSingleton<CSharedDoc>::Instance()->m_roomType) {
 	case 4:
 	case 5:
@@ -12267,10 +12273,10 @@ void CGolfRule::HoleComboGaugeSetting(void) {
 		sCharacterInfo *pCharacter = &WSingleton<CSharedDoc>::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_characterInfo;
 
 		float bonus = 0.0f;
-		if (pCharacter->auxParts.tids[0] == 0x70010010)
-			bonus += 1.0f;
-		if (pCharacter->auxParts.tids[0] == 0x70010012)
-			bonus += 1.0f;
+		for (int k = 0; k < 2; k++) {
+			if (pCharacter->auxParts.tids[0] == comboGaugeParts[k])
+				bonus += 1.0f;
+		}
 
 		PLAYER(GOLFDOC()->m_myPlayerIndex)->m_comboGauge = Between(0.0f, (float)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_comboGauge + bonus, WSingleton<CSharedDoc>::Instance()->GetComboGaugeLimit(GOLFDOC()->m_myPlayerIndex));
 		break;
@@ -12278,10 +12284,10 @@ void CGolfRule::HoleComboGaugeSetting(void) {
 	default:
 		for (int i = 0; i < GOLFDOC()->m_playerNum; i++) {
 			float bonus = 0.0f;
-			if (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_characterInfo.auxParts.tids[0] == 0x70010010)
-				bonus += 1.0f;
-			if (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_characterInfo.auxParts.tids[0] == 0x70010012)
-				bonus += 1.0f;
+			for (int k = 0; k < 2; k++) {
+				if (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_characterInfo.auxParts.tids[0] == comboGaugeParts[k])
+					bonus += 1.0f;
+			}
 
 			if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
 				TEAM(PLAYER(i)->m_attribute)->m_teamRate = Between(0.0f, (float)TEAM(PLAYER(i)->m_attribute)->m_teamRate + bonus, WSingleton<CSharedDoc>::Instance()->GetComboGaugeLimit(PLAYER(i)->m_attribute));
@@ -12322,10 +12328,7 @@ void CGolfRule::EncodePacket(enumClientPacket type, WSendPacket &packet) {
 
 			std::vector<FieldItem::AcquiredItemInfo>::iterator it = items->begin();
 			for (; it != items->end(); ++it) {
-				packet.Encode1((unsigned char)it->itemType);
-				packet.Encode4(it->id);
-				packet.Encode1((unsigned char)it->count);
-				packet.Encode1((unsigned char)it->disposeTextureType);
+				it->EncodeTo(packet);
 			}
 
 			items->clear();

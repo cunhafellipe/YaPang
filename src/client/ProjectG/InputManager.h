@@ -64,7 +64,7 @@ public:
 	};
 
 	// inputmanager.h:27
-	CInputManager(void) : m_keyList(32, 128) {
+	CInputManager(void) : m_keyList(32, 32) {
 		m_sensitivity = 1.0f;
 		m_swapButton = false;
 		Reset();

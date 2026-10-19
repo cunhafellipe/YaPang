@@ -9,6 +9,7 @@
 #include "frdesktop.h"
 #include "frgroupbox.h"
 #include "client/Wangreal/include/wtypes.h"
+#include "client/Wangreal/include/wutil.h"
 #include "client/Wangreal/include/wview.h"
 #include "client/Wangreal/include/woverlay.h"
 #include "client/Wangreal/include/wresrcmng.h"
@@ -298,17 +299,19 @@ bool CMouseCursor::ChildWindowCallback(FrWnd* pWnd, void* pParam) {
 		if (Instance()->m_pointer.x >= rect.x && rect.x + rect.w >= Instance()->m_pointer.x && Instance()->m_pointer.y >= rect.y && rect.y + rect.h >= Instance()->m_pointer.y) {
 			pWnd->GetWindowName(name);
 
+			// Over the chat view, only its scroll bar counts.
+			bool hit = true;
 			if (name == "chatview") {
+				hit = false;
 				FrWnd* pScroll = pWnd->FindChild("scrollbar");
 				if (pScroll) {
 					rect = pScroll->GetRect();
-					if (Instance()->m_pointer.x >= rect.x && rect.x + rect.w >= Instance()->m_pointer.x && Instance()->m_pointer.y >= rect.y && rect.y + rect.h >= Instance()->m_pointer.y) {
-						Instance()->m_area = 0x40;
-						*pFound = 1;
-						return false;
-					}
+					if (Instance()->m_pointer.x >= rect.x && rect.x + rect.w >= Instance()->m_pointer.x && Instance()->m_pointer.y >= rect.y && rect.y + rect.h >= Instance()->m_pointer.y)
+						hit = true;
 				}
-			} else {
+			}
+
+			if (hit) {
 				Instance()->m_area = 0x40;
 				*pFound = 1;
 				return false;
@@ -370,10 +373,9 @@ float CMouseCursor::RayTrace4Ground(void) {
 	if (!(WAbsBySign(m_rayDir.y) < data_a08c54[1])) {
 		float t = g_camera.pivot.y / m_rayDir.y * -1.0f;
 		m_rayDist = t;
-		float x = g_camera.pivot.x + t * m_rayDir.x;
-		float z = g_camera.pivot.z + t * m_rayDir.z;
+		origin.x = g_camera.pivot.x + t * m_rayDir.x; origin.z = g_camera.pivot.z + t * m_rayDir.z;
 
-		if (x > m_groundMinX && x < m_groundMaxX && z > m_groundMinZ && z < m_groundMaxZ)
+		if (origin.x > m_groundMinX && origin.x < m_groundMaxX && origin.z > m_groundMinZ && origin.z < m_groundMaxZ)
 			return t;
 	}
 
@@ -389,12 +391,6 @@ bool CMouseCursor::IsInclude(float x, float y, float w, float h, bool sizeOnly) 
 }
 
 
-// Clamps value to [low, high] (the bound-area clamp of GameCheck).
-template <class T>
-static inline T ClampOf(T value, T low, T high) {
-	return value < low ? low : (value > high ? high : value);
-}
-
 // mousecursor.cpp:515
 int CMouseCursor::GameCheck(void) {
 	if (!GOLFDOC() || (CQuitWindow::Instance() && CQuitWindow::Instance()->IsActive()))
@@ -403,8 +399,8 @@ int CMouseCursor::GameCheck(void) {
 	m_checkGame = true;
 	m_checkChat = false;
 	if (m_pBoundArea) {
-		m_pointer.x = ClampOf(m_pointer.x, m_pBoundArea->x, m_pBoundArea->x + m_pBoundArea->w);
-		m_pointer.y = ClampOf(m_pointer.y, m_pBoundArea->y, m_pBoundArea->y + m_pBoundArea->h);
+		m_pointer.x = Between(m_pBoundArea->x, m_pointer.x, m_pBoundArea->x + m_pBoundArea->w);
+		m_pointer.y = Between(m_pBoundArea->y, m_pointer.y, m_pBoundArea->y + m_pBoundArea->h);
 		g_input->SetMousePoint(m_pointer.x, m_pointer.y);
 	}
 
@@ -539,9 +535,11 @@ int CMouseCursor::GameCheck(void) {
 				m_area = 0x1B;
 			}
 
-			if (GOLFDOC()->GameMode() != 0x8000 || (m_area != 0x1B && m_area != 0x1C))
-				return 1;
-			goto none;
+			if (GOLFDOC()->GameMode() == 0x8000 && (m_area == 0x1B || m_area == 0x1C)) {
+				m_area = 0;
+				return 0;
+			}
+			return 1;
 		}
 	}
 
@@ -555,9 +553,8 @@ int CMouseCursor::GameCheck(void) {
 			return 1;
 		}
 
-		float dy = m_pointer.y - (barY - 34.0f);
-		float dx = m_pointer.x - 23.0f;
-		float distSq = dx * dx + dy * dy;
+		float dy, dx;
+		float distSq = WVector2D(m_pointer.x - 23.0f, m_pointer.y - (barY - 34.0f)).SquareMagnitude();
 
 		if (distSq < 361.0f) {
 			m_area = 2;

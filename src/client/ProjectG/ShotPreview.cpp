@@ -645,8 +645,10 @@ bool ShotPreview::Predict(std::vector<WVector>& path, std::vector<WVector>& boun
 	float rateSqrt = sqrtf(rate);
 	float power = GolfClub().GetPower() * rateSqrt;
 
-	WVector velocity;
-	m_pBall->Reset(velocity);
+	// The original calls GolfClub() here and discards the result.
+	CClub& club = GolfClub();
+
+	m_pBall->Reset(WVector());
 	*m_pBall = GolfBall();
 
 	CGolfBall& ball = GolfBall();
@@ -686,6 +688,7 @@ bool ShotPreview::Predict(std::vector<WVector>& path, std::vector<WVector>& boun
 			ball.m_lieSlope -= screen.x * 0.5f;
 	}
 
+	WVector velocity;
 	velocity = ((Abs(ball.m_lieSlope) * 0.1f + 1.0f) * power) * RotMat(GolfClub().GetLie(0), 0).za * RotMat(spinAngle + angle, 1);
 	first->m_velocity = velocity;
 
@@ -761,10 +764,10 @@ bool ShotPreview::Predict(std::vector<WVector>& path, std::vector<WVector>& boun
 		// shotpreview.cpp:857
 		if (ball.m_preDataCount >= 3000
 			|| (ball.m_preDataCount >= 1500
-				&& (sqrtf(ball.m_velocity.x * ball.m_velocity.x + ball.m_velocity.y * ball.m_velocity.y + ball.m_velocity.z * ball.m_velocity.z) < 0.1f
+				&& (WVectorLen(ball.m_velocity) < 0.1f
 					|| GetPVS().GetObjColNum() >= 10
 					|| GetPVS().GetMeshIndex(ball.m_pos, false) == -1))) {
-			ball.m_velocity.x = ball.m_velocity.y = ball.m_velocity.z = 0.0f;
+			ball.m_velocity.Reset();
 			ball.m_pos = GetPVS().GetGroundPoint(ball.m_pos, false, 0, 0);
 			ball.m_pos.y += ball.m_radius;
 			ball.m_state = 0;
@@ -800,7 +803,7 @@ bool ShotPreview::Predict(std::vector<WVector>& path, std::vector<WVector>& boun
 			float dz = ball.m_pos.z - start->m_pos.z;
 			if (ball.m_eventPreDataIndex[9] < 0) {
 				float dist = sqrtf(dz * dz + dx * dx);
-				if ((GolfClub().GetRange(0) * rateSqrt - 100.0f) * 3.2f < dist) {
+				if (dist > (GolfClub().GetRange(0) * rateSqrt - 100.0f) * 3.2f) {
 					ball.m_eventPreDataIndex[9] = ball.m_preDataCount;
 					ball.m_velocity.Normalize();
 
@@ -898,7 +901,7 @@ bool ShotPreview::Predict(std::vector<WVector>& path, std::vector<WVector>& boun
 		*count = path.size() - 1;
 
 	// shotpreview.cpp:1025
-	ball.Reset(velocity);
+	ball.Reset(WVector());
 
 	GolfBall() = *m_pBall;
 	GetPVS().SetFrame(frame - 1);

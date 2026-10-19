@@ -17,7 +17,7 @@ public:
 	CMonitor(void);
 	virtual ~CMonitor(void);
 
-	virtual void Init(int count, int scale, const WRect& rect);
+	virtual void Init(int count, int scale, PG_PORT_CONST WRect& rect);
 	virtual void Trace(int value);
 	virtual void Process(float elapsed);
 	virtual bool Render(WView* view) const;

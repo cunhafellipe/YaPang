@@ -790,14 +790,21 @@ private:
 	CExhibition* m_pPetExhibition;     // 0x7dc, deleted by HidePet
 	CAnotherHand m_petLoader;          // 0x7e0, HidePet waits for its work
 	std::map<unsigned int, sCharacterInfo> m_characterMap;   // 0x968, a copy of CSharedDoc's owned characters (OnInit)
-	unsigned long m_caddieId;         // 0x974, the caddie Net_EquipCaddie equips when it is not the current one
-	unsigned long m_characterId;       // 0x978, the character Net_EquipCharacter equips when it is not the current one
-	unsigned long m_clubId;           // 0x97c, the club set Net_EquipGear sends
-	unsigned long m_ballId;           // 0x980, the ball Net_EquipGear sends
-	unsigned long m_equipItem[10];     // 0x984, the edited equipped items, sent by Net_EquipItem when they differ from CSharedDoc's
-	UNKNOWN(0x9AC, 0x9C4);
-	unsigned long m_equipSkin[6];      // 0x9c4, the edited equipped skins, sent by Net_EquipSkin when they differ from CSharedDoc's
-	unsigned long m_mascotId;          // 0x9dc, the mascot Net_EquipMascot equips when it is not the current one
+	// 0x974-0x9E0: the edited equipment, one sUserEquip (OnInit copies
+	// CSharedDoc::m_myEquip into it whole).
+	union {
+		struct {
+			unsigned long m_caddieId;         // 0x974, the caddie Net_EquipCaddie equips when it is not the current one
+			unsigned long m_characterId;       // 0x978, the character Net_EquipCharacter equips when it is not the current one
+			unsigned long m_clubId;           // 0x97c, the club set Net_EquipGear sends
+			unsigned long m_ballId;           // 0x980, the ball Net_EquipGear sends
+			unsigned long m_equipItem[10];     // 0x984, the edited equipped items, sent by Net_EquipItem when they differ from CSharedDoc's
+			UNKNOWN(0x9AC, 0x9C4);
+			unsigned long m_equipSkin[6];      // 0x9c4, the edited equipped skins, sent by Net_EquipSkin when they differ from CSharedDoc's
+			unsigned long m_mascotId;          // 0x9dc, the mascot Net_EquipMascot equips when it is not the current one
+		};
+		sUserEquip m_equip;                // 0x974, the same block as one struct
+	};
 	sItemListArea m_itemListArea[14]; // 0x9e0, the item list's no-right-button areas (OnItemListInit)
 	std::list<sSpecialTrophy> m_initList;  // 0xb68, emptied by OnMyRoomInit
 	int m_statSource;                  // 0xb74, what SetLevelBar showed last: 0 the character, 1 the club set, 2 the caddie
@@ -995,6 +1002,7 @@ BEGIN_LAYOUT_CHECK(CRealMyRoomMain)
 	CHECK_FIELD(CRealMyRoomMain, m_characterId, 0x978);
 	CHECK_FIELD(CRealMyRoomMain, m_characterMap, 0x968);
 	CHECK_FIELD(CRealMyRoomMain, m_caddieId, 0x974);
+	CHECK_FIELD(CRealMyRoomMain, m_equip, 0x974);
 	CHECK_FIELD(CRealMyRoomMain, m_clubId, 0x97C);
 	CHECK_FIELD(CRealMyRoomMain, m_ballId, 0x980);
 	CHECK_FIELD(CRealMyRoomMain, m_equipSkin, 0x9C4);

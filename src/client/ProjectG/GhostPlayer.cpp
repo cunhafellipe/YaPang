@@ -611,9 +611,9 @@ bool CGhostTurnBeginAnimationState::RunAnimate(float fDelta) {
 			if (it->w > 0.0f) {
 				it->x += move * 0.5f;
 				it->y += move * 0.5f;
-				it->w -= move;
+				float w = it->w -= move;
 				it->h -= move;
-				if (it->w <= 0.0f) {
+				if (w <= 0.0f) {
 					finished = true;
 				}
 			}
@@ -684,7 +684,7 @@ static __impCGhostPlayer s_impCGhostPlayer;
 // ghostplayer.cpp:715
 CGhostPlayer::CGhostPlayer(void)
 	: m_pGhostDoc(0), m_pHoleData(0), m_pStateMachine(0), m_pAward(0), m_pMovieStyle(0),
-	  m_count3c(0), m_count40(0), m_phase(0), m_alarmState(0), m_serverProperty(0) {
+	  m_count3c(0), m_count40(0), m_phase(0), m_alarmState(0), m_awardSent(0) {
 	m_priority = 5;
 }
 
@@ -999,8 +999,8 @@ void CGhostPlayer::SendAwardResult(void) {
 		packet.Encode4(m_pAward->GetClickCount());
 		packet.Encode4(GOLFDOC()->GetPlayer(0)->m_ghostResult);
 		packet.Encode4(GOLFDOC()->GetPlayer(1)->m_ghostResult);
-		packet.Encode4(GOLFDOC()->GetPlayer(0)->m_ghostAward);
-		packet.Encode4(GOLFDOC()->GetPlayer(1)->m_ghostAward);
+		packet.Encode4(PLAYER(0)->m_ghostAward);
+		packet.Encode4(PLAYER(1)->m_ghostAward);
 		packet.Encode1(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[1].m_level);
 		packet.Encode1(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_level);
 		packet.Encode1(GetHoleIndex(GOLFDOC()->m_currentHole));

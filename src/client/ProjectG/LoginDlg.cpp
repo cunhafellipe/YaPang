@@ -462,8 +462,8 @@ extern "C" float data_b7c970;
 
 // logindlg.cpp:707
 void FrLoginDlg::OnProc(const float dt) {
+	bool bLogin = false;
 	if (m_connState == LOGIN_STATE_NONE) {
-		bool bLogin = false;
 		if (CLoginInfo::Instance()->IsWebLogin()) {
 			bLogin = true;
 		}
@@ -600,9 +600,8 @@ void FrLoginDlg::OnProc(const float dt) {
 	case LOGIN_STATE_BLOCKED2:
 		EnableLoginControls(true);
 		if (m_pViewEdit) {
-			// TODO(header): the first AddText shows the block reason, CSharedDoc's
-			// std::string at 0x4D14 (protected m_string4D14 in SharedDoc.h):
-			// m_pViewEdit->AddText(MakeStr("\\c0xffff0000,0xffffffff\\c%s", WSingleton<CSharedDoc>::Instance()->m_string4D14.c_str()), false, true);
+			// The block reason.
+			m_pViewEdit->AddText(MakeStr("\\c0xffff0000,0xffffffff\\c%s", WSingleton<CSharedDoc>::Instance()->m_string4D14.c_str()), false, true);
 			// "Please contact the customer support center."
 			m_pViewEdit->AddText("\\c0xff000000,0xffffffff\\c\xB0\xED\xB0\xB4 \xC1\xF6\xBF\xF8 \xBC\xBE\xC5\xCD\xB7\xCE \xB9\xAE\xC0\xC7 \xB9\xD9\xB6\xF8\xB4\xCF\xB4\xD9.", false, true);
 			m_connState = LOGIN_STATE_INPUT;

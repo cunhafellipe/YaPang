@@ -841,57 +841,60 @@ void CItemManager::MakeOfflineMap(char *data, int count) {
 
 // itemmanager.cpp:1427
 void CItemManager::MakeTikiRecipeMap(char *data, int count) {
-	IFF_STRUCT::sTikiOutputTable table;
-	memset(&table, 0, sizeof(table));
+	// A one-element array (here and in the two loaders below): the original
+	// keeps the zeroing, which cl drops as a dead store for a plain struct
+	// local that the loop overwrites.
+	IFF_STRUCT::sTikiOutputTable table[1];
+	memset(table, 0, sizeof(table));
 
 	sIffHeader header;
 	memcpy(&header, data, sizeof(sIffHeader));
 	data += sizeof(sIffHeader);
 
 	for (int i = 0; i < header.m_count; i++) {
-		memcpy(&table, data, sizeof(IFF_STRUCT::sTikiOutputTable));
+		memcpy(table, data, sizeof(IFF_STRUCT::sTikiOutputTable));
 		data += sizeof(IFF_STRUCT::sTikiOutputTable);
 
 		if (WSingleton<CTikiMagicBoxDoc>::Instance()) {
-			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertOutput(table);
+			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertOutput(table[0]);
 		}
 	}
 }
 
 // itemmanager.cpp:1459
 void CItemManager::MakeTikiPointTableMap(char *data, int count) {
-	IFF_STRUCT::sTikiPointTable table;
-	memset(&table, 0, sizeof(table));
+	IFF_STRUCT::sTikiPointTable table[1];
+	memset(table, 0, sizeof(table));
 
 	sIffHeader header;
 	memcpy(&header, data, sizeof(sIffHeader));
 	data += sizeof(sIffHeader);
 
 	for (int i = 0; i < header.m_count; i++) {
-		memcpy(&table, data, sizeof(IFF_STRUCT::sTikiPointTable));
+		memcpy(table, data, sizeof(IFF_STRUCT::sTikiPointTable));
 		data += sizeof(IFF_STRUCT::sTikiPointTable);
 
 		if (WSingleton<CTikiMagicBoxDoc>::Instance()) {
-			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertPointTable(table);
+			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertPointTable(table[0]);
 		}
 	}
 }
 
 // itemmanager.cpp:1490
 void CItemManager::MakeTikiSpecialTableMap(char *data, int count) {
-	IFF_STRUCT::sTikiSpecialRecipe recipe;
-	memset(&recipe, 0, sizeof(recipe));
+	IFF_STRUCT::sTikiSpecialRecipe recipe[1];
+	memset(recipe, 0, sizeof(recipe));
 
 	sIffHeader header;
 	memcpy(&header, data, sizeof(sIffHeader));
 	data += sizeof(sIffHeader);
 
 	for (int i = 0; i < header.m_count; i++) {
-		memcpy(&recipe, data, sizeof(IFF_STRUCT::sTikiSpecialRecipe));
+		memcpy(recipe, data, sizeof(IFF_STRUCT::sTikiSpecialRecipe));
 		data += sizeof(IFF_STRUCT::sTikiSpecialRecipe);
 
 		if (WSingleton<CTikiMagicBoxDoc>::Instance()) {
-			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertSpecialRecipe(recipe);
+			WSingleton<CTikiMagicBoxDoc>::Instance()->InsertSpecialRecipe(recipe[0]);
 		}
 	}
 }
@@ -1011,10 +1014,8 @@ void CItemManager::MakeSubscriptionItemMap(char *data, int count) {
 		IFF_STRUCT::sSubscriptionItem item = *(IFF_STRUCT::sSubscriptionItem *)record;
 		record += sizeof(IFF_STRUCT::sSubscriptionItem);
 
-		// The record's first byte is the active flag, its dword at 0x8 the type id.
-		if (*(char *)&item != 0) {
-			unsigned int typeId = *(unsigned int *)((char *)&item + 0x8);
-			m_subscriptionItemMap.insert(std::pair<const unsigned int, IFF_STRUCT::sSubscriptionItem>(typeId, item));
+		if (item.m_active) {
+			m_subscriptionItemMap.insert(std::pair<const unsigned int, IFF_STRUCT::sSubscriptionItem>(item.m_typeId, item));
 		}
 	}
 }
@@ -2881,7 +2882,10 @@ bool CItemManager::IsDisplayItemNumber(unsigned long typeId) {
 }
 
 // itemmanager.cpp:4587
-// The ability index of an item type id (the case values are type ids).
+// The ability index of an item type id (the case values are type ids). The
+// original split same-index cases into several groups; the split here follows
+// its separate bodies (the 13 group at 4655, 0x0825A80C at 4670) and its direct
+// jump tables, which need three targets (0x080D0813-1A, 0x0811200F-16).
 unsigned long CItemManager::GetIndexAbilityItem(unsigned long typeId) {
 	unsigned long index = 0;
 
@@ -2894,13 +2898,19 @@ unsigned long CItemManager::GetIndexAbilityItem(unsigned long typeId) {
 	case 0x08214800: case 0x08254800:
 		index = 8;
 		break;
+	case 0x080A2800: case 0x080A2801: case 0x080A2802: case 0x08122800:
+	case 0x08122801: case 0x08122802: case 0x0816E801: case 0x0816E802:
+	case 0x0816E803: case 0x081EA800:
+		index = 13;
+		break;
+	case 0x0811200F: case 0x0825A80C:
+		index = 1;
+		break;
 	case 0x08026800: case 0x08026801: case 0x08026802: case 0x08064800:
-	case 0x08064801: case 0x08064802: case 0x08064803: case 0x080A2800:
-	case 0x080A2801: case 0x080A2802: case 0x080E4800: case 0x080E4801:
-	case 0x080E4802: case 0x08122800: case 0x08122801: case 0x08122802:
-	case 0x0816E801: case 0x0816E802: case 0x0816E803: case 0x081A4800:
-	case 0x081A4801: case 0x081EA800: case 0x08228800: case 0x08228801:
-	case 0x08228802: case 0x08228803: case 0x08268800:
+	case 0x08064801: case 0x08064802: case 0x08064803: case 0x080E4800:
+	case 0x080E4801: case 0x080E4802: case 0x081A4800: case 0x081A4801:
+	case 0x08228800: case 0x08228801: case 0x08228802: case 0x08228803:
+	case 0x08268800:
 		index = 13;
 		break;
 	case 0x08000828: case 0x08000829: case 0x0800082A: case 0x0800082B:
@@ -2909,9 +2919,8 @@ unsigned long CItemManager::GetIndexAbilityItem(unsigned long typeId) {
 	case 0x0805A80B: case 0x0805A80C: case 0x0805A80F: case 0x0805A810:
 	case 0x0809080C: case 0x08090815: case 0x08090816: case 0x0809A80C:
 	case 0x0809A80D: case 0x0809A80E: case 0x0809A80F: case 0x080D0813:
-	case 0x080D0814: case 0x080D0815: case 0x080D0816: case 0x080D0819:
-	case 0x080D081A: case 0x080D480B: case 0x080D4817: case 0x080D4818:
-	case 0x0811200E: case 0x08112015: case 0x08112016: case 0x0811A00C:
+	case 0x080D0814: case 0x080D0815: case 0x080D0816: case 0x080D480B:
+	case 0x080D4817: case 0x080D4818: case 0x0811200E: case 0x0811A00C:
 	case 0x0811A00D: case 0x0811A00E: case 0x0811A00F: case 0x0815A018:
 	case 0x0815A019: case 0x0815A01A: case 0x0815A01B: case 0x0815A01F:
 	case 0x0815A020: case 0x08162807: case 0x0816280C: case 0x0816280D:
@@ -2920,6 +2929,9 @@ unsigned long CItemManager::GetIndexAbilityItem(unsigned long typeId) {
 	case 0x08196011: case 0x081D8806: case 0x081D8807: case 0x081D8808:
 	case 0x081D8809: case 0x081DA807: case 0x081DA812: case 0x081DA813:
 	case 0x0821A802: case 0x0821A805: case 0x0821A806: case 0x0825A80D:
+		index = 10;
+		break;
+	case 0x080D0819: case 0x080D081A: case 0x08112015: case 0x08112016:
 		index = 10;
 		break;
 	case 0x0800082D: case 0x0800082E: case 0x08000884: case 0x08000886:
@@ -2932,20 +2944,19 @@ unsigned long CItemManager::GetIndexAbilityItem(unsigned long typeId) {
 	case 0x0809A822: case 0x0809A823: case 0x080C0033: case 0x080D0817:
 	case 0x080D0818: case 0x080D0839: case 0x080D083A: case 0x080D480A:
 	case 0x080D480E: case 0x080D4819: case 0x080D4823: case 0x080D4824:
-	case 0x08100037: case 0x0811200F: case 0x08112012: case 0x08112017:
-	case 0x08112020: case 0x08112021: case 0x0811A010: case 0x0811A011:
-	case 0x0811A81E: case 0x0811A81F: case 0x08140046: case 0x0815A01D:
-	case 0x0815A01E: case 0x0815A84F: case 0x0815A850: case 0x08162806:
-	case 0x0816280A: case 0x0816280E: case 0x08162815: case 0x08162816:
-	case 0x08180064: case 0x0818E024: case 0x0818E025: case 0x0818E04A:
-	case 0x0818E04B: case 0x08196008: case 0x0819600D: case 0x08196012:
-	case 0x0819601C: case 0x0819601D: case 0x081D880A: case 0x081D880B:
-	case 0x081D881B: case 0x081D881F: case 0x081D8820: case 0x081DA808:
-	case 0x081DA80B: case 0x081DA814: case 0x081DA81C: case 0x081DA81D:
-	case 0x0821203F: case 0x08212043: case 0x08212044: case 0x0821A801:
-	case 0x0821A807: case 0x0821A810: case 0x0821A811: case 0x0824001C:
-	case 0x0825200C: case 0x0825200D: case 0x0825A805: case 0x0825A806:
-	case 0x0825A80C:
+	case 0x08100037: case 0x08112012: case 0x08112017: case 0x08112020:
+	case 0x08112021: case 0x0811A010: case 0x0811A011: case 0x0811A81E:
+	case 0x0811A81F: case 0x08140046: case 0x0815A01D: case 0x0815A01E:
+	case 0x0815A84F: case 0x0815A850: case 0x08162806: case 0x0816280A:
+	case 0x0816280E: case 0x08162815: case 0x08162816: case 0x08180064:
+	case 0x0818E024: case 0x0818E025: case 0x0818E04A: case 0x0818E04B:
+	case 0x08196008: case 0x0819600D: case 0x08196012: case 0x0819601C:
+	case 0x0819601D: case 0x081D880A: case 0x081D880B: case 0x081D881B:
+	case 0x081D881F: case 0x081D8820: case 0x081DA808: case 0x081DA80B:
+	case 0x081DA814: case 0x081DA81C: case 0x081DA81D: case 0x0821203F:
+	case 0x08212043: case 0x08212044: case 0x0821A801: case 0x0821A807:
+	case 0x0821A810: case 0x0821A811: case 0x0824001C: case 0x0825200C:
+	case 0x0825200D: case 0x0825A805: case 0x0825A806:
 		index = 1;
 		break;
 	}
@@ -3483,7 +3494,7 @@ unsigned char CItemManager::GetLevel(eLvlType type, unsigned long charTypeId, co
 	}
 
 	if (IsLocalContent((localContentType_t)0x51)) {
-		caddieLevel += WSingleton<CCardManager>::Instance()->GetCardPeriodStatus(type);
+		return WSingleton<CCardManager>::Instance()->GetCardPeriodStatus(type) + caddieLevel + clubLevel + level;
 	}
 
 	return caddieLevel + clubLevel + level;

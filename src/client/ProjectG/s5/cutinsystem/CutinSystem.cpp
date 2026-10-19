@@ -627,13 +627,16 @@ void CCutin::ScreenRate(WRect &rc, WOverlay *pOverlay) {
 	float rateY = g_view->GetHeight() * (1.0f / 768.0f);
 
 	if (WSingleton<COption>::Instance()->vIsWideMode() && pOverlay == m_d8) {
-		rateX = rateY;
+		rc.w = rateY * rc.w;
+		rc.h = rateY * rc.h;
+		rc.x = cx - rc.w * 0.5f;
+		rc.y = cy - rc.h * 0.5f;
+	} else {
+		rc.w = rateX * rc.w;
+		rc.h = rateY * rc.h;
+		rc.x = cx - rc.w * 0.5f;
+		rc.y = cy - rc.h * 0.5f;
 	}
-
-	rc.w = rateX * rc.w;
-	rc.h = rateY * rc.h;
-	rc.x = cx - rc.w * 0.5f;
-	rc.y = cy - rc.h * 0.5f;
 
 	if (pOverlay->GetWidth() > pOverlay->GetHeight()) {
 		rc.x = 0.0f;

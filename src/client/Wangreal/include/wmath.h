@@ -279,7 +279,7 @@ public:
 	WPlane();
 	WPlane(const WVector& n, const WVector& p);   // wmath.inl:745 (emitted out of line in wview)
 	WPlane(float a, float b, float c, float d) { x = a; y = b; z = c; dis = d; }   // wmath.h:419
-	WPlane(const WVector& n, float d) { normal = n; dis = d; }                       // wmath.h:420
+	WPlane(const WVector& n, float d) { x = n.x; y = n.y; z = n.z; dis = d; }         // wmath.h:420
 	WPlane& operator=(const WPlane& p);   // wmath.inl:751
 	void Normalize();
 
@@ -447,9 +447,9 @@ public:
 
 	// wmath.h:571
 	bool IsInclude(const Waabb& b) const {
-		return min.x <= b.min.x && b.max.x <= max.x
-			&& min.y <= b.min.y && b.max.y <= max.y
-			&& min.z <= b.min.z && b.max.z <= max.z ? true : false;
+		return b.min.x >= min.x && b.max.x <= max.x
+			&& b.min.y >= min.y && b.max.y <= max.y
+			&& b.min.z >= min.z && b.max.z <= max.z ? true : false;
 	}
 
 	// wmath.h:600

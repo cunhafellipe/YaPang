@@ -61,6 +61,12 @@ public:
 	bool Init(void);
 	virtual int MainLoop(int);
 
+	// m_appFlags bit 1, set while CheckScreenShot records an AVI (the
+	// original reads it through an inline: shr/test at every use).
+	bool IsRecordingAvi(void) const { return ((m_appFlags >> 1) & 1) != 0; }
+	// m_appFlags bit 2, SetWindowed.
+	bool IsWindowed(void) const { return ((m_appFlags >> 2) & 1) != 0; }
+
 protected:
 	void FPU_Check(void);
 	void OpenDisconDlg(const char* message, bool gameServer);
@@ -94,7 +100,7 @@ public:
 	CDxDiagInfo* m_dxDiagInfo; // 0xB8 (gathering starts in the constructor)
 	WList<WInputDev*> m_inputDevList; // 0xBC (AddInputDev)
 	unsigned long m_mainThreadId; // 0xDC (handed to the video device, SetVideoDevice)
-	unsigned int m_appFlags;   // 0xE0 (bit 1: active / AVI capture mode, bit 2: windowed, SetWindowed)
+	unsigned int m_appFlags;   // 0xE0 (bit 1: AVI recording, IsRecordingAvi; bit 2: windowed, SetWindowed/IsWindowed)
 	bool m_flagE4;             // 0xE4 (cleared by the constructor)
 	PADDING(0xE5, 0xE8);
 	unsigned long m_createTime; // 0xE8 (g_CurrentTime at construction)

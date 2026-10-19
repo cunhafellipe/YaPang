@@ -328,21 +328,18 @@ void FrGiftDlg::SendGift(const IFF_ITEM_COMMON& item, __int64 pang, __int64 cook
 	}
 	else {
 		if (m_pNum) {
-			WPoint pt(m_pNum->GetRect().x, m_pNum->GetRect().y);
-			pt.x += (float)((m_item.m_flags0 & 1) ? 50 : -50);
-			m_pNum->MoveWindow(pt);
+			WRect rect = m_pNum->GetRect();
+			m_pNum->MoveWindow(WPoint(rect.x + ((m_item.m_flags0 & 1) ? 50 : -50), rect.y));
 		}
 
 		if (m_pNumPrev) {
-			WPoint pt(m_pNumPrev->GetRect().x, m_pNumPrev->GetRect().y);
-			pt.x += (float)((m_item.m_flags0 & 1) ? 50 : -50);
-			m_pNumPrev->MoveWindow(pt);
+			WRect rect = m_pNumPrev->GetRect();
+			m_pNumPrev->MoveWindow(WPoint(rect.x + ((m_item.m_flags0 & 1) ? 50 : -50), rect.y));
 		}
 
 		if (m_pNumNext) {
-			WPoint pt(m_pNumNext->GetRect().x, m_pNumNext->GetRect().y);
-			pt.x += (float)((m_item.m_flags0 & 1) ? 50 : -50);
-			m_pNumNext->MoveWindow(pt);
+			WRect rect = m_pNumNext->GetRect();
+			m_pNumNext->MoveWindow(WPoint(rect.x + ((m_item.m_flags0 & 1) ? 50 : -50), rect.y));
 		}
 	}
 
@@ -359,7 +356,8 @@ void FrGiftDlg::GiftProgress(void) {
 
 	const char* numText = m_pNum->GetLine(1, false);
 	int num = atoi(numText);
-	sGiftBuyItem buy = { 0 };
+	sGiftBuyItem buy;
+	memset(&buy, 0, sizeof(buy));
 
 	buy.m_serial = 0xffffffff;
 	if (m_periodCount > 0) {
@@ -415,9 +413,9 @@ void FrGiftDlg::GiftProgress(void) {
 		}
 	}
 	else {
+		num = 1;
 		unsigned short count = (unsigned short)cart.size();
 
-		num = 1;
 		WSendPacket packet((enumClientPacket)0x1F);
 		packet.EncodeStr(m_message);
 		packet.Encode4(m_receiverUID);
@@ -596,7 +594,7 @@ bool FrGiftDlg::OnChargeResult(int ret, FrForm*) {
 		switch (WSingleton<CSharedDoc>::Instance()->m_billingType) {
 		case 2:
 			WSingleton<CBrowser>::Instance()->AddPostArgument("sn", "9");
-			WSingleton<CBrowser>::Instance()->AddPostArgument("mn", MakeStr("%d", CLoginInfo::Instance()->AuthUid()));
+			WSingleton<CBrowser>::Instance()->AddPostArgument("mn", MakeStr("%d", LOGININFO()->AuthUid()));
 			WSingleton<CBrowser>::Instance()->OpenPost("https://qa.www.gametree.co.kr/InGame/Gateway.aspx", false, true);
 			break;
 
@@ -652,8 +650,8 @@ void FrGiftDlg::OnCheckoutBtnUp(void) {
 		return;
 	}
 
-	if ((m_receiverMode == 0 && m_receiverNick == WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname)
-		|| (m_receiverMode == 1 && m_receiverNick == WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname)) {
+	if ((m_receiverMode == 0 && m_receiverNick == MyNick())
+		|| (m_receiverMode == 1 && m_receiverNick == MyNick())) {
 		// "You cannot send a gift to yourself."
 		AfxGetTask()->GetActor("Shop") << MsgObject(0, 0x23, (intptr_t)"\xc0\xda\xb1\xe2 \xc0\xda\xbd\xc5\xbf\xa1\xb0\xd4\xb4\xc2 \xbc\xb1\xb9\xb0\xc0\xbb \xba\xb8\xb3\xbe \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
 		return;
@@ -780,7 +778,7 @@ void FrGiftDlg::OnCartOwnerDraw(intptr_t param) {
 		if (!ItemManager()->IsInSalePeriod(pData->m_typeId, WSingleton<CSharedDoc>::Instance()->GetServerTime())) {
 			pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
 			// "(sale period over)"
-			pGDI->Print(WPoint((int)width + 90.0f + pItem->pos.x, pItem->pos.y + 14.0f), 0, "(\xc6\xc7\xb8\xc5\xb1\xe2\xb0\xa3 \xc1\xbe\xb7\xe1)");
+			pGDI->Print(WPoint((int)width + 90.0f, 14.0f) + pItem->pos, 0, "(\xc6\xc7\xb8\xc5\xb1\xe2\xb0\xa3 \xc1\xbe\xb7\xe1)");
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 		}
 
@@ -796,11 +794,11 @@ void FrGiftDlg::OnCartOwnerDraw(intptr_t param) {
 			if (m_periods[m_daysIndex].isCash) {
 				// "price:"
 				float labelWidth = pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   ");
-				pGDI->Print(WPoint((int)labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%I64d\xc4\xed\xc5\xb0", price);
+				pGDI->Print(WPoint((int)labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%I64d\xc4\xed\xc5\xb0", price);
 			}
 			else {
 				float labelWidth = pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   ");
-				pGDI->Print(WPoint((int)labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%I64d\xc6\xce", price);
+				pGDI->Print(WPoint((int)labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%I64d\xc6\xce", price);
 			}
 		}
 		else if (pData->m_flags0 & 1) {
@@ -810,31 +808,30 @@ void FrGiftDlg::OnCartOwnerDraw(intptr_t param) {
 				IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pData->m_typeId);
 				if (!S5::ISCutinItem(pData->m_typeId)) {
 					if (pSkin)
-						pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc4\xed\xc5\xb0", pSkin->m_periodPrices[m_daysIndex]);
+						pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc4\xed\xc5\xb0", pSkin->m_periodPrices[m_daysIndex]);
 				}
 				else if (pSkin) {
 					if (pData->m_discountPrice > 0 && pData->m_discountPrice < pData->m_price)
-						pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc4\xed\xc5\xb0", pData->m_discountPrice);
+						pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc4\xed\xc5\xb0", pData->m_discountPrice);
 					else
-						pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc4\xed\xc5\xb0", pData->m_price);
+						pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc4\xed\xc5\xb0", pData->m_price);
 				}
 			}
 			else if ((pData->m_typeId >> 26) == 8) {
 				IFF_STRUCT::sCadItem* pCad = ItemManager()->FindCadItem(pData->m_typeId);
-				pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc4\xed\xc5\xb0", pCad->m_levels[m_daysIndex]);
+				pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc4\xed\xc5\xb0", pCad->m_levels[m_daysIndex]);
 			}
 			else {
 				float priceX = (float)labelWidth;
-				int priceWidth = float2int(pGDI->Print(WPoint(priceX + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc4\xed\xc5\xb0", pData->m_price));
+				int priceWidth = float2int(pGDI->Print(WPoint(priceX + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc4\xed\xc5\xb0", pData->m_price));
 
 				if (pData->m_discountPrice > 0 && pData->m_discountPrice < pData->m_price) {
-					float startX = priceX + 90.0f - 2.0f;
-					priceX += priceWidth;
-					g_view->DrawLine2D(WPoint(startX + pItem->pos.x, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f + pItem->pos.y),
-						WPoint(priceX + 92.0f + pItem->pos.x, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f + pItem->pos.y), 0xFF000000, 0xFF000000, 0);
+					float endX = priceX + priceWidth;
+					g_view->DrawLine2D(WPoint(priceX + 90.0f - 2.0f, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f) + pItem->pos,
+						WPoint(endX + 92.0f, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f) + pItem->pos, 0xFF000000, 0xFF000000, 0);
 
 					pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
-					pGDI->Print(WPoint(priceX + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, " %d\xc4\xed\xc5\xb0", pData->m_discountPrice);
+					pGDI->Print(WPoint(endX + 90.0f, 34.0f) + pItem->pos, 0, " %d\xc4\xed\xc5\xb0", pData->m_discountPrice);
 					pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 				}
 			}
@@ -847,33 +844,32 @@ void FrGiftDlg::OnCartOwnerDraw(intptr_t param) {
 				if (!S5::ISCutinItem(pData->m_typeId)) {
 					IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pData->m_typeId);
 					if (pSkin)
-						pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pSkin->m_periodPrices[m_daysIndex], pSkin->m_periodPrices[m_daysIndex] * 5 / 100);
+						pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pSkin->m_periodPrices[m_daysIndex], pSkin->m_periodPrices[m_daysIndex] * 5 / 100);
 				}
 				else if (pData->m_discountPrice > 0 && pData->m_discountPrice < pData->m_price)
-					pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pData->m_discountPrice, pData->m_discountPrice * 5 / 100);
+					pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pData->m_discountPrice, pData->m_discountPrice * 5 / 100);
 				else
-					pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pData->m_price, pData->m_price * 5 / 100);
+					pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pData->m_price, pData->m_price * 5 / 100);
 			}
 			else if ((pData->m_typeId >> 26) == 8) {
 				IFF_STRUCT::sCadItem* pCad = ItemManager()->FindCadItem(pData->m_typeId);
-				pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pCad->m_levels[m_daysIndex], pCad->m_levels[m_daysIndex] * 5 / 100);
+				pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pCad->m_levels[m_daysIndex], pCad->m_levels[m_daysIndex] * 5 / 100);
 			}
 			else if ((pData->m_typeId >> 26) == 16) {
 				IFF_STRUCT::sMascot* pMascot = ItemManager()->FindMascot(pData->m_typeId);
-				pGDI->Print(WPoint(labelWidth + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pMascot->m_periodPrices[m_daysIndex], pMascot->m_periodPrices[m_daysIndex] * 5 / 100);
+				pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pMascot->m_periodPrices[m_daysIndex], pMascot->m_periodPrices[m_daysIndex] * 5 / 100);
 			}
 			else {
 				float priceX = (float)labelWidth;
-				int priceWidth = float2int(pGDI->Print(WPoint(priceX + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pData->m_price, pData->m_price * 5 / 100));
+				int priceWidth = float2int(pGDI->Print(WPoint(priceX + 90.0f, 34.0f) + pItem->pos, 0, "%d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pData->m_price, pData->m_discountPrice * 5 / 100));
 
 				if (pData->m_discountPrice > 0 && pData->m_discountPrice < pData->m_price) {
-					float startX = priceX + 90.0f - 2.0f;
-					priceX += priceWidth;
-					g_view->DrawLine2D(WPoint(startX + pItem->pos.x, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f + pItem->pos.y),
-						WPoint(priceX + 92.0f + pItem->pos.x, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f + pItem->pos.y), 0xFF000000, 0xFF000000, 0);
+					float endX = priceX + priceWidth;
+					g_view->DrawLine2D(WPoint(priceX + 90.0f - 2.0f, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f) + pItem->pos,
+						WPoint(endX + 92.0f, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f) + pItem->pos, 0xFF000000, 0xFF000000, 0);
 
 					pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
-					pGDI->Print(WPoint(priceX + 90.0f + pItem->pos.x, pItem->pos.y + 34.0f), 0, " %d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pData->m_discountPrice, pData->m_discountPrice * 5 / 100);
+					pGDI->Print(WPoint(endX + 90.0f, 34.0f) + pItem->pos, 0, " %d\xc6\xce + %d\xc6\xce(\xbc\xf6\xbc\xf6\xb7\xe1)", pData->m_discountPrice, pData->m_discountPrice * 5 / 100);
 					pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 				}
 			}
@@ -901,7 +897,11 @@ void FrGiftDlg::OnCartOwnerDraw(intptr_t param) {
 		if (pLevel) {
 			// "level:"
 			float levelX = pGDI->GetTextExtend("\xb7\xb9    \xba\xa7:") + pItem->pos.x;
-			WRect rc(levelX + 102.0f, lineY + pItem->pos.y - 3.0f, (float)pLevel->Width(), (float)pLevel->Height());
+			WRect rc;
+			rc.x = levelX + 102.0f;
+			rc.y = lineY + pItem->pos.y - 3.0f;
+			rc.w = (float)pLevel->Width();
+			rc.h = (float)pLevel->Height();
 			pGDI->DrawTexture(pLevel, rc, 0xFFFFFFFF, 0);
 
 			pGDI->Print(WPoint(pItem->pos.x + 90.0f, lineY + pItem->pos.y), 0, "\xb7\xb9    \xba\xa7:");
@@ -918,7 +918,7 @@ void FrGiftDlg::OnCartOwnerDraw(intptr_t param) {
 
 			// "unlimited" / "monthly"
 			const char* text = (pData->m_flags0 & 1) ? "\xb9\xab\xc1\xa6\xc7\xd1" : "\xbf\xf9\xb1\xde\xc1\xa6";
-			pGDI->Print(WPoint(pGDI->GetTextExtend("\xbb\xe7\xbf\xeb\xb1\xe2\xb0\xa3:") + 95.0f + pItem->pos.x, lineY + pItem->pos.y), 0, text);
+			pGDI->Print(WPoint(pGDI->GetTextExtend("\xbb\xe7\xbf\xeb\xb1\xe2\xb0\xa3:") + 95.0f, lineY) + pItem->pos, 0, text);
 		}
 		else if ((pData->m_typeId >> 26) == 8) {
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);

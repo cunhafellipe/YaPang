@@ -480,11 +480,11 @@ void CCommoditySlot::SetSlotStatus(eSlotStatus status) {
 	case SLOT_STATUS_OPEN:
 		ButtonSwitch(true);
 		break;
-	case SLOT_STATUS_CLOSED:
-	case SLOT_STATUS_LOCKED:
+	case SLOT_STATUS_COMPLETED:
 		ButtonSwitch(false);
 		break;
-	case SLOT_STATUS_COMPLETED:
+	case SLOT_STATUS_CLOSED:
+	case SLOT_STATUS_LOCKED:
 		ButtonSwitch(false);
 		break;
 	}
@@ -676,11 +676,11 @@ void FrPointEventNoticeDlg::OnOwnerDrawDrawArea(PG_MSGARG param) {
 
 		int space = gdi->SetSpace(0);
 
-		WPoint pos(GetRect().x, GetRect().y);
+		WRect rect = GetRect();
 
 		if (m_itemBitmap) {
 
-			gdi->DrawTexture(m_itemBitmap, WRect(pos.x + 48.0f, pos.y + 41.0f, m_itemBitmap->Width(), m_itemBitmap->Height()), 0xffffffff, 0);
+			gdi->DrawTexture(m_itemBitmap, WRect(rect.x + 48.0f, rect.y + 41.0f, m_itemBitmap->Width(), m_itemBitmap->Height()), 0xffffffff, 0);
 		}
 
 		gdi->SetTextStyle(1);
@@ -688,15 +688,15 @@ void FrPointEventNoticeDlg::OnOwnerDrawDrawArea(PG_MSGARG param) {
 		switch (m_noticeType) {
 		case 1:
 			// "...: do you want to apply for it?"
-			gdi->Print(WPoint(pos.x + 69.0f, pos.y + 153.0f), 0, "\xC0\xBB \xC0\xC0\xB8\xF0\xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?");
+			gdi->Print(WPoint(rect.x + 69.0f, rect.y + 153.0f), 0, "\xC0\xBB \xC0\xC0\xB8\xF0\xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?");
 			break;
 		case 0:
 			// "...: do you want to receive it?"
-			gdi->Print(WPoint(pos.x + 69.0f, pos.y + 153.0f), 0, "\xC0\xBB \xC1\xF6\xB1\xDE\xB9\xDE\xC0\xB8\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?");
+			gdi->Print(WPoint(rect.x + 69.0f, rect.y + 153.0f), 0, "\xC0\xBB \xC1\xF6\xB1\xDE\xB9\xDE\xC0\xB8\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?");
 			break;
 		case 2:
 			// "...: you receive it and donate 100 points."
-			gdi->Print(WPoint(pos.x + 53.0f, pos.y + 153.0f), 0, "\xC0\xBB \xC1\xF6\xB1\xDE\xB9\xDE\xB0\xED 100\xC6\xF7\xC0\xCE\xC6\xAE \xB1\xE2\xBA\xCE\xC7\xD5\xB4\xCF\xB4\xD9.");
+			gdi->Print(WPoint(rect.x + 53.0f, rect.y + 153.0f), 0, "\xC0\xBB \xC1\xF6\xB1\xDE\xB9\xDE\xB0\xED 100\xC6\xF7\xC0\xCE\xC6\xAE \xB1\xE2\xBA\xCE\xC7\xD5\xB4\xCF\xB4\xD9.");
 			break;
 		}
 
@@ -996,20 +996,20 @@ void FrPointEventDlg::OnOwnerDrawDataArea(PG_MSGARG param) {
 		return;
 	}
 
-	WPoint pos(GetRect().x, GetRect().y);
+	WRect rect = GetRect();
 
 	int space = gdi->SetSpace(0);
 
 	gdi->SetTextStyle(1);
 
-	gdi->Print(WPoint(pos.x + 507.0f, pos.y + 73.0f), 2, "%d", GetMyPoint());
+	gdi->Print(WPoint(rect.x + 507.0f, rect.y + 73.0f), 2, "%d", GetMyPoint());
 
 	gdi->SetTextStyle(0);
 
 	gdi->SetSpace(space);
 
 	for (int i = 0; i < 10; i++) {
-		m_slots[i].DrawSlot(pos);
+		m_slots[i].DrawSlot(WPoint(rect.x, rect.y));
 	}
 }
 
@@ -1092,7 +1092,7 @@ bool FrPointEventDlg::OnInit(void) {
 		{
 			6,
 			3, 0, "pointevent_soldout_mark", "pointevent_gift_mark",
-			WPoint(166.0f, 496.0f), WPoint(166.0f, 508.0f), WPoint(130.0f, 463.0f),
+			WPoint(166.0f, 496.0f), WPoint(166.0f, 508.0f), WPoint(130.0f, 462.0f),
 			m_commodityButtons[6],
 			"btn_pointevent_white",
 			CCommodityButton::COMMODITY_BUTTON_GIFT2
@@ -1100,7 +1100,7 @@ bool FrPointEventDlg::OnInit(void) {
 		{
 			7,
 			3, 0, "pointevent_soldout_mark", "pointevent_gift_mark",
-			WPoint(330.0f, 496.0f), WPoint(330.0f, 508.0f), WPoint(295.0f, 463.0f),
+			WPoint(330.0f, 496.0f), WPoint(330.0f, 508.0f), WPoint(295.0f, 462.0f),
 			m_commodityButtons[7],
 			"btn_pointevent_white",
 			CCommodityButton::COMMODITY_BUTTON_GIFT2
@@ -1108,7 +1108,7 @@ bool FrPointEventDlg::OnInit(void) {
 		{
 			8,
 			0, 0, "pointevent_soldout_mark", "pointevent_gift_mark",
-			WPoint(494.0f, 496.0f), WPoint(494.0f, 508.0f), WPoint(459.0f, 463.0f),
+			WPoint(494.0f, 496.0f), WPoint(494.0f, 508.0f), WPoint(459.0f, 462.0f),
 			m_commodityButtons[8],
 			"btn_pointevent_white",
 			CCommodityButton::COMMODITY_BUTTON_GIFT1
@@ -1116,7 +1116,7 @@ bool FrPointEventDlg::OnInit(void) {
 		{
 			9,
 			0, 0, "pointevent_soldout_mark", "pointevent_gift_mark",
-			WPoint(494.0f, 496.0f), WPoint(494.0f, 508.0f), WPoint(459.0f, 463.0f),
+			WPoint(494.0f, 496.0f), WPoint(494.0f, 508.0f), WPoint(459.0f, 462.0f),
 			m_commodityButtons[9],
 			"contribution_btn_white",
 			CCommodityButton::COMMODITY_BUTTON_PLAIN
@@ -1241,7 +1241,7 @@ void FrPointEventDlg::Confirm(unsigned long index) {
 void FrPointEventDlg::ResultMessage(unsigned long result) {
 	FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", NULL);
 	WRect rect = pForm->GetRect();
-	pForm->SetRect(WRect(rect));
+	pForm->SetRect(WRect(rect.x, rect.y, rect.w, rect.h));
 	pForm->SetTimeLimit(12.0f);
 
 	if (m_selectedCommodity < 10) {
@@ -1256,8 +1256,8 @@ void FrPointEventDlg::ResultMessage(unsigned long result) {
 
 				WSendPacket packet(GCR_YOU_GOT_GIFT);
 
-				packet.EncodeStr(std::string(CSharedDoc::Instance()->GetPangyaUserInfo().nickname));
-				packet.Encode4(CSharedDoc::Instance()->m_myUID);
+				packet.EncodeStr(std::string(MyNick()));
+				packet.Encode4(MyUID());
 
 				packet.Send(SEND_TO_MSN);
 				break;
@@ -1272,8 +1272,8 @@ void FrPointEventDlg::ResultMessage(unsigned long result) {
 
 				WSendPacket packet(GCR_YOU_GOT_GIFT);
 
-				packet.EncodeStr(std::string(CSharedDoc::Instance()->GetPangyaUserInfo().nickname));
-				packet.Encode4(CSharedDoc::Instance()->m_myUID);
+				packet.EncodeStr(std::string(MyNick()));
+				packet.Encode4(MyUID());
 
 				packet.Send(SEND_TO_MSN);
 				break;
@@ -1286,11 +1286,14 @@ void FrPointEventDlg::ResultMessage(unsigned long result) {
 		case 4:
 
 			switch (m_slots[m_selectedCommodity].GetButtonType()) {
+			case CCommodityButton::COMMODITY_BUTTON_GIFT1:
+				// "Not enough points."
+				pForm->SetMessage("\xC6\xF7\xC0\xCE\xC6\xAE\xB0\xA1 \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9.", false);
+				break;
 			case CCommodityButton::COMMODITY_BUTTON_GIFT2:
 				// "Not enough points."
 				pForm->SetMessage("\xC6\xF7\xC0\xCE\xC6\xAE\xB0\xA1 \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9.", false);
 				break;
-			case CCommodityButton::COMMODITY_BUTTON_GIFT1:
 			case CCommodityButton::COMMODITY_BUTTON_PLAIN:
 				// "Not enough points."
 				pForm->SetMessage("\xC6\xF7\xC0\xCE\xC6\xAE\xB0\xA1 \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9.", false);

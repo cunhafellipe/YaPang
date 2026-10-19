@@ -181,9 +181,9 @@ int GetCardsAttachedToPart(std::vector<sSCardAvilityPeriodInfo*>& cards, unsigne
 	std::list<sSCardAvilityPeriodInfo>& cardList = WSingleton<CSharedDoc>::Instance()->m_cardPeriodList[0];
 	std::list<sSCardAvilityPeriodInfo>::iterator it = cardList.begin();
 	while (it != cardList.end()) {
-		sSCardAvilityPeriodInfo* pCard = &*it;
-		if (typeId == pCard->partsTypeId && id == pCard->partsId) {
-			cards.push_back(pCard);
+		sSCardAvilityPeriodInfo& card = *it;
+		if (typeId == card.partsTypeId && id == card.partsId) {
+			cards.push_back(&card);
 		}
 
 		++it;
@@ -1005,17 +1005,19 @@ void FrPangEdit::OnProc(const float dt) {
 
 		if (digits.length() > 0) {
 			__int64 value = _atoi64(digits.c_str());
-			if (value > 0) {
-				__int64 tex = m_texRate * value / 100;
+			if (value <= 0) {
+				return;
+			}
 
-				if (WSingleton<CSharedDoc>::Instance()->m_myPang <= value + tex) {
-					// The most pang the player can put on with the tax.
-					value = WSingleton<CSharedDoc>::Instance()->m_myPang * 100 / (m_texRate + 100);
+			__int64 tex = m_texRate * value / 100;
 
-					char buf[32] = { 0 };
-					_i64toa(value, buf, 10);
-					m_pEdit->ForcedEdit(buf, 0);
-				}
+			if (WSingleton<CSharedDoc>::Instance()->m_myPang <= value + tex) {
+				// The most pang the player can put on with the tax.
+				value = WSingleton<CSharedDoc>::Instance()->m_myPang * 100 / (m_texRate + 100);
+
+				char buf[32] = { 0 };
+				_i64toa(value, buf, 10);
+				m_pEdit->ForcedEdit(buf, 0);
 			}
 		}
 	}
@@ -1111,7 +1113,9 @@ void EncapsulatedPang::DrawPang(void) {
 		return;
 	}
 
-	WRect rect = *m_pRect;
+	float width = m_pRect->w;
+	float left = m_pRect->x;
+	float top = m_pRect->y;
 	unsigned char alpha = 0xff;
 	unsigned long color = 0xffffffff;
 	if (IsStyle(STYLE_EDITABLE) && m_pRect->IsInRect(g_pFresh->GetManager()->GetMousePos())) {
@@ -1125,23 +1129,23 @@ void EncapsulatedPang::DrawPang(void) {
 		const Bitmap* pRight = g_pFresh->GetBitmap("pang_bar_03");
 
 		if (pLeft != 0 && pMiddle != 0 && pRight != 0) {
-			float middleW = rect.w - pRight->Width() - pLeft->Width();
-			float middleX = rect.x + pLeft->Width();
+			float middleW = width - pRight->Width() - pLeft->Width();
+			float middleX = left + pLeft->Width();
 
-			pDevice->DrawTexture(pLeft, WRect(rect.x, rect.y, (float)pLeft->Width(), (float)pLeft->Height()), color, 0);
-			pDevice->DrawTexture(pMiddle, WRect(middleX, rect.y, middleW, (float)pMiddle->Height()), color, 0);
-			pDevice->DrawTexture(pRight, WRect(middleX + middleW, rect.y, (float)pRight->Width(), (float)pRight->Height()), color, 0);
+			pDevice->DrawTexture(pLeft, WRect(left, top, (float)pLeft->Width(), (float)pLeft->Height()), color, 0);
+			pDevice->DrawTexture(pMiddle, WRect(middleX, top, middleW, (float)pMiddle->Height()), color, 0);
+			pDevice->DrawTexture(pRight, WRect(middleX + middleW, top, (float)pRight->Width(), (float)pRight->Height()), color, 0);
 		}
 	}
 
 	if (IsStyle(STYLE_PANG_ICON)) {
 		const Bitmap* pIcon = g_pFresh->GetBitmap("pang_bar_pang");
 		if (pIcon != 0) {
-			pDevice->DrawTexture(pIcon, WRect(rect.x + 10.0f, rect.y + 5.0f, (float)pIcon->Width(), (float)pIcon->Height()), color, 0);
+			pDevice->DrawTexture(pIcon, WRect(left + 10.0f, top + 5.0f, (float)pIcon->Width(), (float)pIcon->Height()), color, 0);
 		}
 	}
 
-	float x = rect.x + m_pRect->w - 20.0f;
+	float x = left + m_pRect->w - 20.0f;
 	float y = m_pRect->y + 5.0f;
 
 	char text[64] = { 0 };
@@ -1319,10 +1323,8 @@ bool FrMyWareHouse::SubListItemCount(unsigned long guid, unsigned long typeId, i
 	FrListItem* pItem = FindListItem(guid, typeId);
 	if (pItem != 0) {
 		sWarpItem* pWarp = (sWarpItem*)pItem->pData;
-		int rest = pWarp->count - count;
-		if (rest >= 0) {
-			pWarp->count = rest;
-			if (rest == 0) {
+		if (pWarp->count - count >= 0) {
+			if ((pWarp->count -= count) == 0) {
 				m_pItemList->DelItem(pItem);
 			}
 			return true;
@@ -1605,13 +1607,13 @@ void FrMyWareHouse::OnListDraw(intptr_t param) {
 	pDevice->SetTextColor(0xff000000, 0xffffffff);
 	pDevice->SetTextStyle(0);
 
-	WRect itemRect(pos, m_pItemList->GetItemWidth(), m_pItemList->GetItemHeight());
+	WRect itemRect(pos, WSize(m_pItemList->GetItemWidth(), m_pItemList->GetItemHeight()));
 	if (itemRect.IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 		if (g_input->GetButton(LEFT_BUTTON) == 1) {
 			CTradeDragDrop::SetPopItem(sTradeDropItem(pWarp->guid, pWarp->typeId));
 		}
 
-		WOverlay::DrawLineBox(g_view, WRect(itemRect.x + 1.0f, itemRect.y + 1.0f, itemRect.w - 2.0f, itemRect.h - 2.0f), 0, 0xffffff00);
+		WOverlay::DrawLineBox(g_view, WRect(itemRect.TopLeft() + WPoint(1.0f, 1.0f), WSize(itemRect.w - 2.0f, itemRect.h - 2.0f)), 0, 0xffffff00);
 		FrTradeToolTip* pToolTip = FindPrivateTradeChildForm<FrTradeToolTip>("FrTradeToolTip");
 		if (pToolTip != 0) {
 			_sPrivateTradeItemSingle single;
@@ -1803,13 +1805,13 @@ void FrTradeToolTip::SetToolTip(_sPrivateTradeItemSingle* pItem) {
 		break;
 	}
 
-	m_textLines.push_back("");
+	m_textLines.push_back(std::string(""));
 	m_textLines.push_back(name);
 
 	if ((m_pItem->typeId & 0xfc000000) == 0x8000000) {
 		IFF_STRUCT::sPart* pPart = ItemManager()->FindPart(m_pItem->typeId);
 		if (pPart != 0) {
-			m_textLines.push_back("");
+			m_textLines.push_back(std::string(""));
 			GetAblilityText(m_textLines, pPart->m_baseStat, pPart->m_slotStat);
 		}
 	}
@@ -1817,7 +1819,7 @@ void FrTradeToolTip::SetToolTip(_sPrivateTradeItemSingle* pItem) {
 	if ((m_pItem->typeId & 0xfc000000) == 0x10000000) {
 		IFF_STRUCT::sClubSet* pClubSet = ItemManager()->FindClubSet(m_pItem->typeId);
 		if (pClubSet != 0) {
-			m_textLines.push_back("");
+			m_textLines.push_back(std::string(""));
 			GetAblilityText(m_textLines, pClubSet->m_baseStat, m_pItem->slotStats);
 		}
 	}
@@ -1832,7 +1834,7 @@ void FrTradeToolTip::SetToolTip(_sPrivateTradeItemSingle* pItem) {
 		}
 	}
 
-	m_textLines.push_back("");
+	m_textLines.push_back(std::string(""));
 	MakeFormatText(desc, m_textLines, 0);
 
 	for (std::vector<std::string>::iterator it = m_textLines.begin(); it != m_textLines.end(); ++it) {
@@ -2305,7 +2307,7 @@ void FrPrivateTradeWnd::OnListDraw(intptr_t param) {
 	}
 
 	FrGraphicInterface* pDevice = g_pFresh->GetManager()->GetGDI();
-	WRect rect(pItem->pos, m_pItemList->GetItemWidth(), m_pItemList->GetItemHeight());
+	WRect rect(pItem->pos, WSize(m_pItemList->GetItemWidth(), m_pItemList->GetItemHeight()));
 
 	const Bitmap* pBg = g_pFresh->GetBitmap("cfrm00");
 	WRect src(0.0f, 0.0f, pBg->Width(), pBg->Height());
@@ -2570,8 +2572,11 @@ bool FrPrivateTrade::OnInit(void) {
 	m_pMyTradeWnd->AddPangBarStyle(EncapsulatedPang::STYLE_EDITABLE);
 
 	WRect myRect = pTradeWnd->GetRect();
-	float right = myRect.w + myRect.x;
-	EncapsulatedPang::SetRect(WRect(right - 150.0f, myRect.h + myRect.y + 5.0f, 150.0f, 20.0f));
+	myRect.x = myRect.Right() - 150.0f;
+	myRect.y = myRect.Bottom() + 5.0f;
+	myRect.w = 150.0f;
+	myRect.h = 20.0f;
+	EncapsulatedPang::SetRect(myRect);
 
 	FrMyWareHouse* pWareHouse = CreateForm<FrMyWareHouse>(g_pFresh->GetManager(), 0, "FrMyWareHouse", this);
 	if (pWareHouse == 0) {

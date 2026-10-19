@@ -148,16 +148,16 @@ void CHelpMsg::ResetUiPosition(void) {
 	if (m_helpIndex != -1 || m_itemTypeId != 0) CalcWindowSize(m_title, m_text);
 }
 
+// The help shown for the previous cursor area while an item is selected.
+extern "C" {
+static int data_a7f8e4 = 29;
+}
+
 // helpmsg.cpp:133
 void CHelpMsg::Process(float elapsed) {
-	// The help shown for the previous cursor area while an item is selected.
-	static int s_lastIndex = 29;
-
 	char text[32];
 	char distText[32];
 	char countText[32];
-	float x, y;
-	float power;
 
 	if (IsLocalContent((localContentType_t)0x4F) && WSingleton<CSharedDoc>::Instance()->m_playingMode == 1) {
 		if (WSingleton<CSharedDoc>::Instance()->m_replayPlayType == 4 && IsMyTurn(false) && WSingleton<CSharedDoc>::Instance()->m_gameMode != 5 && WSingleton<CSharedDoc>::Instance()->m_gameMode == 0 && GOLFDOC()->m_gameState == 15 && WSingleton<CSharedDoc>::Instance()->m_roomType != 10 && WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomMode != 14) {
@@ -220,7 +220,10 @@ void CHelpMsg::Process(float elapsed) {
 	case 17: {
 		index = 0;
 		// "(%d power shots available)"
-		sprintf(m_itemText, "(\xC6\xC4\xBF\xF6\xBC\xA6\xC0\xBB %d\xB9\xF8 \xBB\xE7\xBF\xEB \xB0\xA1\xB4\xC9)", float2int((WSingleton<CSharedDoc>::Instance()->m_roomType == 1 ? TEAM((unsigned char)(area - 14))->m_teamRate : PLAYER((unsigned char)(area - 14))->m_comboGauge) / 33.0f));
+		if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1)
+			sprintf(m_itemText, "(\xC6\xC4\xBF\xF6\xBC\xA6\xC0\xBB %d\xB9\xF8 \xBB\xE7\xBF\xEB \xB0\xA1\xB4\xC9)", float2int(TEAM((unsigned char)(area - 14))->m_teamRate / 33.0f));
+		else
+			sprintf(m_itemText, "(\xC6\xC4\xBF\xF6\xBC\xA6\xC0\xBB %d\xB9\xF8 \xBB\xE7\xBF\xEB \xB0\xA1\xB4\xC9)", float2int(PLAYER((unsigned char)(area - 14))->m_comboGauge / 33.0f));
 		break;
 	}
 	case 10:
@@ -273,9 +276,10 @@ void CHelpMsg::Process(float elapsed) {
 		index = 3;
 		break;
 	}
-	case 3:
+	case 3: {
 		if (g_input->GetButton(LEFT_BUTTON)) break;
 
+		float x, y;
 		AfxGetTask()->GetActor("Spin") << MsgObject(0, 0x166, (intptr_t)&x, (intptr_t)&y, 0, 0, 0);
 		x -= g_input->GetMousePoint().x;
 		y -= g_input->GetMousePoint().y;
@@ -284,22 +288,24 @@ void CHelpMsg::Process(float elapsed) {
 			index = 12;
 		} else {
 			index = 13;
+			float power;
 			AfxGetTask()->GetActor("Screen") << MsgObject(0, 0x1C2, (intptr_t)&power, 0, 0, 0, 0);
 			// "(now %.0f%%)"
 			sprintf(text, "(\xC7\xF6\xC0\xE7 %.0f%%)", power * 100.0f);
 		}
 		break;
 	}
+	}
 
 	if (area >= 0x33 && area <= 0x3E) index = 15;
 
 	if (m_itemTypeId != 0) {
 		if (index == 29) {
-			s_lastIndex = index;
+			data_a7f8e4 = index;
 			index = 7;
 		} else {
-			if (index != s_lastIndex) {
-				s_lastIndex = index;
+			if (index != data_a7f8e4) {
+				data_a7f8e4 = index;
 				m_itemChanged = false;
 			}
 			if (m_itemChanged) index = 7;
@@ -505,7 +511,6 @@ void CHelpMsg::Display(void) {
 		y += 15.0f;
 		if (type == 6) {
 			pos++;
-			continue;
 		}
 	} while (type != 0);
 

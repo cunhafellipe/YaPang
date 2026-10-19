@@ -175,7 +175,7 @@ bool cHttp::DownLoad2(const char* fileName, const char* remoteFile, const char* 
 		total += written;
 
 		sprintf(m_status, "'%s' %dKb/%dKb", remoteFile, total / 1024, size / 1024);
-		SendLog(0x40B, (long)((float)total / (float)size * 100.0f));
+		SendLog(0x40B, (long)(100.0f * ((float)total / (float)size)));
 
 		if (total - lastTotal >= 100000) {
 			float bytes = (float)(total - lastTotal);

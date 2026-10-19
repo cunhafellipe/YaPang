@@ -177,12 +177,11 @@ void CLetter::OnLoad(void) {
 
 	char* fontFile = "[bigfont.jpg";
 	m_fontInfo.filename = &fontFile;
+	m_fontInfo.flag = 0;
+	m_fontInfo.fontw = m_fontInfo.fonth = 32;
 	m_fontInfo.numPages = 1;
-	m_fontInfo.fontw = 32;
-	m_fontInfo.fonth = 32;
 	m_fontInfo.texw = 256;
 	m_fontInfo.texh = 128;
-	m_fontInfo.flag = 0;
 	m_fontInfo.pCharSet = "1234567890ym%-./x ";
 	m_pFont->Create(&m_fontInfo);
 }

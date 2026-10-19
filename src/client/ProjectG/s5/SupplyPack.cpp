@@ -471,21 +471,19 @@ void FrSupplyPackDlg::OnBgAreaDraw(void) {
 		}
 
 		// the count held before the supply, then the count shown so far
-		{
-			m_pWindFont->SetColor(((unsigned long)(unsigned char)m_exhibitionAlpha << 24) | 0xFFFFFF);
-			float x = m_rect.x;
-			float y = m_rect.y + 212.0f;
-			m_pWindFont->Print(x + 71.0f, y, MakeStr("%d", m_heldCount), TITLEFONT_ALIGN_CENTER, 1.0f, 1.0f);
+		m_pWindFont->SetColor(((unsigned long)(unsigned char)m_exhibitionAlpha << 24) | 0xFFFFFF);
+		float x = m_rect.x;
+		float y = m_rect.y + 212.0f;
+		m_pWindFont->Print(x + 71.0f, y, MakeStr("%d", m_heldCount), TITLEFONT_ALIGN_CENTER, 1.0f, 1.0f);
 
-			m_pWindFont->SetColor(((unsigned long)(unsigned char)m_exhibitionAlpha << 24) | 0xFF80FF);
-			m_pWindFont->Print(x + 177.0f, y, MakeStr("%d", m_displayCount), TITLEFONT_ALIGN_CENTER, 1.0f, 1.0f);
-		}
+		m_pWindFont->SetColor(((unsigned long)(unsigned char)m_exhibitionAlpha << 24) | 0xFF80FF);
+		m_pWindFont->Print(x + 177.0f, y, MakeStr("%d", m_displayCount), TITLEFONT_ALIGN_CENTER, 1.0f, 1.0f);
 
 		pBmp = g_pFresh->GetBitmap("supplypack_arrow");
 		if (pBmp) {
 			WRect rect = m_rect;
-			rect.x += (rect.w - pBmp->Width()) * 0.5f
-				+ m_arrowOffset;
+			rect.x += (rect.w - pBmp->Width()) * 0.5f;
+			rect.x += m_arrowOffset;
 			rect.y += 205.0f;
 			rect.w = pBmp->Width();
 			rect.h = pBmp->Height();

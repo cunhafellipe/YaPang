@@ -107,7 +107,7 @@ void FrReadyToMaster::OnStartBtnUp(void) {
 	}
 
 	WSendPacket packet(GCT_REQUEST_START_GAME);
-	packet.Encode4(WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid);
+	packet.Encode4(MyGuid(false));
 	packet.Send(SEND_TO_DEFAULT);
 
 	Close(true);

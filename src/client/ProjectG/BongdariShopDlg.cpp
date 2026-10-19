@@ -180,7 +180,7 @@ FrBongdariShopDlg::FrBongdariShopDlg(void) {
 
 	m_shopState = 0;
 
-	m_pPetBonusBall[0] = 0; m_pPetBonusBall[1] = 0; m_pPetBonusBall[2] = 0; m_pPetBonusBall[3] = 0; m_pPetBonusBall[4] = 0;
+	for (int i = 0; i < 5; i++) m_pPetBonusBall[i] = 0;
 
 	m_pDefaultSilhouetteImage = g_pFresh->GetManager()->GetBitmap("ITEMS", "item0_13");
 
@@ -192,7 +192,7 @@ FrBongdariShopDlg::FrBongdariShopDlg(void) {
 	m_pBongdari = 0;
 	m_pBongdariArea = 0;
 
-	m_pBonusBallArea[0] = 0; m_pBonusBallArea[1] = 0; m_pBonusBallArea[2] = 0; m_pBonusBallArea[3] = 0; m_pBonusBallArea[4] = 0;
+	for (int i = 0; i < 5; i++) m_pBonusBallArea[i] = 0;
 
 	m_pShadowImage = g_pFresh->GetManager()->GetBitmap("BONGDARI_SHOP", "shadow");
 	m_pClickTextImage = g_pFresh->GetManager()->GetBitmap("BONGDARI_SHOP", "text_bongdari_click");
@@ -510,7 +510,8 @@ void FrBongdariShopDlg::OnProc(const float dt) {
 			switch (m_shopState) {
 			case 0:
 				if (!m_bUsingBonusBall) {
-					WRect rect = m_pBongdariArea->GetRect();
+					WRect rect;
+					rect = m_pBongdariArea->GetRect();
 					if (rect.IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {
 						m_cursorType = 1;
 						if (m_bBongdariPressed)
@@ -525,7 +526,8 @@ void FrBongdariShopDlg::OnProc(const float dt) {
 					if (m_pBonusBallArea[data_af74cc]
 						&& m_pBonusBallArea[data_af74cc]->IsVisible()
 						&& m_movingData[data_af74cc].m_state == 2) {
-						WRect rect = m_pBonusBallArea[data_af74cc]->GetRect();
+						WRect rect;
+						rect = m_pBonusBallArea[data_af74cc]->GetRect();
 						if (rect.IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {
 							m_cursorType = 1;
 							m_selectedBall = data_af74cc;
@@ -556,7 +558,7 @@ bool FrBongdariShopDlg::OnLButtonDown(const WPoint& pt) {
 		m_bBongdariPressed = false;
 		WRect rect = m_pBongdariArea->GetRect();
 
-		if (rect.IsInRect(pt.x, pt.y))
+		if (rect.IsInRect(pt))
 			m_bBongdariPressed = true;
 		break;
 	}
@@ -565,7 +567,8 @@ bool FrBongdariShopDlg::OnLButtonDown(const WPoint& pt) {
 			if (m_pBonusBallArea[i]) {
 				if (m_pBonusBallArea[i]->IsVisible()) {
 					if (m_movingData[i].m_state == 2) {
-						WRect rect = m_pBonusBallArea[i]->GetRect();
+						WRect rect;
+						rect = m_pBonusBallArea[i]->GetRect();
 
 						if (rect.IsInRect(pt)) {
 							if (m_pTotalItemBn)
@@ -1026,10 +1029,8 @@ void FrBongdariShopDlg::Processing(float dt) {
 				if (m_pPetBonusBall[data_af74c8]) {
 					CExhibition* pBall = m_pPetBonusBall[data_af74c8];
 					float* pSpin = &m_movingData[data_af74c8].m_spin;
-					// The original calls WMatrix::operator*=(const WMatrix&) (out of line in
-					// GolfRule); wmath.h does not declare it yet, hence the product form.
-					pBall->GetMatrix() = pBall->GetMatrix() * RotMat(dt * *pSpin * 8.0f * g_DEGTORAD, 2);
-					pBall->GetMatrix() = pBall->GetMatrix() * RotMat(dt * *pSpin * 8.0f * g_DEGTORAD, 1);
+					pBall->GetMatrix() *= RotMat(dt * *pSpin * 8.0f * g_DEGTORAD, 2);
+					pBall->GetMatrix() *= RotMat(dt * *pSpin * 8.0f * g_DEGTORAD, 1);
 				}
 				break;
 			case 3:
@@ -1164,8 +1165,8 @@ void FrBongdariShopDlg::DisplayItemSilhouette(void) {
 	if (pGDI && m_bonusBallCount <= 5) {
 		WRect base = GetRect();
 		const Bitmap* pBmp = 0;
-		char text[8] = { 0 };
 		unsigned long color = 0xffffffff;
+		char text[8] = { 0 };
 
 		for (int i = 0; i < 9; i++) {
 			sItemSilhouette& sil = m_silhouettes[i];
@@ -1207,7 +1208,7 @@ void FrBongdariShopDlg::DisplayItemSilhouette(void) {
 					}
 				}
 
-				WRect rect(base.x + offX + g_arrPtItemSilhouette[i].x, base.y + g_arrPtItemSilhouette[i].y + offY, (float)pBmp->Width(), (float)pBmp->Height());
+				WRect rect(base.x + g_arrPtItemSilhouette[i].x + offX, base.y + g_arrPtItemSilhouette[i].y + offY, (float)pBmp->Width(), (float)pBmp->Height());
 
 				pGDI->DrawTexture(pBmp, rect, color, 0);
 
@@ -1241,9 +1242,8 @@ void FrBongdariShopDlg::DrawShadow(void) {
 				if (m_pBongdari) {
 					FrArea* pArea = m_pBongdariArea;
 					float w = m_pShadowImage->Width() * 1.5f;
-					float x = pArea->GetRect().x + pArea->GetRect().w * 0.5f - w * 0.5f;
 
-					rect = WRect(x, pArea->GetRect().y + pArea->GetRect().h - 23.0f - (m_pShadowImage->Height() * 1.5f) * 0.5f, w, m_pShadowImage->Height() * 1.5f);
+					rect = WRect(pArea->GetRect().x + pArea->GetRect().w * 0.5f - w * 0.5f, pArea->GetRect().y + pArea->GetRect().h - 23.0f - (m_pShadowImage->Height() * 1.5f) * 0.5f, w, m_pShadowImage->Height() * 1.5f);
 					pGDI->DrawTexture(m_pShadowImage, rect, 0x90ffffff, 0);
 				}
 			}
@@ -1327,7 +1327,7 @@ void FrBongdariShopDlg::DrawUserInfo(void) {
 			return;
 
 		char buf[32] = "";
-		WPoint pos(m_rect.x, m_rect.y);
+		WRect pos = GetRect();
 		static int s_fontWidth = m_pTitleFont29c->GetFontInfo()->fontw;
 		static int s_bonusFontWidth = m_pTitleFont2a4->GetFontInfo()->fontw;
 		static float s_textWidth;
@@ -1375,6 +1375,7 @@ void FrBongdariShopDlg::DrawUserInfo(void) {
 				alpha = (unsigned char)m_feeTextAlpha;
 			}
 
+			unsigned long color = (alpha << 24) | 0xffffff;
 			WRect rc(pos.x, pos.y + m_feeTextY, (float)m_pFeeImages[m_dataFee]->Width(), (float)m_pFeeImages[m_dataFee]->Height());
 
 			switch (m_dataFee) {
@@ -1382,7 +1383,7 @@ void FrBongdariShopDlg::DrawUserInfo(void) {
 			case 1: rc.x = pos.x + 317.0f; rc.y += 10.0f; break;
 			}
 
-			pGDI->DrawTexture(m_pFeeImages[m_dataFee], rc, (alpha << 24) | 0xffffff, 0);
+			pGDI->DrawTexture(m_pFeeImages[m_dataFee], rc, color, 0);
 		}
 
 		if (m_bShowDiscount && m_pFeeImages[1]) {
@@ -1427,7 +1428,7 @@ void FrBongdariShopDlg::DrawUserInfo(void) {
 			return;
 
 		char buf[32] = "";
-		WPoint pos(m_rect.x, m_rect.y);
+		WRect pos = GetRect();
 		static int s_fontWidth = m_pTitleFont29c->GetFontInfo()->fontw;
 		static float s_textWidth;
 
@@ -1451,6 +1452,7 @@ void FrBongdariShopDlg::DrawUserInfo(void) {
 				alpha = (unsigned char)m_feeTextAlpha;
 			}
 
+			unsigned long color = (alpha << 24) | 0xffffff;
 			WRect rc(pos.x, pos.y + m_feeTextY, (float)m_pFeeImages[m_dataFee]->Width(), (float)m_pFeeImages[m_dataFee]->Height());
 
 			switch (m_dataFee) {
@@ -1458,7 +1460,7 @@ void FrBongdariShopDlg::DrawUserInfo(void) {
 			case 1: rc.x = pos.x + 296.0f; rc.y += 10.0f; break;
 			}
 
-			pGDI->DrawTexture(m_pFeeImages[m_dataFee], rc, (alpha << 24) | 0xffffff, 0);
+			pGDI->DrawTexture(m_pFeeImages[m_dataFee], rc, color, 0);
 		}
 	}
 }
@@ -1699,7 +1701,7 @@ void FrBongdariShopDlg::SetRandomDataItemSilhouette(void) {
 	}
 
 	if (total > 0) {
-		for (int i = 0; i < total - cookieCount; i++) {
+		for (total -= cookieCount; total > 0; total--) {
 			unsigned long typeId;
 			bool bRetry;
 			do {
@@ -1883,15 +1885,14 @@ void FrBongdariShopDlg::UpdateListMyItem(sBonusBall* pBall) {
 
 	if (bNew) {
 		if ((pBall->m_typeId >> 26) == 7) {
-			sCaddieInfo caddie;
-			memset(&caddie, 0, sizeof(caddie));
+			sCaddieInfo caddie = { pBall->m_serial };
 
 			caddie.days = 30;
 
 			caddie.flags &= 0xfc;
 
-			caddie.id = pBall->m_serial;
 			caddie.typeId = pBall->m_typeId;
+			caddie.reserved = 0;
 			WSingleton<CSharedDoc>::Instance()->m_caddieMap[pBall->m_serial] = caddie;
 		} else if ((pBall->m_typeId >> 26) == 4) {
 			sItemInfo item;
@@ -1903,7 +1904,7 @@ void FrBongdariShopDlg::UpdateListMyItem(sBonusBall* pBall) {
 		} else {
 			sItemInfo item;
 
-			short count[5] = { 1, 0, 0, 0, 0 };
+			short count[5] = { 1 };
 			if (pBall->m_bUnitCount == 0) {
 				count[0] = (short)pBall->m_count;
 			} else if (pBall->m_bUnitCount == 1 || pBall->m_bUnitCount == 2) {
@@ -1912,6 +1913,7 @@ void FrBongdariShopDlg::UpdateListMyItem(sBonusBall* pBall) {
 			}
 
 			item.m_serial = pBall->m_serial;
+			item.m_stateBits.flag0 = 0;
 			item.m_typeId = pBall->m_typeId;
 			memcpy(item.m_clubStatLevel, count, sizeof(count));
 			item.m_reserved16 = 0;
@@ -1932,7 +1934,7 @@ void FrBongdariShopDlg::UpdateListMyItem(sBonusBall* pBall) {
 				}
 			}
 
-			switch (pBall->m_typeId >> 26) {
+			switch (item.m_typeId >> 26) {
 			case 2:
 				WSingleton<CSharedDoc>::Instance()->AddMyPartsList(item);
 				break;
@@ -2405,6 +2407,7 @@ void FrTotalItemDlg::OnTotalItemListInit(intptr_t param) {
 
 // bongdarishopdlg.cpp:3135
 void FrTotalItemDlg::OnTotalItemListOwnerDraw(PG_MSGARG param) {
+	unsigned int i = 0;
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (!pGDI)
@@ -2463,7 +2466,7 @@ void FrTotalItemDlg::OnTotalItemListOwnerDraw(PG_MSGARG param) {
 		char* text = MakeStr("%d", pBall->m_count);
 		float x = pItem->pos.x + 70.0f;
 
-		for (unsigned int i = 0; i < strlen(text); i++) {
+		for (i = 0; i < strlen(text); i++) {
 			x -= m_pTitleFont->GetCharWidthA(g_view, text[i] - '0');
 		}
 
@@ -2672,8 +2675,8 @@ void FrBongdarishopNoticeDlg::OnListIndexInit(intptr_t param) {
 // bongdarishopdlg.cpp:3408
 void FrBongdarishopNoticeDlg::OnNoticeViewerBnUp(void) {
 	if (m_curIndex >= 0) {
-		const WPoint& mousePos = g_pFresh->GetManager()->GetMousePos();
-		WPoint mouse(mousePos.x, mousePos.y);
+		WPoint mouse;
+		mouse = g_pFresh->GetManager()->GetMousePos();
 
 		std::list<sNoticeImage::sBn>::iterator it;
 		for (it = m_noticeImages[m_curIndex].buttons.begin(); it != m_noticeImages[m_curIndex].buttons.end(); ++it) {
@@ -3010,15 +3013,6 @@ void FrBongdarishopRareItemDlg::SetRareItem(sBonusBall* pBall) {
 		memcpy(slot, pPart->m_slotStat, sizeof(slot));
 		break;
 	}
-	case 7: {
-		IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(pBall->m_typeId);
-
-		if (!pCaddie)
-			return;
-
-		memcpy(base, pCaddie->m_levels, sizeof(base));
-		break;
-	}
 	case 8: {
 		IFF_STRUCT::sCadItem* pCadItem = ItemManager()->FindCadItem(pBall->m_typeId);
 
@@ -3026,6 +3020,15 @@ void FrBongdarishopRareItemDlg::SetRareItem(sBonusBall* pBall) {
 			return;
 
 		memcpy(base, pCadItem->m_levels, sizeof(base));
+		break;
+	}
+	case 7: {
+		IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(pBall->m_typeId);
+
+		if (!pCaddie)
+			return;
+
+		memcpy(base, pCaddie->m_levels, sizeof(base));
 		break;
 	}
 	default:
@@ -3405,7 +3408,7 @@ void FrClosedBonusBallResultDlg::SetEditDataClosedBonusBall(int editIdx, int lis
 	int n = 0;
 
 	for (FrListBox::ITEM_LIST::iterator it = m_pClosedBonusBallList->m_itemList.begin(); it != m_pClosedBonusBallList->m_itemList.end(); ++it) {
-		if (n == listIdx) {
+		if (listIdx == n) {
 			FrListItem* pListItem = *it;
 
 			if (pListItem) {
@@ -3459,7 +3462,7 @@ void FrClosedBonusBallResultDlg::SetEditDataClosedBonusBall(int editIdx, int lis
 							if (bFound) {
 								const char* statName = "";
 
-								for (int i = 0; i < 5; i++) {
+								for (unsigned char i = 0; i < 5; i++) {
 									if (base.m_value[i] != 0 || slot.m_value[i] != 0) {
 										switch (i) {
 										case 0: statName = "\xC6\xC4\xBF\xF6"; break;

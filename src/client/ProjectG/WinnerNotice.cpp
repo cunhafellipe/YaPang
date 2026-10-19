@@ -527,7 +527,11 @@ void CWinnerNotice::GetItemCountfromXml(TiXmlDocument& doc, std::string& out) {
 	TiXmlElement* qty = doc.FirstChildElement("PARAMS")->FirstChildElement("QTY");
 	TiXmlElement* typeId = doc.FirstChildElement("PARAMS")->FirstChildElement("TYPEID");
 
-	if (typeId == NULL || qty == NULL) {
+	if (typeId == NULL) {
+		out = "";
+		return;
+	}
+	if (qty == NULL) {
 		out = "";
 		return;
 	}

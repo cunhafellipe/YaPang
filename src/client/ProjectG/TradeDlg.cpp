@@ -76,10 +76,11 @@ void DrawPartsSlot(WPoint pt, sTradeItem* pItem) {
 		return;
 	}
 
+	int slot;
 	float charX = 5.0f;
 	float caddieX = 5.0f;
 
-	for (int slot = 1; slot < pPart->m_charCardSlots + 1; slot++) {
+	for (slot = 1; slot < pPart->m_charCardSlots + 1; slot++) {
 		std::list<sSCardAvilityPeriodInfo>::iterator it;
 		bool bFound = false;
 		for (it = WSingleton<CSharedDoc>::Instance()->m_cardPeriodList[0].begin(); it != WSingleton<CSharedDoc>::Instance()->m_cardPeriodList[0].end(); ++it) {
@@ -98,12 +99,11 @@ void DrawPartsSlot(WPoint pt, sTradeItem* pItem) {
 			}
 			bFound = true;
 			const Bitmap* pBmp = g_pFresh->GetBitmap(pCard->m_texture);
-			if (pBmp == 0) {
-				continue;
+			if (pBmp) {
+				WRect rect(pt.x + charX, pt.y + 54.0f, (float)pBmp->Width(), (float)pBmp->Height());
+				pGDI->DrawTexture(pBmp, rect, 0xFFFFFFFF, 0);
+				charX += 16.0f;
 			}
-			WRect rect(pt.x + charX, pt.y + 54.0f, (float)pBmp->Width(), (float)pBmp->Height());
-			pGDI->DrawTexture(pBmp, rect, 0xFFFFFFFF, 0);
-			charX += 16.0f;
 		}
 		if (!bFound) {
 			const Bitmap* pBmp = g_pFresh->GetBitmap("card_character_empty");
@@ -115,7 +115,7 @@ void DrawPartsSlot(WPoint pt, sTradeItem* pItem) {
 		}
 	}
 
-	for (int slot = 1; slot < pPart->m_caddieCardSlots + 1; slot++) {
+	for (slot = 1; slot < pPart->m_caddieCardSlots + 1; slot++) {
 		std::list<sSCardAvilityPeriodInfo>::iterator it;
 		bool bFound = false;
 		for (it = WSingleton<CSharedDoc>::Instance()->m_cardPeriodList[0].begin(); it != WSingleton<CSharedDoc>::Instance()->m_cardPeriodList[0].end(); ++it) {
@@ -134,12 +134,11 @@ void DrawPartsSlot(WPoint pt, sTradeItem* pItem) {
 			}
 			bFound = true;
 			const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr(pCard->m_texture));
-			if (pBmp == 0) {
-				continue;
+			if (pBmp) {
+				WRect rect(pt.x + caddieX, pt.y + 70.0f, (float)pBmp->Width(), (float)pBmp->Height());
+				pGDI->DrawTexture(pBmp, rect, 0xFFFFFFFF, 0);
+				caddieX += 16.0f;
 			}
-			WRect rect(pt.x + caddieX, pt.y + 70.0f, (float)pBmp->Width(), (float)pBmp->Height());
-			pGDI->DrawTexture(pBmp, rect, 0xFFFFFFFF, 0);
-			caddieX += 16.0f;
 		}
 		if (!bFound) {
 			const Bitmap* pBmp = g_pFresh->GetBitmap("card_caddie_empty");
@@ -283,7 +282,7 @@ void DrawAbility(const sTradeItem& item, FrListItem* pListItem) {
 		float y = 0.0f;
 		const char* statName = "";
 
-		for (int i = 0; i < 5; i++) {
+		for (unsigned char i = 0; i < 5; i++) {
 			if (base.m_value[i] == 0 && slot.m_value[i] == 0)
 				continue;
 
@@ -319,7 +318,7 @@ void DrawAbility(const sTradeItem& item, FrListItem* pListItem) {
 			else
 				text = MakeStr("%s%+d/\xBD\xBD\xB7\xD4%+d", statName, base.m_value[i], slot.m_value[i]);
 
-			pGDI->Print(WPoint(pListItem->pos.x + 182.0f, y + 36.0f + pListItem->pos.y), 2, text);
+			pGDI->Print(pListItem->pos + WPoint(182.0f, y + 36.0f), 2, text);
 			y += 14.0f;
 		}
 	} else if (kind == 4) {
@@ -739,6 +738,8 @@ void FrTradeDlg::OnTradeItemListRClick(void) {
 
 // tradedlg.cpp:722
 void FrTradeDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
+	unsigned int i = 0;
+
 	FrListItem* pListItem = (FrListItem*)param;
 
 	if (pListItem == 0) {
@@ -754,8 +755,8 @@ void FrTradeDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 		return;
 	}
 
-	const Bitmap* pBase = m_pItemBaseN;
 	unsigned long diffuse = 0xFFFFFFFF;
+	const Bitmap* pBase = m_pItemBaseN;
 
 	pGI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 
@@ -785,8 +786,7 @@ void FrTradeDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 		pGI->DrawTexture(pBase, rect, baseDiffuse, 0);
 	}
 
-	switch (item.typeId >> 26) {
-	case 2: {
+	if ((item.typeId >> 26) == 2) {
 		IFF_STRUCT::sChar* pChar = ItemManager()->FindChar(((item.typeId >> 18) & 0xFF) | 0x04000000);
 		if (pChar != 0) {
 			const Bitmap* pCharBmp = g_pFresh->GetBitmap(MakeStr("s_%s", pChar->m_icon));
@@ -795,8 +795,6 @@ void FrTradeDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 				pGI->DrawTexture(pCharBmp, rect, 0xFFFFFFFF, 0);
 			}
 		}
-		break;
-	}
 	}
 
 	const Bitmap* pIcon = g_pFresh->GetBitmap(pCommon->m_icon);
@@ -844,7 +842,7 @@ void FrTradeDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 	}
 
 	pGI->SetTextStyle(1);
-	pGI->Print(WPoint(pListItem->pos.x + 182.0f, pListItem->pos.y + 7.0f), 2, pName);
+	pGI->Print(pListItem->pos + WPoint(182.0f, 7.0f), 2, pName);
 	pGI->SetTextStyle(0);
 
 	char price[32] = { 0 };
@@ -856,30 +854,30 @@ void FrTradeDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 		const char* str = MakeStr("%d", item.count);
 		float x = pListItem->pos.x + 54.0f;
 
-		for (unsigned int i = 0; i < strlen(str); i++) {
+		for (i = 0; i < strlen(str); i++) {
 			x -= m_pTitleFont->GetCharWidthA(g_view, str[i] - '0');
 		}
 
 		m_pTitleFont->Print(g_view, x, pListItem->pos.y + 55.0f, str, 0, 0xFFFFFFFF, 0);
 
-		pGI->Print(WPoint(pListItem->pos.x + 182.0f, pListItem->pos.y + 23.0f), 2, MakeStr("\xB0\xB3\xB4\xE7 %s\xC6\xCE", price));
+		pGI->Print(pListItem->pos + WPoint(182.0f, 23.0f), 2, MakeStr("\xB0\xB3\xB4\xE7 %s\xC6\xCE", price));
 	} else {
-		pGI->Print(WPoint(pListItem->pos.x + 182.0f, pListItem->pos.y + 23.0f), 2, MakeStr("%s\xC6\xCE", price));
+		pGI->Print(pListItem->pos + WPoint(182.0f, 23.0f), 2, MakeStr("%s\xC6\xCE", price));
 	}
 
 	pGI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 
 	DrawAbility(item, pListItem);
 
-	if (!m_bMyShop && m_packageSale != TYPE_SALES_PACKAGE && !(item.statFlag & 1)) {
-		if (pListItem->underCursor) {
-			if ((m_buyBtnN.rect + pListItem->pos).IsInRect(g_pFresh->GetManager()->GetMousePos())) {
+	if (!m_bMyShop && m_packageSale != TYPE_SALES_PACKAGE) {
+		bool canBuy = !(item.statFlag & 1);
+
+		if (canBuy) {
+			if (pListItem->underCursor && (m_buyBtnN.rect + pListItem->pos).IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 				pGI->DrawTexture(m_buyBtnO.pBitmap, m_buyBtnO.rect + pListItem->pos, 0xFFFFFFFF, 0);
 			} else {
 				pGI->DrawTexture(m_buyBtnN.pBitmap, m_buyBtnN.rect + pListItem->pos, 0xFFFFFFFF, 0);
 			}
-		} else {
-			pGI->DrawTexture(m_buyBtnN.pBitmap, m_buyBtnN.rect + pListItem->pos, 0xFFFFFFFF, 0);
 		}
 	}
 
@@ -1191,7 +1189,8 @@ void FrTradeDlg::DrawPang(void) {
 	if (!m_pPangFont)
 		return;
 
-	char buf[32] = ""; WPoint pos(m_rect.x, m_rect.y);
+	char buf[32] = "";
+	WRect rect = GetRect();
 	static int s_fontWidth = m_pPangFont->GetFontInfo()->fontw;
 	static float s_textWidth;
 
@@ -1204,7 +1203,7 @@ void FrTradeDlg::DrawPang(void) {
 	}
 
 	s_textWidth = (s_fontWidth - 1.0f) * (strlen(buf) - 1);
-	m_pPangFont->Print(g_view, pos.x + 130.0f - s_textWidth, pos.y + 380.0f, buf, 0, 0xffffffff, 0);
+	m_pPangFont->Print(g_view, rect.x + 130.0f - s_textWidth, rect.y + 380.0f, buf, 0, 0xffffffff, 0);
 }
 
 // tradedlg.cpp:1368
@@ -1491,7 +1490,9 @@ bool CheckTradeItem(unsigned long typeId, const sTradeItem& item) {
 			return false;
 		if (item.price == 0)
 			return false;
-		return (int)item.count > 0 ? true : false;
+		if (item.count <= 0)
+			return false;
+		return true;
 	}
 
 	return false;
@@ -1553,6 +1554,8 @@ void FrTradeBuyDlg::OnBuyItemIconInit(PG_MSGARG param) {
 
 // tradedlg.cpp:1744
 void FrTradeBuyDlg::OnBuyItemIconOwnerDraw(void) {
+	unsigned int i = 0;
+
 	if (m_pBuyItem == 0) {
 		return;
 	}
@@ -1608,7 +1611,7 @@ void FrTradeBuyDlg::OnBuyItemIconOwnerDraw(void) {
 			const char* str = MakeStr("%d", m_pBuyItem->count);
 			float x = pt.x + 54.0f;
 
-			for (unsigned int i = 0; i < strlen(str); i++) {
+			for (i = 0; i < strlen(str); i++) {
 				x -= m_pTitleFont->GetCharWidthA(g_view, str[i] - '0');
 			}
 
@@ -1939,7 +1942,7 @@ void FrTradeBuyDlg::SetBuyItem(sTradeItem* pItem) {
 
 	const char* statName = "";
 
-	for (int i = 0; i < 5; i++) {
+	for (unsigned char i = 0; i < 5; i++) {
 		if (base.m_value[i] == 0 && slot.m_value[i] == 0)
 			continue;
 
@@ -2150,6 +2153,8 @@ void FrTradeResultDlg::OnResultItemIconInit(intptr_t param) {
 
 // tradedlg.cpp:2452
 void FrTradeResultDlg::OnResultItemIconOwnerDraw(void) {
+	unsigned int i = 0;
+
 	if (m_resultItem.typeId == 0) {
 		return;
 	}
@@ -2208,7 +2213,7 @@ void FrTradeResultDlg::OnResultItemIconOwnerDraw(void) {
 			const char* str = MakeStr("%d", m_resultItem.count);
 			float x = pt.x + 54.0f;
 
-			for (unsigned int i = 0; i < strlen(str); i++) {
+			for (i = 0; i < strlen(str); i++) {
 				x -= m_pTitleFont->GetCharWidthA(g_view, str[i] - '0');
 			}
 
@@ -2456,7 +2461,7 @@ void FrTradeResultDlg::SetResultItem(sTradeItem* pItem) {
 
 	const char* statName = "";
 
-	for (int i = 0; i < 5; i++) {
+	for (unsigned char i = 0; i < 5; i++) {
 		if (base.m_value[i] == 0 && slot.m_value[i] == 0)
 			continue;
 
@@ -3048,8 +3053,9 @@ void FrTradeEditDlg::OnTradeMyItemOkBnUp(void) {
 	char price[10] = { 0 };
 	const char* pText = m_pTradeMyItemPrice->GetLine(1, false);
 
+	int i = 0;
 	char* p = price;
-	for (int i = 0; i < 9; i++) {
+	for (; i < 9; i++) {
 		if (pText[i] == 0) {
 			break;
 		}
@@ -3279,13 +3285,7 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 			item.guid = it->m_serial;
 
 			item.typeId = it->m_typeId;
-			int trading = 0;
-			std::list<sTradeItem>* pTrade = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-			for (std::list<sTradeItem>::iterator t = pTrade->begin(); t != pTrade->end(); ++t) {
-				if (t->guid == it->m_serial) {
-					trading += t->count;
-				}
-			}
+			int trading = GetNumTradingItem(it->m_serial);
 			item.count = 1 - trading;
 			item.price = 0;
 
@@ -3316,13 +3316,7 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 	if (IsLocalContent((localContentType_t)0x57)) {
 		std::list<sItemInfo>& uccList = WSingleton<CSharedDoc>::Instance()->m_myItemList;
 		for (std::list<sItemInfo>::iterator it = uccList.begin(); it != uccList.end(); ++it) {
-			int trading = 0;
-			std::list<sTradeItem>* pTrade = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-			for (std::list<sTradeItem>::iterator t = pTrade->begin(); t != pTrade->end(); ++t) {
-				if (t->guid == it->m_serial) {
-					trading += t->count;
-				}
-			}
+			int trading = GetNumTradingItem(it->m_serial);
 			if (trading > 0) {
 				continue;
 			}
@@ -3334,7 +3328,9 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 
 			if (((pCommon->m_flags0 >> 1) & 0xF) == 1 || ((pCommon->m_flags0 >> 1) & 0xF) == 3) {
 				bool bWorn = false;
-				for (std::map<unsigned int, sCharacterInfo>::const_iterator ch = WSingleton<CSharedDoc>::Instance()->m_characterMap.begin(); ch != WSingleton<CSharedDoc>::Instance()->m_characterMap.end(); ++ch) {
+				const std::map<unsigned int, sCharacterInfo>& charMap = WSingleton<CSharedDoc>::Instance()->m_characterMap;
+				std::map<unsigned int, sCharacterInfo>::const_iterator chEnd = charMap.end();
+				for (std::map<unsigned int, sCharacterInfo>::const_iterator ch = charMap.begin(); ch != chEnd; ++ch) {
 					if (ch->second.typeId == (((it->m_typeId >> 18) & 0xFF) | 0x04000000)) {
 						int slot = (it->m_typeId >> 13) & 0x1F;
 
@@ -3393,13 +3389,7 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 			item.guid = it->m_serial;
 
 			item.typeId = it->m_typeId;
-			int trading = 0;
-			std::list<sTradeItem>* pTrade = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-			for (std::list<sTradeItem>::iterator t = pTrade->begin(); t != pTrade->end(); ++t) {
-				if (t->guid == it->m_serial) {
-					trading += t->count;
-				}
-			}
+			int trading = GetNumTradingItem(it->m_serial);
 			item.count = it->m_count - trading;
 			item.price = 0;
 
@@ -3431,13 +3421,7 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 			item.guid = it->m_serial;
 
 			item.typeId = it->m_typeId;
-			int trading = 0;
-			std::list<sTradeItem>* pTrade = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-			for (std::list<sTradeItem>::iterator t = pTrade->begin(); t != pTrade->end(); ++t) {
-				if (t->guid == it->m_serial) {
-					trading += t->count;
-				}
-			}
+			int trading = GetNumTradingItem(it->m_serial);
 			item.count = it->m_count - trading - GetNumEquipItem(it->m_typeId);
 			item.price = 0;
 
@@ -3463,13 +3447,7 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 		if (((pCommon->m_flags0 >> 1) & 0xF) == 1 || ((pCommon->m_flags0 >> 1) & 0xF) == 3) {
 			item.guid = it->m_serial;
 			item.typeId = it->m_typeId;
-			int trading = 0;
-			std::list<sTradeItem>* pTrade = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-			for (std::list<sTradeItem>::iterator t = pTrade->begin(); t != pTrade->end(); ++t) {
-				if (t->guid == it->m_serial) {
-					trading += t->count;
-				}
-			}
+			int trading = GetNumTradingItem(it->m_serial);
 			item.count = it->m_count - trading;
 			item.price = 0;
 
@@ -3495,13 +3473,7 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 		if (((pCommon->m_flags0 >> 1) & 0xF) == 1 || ((pCommon->m_flags0 >> 1) & 0xF) == 3) {
 			item.guid = it->second.id;
 			item.typeId = it->second.typeId;
-			int trading = 0;
-			std::list<sTradeItem>* pTrade = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-			for (std::list<sTradeItem>::iterator t = pTrade->begin(); t != pTrade->end(); ++t) {
-				if (t->guid == it->second.id) {
-					trading += t->count;
-				}
-			}
+			int trading = GetNumTradingItem(it->second.id);
 			item.count = 1 - trading;
 			item.price = 0;
 
@@ -3530,20 +3502,14 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 
 			item.guid = it->second.m_serial;
 			item.typeId = it->second.m_typeId;
-			int trading = 0;
-			std::list<sTradeItem>* pTrade = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-			for (std::list<sTradeItem>::iterator t = pTrade->begin(); t != pTrade->end(); ++t) {
-				if (t->guid == it->second.m_serial) {
-					trading += t->count;
-				}
-			}
+			int trading = GetNumTradingItem(it->second.m_serial);
 			item.count = 1 - trading;
 			item.price = 0;
 
 			item.period = 0;
 			memcpy(item.stats, it->second.m_clubStatLevel, sizeof(item.stats));
 
-			for (int i = 0; i < 5; i++) {
+			for (unsigned char i = 0; i < 5; i++) {
 				for (int j = 0; j < (short)item.stats[i]; j++) {
 					IFF_STRUCT::sEnchant* pEnchant = ItemManager()->FindEnchant(((i | 0x340) << 20) | j);
 
@@ -3572,13 +3538,7 @@ void FrTradeEditDlg::SetListEnableTradingMyItem(void) {
 			if (((pCommon->m_flags0 >> 1) & 0xF) == 1 || ((pCommon->m_flags0 >> 1) & 0xF) == 3) {
 				item.guid = it->m_guid;
 				item.typeId = it->m_typeId;
-				int trading = 0;
-				std::list<sTradeItem>* pTrade = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-				for (std::list<sTradeItem>::iterator t = pTrade->begin(); t != pTrade->end(); ++t) {
-					if (t->guid == it->m_guid) {
-						trading += t->count;
-					}
-				}
+				int trading = GetNumTradingItem(it->m_guid);
 				item.count = it->m_count - trading;
 				item.price = 0;
 
@@ -3751,7 +3711,7 @@ void FrTradeEditDlg::SetTradeMyItem(sTradeItem* pItem) {
 	if (bStats) {
 		const char* statName = "";
 
-		for (int i = 0; i < 5; i++) {
+		for (unsigned char i = 0; i < 5; i++) {
 			if (base.m_value[i] == 0 && slot.m_value[i] == 0)
 				continue;
 
@@ -3932,6 +3892,8 @@ void FrTradeEditDlg::DrawPang(void) {
 
 // tradedlg.cpp:4569
 void FrTradeEditDlg::DrawItem(WPoint pt, sTradeItem* pItem, unsigned char flag) {
+	unsigned int i = 0;
+
 	if (pItem == 0) {
 		return;
 	}
@@ -3987,7 +3949,7 @@ void FrTradeEditDlg::DrawItem(WPoint pt, sTradeItem* pItem, unsigned char flag) 
 			const char* str = MakeStr("%d", count);
 			float x = pt.x + 54.0f;
 
-			for (unsigned int i = 0; i < strlen(str); i++) {
+			for (i = 0; i < strlen(str); i++) {
 				x -= m_pTitleFont->GetCharWidthA(g_view, str[i] - '0');
 			}
 
@@ -4296,6 +4258,8 @@ void FrTradeFinishEditDlg::OnTradeItemListInit(PG_MSGARG param) {
 
 // tradedlg.cpp:4985
 void FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
+	unsigned int i = 0;
+
 	FrListItem* pListItem = (FrListItem*)param;
 
 	if (pListItem == 0) {
@@ -4343,12 +4307,11 @@ void FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 		return;
 	}
 
-	unsigned long kind = item.typeId >> 26;
-	if (kind == 0x12 && (((item.typeId >> 11) & 0x7FF) == 12 || ((item.typeId >> 11) & 0x7FF) == 11)) {
+	if ((item.typeId >> 26) == 0x12 && (((item.typeId >> 11) & 0x7FF) == 12 || ((item.typeId >> 11) & 0x7FF) == 11)) {
 		return;
 	}
 
-	if (kind == 2) {
+	if ((item.typeId >> 26) == 2) {
 		IFF_STRUCT::sChar* pChar = ItemManager()->FindChar(((item.typeId >> 18) & 0xFF) | 0x04000000);
 		if (pChar != 0) {
 			const Bitmap* pCharBmp = g_pFresh->GetBitmap(MakeStr("s_%s", pChar->m_icon));
@@ -4365,7 +4328,7 @@ void FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 		float offX;
 		float offY;
 
-		switch (kind) {
+		switch (item.typeId >> 26) {
 		case 2:
 			offX = 7.0f;
 			offY = 2.0f;
@@ -4401,11 +4364,12 @@ void FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 
 		pGI->SetTextStyle(1);
 		pGI->Print(WPoint(pListItem->pos.x + 182.0f, pListItem->pos.y + 7.0f), 2, pName);
+		pGI->SetTextStyle(0);
 	} else {
 		pGI->SetTextStyle(1);
 		pGI->Print(WPoint(pListItem->pos.x + 182.0f, pListItem->pos.y + 7.0f), 2, pCommon->m_name);
+		pGI->SetTextStyle(0);
 	}
-	pGI->SetTextStyle(0);
 
 	char price[32] = { 0 };
 
@@ -4416,7 +4380,7 @@ void FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 		const char* str = MakeStr("%d", item.count);
 		float x = pListItem->pos.x + 54.0f;
 
-		for (unsigned int i = 0; i < strlen(str); i++) {
+		for (i = 0; i < strlen(str); i++) {
 			x -= m_pTitleFont->GetCharWidthA(g_view, str[i] - '0');
 		}
 
@@ -4431,7 +4395,7 @@ void FrTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 
 	DrawAbility(item, pListItem);
 
-	switch (kind) {
+	switch (item.typeId >> 26) {
 	case 2:
 	case 4:
 	case 7:
@@ -4878,9 +4842,10 @@ void SetTradeResultCode(int code, int msgId, sTradeItem* pItem) {
 		}
 	}
 	else {
-		FrForm* pResult = FrStaticCast<FrForm>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("traderesultdlg"));
+		FrForm* pResult = FrStaticCast<FrForm>(g_pFresh->GetDesktop()->FindChildByName("traderesultdlg"));
 		if (!pResult) {
-			FrTradeWarningDlg* pWarn = FrStaticCast<FrTradeWarningDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradewarningdlg"));
+			FrWnd* pFound = g_pFresh->GetDesktop()->FindChildByName("tradewarningdlg");
+			FrTradeWarningDlg* pWarn = (FrTradeWarningDlg*)(pFound != 0 ? (void*)pFound : (__rtti_obj = (void*)pFound));
 			if (!pWarn) {
 				FrTradeWarningDlg* pDlg = CreateForm<FrTradeWarningDlg>(g_pFresh->GetManager(), 0, "tradewarningdlg", 0);
 				if (pDlg) {
@@ -4896,7 +4861,7 @@ void SetTradeResultCode(int code, int msgId, sTradeItem* pItem) {
 				WSingleton<CChatMsg>::Instance()->AddChatMsg(std::string("\xBB\xF3\xC1\xA1\xC0\xCC \xB4\xDD\xC7\xFB\xBD\xC0\xB4\xCF\xB4\xD9. \xB4\xD9\xC0\xBD \xB1\xE2\xC8\xB8\xBF\xA1 \xC0\xCC\xBF\xEB\xC7\xD8\xC1\xD6\xBC\xBC\xBF\xE4."), 0xFFFF, false, false);
 				break;
 			case 4:
-				WSingleton<CChatMsg>::Instance()->AddChatMsg(std::string("\xBB\xF3\xC1\xA1\xC0\xCC \xC6\xED\xC1\xFD\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xB0\xB3\xBC\xB3 \xC8\xC4 \xC0\xCC\xBF\xEB\xC7\xD8\xC1\xD6\xBC\xBC\xBF\xE4."), 0xFFFF, false, false);
+				WSingleton<CChatMsg>::Instance()->AddChatMsg("\xBB\xF3\xC1\xA1\xC0\xCC \xC6\xED\xC1\xFD\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xB0\xB3\xBC\xB3 \xC8\xC4 \xC0\xCC\xBF\xEB\xC7\xD8\xC1\xD6\xBC\xBC\xBF\xE4.", 0xFFFF, false, false);
 				break;
 			}
 		}

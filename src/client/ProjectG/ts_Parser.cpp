@@ -528,14 +528,18 @@ bool ts_Parser::PTS_PopMacro(sTS_Macro *macro) {
 	if (result == true) {
 		std::list<sTS_Macro *>::iterator it = m_macros.begin();
 
-		if (it == m_macros.end() || *it == NULL) {
+		if (it != m_macros.end()) {
+			if (*it != NULL) {
+				*macro = **it;
+				delete *it;
+				*it = NULL;
+				m_macros.erase(it);
+			} else {
+				return false;
+			}
+		} else {
 			return false;
 		}
-
-		*macro = **it;
-		delete *it;
-		*it = NULL;
-		m_macros.erase(it);
 	}
 
 	return result;

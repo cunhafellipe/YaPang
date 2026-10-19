@@ -46,7 +46,7 @@ void CRain::Process(float fDelta) {
 
 	for (int i = 0; i < 500; i++) {
 		m_frags[i].pos += m_wind * 10.0f * fDelta;
-		m_frags[i].visible = (m_frags[i].pos - g_camera.pivot).Magnitude() < m_height || (m_frags[i].pos + m_wind - g_camera.pivot).Magnitude() < m_height ? true : false;
+		m_frags[i].visible = (m_frags[i].pos - g_camera.pivot).Magnitude() < m_height || (m_wind + m_frags[i].pos - g_camera.pivot).Magnitude() < m_height ? true : false;
 
 		for (int j = 0; j < 3; j++) {
 			if (m_frags[i].pos.p[j] > area.max.p[j]) {

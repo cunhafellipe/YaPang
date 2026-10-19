@@ -235,10 +235,8 @@ void FrDtRoomDlg::OnGameDescInit(intptr_t param) {
 	case 14: {
 		IFF_STRUCT::sMatch* pMatch = ItemManager()->FindMatch(CSharedDoc::Instance()->m_gameDesc.m_descMatchId);
 
-		if (pMatch) {
-			pName = pMatch->m_name;
-			break;
-		}
+		pName = pMatch ? pMatch->m_name : CSharedDoc::Instance()->m_gameTypeNames[CSharedDoc::Instance()->m_gameDesc.m_descGameType].name;
+		break;
 	}
 	default:
 		pName = CSharedDoc::Instance()->m_gameTypeNames[CSharedDoc::Instance()->m_gameDesc.m_descGameType].name;
@@ -259,7 +257,7 @@ void FrDtRoomDlg::OnGameDescInit(intptr_t param) {
 	} else {
 
 		unsigned long typeId = 0x28000000 | ((course > 0x7F && course != 0xFD) ? course - 0x80 : course);
-		IFF_STRUCT::sCourse* pCourse = ItemManager()->FindCourse(typeId);
+		IFF_STRUCT::sCourse* pCourse = CSharedDoc::Instance()->m_itemManager.FindCourse(typeId);
 
 		if (pCourse) {
 			sprintf(text, "\xc4\xda\xbd\xba : %s", pCourse->m_name);
@@ -735,7 +733,7 @@ void FrDtRoomDlg::OnUserListOwnerDraw(PG_MSGARG param) {
 
 
 
-	unsigned long color = (it->second.identity & 0x14) ? 0x50FFFFFF : 0xFFFFFFFF;
+	unsigned long color = ((unsigned char)it->second.identity & 0x14) ? 0x50FFFFFF : 0xFFFFFFFF;
 
 
 

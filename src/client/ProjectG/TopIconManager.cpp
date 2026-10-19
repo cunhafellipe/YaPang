@@ -135,7 +135,13 @@ void CIconManager::Destory(void) {
 	std::vector<sTopIcon*>::iterator it = m_icons.begin();
 	for (; it != m_icons.end(); ++it) {
 
+		// The original tests the iterator itself (VC7.1 vector iterators convert
+		// to a pointer); a port's iterator is a class, so it tests against end().
+#ifdef PG_PORT
 		if (it != m_icons.end()) {
+#else
+		if (it != NULL) {
+#endif
 
 			if ((*it)->m_icon)
 				m_instanceFunctions[(*it)->m_name].m_destroy((*it)->m_icon);
@@ -187,7 +193,13 @@ bool CIconManager::IsIncludedIcon(std::string name) {
 	std::vector<sTopIcon*>::iterator it = m_icons.begin();
 	for (; it != m_icons.end(); ++it) {
 
+		// The original tests the iterator itself (VC7.1 vector iterators convert
+		// to a pointer); a port's iterator is a class, so it tests against end().
+#ifdef PG_PORT
 		if (it != m_icons.end()) {
+#else
+		if (it != NULL) {
+#endif
 
 			if (strcmp((*it)->m_name.c_str(), name.c_str()) == 0)
 				return true;

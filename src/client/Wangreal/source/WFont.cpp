@@ -723,7 +723,7 @@ int WFixedFont::Load(const char* fntName) {
 
 	m_bytePerChar = (hd.fontsize * bpp + 7) / 8 * hd.fontsize + 2;
 
-	m_bAntialiased = hd.bAntialiased; m_iFontWidth = m_iFontHeight = hd.fontsize;
+	m_bAntialiased = hd.bAntialiased; m_iFontHeight = m_iFontWidth = hd.fontsize;
 
 	return 0;
 }

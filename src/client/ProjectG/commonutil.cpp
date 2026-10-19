@@ -390,7 +390,8 @@ template<> struct greater<PAKINFO> : public binary_function<PAKINFO, PAKINFO, bo
 // commonutil.cpp:604
 int __stdcall IntegrityPakCRC(std::list<PAKINFO>& pakList, const char* integratedName, std::string& errorFile) {
 	std::list<PAKINFO>::iterator it = pakList.begin();
-	SYSTEM_INFO systemInfo = { 0 };
+	SYSTEM_INFO systemInfo;
+	memset(&systemInfo, 0, sizeof(systemInfo));
 	GetSystemInfo(&systemInfo);
 	int multiProcessor = 0;
 	if (systemInfo.dwNumberOfProcessors > 1) {

@@ -208,7 +208,7 @@ void FrValEventDlg::BuildHeartCount(void) {
 }
 
 // valentineeventdlg.cpp:197
-void FrValEventDlg::DrawInDlg(const char* name, const WPoint& pt) {
+void FrValEventDlg::DrawInDlg(const char* name, PG_PORT_CONST WPoint& pt) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -226,7 +226,7 @@ void FrValEventDlg::DrawInDlg(const char* name, const WPoint& pt) {
 }
 
 // valentineeventdlg.cpp:214
-void FrValEventDlg::DrawGauge(const WPoint& pt, unsigned char count) {
+void FrValEventDlg::DrawGauge(PG_PORT_CONST WPoint& pt, unsigned char count) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
 
@@ -1238,14 +1238,13 @@ void ntHolesEventDlg::OnGaugeOwnerDraw(void) {
 
 	pGDI->DrawTexture(bmp, WRect(0.0f, 0.0f, (float)bmp->Width(), (float)bmp->Height()), WRect(x + 93.0f, m_rect.y + 289.0f, width, 8.0f), 0xFFFFFFFF, 0);
 
-	WPoint pt;
-	pt.x = m_rect.x + 427.0f;
+	float textX = m_rect.x + 427.0f;
 
-	pt.y = m_rect.y + 137.0f;
+	float textY = m_rect.y + 137.0f;
 	const char* text = MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_myStatHolesPlayed);
 	float textWidth = m_pTitleFont->GetTextWidth(g_view, text);
 
-	m_pTitleFont->Print(g_view, pt.x - textWidth * 0.5f, pt.y, text, 0, 0xFFFFFFFF, 0);
+	m_pTitleFont->Print(g_view, textX - textWidth * 0.5f, textY, text, 0, 0xFFFFFFFF, 0);
 }
 
 // valentineeventdlg.cpp:1428

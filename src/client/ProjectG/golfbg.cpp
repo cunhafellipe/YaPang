@@ -152,8 +152,7 @@ void CGolfBg::DoInitAfterLoad(void) {
 		if (!point)
 			point = GOLFDOC()->m_pPolySoup->FindPoint("\xB1\xD7\xB8\xAE\xB5\xE5");
 	}
-	WVector& center = point->m_pos;
-	SetGridCenter(center);
+	SetGridCenter(point->m_pos);
 
 	SetStartPoint(GOLFDOC()->GetHoleData().m_teePos);
 	SetHolePoint(GOLFDOC()->GetHoleData().m_cupPos);
@@ -201,7 +200,7 @@ void CGolfBg::OnLoad(void) {
 
 	if (CSharedDoc::Instance()->m_roomInfo.m_roomMode == 0xE) {
 		unsigned char i;
-		for (i = 0; i != 18; i++) {
+		for (i = 0; i < 18; i++) {
 			if (CSharedDoc::Instance()->m_holeOrder[i] == GOLFDOC()->m_currentHole) {
 				i++;
 				break;
@@ -211,7 +210,8 @@ void CGolfBg::OnLoad(void) {
 		SetCurMap(CSharedDoc::Instance()->m_holeCourse[i - 1]);
 	}
 
-	if (!GOLFDOC()->m_pPolySoup->Load(MakeStr("%s_%02d.gbin", CSharedDoc::Instance()->m_pCurCourse ? CSharedDoc::Instance()->m_pCurCourse->m_mapName : 0, GOLFDOC()->m_currentHole), false)) {
+	CGolfDoc* golfDoc = GOLFDOC();
+	if (!golfDoc->m_pPolySoup->Load(MakeStr("%s_%02d.gbin", CSharedDoc::Instance()->m_pCurCourse ? CSharedDoc::Instance()->m_pCurCourse->m_mapName : 0, golfDoc->m_currentHole), false)) {
 		g_bQuit = true;
 		return;
 	}
@@ -260,8 +260,9 @@ void CGolfBg::HandleMsg(const MsgObject& msg) {
 	}
 
 	switch (msg.m_msg) {
-	case 0x1E8:
-		if (!GOLFDOC()->m_pPolySoup->Load(MakeStr("%s_%02d.gbin", CSharedDoc::Instance()->m_pCurCourse ? CSharedDoc::Instance()->m_pCurCourse->m_mapName : 0, GOLFDOC()->m_currentHole), false)) {
+	case 0x1E8: {
+		CGolfDoc* golfDoc = GOLFDOC();
+		if (!golfDoc->m_pPolySoup->Load(MakeStr("%s_%02d.gbin", CSharedDoc::Instance()->m_pCurCourse ? CSharedDoc::Instance()->m_pCurCourse->m_mapName : 0, golfDoc->m_currentHole), false)) {
 			g_bQuit = true;
 			return;
 		}
@@ -272,6 +273,7 @@ void CGolfBg::HandleMsg(const MsgObject& msg) {
 
 		SendMsg(this, "GolfRule", 0x81, 0, 0, 0, 0);
 		break;
+	}
 
 	case 0x142:
 		SetRenderWeather((unsigned char)msg.m_param1);
@@ -330,7 +332,7 @@ void CGolfBg::HandleMsg(const MsgObject& msg) {
 		tee.y = GetPVS().GetGroundPoint(tee, false, 0, false).y + 100.0f;
 		WVector first; first = list[0];
 		first.y = GetPVS().GetGroundPoint(first, true, 0, true).y + 100.0f;
-		WVector dir = tee - first; WVector side = tee + 250.0f * WVector(dir).Normalize();
+		WVector dir; dir = tee - first; WVector side; side = tee + WVector(dir).Normalize() * 250.0f;
 
 		pOut->push_back((side + tee) * 0.5f);
 		pOut->push_back(tee);
@@ -351,11 +353,11 @@ void CGolfBg::HandleMsg(const MsgObject& msg) {
 
 		float up = rand() % 2 ? 1.0f : -1.0f;
 
-		WVector across = WCrossProduct(WVector(0.0f, up, 0.0f), list.back() - list[i - 1]);
+		WVector across; across = WCrossProduct(WVector(0.0f, up, 0.0f), list.back() - list[i - 1]);
 		across.Normalize();
 		across *= 30.0f;
 
-		WVector last = list.back() + across;
+		WVector last; last = list.back() + across;
 		last.y = GetPVS().GetGroundPoint(last, false, 0, false).y + 100.0f;
 		WVector prev = list[i - 1];
 		prev.y = GetPVS().GetGroundPoint(prev, true, 0, true).y + 100.0f;
@@ -384,7 +386,7 @@ void CGolfBg::HandleMsg(const MsgObject& msg) {
 
 		point = WVector(dir).Normalize() * 250.0f;
 		side = point + tee;
-		across = tee + WCrossProduct(point, WVector(0.0f, rand() % 2 ? 1.0f : -1.0f, 0.0f));
+		across = tee + WCrossProduct(WVector(0.0f, rand() % 2 ? 1.0f : -1.0f, 0.0f), point);
 
 		pOut->push_back((across + first) * 0.5f);
 		pOut->push_back(across);

@@ -406,19 +406,18 @@ void CGhostHandler::OnGhostPacket(WReceivedPacket &packet) {
 
 			if (count == 0) {
 				OpenNotifyDlg(0);
-				break;
-			}
+			} else {
+				std::list<GHOST_GAME_BRIEF> games;
+				std::string nick;
+				for (int i = 0; i < count; i++) {
+					// ghosthandler.cpp:380
+					int numbers[5] = { 0 }; for (int j = 0; j < 5; j++) { numbers[j] = packet.Decode4(); } packet.DecodeStr(nick); int hasData = packet.Decode4(); GHOST_GAME_BRIEF brief = { uid, numbers[0], { numbers[1], numbers[2], numbers[3], numbers[4] }, hasData };
+					games.push_back(brief);
+				}
 
-			std::list<GHOST_GAME_BRIEF> games;
-			std::string nick;
-			for (int i = 0; i < count; i++) {
-				// ghosthandler.cpp:380
-				int numbers[5] = { 0 }; for (int j = 0; j < 5; j++) { numbers[j] = packet.Decode4(); } packet.DecodeStr(nick); int hasData = packet.Decode4(); GHOST_GAME_BRIEF brief = { uid, numbers[0], { numbers[1], numbers[2], numbers[3], numbers[4] }, hasData };
-				games.push_back(brief);
+				// ghosthandler.cpp:384
+				OpenGhostGameDlg(uid, nick, games, (FRESH_RESULT_CALLBACK)&CGhostHandler::OnResultGhostGameDlg);
 			}
-
-			// ghosthandler.cpp:384
-			OpenGhostGameDlg(uid, nick, games, (FRESH_RESULT_CALLBACK)&CGhostHandler::OnResultGhostGameDlg);
 			break;
 		}
 

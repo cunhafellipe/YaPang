@@ -96,9 +96,9 @@ ntAvatarChatMain::ntAvatarChatMain(void) {
 	m_decalTime = 0.0f;
 	m_cameraOffset = WVector::ZERO;
 	m_cameraAngle = WVector(-0.48869219f, 0.0f, 0.0f);
-	m_cameraDistance = 28.8f;
-	m_cameraDistanceGoal = 28.8f;
-	m_cameraClipDistance = 28.8f;
+	m_cameraDistance = 28.800001f;
+	m_cameraDistanceGoal = 28.800001f;
+	m_cameraClipDistance = 28.800001f;
 	m_cameraHeight = 4.6f;
 	m_cameraHeightGoal = 4.6f;
 	m_idleTime = 0.0f;
@@ -177,14 +177,13 @@ void ntAvatarChatMain::OnLoad(void) {
 		WPolySoup::sCamera *camera = GOLFDOC()->m_pPolySoup->FindCamera("DefaultCamera");
 		if (camera) {
 			g_camera = camera->m_matrix;
-			g_view->SetFOV(camera->m_fov * 0.017453292f);
+			g_view->SetFOV(camera->m_fov * g_DEGTORAD);
 		}
 
 		g_audio->StopBGM(false);
-		// sCourse 0xB8 is the course's ambient sound (char[0x28] after m_mapName); not yet a member of sCourse
-		if (CSharedDoc::Instance()->m_pCurCourse && CSharedDoc::Instance()->m_pCurCourse->m_mapName[0x28]) {
+		if (GetCurMapProp() && GetCurMapProp()->m_ambientSound[0]) {
 			g_audio->StopSfx("AmbientSnd");
-			g_audio->PlaySfx(CSharedDoc::Instance()->m_pCurCourse->m_ambientSound, 0, 1, "AmbientSnd", 0, 0.5f, 200.0f);
+			g_audio->PlaySfx(GetCurMapProp()->m_ambientSound, 0, 1, "AmbientSnd", 0, 0.5f, 200.0f);
 		}
 
 		CSceneManager::Instance()->SetWeather(0, false);
@@ -198,14 +197,13 @@ void ntAvatarChatMain::OnLoad(void) {
 		WPolySoup::sCamera *camera = GOLFDOC()->m_pPolySoup->FindCamera("DefaultCamera");
 		if (camera) {
 			g_camera = camera->m_matrix;
-			g_view->SetFOV(camera->m_fov * 0.017453292f);
+			g_view->SetFOV(camera->m_fov * g_DEGTORAD);
 		}
 
 		g_audio->StopBGM(false);
-		// sCourse 0xB8 is the course's ambient sound (char[0x28] after m_mapName); not yet a member of sCourse
-		if (CSharedDoc::Instance()->m_pCurCourse && CSharedDoc::Instance()->m_pCurCourse->m_mapName[0x28]) {
+		if (GetCurMapProp() && GetCurMapProp()->m_ambientSound[0]) {
 			g_audio->StopSfx("AmbientSnd");
-			g_audio->PlaySfx(CSharedDoc::Instance()->m_pCurCourse->m_ambientSound, 0, 1, "AmbientSnd", 0, 0.5f, 200.0f);
+			g_audio->PlaySfx(GetCurMapProp()->m_ambientSound, 0, 1, "AmbientSnd", 0, 0.5f, 200.0f);
 		}
 
 		CSceneManager::Instance()->SetWeather(COption::Instance()->dGetWeather(), false);
@@ -319,8 +317,9 @@ void ntAvatarChatMain::OnLoad(void) {
 
 	m_shadowTexture = g_resrcmng->LoadTexture("[shadow.jpg", 0, 0, 0);
 
-	// TODO: avatar_main.cpp:499 toggles CSceneManager::m_overlapCamera (0x128), private in scenemanager.h:
-	// CSceneManager::Instance()->m_overlapCamera = !CSceneManager::Instance()->m_overlapCamera;
+	// The original toggles CSceneManager::m_overlapCamera (0x128) directly (no ToggleTransparent
+	// copy in this unit; ntAvatarChatMain is presumably a friend of CSceneManager).
+	CSceneManager::Instance()->ToggleTransparent();
 
 	if (CMessengerInfo::Instance()->m_myStatus != 3)
 		CMessengerInfo::Instance()->SetMyStatus((MSN::eStatusType)0);
@@ -470,8 +469,7 @@ void ntAvatarChatMain::OnRestorePreserved(void) {
 
 	ntAvatarManager::Instance()->ResetAvatarPositionAngle();
 
-	// sCourse 0xB8 is the course's ambient sound (char[0x28] after m_mapName); not yet a member of sCourse
-	if (CSharedDoc::Instance()->m_pCurCourse && CSharedDoc::Instance()->m_pCurCourse->m_mapName[0x28]) {
+	if (CSharedDoc::Instance()->m_pCurCourse && CSharedDoc::Instance()->m_pCurCourse->m_ambientSound[0]) {
 		g_audio->PlaySfx(CSharedDoc::Instance()->m_pCurCourse->m_ambientSound, 0, 1, "AmbientSnd", 0, 0.5f, 200.0f);
 	}
 
@@ -565,10 +563,10 @@ void ntAvatarChatMain::ToggleTopViewMode(void) {
 		}
 		m_topViewHeight = 256.0f;
 
-		*((bool *)CSceneManager::Instance() + 0xB8) = false; // TODO: CSceneManager::m_useFog (0xB8), private in scenemanager.h; becomes CSceneManager::Instance()->m_useFog once it is public
+		CSceneManager::Instance()->SetFog(false);
 	} else {
 		GOLFDOC()->GameMode() = 0;
-		*((bool *)CSceneManager::Instance() + 0xB8) = true; // TODO: CSceneManager::m_useFog (0xB8), private in scenemanager.h; becomes CSceneManager::Instance()->m_useFog once it is public
+		CSceneManager::Instance()->SetFog(true);
 	}
 }
 
@@ -660,7 +658,7 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 							}
 						}
 					} else {
-						WVector target = GetPVS().GetRayIntersection(rayFrom, rayDir);
+						WVector target = WVector(GetPVS().GetRayIntersection(rayFrom, rayDir));
 
 						if (!ntAvatarManager::Instance()->m_pMyAvatar->IsHoldState()) {
 							int groundIndex;
@@ -1038,7 +1036,8 @@ void ntAvatarChatMain::ProcessCamera(float elapsed) {
 			}
 		}
 
-		WVector pos = ntAvatarManager::Instance()->m_pMyAvatar->m_position;
+		const WVector &avatarPos = ntAvatarManager::Instance()->m_pMyAvatar->m_position;
+		WVector pos = avatarPos;
 		pos.y += m_cameraHeight;
 
 		// Pull the camera in when the ground or an object is between it and
@@ -1059,7 +1058,8 @@ void ntAvatarChatMain::ProcessCamera(float elapsed) {
 		}
 
 		dir.Normalize();
-		WVector eye = pos + dir * m_cameraClipDistance;
+		WVector eye;
+		eye = pos + dir * m_cameraClipDistance;
 
 		WVector ground = GetPVS().GetGroundPoint(eye, false, 0, false);
 		float minY = ground.y + 3.5f;
@@ -1241,7 +1241,7 @@ void ntAvatarChatMain::HandleMsg(const MsgObject &msg) {
 
 			static_cast<ntAvatarChatTask *>(GetTask())->AddAvatarBurden(ntAvatarBurden(pSlotInfo->m_ruleUID, pSlotInfo->m_uid, *pCharInfo, 0));
 
-			if (pSlotInfo->m_uid == CSharedDoc::Instance()->GetPangyaUserInfo().guid) {
+			if (CSharedDoc::Instance()->GetPangyaUserInfo().guid == pSlotInfo->m_uid) {
 				// The local player: place it at a random spot around the start point.
 				ntAvatarManager::Instance()->m_pMyAvatar = pAvatar;
 				CSharedDoc::Instance()->m_myCharacterId = pCharInfo->id;
@@ -1261,8 +1261,10 @@ void ntAvatarChatMain::HandleMsg(const MsgObject &msg) {
 				bool showFx = true;
 				if (IsLocalContent((localContentType_t)10)) {
 					std::map<unsigned long, sBriefUserInfo>::const_iterator it = CSharedDoc::Instance()->m_userMap.find(pSlotInfo->m_uid);
-					if (sBriefUserInfo(it->second).identityBits.administrator && !sBriefUserInfo(it->second).invisible) {
-						showFx = false;
+					if (sBriefUserInfo(it->second).identityBits.administrator) {
+						if (!sBriefUserInfo(it->second).invisible) {
+							showFx = false;
+						}
 					}
 				}
 				if (showFx) {
@@ -1309,7 +1311,7 @@ void ntAvatarChatMain::HandleMsg(const MsgObject &msg) {
 		}
 
 		if (ntAvatarManager::Instance()->m_pMyAvatar) {
-			if (strcmp(ntAvatarManager::Instance()->m_pMyAvatar->GetIDName(), pAvatar->GetIDName()) == 0) {
+			if (strcmp(pAvatar->GetIDName(), ntAvatarManager::Instance()->m_pMyAvatar->GetIDName()) == 0) {
 				CSharedDoc::Instance()->SendTradeCloseShop();
 				ntAvatarManager::Instance()->m_pMyAvatar->SubState(0x7E);
 				ntAvatarManager::Instance()->m_pMyAvatar = 0;
@@ -1565,7 +1567,7 @@ void ntAvatarChatMain::HandleMsg(const MsgObject &msg) {
 		case 4: {
 			// Warp: param3/param4 the x/z position, param5 the angle.
 			WVector pos(*(const float *)msg.m_param3, 0.0f, *(const float *)msg.m_param4);
-			pos = m_pPVS->GetGroundPoint(pos, false, 0, false);
+			pos = GetPVS().GetGroundPoint(pos, false, 0, false);
 			pAvatar->SetPosition(pos);
 			pAvatar->SetAngle(*(const float *)msg.m_param5);
 
@@ -1619,15 +1621,14 @@ void ntAvatarChatMain::HandleMsg(const MsgObject &msg) {
 	}
 
 	case 0x3D: {
-		// avatar_main.cpp:2252: set or clear bit 2 of a room player's attribute
-		// (param2 == 1 sets it; the original stores a one-bit field there,
-		// globalgamedefine.h names no field for bits 0-2 yet).
+		// avatar_main.cpp:2252: set or clear a room player's dive bit
+		// (param2 == 1 sets it).
 		std::list<sSlotInfo> &players = CSharedDoc::Instance()->m_roomPlayerList;
 		std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), msg.m_param1);
 		if (it == players.end()) {
 			break;
 		}
-		it->m_attribute = (unsigned char)((it->m_attribute & ~4) | ((msg.m_param2 == 1) << 2));
+		it->m_attributeBits.dive = (msg.m_param2 == 1);
 		break;
 	}
 
@@ -1903,19 +1904,17 @@ void ntAvatarChatMain::SetLocalPVS(CQuadTree &pvs) {
 
 // avatar_main.cpp:2637
 void ntAvatarChatMain::StartSpEffect(ntAvatar *pAvatar, eSPAVILITYTYPE type) {
-	CFxSequence *pSeq;
+	CFxSequence *pSeq = NULL;
 	bool bOn = pAvatar->GetMySpItem(type).getflag();
 
 	switch (type) {
 	case 0:
 		if (bOn) {
 			pSeq = CFx::Instance()->OpenSequence("change_up-big.seq", true);
+		} else if (pAvatar->GetMySpItem((eSPAVILITYTYPE)1).getflag()) {
+			pSeq = CFx::Instance()->OpenSequence("change_up-middle.seq", true);
 		} else {
-			if (pAvatar->GetMySpItem((eSPAVILITYTYPE)1).getflag()) {
-				pSeq = CFx::Instance()->OpenSequence("change_up-middle.seq", true);
-			} else {
-				pSeq = CFx::Instance()->OpenSequence("change_up-small.seq", true);
-			}
+			pSeq = CFx::Instance()->OpenSequence("change_up-small.seq", true);
 		}
 		break;
 
@@ -1927,10 +1926,10 @@ void ntAvatarChatMain::StartSpEffect(ntAvatar *pAvatar, eSPAVILITYTYPE type) {
 				pSeq = CFx::Instance()->OpenSequence("change_up-middle.seq", true);
 			}
 		} else {
-			if (pAvatar->GetMySpItem((eSPAVILITYTYPE)0).getflag()) {
-				pSeq = CFx::Instance()->OpenSequence("change_up-big.seq", true);
-			} else {
+			if (!pAvatar->GetMySpItem((eSPAVILITYTYPE)0).getflag()) {
 				pSeq = CFx::Instance()->OpenSequence("change_up-small.seq", true);
+			} else {
+				pSeq = CFx::Instance()->OpenSequence("change_up-big.seq", true);
 			}
 		}
 		break;
@@ -1962,7 +1961,7 @@ void ntAvatarChatMain::StartSpEffect(ntAvatar *pAvatar, eSPAVILITYTYPE type) {
 	}
 
 	default:
-		return;
+		break;
 	}
 
 	if (pSeq) {
@@ -1998,7 +1997,7 @@ bool ntAvatarChatMain::SpCommand(const char *command) {
 				if (timeGetTime() - s_lastTime >= 1000) {
 					s_lastTime = timeGetTime();
 				} else {
-					CChatMsg::Instance()->AddChatMsg(std::string("\xc1\xf6\xb1\xdd\xc0\xba \xbb\xe7\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9"), 0xFFFF7878, true, false);
+					CChatMsg::Instance()->AddChatMsg("\xc1\xf6\xb1\xdd\xc0\xba \xbb\xe7\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9", 0xFFFF7878, true, false);
 					return true;
 				}
 			}
@@ -2006,7 +2005,7 @@ bool ntAvatarChatMain::SpCommand(const char *command) {
 			if (CanUseSPItem((eSPAVILITYTYPE)i)) {
 				ntAvatarManager::Instance()->m_pMyAvatar->UseSPItem((eSPAVILITYTYPE)i);
 			} else {
-				CChatMsg::Instance()->AddChatMsg(std::string("\xc7\xd8\xb4\xe7 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xc2\xf8\xbf\xeb\xc7\xcf\xc1\xf6 \xbe\xca\xbe\xd2\xbd\xc0\xb4\xcf\xb4\xd9"), 0xFFFF7878, true, false);
+				CChatMsg::Instance()->AddChatMsg("\xc7\xd8\xb4\xe7 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xc2\xf8\xbf\xeb\xc7\xcf\xc1\xf6 \xbe\xca\xbe\xd2\xbd\xc0\xb4\xcf\xb4\xd9", 0xFFFF7878, true, false);
 			}
 			break;
 		}

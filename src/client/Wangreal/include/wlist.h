@@ -124,14 +124,14 @@ T WList<T>::Next(void *&pos) const {
 
 	if (pos != NULL) {
 		listinfo *info = (listinfo *)pos;
-		if (info->next == m_list) {
+		if ((info = info->next) == m_list) {
 
 			pos = NULL;
 		} else {
 
 
-			pos = info->next;
-			return info->next->item;
+			pos = info;
+			return info->item;
 		}
 	}
 	return NULL;
@@ -157,8 +157,8 @@ T WList<T>::Prev(void *&pos) const {
 		} else {
 
 
-			pos = info->prev;
-			return info->prev->item;
+			pos = info = info->prev;
+			return info->item;
 		}
 	}
 	return NULL;
@@ -197,7 +197,7 @@ T WList<T>::Prev() {
 	if (m_surf != NULL) {
 
 		T item = m_surf->item;
-		m_surf = (m_surf != m_list) ? m_surf->prev : NULL;
+		m_surf = (m_surf == m_list) ? NULL : m_surf->prev;
 		return item;
 	}
 
@@ -394,7 +394,7 @@ typename WList<T>::listinfo *WList<T>::Link(listinfo *head, listinfo *item) {
 
 	item->next = head;
 	item->prev = head->prev;
-	head->prev = item;
+	item->next->prev = item;
 	item->prev->next = item;
 
 	return head;

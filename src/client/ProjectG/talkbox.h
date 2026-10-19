@@ -6,6 +6,7 @@
 
 #include "defines.h"
 #include "padding.h"
+#include "client/Wangreal/include/wtypes.h"
 
 class WView;
 class WFont;
@@ -41,8 +42,7 @@ protected:
 	int m_lineCount;            // 0x14
 	float m_transparency;       // 0x18
 	float m_remainTime;         // 0x1c
-	float m_boxX;               // 0x20
-	float m_boxY;               // 0x24
+	WPoint m_boxPos;            // 0x20, top left of the last drawn box
 	char m_text[0x200];         // 0x28
 	unsigned char m_maxLineLength; // 0x228
 	PADDING(0x229, 0x22C);
@@ -57,8 +57,7 @@ BEGIN_LAYOUT_CHECK(CTalkBox)
 	CHECK_FIELD(CTalkBox, m_lineCount, 0x14);
 	CHECK_FIELD(CTalkBox, m_transparency, 0x18);
 	CHECK_FIELD(CTalkBox, m_remainTime, 0x1c);
-	CHECK_FIELD(CTalkBox, m_boxX, 0x20);
-	CHECK_FIELD(CTalkBox, m_boxY, 0x24);
+	CHECK_FIELD(CTalkBox, m_boxPos, 0x20);
 	CHECK_FIELD(CTalkBox, m_text, 0x28);
 	CHECK_FIELD(CTalkBox, m_maxLineLength, 0x228);
 END_LAYOUT_CHECK

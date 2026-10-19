@@ -3,6 +3,7 @@
 #define PG_CLIENT_PROJECTG_SCENEMANAGER_H
 
 #include <string.h>
+#include <bitset>
 #include <list>
 
 #include "defines.h"
@@ -243,7 +244,11 @@ private:
 	bool m_overlapCamera;                  // 0x128, OverlapCamera fades elements between the camera and the target
 	bool m_noOverlapCamera;                // 0x129, OverlapCamera keeps each element's own alpha (ToogleNoOverlapCamera)
 	UNKNOWN(0x12A, 0x12C);
-	unsigned long m_debugDraw;             // 0x12C, DrawDebugLine: bit 0 AABB, bit 1 OBBs, bit 2 sphere
+	// 0x12C, a std::bitset (tested as mov/shr/test 1: docs/tough_problems/022);
+	// DrawPuppet: bit 0 AABB, bit 1 OBBs, bit 2 sphere; bit 3 imposter quads;
+	// DrawDebugLine: bit 4 lowest plane, bit 5 highest plane. 32 bits, since
+	// "debugline" stores the whole word unmasked.
+	std::bitset<32> m_debugDraw;
 };
 BEGIN_LAYOUT_CHECK(CSceneManager)
 	CHECK_FIELD(CSceneManager, m_beachList, 0x28);

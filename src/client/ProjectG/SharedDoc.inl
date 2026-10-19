@@ -12,10 +12,7 @@ const char *GetGameTypeName(unsigned char gameType) {
 	return WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[gameType].name;
 }
 
-// shareddoc.inl:229
-void SetHoles(unsigned char holes) {
-	WSingleton<CSharedDoc>::Instance()->m_holes = holes;
-}
+// shareddoc.inl:229 SetHoles: defined in SharedDoc.h (SHAREDDOC_INLINE).
 
 // shareddoc.inl:293 SetWeather: defined in SharedDoc.h (SHAREDDOC_INLINE).
 

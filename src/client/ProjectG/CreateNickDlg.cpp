@@ -192,7 +192,7 @@ void FrCreateNickDlg::OnOKBtnUp(void) {
 	}
 
 	WSendPacket packet(LC_CHANGE_NICK_REQ);
-	packet.EncodeStr(std::string(m_pEditNick->GetLine(1, false)));
+	packet.EncodeStr(m_pEditNick->GetLine(1, false));
 	packet.Send(SEND_TO_LOGIN);
 
 	AfxGetTask()->GetActor("Lobby") << MsgObject(0, 1, 0, 0, 0, 0, 0);
@@ -202,7 +202,7 @@ void FrCreateNickDlg::OnOKBtnUp(void) {
 void FrCreateNickDlg::OnCheckBtnUp(void) {
 	if (CheckNickByClient()) {
 		WSendPacket packet(LC_CHECK_NICK_REQ);
-		packet.EncodeStr(std::string(m_pEditNick->GetLine(1, false)));
+		packet.EncodeStr(m_pEditNick->GetLine(1, false));
 		packet.Send(SEND_TO_LOGIN);
 
 		AfxGetTask()->GetActor("Lobby") << MsgObject(0, 1, 0, 0, 0, 0, 0);

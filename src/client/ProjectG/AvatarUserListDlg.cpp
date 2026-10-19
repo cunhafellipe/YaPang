@@ -127,7 +127,7 @@ void FrAvatarUserListDlg::OnUserListOwnerDraw(PG_MSGARG param) {
 				pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 50.0f - float2int(pLevel->Width() * 0.5f), pItem->pos.y + 13.0f - float2int(pLevel->Height() * 0.5f), (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
 			}
 
-			if (pSlot->m_guildUID && !(pSlot->m_identity & 0x14)) {
+			if (pSlot->m_guildUID && !pSlot->IsIdentity(0x14)) {
 				const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pSlot->m_emblemName);
 
 				if (pEmblem) {
@@ -136,7 +136,7 @@ void FrAvatarUserListDlg::OnUserListOwnerDraw(PG_MSGARG param) {
 			}
 
 			// administrators and observers are drawn half transparent
-			unsigned long color = pSlot->IsIdentity(0x14) ? 0x80FFFFFF : 0xFFFFFFFF;
+			unsigned long color = ((unsigned char)pSlot->m_identity & 0x14) ? 0x80FFFFFF : 0xFFFFFFFF;
 
 			if (pItem->underCursor) {
 				pGDI->SetTextColor(0xFFFFFFFF, 0xFF808080);

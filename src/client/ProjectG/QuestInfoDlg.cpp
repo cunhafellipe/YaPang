@@ -167,6 +167,7 @@ void FrQuestInfoDlg::OnRewardItemListInit(intptr_t param) {
 
 // questinfodlg.cpp:115
 void FrQuestInfoDlg::OnRewardItemListOwnerDraw(PG_MSGARG param) {
+	unsigned int i = 0;
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem) {
 
@@ -262,7 +263,7 @@ void FrQuestInfoDlg::OnRewardItemListOwnerDraw(PG_MSGARG param) {
 				char* text = MakeStr("%d", count);
 				float x = pItem->pos.x + 70.0f;
 
-				for (unsigned int i = 0; i < strlen(text); i++) {
+				for (i = 0; i < strlen(text); i++) {
 					x -= m_pTitleFont->GetCharWidthA(g_view, text[i] - '0');
 				}
 
@@ -401,6 +402,7 @@ void FrQuestGift::OnGiftListInit(intptr_t param) {
 
 // questinfodlg.cpp:338
 void FrQuestGift::OnGiftListOwnerDraw(PG_MSGARG param) {
+	unsigned int i = 0;
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem) {
 
@@ -518,7 +520,7 @@ void FrQuestGift::OnGiftListOwnerDraw(PG_MSGARG param) {
 						char* text = MakeStr("%d", count);
 						float x = pItem->pos.x + 70.0f;
 
-						for (unsigned int i = 0; i < strlen(text); i++) {
+						for (i = 0; i < strlen(text); i++) {
 							x -= m_pTitleFont->GetCharWidthA(g_view, text[i] - '0');
 						}
 

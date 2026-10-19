@@ -43,6 +43,11 @@ void CClock::OnInit(void) {
 	Reset();
 }
 
+// Nameless per-unit rdata constant: degrees to radians.
+extern "C" {
+static const float data_9ed94c = 0.017453292f;
+}
+
 // clock.cpp:32
 void CClock::OnProcess(float elapsed) {
 	if (GOLFDOC()->m_pause || GOLFDOC()->m_clockStopped)
@@ -72,14 +77,12 @@ void CClock::OnProcess(float elapsed) {
 			}
 		}
 	} else if (m_bTicking && GetShotTimeLimit()) {
-		CGolfDoc *golfDoc = GOLFDOC();
-		unsigned long elapsedMs = (unsigned long)(elapsed * 1000.0f);
-		if (golfDoc->m_remainShotTime > elapsedMs)
-			golfDoc->m_remainShotTime -= elapsedMs;
+		if (GOLFDOC()->m_remainShotTime > (unsigned long)(elapsed * 1000.0f))
+			GOLFDOC()->m_remainShotTime -= (unsigned long)(elapsed * 1000.0f);
 		else
-			golfDoc->m_remainShotTime = 0;
+			GOLFDOC()->m_remainShotTime = 0;
 
-		m_angle = ((1.0f - (float)GOLFDOC()->m_remainShotTime / (float)GetShotTimeLimit()) * 278.0f + 12.0f) * 0.017453292f;
+		m_angle = ((1.0f - (float)GOLFDOC()->m_remainShotTime / (float)GetShotTimeLimit()) * 278.0f + 12.0f) * data_9ed94c;
 
 		if (GOLFDOC()->m_remainShotTime < 10000) {
 			if (!GOLFDOC()->m_clockHold && !g_audio->IsPlaying(CLOCK_TICK_SFX))

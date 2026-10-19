@@ -39,9 +39,9 @@ CCardSlot::~CCardSlot(void) {
 
 // ccardbook.cpp:45
 void CCardSlot::SetCard(unsigned long typeId) {
-	m_pCards = NULL;
-
 	if (typeId != 0) {
+		m_pCards = NULL;
+
 		for (std::list<sCards>::iterator it = CSharedDoc::Instance()->m_myCardList.begin(); it != CSharedDoc::Instance()->m_myCardList.end(); ++it) {
 			m_pCardInfo = ItemManager()->FindCard(typeId);
 			m_pCommonItem = ItemManager()->FindCommonItem(typeId);
@@ -60,6 +60,7 @@ void CCardSlot::SetCard(unsigned long typeId) {
 	} else {
 		m_pCardInfo = NULL;
 		m_pCommonItem = NULL;
+		m_pCards = NULL;
 	}
 
 	if (m_pButton != NULL && typeId != 0) {
@@ -221,8 +222,8 @@ bool CCardSlot::OnItemAttachCardDlgResult(int result, FrForm* pForm) {
 	}
 
 	if (ItemManager()->IsPartAttachCard(pDlg->m_cardTypeId, pDlg->m_itemTypeId, pDlg->m_selectedSlot)) {
-		request.cardId = pDlg->m_cardId;
 		request.cardTypeId = pDlg->m_cardTypeId;
+		request.cardId = pDlg->m_cardId;
 		request.itemTypeId = pDlg->m_itemTypeId;
 		request.itemId = pDlg->m_itemId;
 		request.slot = pDlg->m_selectedSlot;
@@ -601,7 +602,7 @@ void CCardPage::PageSeparate(std::vector<unsigned long>*& rpList, unsigned char 
 	unsigned long slot = 0;
 	unsigned long pageCount;
 
-	for (std::map<unsigned int, IFF_STRUCT::sCard>::const_iterator it = ItemManager()->m_cardMap.begin(); it != ItemManager()->m_cardMap.end(); it++) {
+	for (std::map<unsigned int, IFF_STRUCT::sCard>::iterator it = ItemManager()->m_cardMap.begin(); it != ItemManager()->m_cardMap.end(); it++) {
 		IFF_STRUCT::sCard card = it->second;
 		IFF_STRUCT::sCard* pCard = ItemManager()->FindCard(it->first);
 

@@ -170,8 +170,11 @@ void FrSetItemDlg::OnComponentOwnerDraw(intptr_t param) {
 	if (pBitmap) {
 		float x = pGDI->GetTextExtend("\xB7\xB9    \xBA\xA7:") + pItem->pos.x;
 
-		WRect rect(x + 102.0f, pItem->pos.y + 31.0f, (float)pBitmap->Width(),
-			(float)pBitmap->Height());
+		WRect rect;
+		rect.x = x + 102.0f;
+		rect.y = pItem->pos.y + 31.0f;
+		rect.w = (float)pBitmap->Width();
+		rect.h = (float)pBitmap->Height();
 		pGDI->DrawTexture(pBitmap, rect, 0xFFFFFFFF, 0);
 
 		pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xB7\xB9    \xBA\xA7:");

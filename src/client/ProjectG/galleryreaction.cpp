@@ -38,23 +38,23 @@ void CGallery::OnProcess(float dt) {
 
 // galleryreaction.cpp:32
 void CGallery::SetSound(const char *name, float delay) {
-	int gameState = GOLFDOC()->m_gameState;
-	if (gameState >= 15 || gameState == 8) {
-		if (strcmp(m_soundName, name) == 0) {
-			if (m_soundDelay > 0.0f) {
-				return;
-			}
-			m_soundDelay = delay;
+	if (GOLFDOC()->m_gameState < 15 && GOLFDOC()->m_gameState != 8)
+		return;
+
+	if (strcmp(m_soundName, name) == 0) {
+		if (m_soundDelay > 0.0f)
+			return;
+
+		m_soundDelay = delay;
+	} else {
+		if (m_soundName[0] != '\0') {
+			g_audio->StopSfx(m_soundName);
 		}
-		else {
-			if (m_soundName[0] != '\0') {
-				g_audio->StopSfx(m_soundName);
-			}
-			m_soundDelay = delay;
-			strcpy(m_soundName, name);
-		}
-		g_audio->PlaySfx(m_soundName, 0, 0, m_soundName, 0, 0.5f, 200.0f);
+		m_soundDelay = delay;
+		strcpy(m_soundName, name);
 	}
+
+	g_audio->PlaySfx(m_soundName, 0, 0, m_soundName, 0, 0.5f, 200.0f);
 }
 
 // galleryreaction.cpp:58

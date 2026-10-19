@@ -121,7 +121,7 @@ void CWind::CheckSpecialWind(void) {
 		m_specialIntensity = (float)(((&CSharedDoc::Instance()->m_holeRandom[0])[GOLFDOC()->m_currentHole - 1] & 3) + 6);
 		m_fxMatrix.Reset();
 		m_fxMatrix.Rotate(angles);
-		m_fxMatrix.pivot = (area->m_aabb.max + area->m_aabb.min) * 0.5f;
+		m_fxMatrix.pivot = (area->m_aabb.min + area->m_aabb.max) * 0.5f;
 		m_fxOffset.Reset();
 		m_specialWind = m_specialIntensity * RotMat(m_specialDirection, 1).xa;
 	} else {
@@ -288,7 +288,7 @@ void CWind::SetIntensity(float intensity) {
 				m_specialIntensity = intensity;
 				m_fxMatrix.Reset();
 				m_fxMatrix.Rotate(angles);
-				m_fxMatrix.pivot = (area->m_aabb.max + area->m_aabb.min) * 0.5f;
+				m_fxMatrix.pivot = (area->m_aabb.min + area->m_aabb.max) * 0.5f;
 				m_fxOffset.Reset();
 				m_specialWind = m_specialIntensity * RotMat(m_specialDirection, 1).xa;
 			}
@@ -321,7 +321,7 @@ void CWind::SetDirection(float direction) {
 				m_specialDirection = direction;
 				m_fxMatrix.Reset();
 				m_fxMatrix.Rotate(angles);
-				m_fxMatrix.pivot = (area->m_aabb.max + area->m_aabb.min) * 0.5f;
+				m_fxMatrix.pivot = (area->m_aabb.min + area->m_aabb.max) * 0.5f;
 				m_fxOffset.Reset();
 				m_specialWind = m_specialIntensity * RotMat(angles.y, 1).xa;
 			}
@@ -543,7 +543,7 @@ WVector CWind::GetWind(const WVector& pos) {
 	}
 
 	if (IsLocalContent((localContentType_t)0x51) && CSharedDoc::Instance()->m_gameMode == 1) {
-		float intensity = wind.Magnitude();
+		float intensity = sqrtf(WDotProduct(wind, wind));
 		intensity = intensity - CCardManager::Instance()->GetWindPowerDown();
 		if (intensity < 1.0f)
 			intensity = 1.0f;

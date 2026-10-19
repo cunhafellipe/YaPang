@@ -67,7 +67,7 @@ public:
 private:
 	static sFRESH_ENTRY _MsgEntries[];
 
-public:
+PG_PROTECTED:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP *GetMessageMap(void) const;
 
@@ -246,20 +246,20 @@ public:
 private:
 	CRealMyRoom_EnterSetting *m_rmrSettingDlg;    // 0x1C, cleared by OnRMR_ResultSetting
 
-public:
+PG_PROTECTED:
 	FrButton *m_barButton[0x15]; // 0x20, indexed by eBarButton (10: the special card button)
 
 	// 0x74: [0] the over bar's group box (OnOverBar_Init), [1] the under
 	// tab (OnUnderTab_Init), [2] the under bar (OnUnderBarInit).
 	FrGroupBox *m_barFrame[3];
 
-public:
+PG_PROTECTED:
 	FrButton *m_underBar;       // 0x80, cleared by InitUnderBar; blinks while the under tab is shown
 
 private:
 	FrWnd *m_underTab;          // 0x84, cleared by InitUnderBar
 
-public:
+PG_PROTECTED:
 	FrButton *m_oneLineReqBtn;  // 0x88, OnOverBar_OneLineReqBtnInit
 
 private:
@@ -267,13 +267,13 @@ private:
 	FrArea *m_overBarArea[3];   // 0x90, OnOverBar_Bar1Init..Bar3Init
 	FrArea *m_overBarFrame[3];  // 0x9C, OnOverBar_Frame1Init..Frame3Init (moved left by 140 below 800 wide)
 
-public:
+PG_PROTECTED:
 	FrArea *m_titleArea;        // 0xA8, the over bar's title (OnOverBar_TitleInit)
 
 private:
 	FrWnd *m_overBarTab;        // 0xAC, OnOverBar_TabInit
 
-public:
+PG_PROTECTED:
 	FrViewer *m_charViewer;     // 0xB0, OnOverBar_CharInit
 	FrViewer *m_caddieViewer;   // 0xB4, OnOverBar_CaddieInit
 	FrViewer *m_aztecViewer;    // 0xB8, OnOverBar_AztecInit
@@ -285,7 +285,7 @@ public:
 private:
 	FrStatic *m_siteWnd;                // 0xD8, OnOverBar_SiteInit; UpdateSiteInfo sets its caption
 
-public:
+PG_PROTECTED:
 	FrWnd *m_pangCookieWnd;             // 0xDC, OnOverBar_PangCookieInit; CGhostMain hides it
 
 private:
@@ -294,21 +294,21 @@ private:
 	const Bitmap *m_hanCoinBitmap;      // 0xE8, "pang_bar_hancoin"
 	const Bitmap *m_hanFrameBitmap;     // 0xEC, "pang_bar_frame_han"
 
-public:
+PG_PROTECTED:
 	bool m_overBarButtonDown;           // 0xF0, set while ProcessOverBar sees button 0 pressed; cleared by CLobbyMain's constructor
 	bool m_subSelectionPending;         // 0xF1, ProcessOverBar sends the sub selection on release
 
 private:
 	PADDING(0xF2, 0xF4);
 
-public:
+PG_PROTECTED:
 	FrWnd *m_messengerBubbleEdit;       // 0xF4, OnMessengerBubbleEditInit (CGolfRule's too)
 
 private:
 	FrArea *m_messengerBubble;          // 0xF8, OnMessengerBubbleInit
 	const Bitmap *m_bubbleBitmap[3];    // 0xFC, "login_%02d"
 
-public:
+PG_PROTECTED:
 	FrWnd *m_messengerWnd;              // 0x108, cleared by InitMessenger; CGolfRule::SetVisibleUpperBtns shows/hides it
 
 	FrWnd *m_messengerAlarmBtn;         // 0x10C, OnMessengerAlarmBtnInit (CGolfRule's too)
@@ -318,13 +318,13 @@ private:
 	FrWnd *m_treasureAlarm;             // 0x114, OnTreasureAlarmInit
 	PADDING(0x118, 0x120);
 
-public:
+PG_PROTECTED:
 	bool m_bongdariShop[3];     // 0x120, cleared by InitBongdariShop
 
 private:
 	PADDING(0x123, 0x124);
 
-public:
+PG_PROTECTED:
 	FrGiftDlg *m_giftDlg;       // 0x124, CShopMain::SendGift creates it
 	FrOptionDlg *m_optionDlg;   // 0x128, OnOverBar_OptionUp; CShopMain::InitShopDialogs clears it
 	FrForm *m_kbdManualDlg;     // 0x12C, CShopMain::InitShopDialogs clears it
@@ -336,29 +336,29 @@ private:
 	FrForm *m_tikiMagicBoxDlg;  // 0x13C, cleared by OnTikiMagicBoxDlgResult
 	FrForm *m_scratchDlg;       // 0x140
 
-public:
+PG_PROTECTED:
 	FrForm *m_onelineReqDlg;    // 0x144, opened with OnOnelineReqDlgResult; CLobbyMain::ResetControl clears it
 
-public:
+PG_PROTECTED:
 	FrForm *m_waitDlg;          // 0x148, the "wait" form OnProcess opens
 	FrNoticeDlg *m_noticeDlg;   // 0x14C, created by OnUnderBar_NoticeUp
 
 	FrForm *m_popupDlg;         // 0x150, opened by a derived task; CloseAllDialogs closes it, CLobbyMain::ResetControl clears it
 
-public:
+PG_PROTECTED:
 	FrForm *m_notifyOneDlg;     // 0x154, CShopMain::InitShopDialogs clears it
 
 private:
 	FrForm *m_quitDlg;          // 0x158
 
-public:
+PG_PROTECTED:
 	FrSPCardBuffDlg *m_specialCardForm;  // 0x15C, CRealMyRoomMain::HandleMsg 0x219 blinks the bar button while it is closed
 
 private:
 	FrForm *m_maketListDlg;     // 0x160
 	FrForm *m_completedMissionDlgs[5];  // 0x164
 
-public:
+PG_PROTECTED:
 	std::vector<FrLevelupItemForm *> m_levelupForms;   // 0x178, CloseAllDialogs closes them, OnLevelupFormResult drops the last
 	float m_waitDlgTime;        // 0x188, OnProcess opens m_waitDlg past 0.5s, -10 when idle
 
@@ -368,7 +368,7 @@ private:
 	bool m_showSubSelection;    // 0x190
 	PADDING(0x191, 0x194);
 
-public:
+PG_PROTECTED:
 	int m_subSelection;         // 0x194, CLobbyMain::InitControlsSelectedUserInfo clears it
 	int m_subSelectionTab;      // 0x198
 
@@ -376,7 +376,7 @@ private:
 	bool m_underBarEnabled;     // 0x19C, cleared by InitUnderBar
 	PADDING(0x19D, 0x1A0);
 
-public:
+PG_PROTECTED:
 	WTitleFont *m_titleFont;    // 0x1A0, released by OnDestroy/OnPreserveBack
 
 	float m_uiOffsetX;          // 0x1A4, CalcUIOffset: centres the 800x600 UI
@@ -390,7 +390,7 @@ private:
 	bool m_itemStorageOpen;     // 0x1D4, cleared by OnUnderBar_ItemStorageInit
 	PADDING(0x1D5, 0x1DC);
 
-public:
+PG_PROTECTED:
 	FrSubEquipBar *m_subEquipBar;       // 0x1DC, OpenSubEquipBar creates it ("EQUIPBAR_SUB")
 };
 CHECK_SIZE(CTaskMain, 0x1E0);

@@ -9,6 +9,7 @@
 #include "classdefine.h"
 #include "wmath.h"
 #include "wscene.h"
+#include "wflag.h"
 #include <list>
 #include <string.h>
 
@@ -117,6 +118,13 @@ public:
 			return strstr(club->m_name, name) ? true : false;
 		return strstr(m_pClub->m_name, name) ? true : false;
 	}
+	// Name inferred (the PDB has no record of it, never emitted out of line):
+	// the club whose name contains `name` (grid's putter "1PT" tests).
+	char *FindName(char *name, sClub *club = NULL) {
+		if (club)
+			return strstr(club->m_name, name);
+		return strstr(m_pClub->m_name, name);
+	}
 	float GetBarWidth(void);                // club.h:204 (gui_control's object holds a copy)
 	unsigned char GetBarAlpha(void);        // club.h:205 (gui_control's object holds a copy)
 	// club.h:202
@@ -173,7 +181,7 @@ private:
 	WCrypticValue<int> m_powerShot;     // 0x2C
 	unsigned char m_approachMode;       // 0x3C, 0-4 by distance to the cup (SetApproachMode); 4 ignores the ball's lie angle (GetLie)
 	PADDING(0x3D, 0x40);
-	unsigned long m_flags;              // 0x40
+	WFlags m_flags;                     // 0x40
 	bool m_powerPutter;                 // 0x44 (IsPowerPutter), set by SetApproachMode (false within 15 yards of the cup, true off the green)
 	PADDING(0x45, 0x48);
 	float m_barDelay;                   // 0x48, seconds waited in bar state 0 before the bar shows (BarProcess)

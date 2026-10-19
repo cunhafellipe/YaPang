@@ -79,7 +79,7 @@ private:
 	tweaker(const char* name);
 
 	void _regist_command(const char* name, const char* cmd, tweaker_cmd_info& info);
-	std::string _run_command(std::string& cmd, const tweaker_param& param);
+	std::string _run_command(std::string& cmd, PG_PORT_CONST tweaker_param& param);
 	void _insert_alloc(tweaker_cmd_target* target);
 	void _erase_alloc(tweaker_cmd_target* target);
 	bool _is_exist_alloc(tweaker_cmd_target* target);

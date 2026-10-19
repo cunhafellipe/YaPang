@@ -778,16 +778,16 @@ void FrTreasureCourse::ReInitCloud(int cloudIdx) {
 	rect = WRect(0.0f, 0.0f, (float)m_pCloudBitmap->Width(), (float)m_pCloudBitmap->Height());
 	sCloud cloud;
 
-	cloud.m_unknown10 = Between(5.0f, Random(1.0f, 10.0f, -1), 10.0f);
-	cloud.m_unknown18 = scales[rand() % 4];
+	cloud.m_speed = Between(5.0f, Random(1.0f, 10.0f, -1), 10.0f);
+	cloud.m_scale = scales[rand() % 4];
 
 	float offset = steps[rand() % 10];
 	rect.x = offset * (m_pCloudArea->GetRect().w * 0.1f);
 
-	if (1.0f - cloud.m_unknown18 >= 0.0001f) {
-		rect.w *= cloud.m_unknown18;
-		rect.h = cloud.m_unknown18 * rect.h;
-		if (cloud.m_unknown18 != 1.0f) {
+	if (1.0f - cloud.m_scale >= 0.0001f) {
+		rect.w *= cloud.m_scale;
+		rect.h = cloud.m_scale * rect.h;
+		if (cloud.m_scale != 1.0f) {
 			rect.w += 0.5f; rect.h += 0.5f;
 		}
 	}
@@ -800,7 +800,7 @@ void FrTreasureCourse::ReInitCloud(int cloudIdx) {
 
 	cloud.alpha = 0;
 	if (m_pCloudArea->GetRect().x < rect.x) {
-		cloud.m_unknown1d = true;
+		cloud.m_startVisible = true;
 		cloud.alpha = 255;
 	}
 
@@ -811,7 +811,7 @@ void FrTreasureCourse::ReInitCloud(int cloudIdx) {
 void FrTreasureCourse::ProcCloud(float dt) {
 	for (unsigned char i = 0; i < m_cloudCount; ++i) {
 		CheckArea(i, dt);
-		m_clouds[i].srcRect.x += dt * m_clouds[i].m_unknown10;
+		m_clouds[i].srcRect.x += dt * m_clouds[i].m_speed;
 	}
 }
 
@@ -823,7 +823,7 @@ void FrTreasureCourse::CheckArea(int cloudIdx, float dt) {
 	float cloudRight = cloudRect.x + cloudRect.w;
 
 	if (areaRect.x <= cloudRect.x && areaRect.x + cloudRect.w * 2.0f > cloudRight) {
-		if (!m_clouds[cloudIdx].m_unknown1d) { if (m_clouds[cloudIdx].alpha < 255) m_clouds[cloudIdx].alpha += 1; else m_clouds[cloudIdx].alpha = 255; }
+		if (!m_clouds[cloudIdx].m_startVisible) { if (m_clouds[cloudIdx].alpha < 255) m_clouds[cloudIdx].alpha += 1; else m_clouds[cloudIdx].alpha = 255; }
 	} else if (cloudRight > areaRight && cloudRight + areaRight > cloudRect.x) {
 		if (m_clouds[cloudIdx].alpha > 0) m_clouds[cloudIdx].alpha -= 5; else m_clouds[cloudIdx].alpha = 0;
 	}
@@ -835,7 +835,7 @@ void FrTreasureCourse::CheckArea(int cloudIdx, float dt) {
 
 // treasuredlg.cpp:928
 void FrTreasureCourse::ShiftAlpha(int cloudIdx, float dt, eALPHA type) {
-	if (type == ALPHA_IN && !m_clouds[cloudIdx].m_unknown1d) {
+	if (type == ALPHA_IN && !m_clouds[cloudIdx].m_startVisible) {
 		if (m_clouds[cloudIdx].alpha < 255) {
 			m_clouds[cloudIdx].alpha += 1;
 		} else {
@@ -1354,7 +1354,7 @@ void FrTreasureCourse::SelectMapBtn(unsigned char mapIdx) {
 		m_mapIndexChanged = true;
 
 	if (m_mapIndexChanged) {
-		m_pCurMapViewer->Open(MakeStr("mid_%s", pCourse->m_name));
+		m_pCurMapViewer->Open(MakeStr("mid_%s", pCourse->m_icon));
 	}
 
 	if (m_mapIndexChanged && (!stricmp(g_pFresh->GetManager()->GetLayoutID(), "GAMEROOM") || !stricmp(g_pFresh->GetManager()->GetLayoutID(), "GAMEROOM_EXT") || !stricmp(g_pFresh->GetManager()->GetLayoutID(), "AVATARCHAT_MAIN"))) {
@@ -1698,8 +1698,8 @@ sFRESH_ENTRY FrTreasureGift::_MsgEntries[] = {
 
 // treasuredlg.cpp:1818
 FrTreasureGift::FrTreasureGift(void)
-	: m_unknown150(8) {
-	m_unknown151 = 1;
+	: m_gridColumns(8) {
+	m_gridRows = 1;
 	m_bState = true;
 }
 
@@ -1714,7 +1714,7 @@ bool FrTreasureGift::OnInit(void) {
 	MoveWindow(GetCalcPoint());
 	WSingleton<CTHunter>::Instance()->GetTreasurePoint();
 	SetPointByFrameHeight();
-	m_unknown151 = (unsigned char)(m_boxOpener.m_unknown64 / 8);
+	m_gridRows = (unsigned char)(m_boxOpener.m_slotCount / 8);
 
 	return true;
 }
@@ -1807,16 +1807,16 @@ void FrTreasureGift::OnOwnerDraw_GridArea(PG_MSGARG param) {
 	_WRECT line = { rect.x + 25.0f, rect.y + 30.0f, rect.w - 65.0f, 1.0f };
 	WOverlay::DrawBox(g_view, line, 0, data_a94af8, 0.0f);
 
-	if (m_unknown151 == 2) {
+	if (m_gridRows == 2) {
 		_WRECT line2 = { rect.x + 25.0f, rect.y + 98.0f, rect.w - 65.0f, 1.0f };
 		WOverlay::DrawBox(g_view, line2, 0, data_a94af8, 0.0f);
-	} else if (m_unknown151 == 3) {
+	} else if (m_gridRows == 3) {
 		_WRECT line3 = { rect.x + 25.0f, rect.y + 166.0f, rect.w - 65.0f, 1.0f };
 		WOverlay::DrawBox(g_view, line3, 0, data_a94af8, 0.0f);
 	}
 
 	// Vertical lines.
-	for (int i = 0; i != 8; ++i) {
+	for (unsigned char i = 0; i < 8; ++i) {
 		_WRECT line4 = { rect.x + i * 65.0f + 33.0f, rect.y + 35.0f, 1.0f, rect.h - 60.0f };
 		WOverlay::DrawBox(g_view, line4, 0, data_a94af8, 0.0f);
 	}
@@ -1903,13 +1903,13 @@ CBoxOpener::CBoxOpener(void) {
 	m_boxBitmapIdx = 0;
 	m_openGiftIdx = 0;
 	m_giftCount = 0;
-	m_unknown64 = 0;
+	m_slotCount = 0;
 
 	m_pGiftList = 0;
 	m_unknown48 = 0;
 	m_nextSeq = SEQ_NONE;
 	m_curSeq = SEQ_NONE;
-	m_unknown74 = 0;
+	m_approachMode = 0;
 	m_seqDuration = 2000;
 
 	tagWTITLEFONT info;
@@ -1932,38 +1932,38 @@ CBoxOpener::~CBoxOpener(void) {
 	if (m_pSimpleUI) { delete m_pSimpleUI; m_pSimpleUI = 0; }
 	if (g_resrcmng && m_pTitleFont) { g_resrcmng->Release(m_pTitleFont); m_pTitleFont = 0; }
 
-	m_unknown74 = 0;
+	m_approachMode = 0;
 }
 
 // treasuredlg.cpp:2067
 bool CBoxOpener::OnInit(void) {
-	if (m_unknown74 == 1) {
+	if (m_approachMode == 1) {
 		WSingleton<CTHunter>::Instance()->ReAdjustRepository();
 	}
 
 	m_giftCount = WSingleton<CTHunter>::Instance()->GetRepositorySize();
 
 	if (m_giftCount < 9) {
-		m_unknown64 = 8;
+		m_slotCount = 8;
 	} else if (m_giftCount > 8 && m_giftCount < 17) {
-		m_unknown64 = 16;
+		m_slotCount = 16;
 	} else if (m_giftCount > 16 && m_giftCount < 25) {
-		m_unknown64 = 24;
+		m_slotCount = 24;
 	} else {
-		m_unknown64 = 8;
+		m_slotCount = 8;
 	}
 
-	m_gifts.reserve(m_unknown64);
+	m_gifts.reserve(m_slotCount);
 
 	sTGift gift;
-	for (unsigned char i = 0; i < m_unknown64; ++i) {
+	for (unsigned char i = 0; i < m_slotCount; ++i) {
 		if (i < m_giftCount) {
 			sTreasureHunt hunt;
 			hunt = WSingleton<CTHunter>::Instance()->GetGiftInfo(i);
 			gift.itemIdx = i;
-			gift.m_unknown8 = hunt.m_typeId;
-			gift.m_unknownc = hunt.m_count;
-			gift.m_unknowne = hunt.m_index == WSingleton<CSharedDoc>::Instance()->m_myUID;
+			gift.m_typeId = hunt.m_typeId;
+			gift.m_count = hunt.m_count;
+			gift.m_isMine = hunt.m_index == WSingleton<CSharedDoc>::Instance()->m_myUID;
 		} else {
 			gift.Reset();
 		}
@@ -1974,7 +1974,7 @@ bool CBoxOpener::OnInit(void) {
 	}
 
 	WRect rect = m_pGiftList->GetRect();
-	rect.h = (m_unknown64 / 8) * 68.0f;
+	rect.h = (m_slotCount / 8) * 68.0f;
 	m_pGiftList->SetRect(rect);
 
 	m_pItemBoxNBitmap = g_pFresh->RegisterBitmap("th_item_box_n");
@@ -2073,7 +2073,7 @@ void CBoxOpener::ChangeSequence(eSeqProc seq) {
 void CBoxOpener::ProcInit(void) {
 	if (timeGetTime() - m_seqStartTime > 1000) {
 		for (unsigned char i = 0; i < m_pGiftList->GetCurrentItemSize(true); ++i) {
-			GetGiftItem(i)->m_unknown10 = 1;
+			GetGiftItem(i)->m_state = 1;
 		}
 		m_nextSeq = SEQ_CREATE;
 	}
@@ -2084,14 +2084,14 @@ void CBoxOpener::ProcCreate(void) {
 	if (timeGetTime() - m_seqStartTime > m_seqDuration) {
 		if (m_openGiftIdx < m_giftCount) {
 			sTGift* pGift = GetGiftItem(m_openGiftIdx++);
-			if (pGift && pGift->m_unknown8) {
-				pGift->m_unknownf = 1;
-				pGift->m_unknown10 = 3;
+			if (pGift && pGift->m_typeId) {
+				pGift->m_revealed = 1;
+				pGift->m_state = 3;
 				g_audio->PlaySfx("play_fail_item", 0, 0, 0, 0, 0.5f, 200.0f);
 			}
-		} else if (m_openGiftIdx < m_unknown64) {
+		} else if (m_openGiftIdx < m_slotCount) {
 			sTGift* pGift = GetGiftItem(m_openGiftIdx++);
-			pGift->m_unknown10 = 2;
+			pGift->m_state = 2;
 		} else {
 			m_openGiftIdx++;
 		}
@@ -2101,7 +2101,7 @@ void CBoxOpener::ProcCreate(void) {
 		if (m_openGiftIdx == m_giftCount) {
 			m_seqDuration = 50;
 		}
-		if (m_openGiftIdx == m_unknown64) {
+		if (m_openGiftIdx == m_slotCount) {
 			m_nextSeq = SEQ_MYITEM_OPEN;
 		}
 	}
@@ -2112,9 +2112,9 @@ void CBoxOpener::ProcMyItemOpen(void) {
 	if (m_openGiftIdx < m_giftCount && timeGetTime() - m_seqStartTime > 250) {
 		if (m_openGiftIdx < m_giftCount) {
 			sTGift* pGift = GetGiftItem(m_openGiftIdx++);
-			if (pGift && pGift->m_unknown8) {
-				pGift->m_unknown10 = 4;
-				pGift->m_unknown4 = 0;
+			if (pGift && pGift->m_typeId) {
+				pGift->m_state = 4;
+				pGift->m_emoticonFrame = 0;
 				g_audio->PlaySfx("play_fail_item", 0, 0, 0, 0, 0.5f, 200.0f);
 			} else {
 				m_openGiftIdx++;
@@ -2164,7 +2164,7 @@ void CBoxOpener::DrawGiftList(FrListItem* pItem) {
 		WPoint pt = m_pGiftList->GetRect().TopLeft();
 		const Bitmap* pBmp;
 
-		if (m_curSeq >= SEQ_COMPLETE && pGift->m_unknowne) {
+		if (m_curSeq >= SEQ_COMPLETE && pGift->m_isMine) {
 			pBmp = m_pItemBoxOBitmap;
 		} else {
 			pBmp = m_pItemBoxNBitmap;
@@ -2180,9 +2180,9 @@ void CBoxOpener::DrawGiftList(FrListItem* pItem) {
 
 		unsigned long color = 0xffffffff;
 		pBmp = 0;
-		GetItemOffset(pt, pGift->m_unknown8, true);
+		GetItemOffset(pt, pGift->m_typeId, true);
 
-		switch (pGift->m_unknown10) {
+		switch (pGift->m_state) {
 		case 0:
 			return;
 		case 1:
@@ -2194,10 +2194,10 @@ void CBoxOpener::DrawGiftList(FrListItem* pItem) {
 			pt.x = 27.0f; pt.y = 28.0f;
 			break;
 		case 3:
-			if (pGift->m_unknownf == 1) {
-				IFF_ITEM_COMMON* pItemData = ItemManager()->FindCommonItem(pGift->m_unknown8);
+			if (pGift->m_revealed == 1) {
+				IFF_ITEM_COMMON* pItemData = ItemManager()->FindCommonItem(pGift->m_typeId);
 				if (pItemData) {
-					if (pGift->m_unknown8 != 0x1A000010) {
+					if (pGift->m_typeId != 0x1A000010) {
 						pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", pItemData->m_icon);
 					} else {
 						pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "Item_Pang");
@@ -2210,11 +2210,11 @@ void CBoxOpener::DrawGiftList(FrListItem* pItem) {
 			}
 			break;
 		case 4:
-			color = pGift->m_unknowne == 1 ? 0xffffffff : 0x20202020;
-			if (pGift->m_unknownf == 1) {
-				IFF_ITEM_COMMON* pItemData = ItemManager()->FindCommonItem(pGift->m_unknown8);
+			color = pGift->m_isMine == 1 ? 0xffffffff : 0x20202020;
+			if (pGift->m_revealed == 1) {
+				IFF_ITEM_COMMON* pItemData = ItemManager()->FindCommonItem(pGift->m_typeId);
 				if (pItemData) {
-					if (pGift->m_unknown8 != 0x1A000010) {
+					if (pGift->m_typeId != 0x1A000010) {
 						pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", pItemData->m_icon);
 					} else {
 						pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "Item_Pang");
@@ -2230,15 +2230,15 @@ void CBoxOpener::DrawGiftList(FrListItem* pItem) {
 		if (pBmp) {
 			pGI->DrawTexture(pBmp, WRect(pt.x + pItem->pos.x, pt.y + pItem->pos.y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
 
-			if (m_pTitleFont && pGift->m_unknown10 == 4) {
-				if (pGift->m_unknownc != 0) {
+			if (m_pTitleFont && pGift->m_state == 4) {
+				if (pGift->m_count != 0) {
 					WPoint pos(pItem->pos.x, pItem->pos.y);
-					GetItemOffset(pos, pGift->m_unknown8, false);
+					GetItemOffset(pos, pGift->m_typeId, false);
 
 					char text[16] = { 0 };
-					itoa(pGift->m_unknownc, text, 10);
+					itoa(pGift->m_count, text, 10);
 
-					if (pGift->m_unknown8 == 0x1A000010) {
+					if (pGift->m_typeId == 0x1A000010) {
 						pos.x -= 15.0f;
 					}
 
@@ -2247,11 +2247,11 @@ void CBoxOpener::DrawGiftList(FrListItem* pItem) {
 			}
 		}
 
-		if (pGift->m_unknown10 >= 3) {
-			if (pGift->m_unknown4 >= 0.0f && (int)pGift->m_unknown4 < 8) {
+		if (pGift->m_state >= 3) {
+			if (pGift->m_emoticonFrame >= 0.0f && (int)pGift->m_emoticonFrame < 8) {
 				if (m_pSimpleUI) {
-					m_pSimpleUI->Render(MakeStr("%d", (int)pGift->m_unknown4), pItem->pos.x - 10.0f, pItem->pos.y - 25.0f, 1.5f, 0);
-					pGift->m_unknown4 += m_dt * 15.0f;
+					m_pSimpleUI->Render(MakeStr("%d", (int)pGift->m_emoticonFrame), pItem->pos.x - 10.0f, pItem->pos.y - 25.0f, 1.5f, 0);
+					pGift->m_emoticonFrame += m_dt * 15.0f;
 				}
 			}
 		}
@@ -2275,7 +2275,7 @@ void CBoxOpener::DrawBoxArea(void) {
 		pGI->DrawTexture(m_boxBitmaps[m_boxBitmapIdx], WRect(rect.x + 20.0f, rect.y + 22.0f, (float)m_boxBitmaps[m_boxBitmapIdx]->Width(), (float)m_boxBitmaps[m_boxBitmapIdx]->Height()), 0xffffffff, 0);
 	}
 
-	if (m_unknown74 == 1) {
+	if (m_approachMode == 1) {
 		unsigned char giftCount = WSingleton<CTHunter>::Instance()->GetGiftSize();
 		if (giftCount > 0) {
 			pGI->SetTextColor(0xffff0000, 0xffffffff);

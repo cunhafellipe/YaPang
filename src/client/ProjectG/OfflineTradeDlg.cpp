@@ -671,35 +671,34 @@ void COfflineTradeDlg::OnMaketListOwnerDraw(PG_MSGARG param) {
 		}
 	}
 
-	WPoint& pos = pItem->pos;
-
 	if (pSaleItem->m_public == 1) {
 		// "public"
-		pGDI->Print(WPoint(pos.x + 470.0f, pos.y + 1.0f), 2, "\xB0\xF8  \xB0\xB3");
+		pGDI->Print(pItem->pos + WPoint(470.0f, 1.0f), 2, "\xB0\xF8  \xB0\xB3");
 	} else {
 		pGDI->SetTextColor(0xFFD1D1D0, 0xFFFFFFFF);
 		// "private"
-		pGDI->Print(WPoint(pos.x + 470.0f, pos.y + 1.0f), 2, "\xBA\xF1\xB0\xF8\xB0\xB3");
+		pGDI->Print(pItem->pos + WPoint(470.0f, 1.0f), 2, "\xBA\xF1\xB0\xF8\xB0\xB3");
 	}
 
 	IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(pSaleItem->m_typeId);
 
 	if (pCommon) {
-		pGDI->Print(WPoint(pos.x + 160.0f, pos.y + 1.0f), 2, "%s", pCommon->m_name);
+		pGDI->Print(pItem->pos + WPoint(160.0f, 1.0f), 2, "%s", pCommon->m_name);
 	}
 
-	pGDI->Print(WPoint(pos.x + 250.0f, pos.y + 1.0f), 2, "%d", pSaleItem->m_price);
-	pGDI->Print(WPoint(pos.x + 280.0f, pos.y + 1.0f), 2, "%d", pSaleItem->m_count);
-	pGDI->Print(WPoint(pos.x + 400.0f, pos.y + 1.0f), 2, "%s", pSaleItem->m_ownerNick);
+	pGDI->Print(pItem->pos + WPoint(250.0f, 1.0f), 2, "%d", pSaleItem->m_price);
+	pGDI->Print(pItem->pos + WPoint(280.0f, 1.0f), 2, "%d", pSaleItem->m_count);
+	pGDI->Print(pItem->pos + WPoint(400.0f, 1.0f), 2, "%s", pSaleItem->m_ownerNick);
 
 	if (m_canVisitMyRoom) {
+		WPoint& pos = pItem->pos;
+
 		if (pItem->underCursor && WRect(m_moveBtnNormal.rect.x + pos.x, pos.y + m_moveBtnNormal.rect.y,
 				m_moveBtnNormal.rect.w, m_moveBtnNormal.rect.h).IsInRect(g_pFresh->GetManager()->GetMousePos())) {
 			pGDI->DrawTexture(m_moveBtnOver.pBitmap, m_moveBtnOver.rect + pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
 			CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x16);
 		} else {
-			pGDI->DrawTexture(m_moveBtnNormal.pBitmap, WRect(pos.x + m_moveBtnNormal.rect.x, pos.y + m_moveBtnNormal.rect.y,
-				m_moveBtnNormal.rect.w, m_moveBtnNormal.rect.h), 0xFFFFFFFF, 0);
+			pGDI->DrawTexture(m_moveBtnNormal.pBitmap, WRect(WPoint(pos.x + m_moveBtnNormal.rect.x, pos.y + m_moveBtnNormal.rect.y), m_moveBtnNormal.rect.w, m_moveBtnNormal.rect.h), 0xFFFFFFFF, 0);
 		}
 	}
 

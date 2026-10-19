@@ -250,8 +250,8 @@ void FrRepayDlg::OnCartOwnerDraw(intptr_t param) {
 		pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 		pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 74.0f), 0, "\xBB\xE7\xBF\xEB\xB1\xE2\xB0\xA3:");
 		pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
-		float x = pItem->pos.x + (pGDI->GetTextExtend("\xBB\xE7\xBF\xEB\xB1\xE2\xB0\xA3:") + 95.0f);
-		pGDI->Print(WPoint(x, pItem->pos.y + 74.0f), 0, "\xB1\xB8\xC0\xD4\xC0\xCF\xB7\xCE \xBA\xCE\xC5\xCD %d\xC0\xCF \xB5\xBF\xBE\xC8\xB8\xB8", 30);
+		float x = pGDI->GetTextExtend("\xBB\xE7\xBF\xEB\xB1\xE2\xB0\xA3:") + 95.0f;
+		pGDI->Print(WPoint(pItem->pos.x + x, pItem->pos.y + 74.0f), 0, "\xB1\xB8\xC0\xD4\xC0\xCF\xB7\xCE \xBA\xCE\xC5\xCD %d\xC0\xCF \xB5\xBF\xBE\xC8\xB8\xB8", 30);
 	}
 }
 

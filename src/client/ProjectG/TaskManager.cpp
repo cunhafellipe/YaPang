@@ -1,5 +1,6 @@
 // Original: d:\build\custom\temp\code\client\projectg\taskmanager.cpp
 #define TASKMANAGER_TASKMANAGER_INLINE
+#define TASKMANAGER_LOGININFO_DECL_ONLY
 #include <atlbase.h>	// stand-in for the precompiled header: _AtlWinModule initializer
 #include "StandingInLine.h"   // its s_standingNames initializer is the unit's first
 #include "guilddefine.h"
@@ -584,7 +585,7 @@ void CTask::Init(const char *backGround) {
 
 	if (!IsInited()) {
 
-		m_stateFlags |= 2;
+		m_stateFlags.Enable(2);
 		OnInitFinished();
 	}
 
@@ -601,9 +602,9 @@ void CTask::Init(const char *backGround) {
 // taskmanager.cpp:884
 void CTask::SetInited(bool inited) {
 	if (inited) {
-		m_stateFlags |= 2;
+		m_stateFlags.Enable(2);
 	} else {
-		m_stateFlags &= ~2;
+		m_stateFlags.Disable(2);
 	}
 }
 
@@ -780,7 +781,7 @@ void CTask::Display(void) {
 					CSceneManager::Instance()->Render(g_view, 0xffffffff);
 				}
 
-				if (!(m_stateFlags & 1)) {
+				if (!m_stateFlags.GetFlag(1)) {
 					g_view->Clear(0, 2);
 				}
 			}
@@ -882,7 +883,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		break;
 	case 0x19c:
 		// taskmanager.cpp:1290
-		AfxGetTask()->m_mainActor << MsgObject(0, 2, 0, 0, 0, 0, 0);
+		AfxGetTask()->GetMainActor() << MsgObject(0, 2, 0, 0, 0, 0, 0);
 		{
 			// taskmanager.cpp:1293
 			S5::FrSupplyPackDlg *pDlg = 0;
@@ -928,25 +929,24 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:1326
 					CSharedDoc::Instance()->m_itemInfoList.erase(it);
 				// taskmanager.cpp:1328
-				AfxGetTask()->m_mainActor << MsgObject(0, 0xDD, 0, 0, 0, 0, 0);
+				AfxGetTask()->GetMainActor() << MsgObject(0, 0xDD, 0, 0, 0, 0, 0);
 			}
 			// taskmanager.cpp:1332
 			if ((typeId & 0xFC000000) != 0x14000000) {
 				break;
 			}
 			// taskmanager.cpp:1335
-			it = std::find(CSharedDoc::Instance()->m_myGearList.begin(), CSharedDoc::Instance()->m_myGearList.end(), typeId);
+			std::list<sItemInfo>::iterator gear = std::find(CSharedDoc::Instance()->m_myGearList.begin(), CSharedDoc::Instance()->m_myGearList.end(), typeId);
 			// taskmanager.cpp:1339
-			if (it == CSharedDoc::Instance()->m_myGearList.end()) {
-				break;
+			if (gear != CSharedDoc::Instance()->m_myGearList.end()) {
+				// taskmanager.cpp:1342
+				int added = count - gear->m_count;
+				gear->m_count = (short)count;
+				// taskmanager.cpp:1346
+				if (pDlg)
+					// taskmanager.cpp:1347
+					pDlg->UpdateData(added);
 			}
-			// taskmanager.cpp:1342
-			int added = count - it->m_count;
-			it->m_count = (short)count;
-			// taskmanager.cpp:1346
-			if (pDlg)
-				// taskmanager.cpp:1347
-				pDlg->UpdateData(added);
 		}
 		break;
 	case 0x11b:
@@ -1073,11 +1073,11 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:1479
 			if (!GalleryMode() && IsMassGame(CSharedDoc::Instance()->m_roomInfo.m_gameType)) {
 				// taskmanager.cpp:1481
-				CSharedDoc::Instance()->m_userInfo.eventFlags ^= ((packet.Decode1() << 3) ^ CSharedDoc::Instance()->m_userInfo.eventFlags) & 0x08;
+				CSharedDoc::Instance()->m_userInfo.eventBits.eventFlag3 = packet.Decode1();
 				// taskmanager.cpp:1482
-				CSharedDoc::Instance()->m_userInfo.eventFlags ^= ((packet.Decode1() << 4) ^ CSharedDoc::Instance()->m_userInfo.eventFlags) & 0x10;
+				CSharedDoc::Instance()->m_userInfo.eventBits.eventFlag4 = packet.Decode1();
 				// taskmanager.cpp:1483
-				CSharedDoc::Instance()->m_userInfo.eventFlags ^= ((packet.Decode1() << 5) ^ CSharedDoc::Instance()->m_userInfo.eventFlags) & 0x20;
+				CSharedDoc::Instance()->m_userInfo.eventBits.eventFlag5 = packet.Decode1();
 				// taskmanager.cpp:1485
 				if (IsLocalContent((localContentType_t)0x51)) {
 					// taskmanager.cpp:1488
@@ -1265,7 +1265,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 		}
 		// taskmanager.cpp:1682
-		for (int hole = 0; hole < 18; hole++) {
+		for (unsigned char hole = 0; hole < 18; hole++) {
 			// taskmanager.cpp:1684
 			CSharedDoc::Instance()->m_holeRandom[hole] = packet.Decode4();
 			// taskmanager.cpp:1685
@@ -1656,11 +1656,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:2056
 					CSharedDoc::Instance()->m_controlServerService = packet.Decode4();
 					// taskmanager.cpp:2057
-					CSharedDoc::Instance()->m_value5060 = packet.Decode4();
+					unsigned long value5060 = packet.Decode4();
+					// taskmanager.cpp:2059
+					CSharedDoc::Instance()->m_value5060 = value5060;
 					// taskmanager.cpp:2061
 					unsigned long serverProperty = packet.Decode4();
 					// taskmanager.cpp:2069
-					CSharedDoc::Instance()->m_serverProperty = serverProperty;
+					CSharedDoc::Instance()->m_serverProperty.Set(serverProperty);
 
 					// taskmanager.cpp:2073
 					GUILD_USER_INFO guildUserInfo;
@@ -1878,7 +1880,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:2376
 					caddie.experience += gain;
 					// taskmanager.cpp:2380
-					for (int i = 0; i < 3; i++) {
+					for (unsigned char i = 0; i < 3; i++) {
 						if (caddie.level == i && caddie.experience >= CSharedDoc::Instance()->m_caddieLevelExp[i].m_exp) {
 							// taskmanager.cpp:2382
 							caddie.level++;
@@ -2054,7 +2056,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 			// The messenger learns the player's new place.
 			// taskmanager.cpp:2530
-			if (WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN) && CMessengerInfo::Instance()->m_serverListRequest == 4) {
+			if (WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN) && CMessengerInfo::Instance()->GetComplete() == CONNECT_STATUS_COMPLETE) {
 				// taskmanager.cpp:2532
 				CSharedDoc::Instance()->m_roomInfo.m_roomNumber = 0xFFFF;
 				// taskmanager.cpp:2533
@@ -2108,7 +2110,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:2586
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 6, 0, 0, 0, 0, 0));
 				// taskmanager.cpp:2588
-				for (int i = 0; i < count; i++) {
+				for (unsigned char i = 0; i < count; i++) {
 					// taskmanager.cpp:2590
 					if (IsLocalContent((localContentType_t)0x5E)) {
 						sRoomInfoLegacy legacy;
@@ -2169,7 +2171,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			case 1:
 				// Rooms added or changed.
 				// taskmanager.cpp:2647
-				for (int i = 0; i < count; i++) {
+				for (unsigned char i = 0; i < count; i++) {
 					// taskmanager.cpp:2649
 					if (IsLocalContent((localContentType_t)0x5E)) {
 						sRoomInfoLegacy legacy;
@@ -2241,7 +2243,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			case 2:
 				// Rooms removed.
 				// taskmanager.cpp:2716
-				for (int i = 0; i < count; i++) {
+				for (unsigned char i = 0; i < count; i++) {
 					// taskmanager.cpp:2718
 					packet.DecodeBuffer(&room, sizeof(sRoomInfo));
 					// taskmanager.cpp:2721
@@ -2264,7 +2266,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			case 3:
 				// Rooms updated in place.
 				// taskmanager.cpp:2739
-				for (int i = 0; i < count; i++) {
+				for (unsigned char i = 0; i < count; i++) {
 					// taskmanager.cpp:2741
 					packet.DecodeBuffer(&room, sizeof(sRoomInfo));
 					// taskmanager.cpp:2744
@@ -2348,7 +2350,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 							// taskmanager.cpp:2836
 							if (info.invisible) {
 								// taskmanager.cpp:2839
-								if (info.lobbyFlags & 4) {
+								if (info.stayInLobby) {
 									// taskmanager.cpp:2841
 									GetActor("Lobby") << MsgObject(0, 0xA, (intptr_t)&it->second, 0, 0, 0, 0);
 								}
@@ -2376,7 +2378,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						// taskmanager.cpp:2864
 						if (info.identityBits.administrator) {
 							// taskmanager.cpp:2866
-							if (!(info.lobbyFlags & 4)) {
+							if (!info.stayInLobby) {
 								// taskmanager.cpp:2868
 								CSharedDoc::Instance()->m_userMap.erase(it);
 							}
@@ -2394,26 +2396,25 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:2884
 					std::map<unsigned long, sBriefUserInfo>::iterator it = CSharedDoc::Instance()->m_userMap.find(info.uid);
 					// taskmanager.cpp:2885
-					if (it == CSharedDoc::Instance()->m_userMap.end()) {
-						break;
-					}
-					// taskmanager.cpp:2887
-					it->second = info;
-					// taskmanager.cpp:2888
-					CSharedDoc *pDoc = CSharedDoc::Instance();
-					if (info.roomNumber != pDoc->m_mySlot || info.roomNumber == 0xFFFF) {
-						break;
-					}
-					// A player of the local player's room: refresh his room entry.
-					// taskmanager.cpp:2890
-					for (std::list<sSlotInfo>::iterator player = pDoc->m_roomPlayerList.begin(); player != pDoc->m_roomPlayerList.end(); ++player) {
-						// taskmanager.cpp:2892
-						if (player->m_uid == info.uid) {
-							// taskmanager.cpp:2894
-							player->m_identity = info.identity;
-							// taskmanager.cpp:2895
-							player->m_titleTypeId = info.titleTypeId;
+					if (it != CSharedDoc::Instance()->m_userMap.end()) {
+						// taskmanager.cpp:2887
+						it->second = info;
+						// taskmanager.cpp:2888
+						CSharedDoc *pDoc = CSharedDoc::Instance();
+						if (info.roomNumber != pDoc->m_mySlot || info.roomNumber == 0xFFFF) {
 							break;
+						}
+						// A player of the local player's room: refresh his room entry.
+						// taskmanager.cpp:2890
+						for (std::list<sSlotInfo>::iterator player = pDoc->m_roomPlayerList.begin(); player != pDoc->m_roomPlayerList.end(); ++player) {
+							// taskmanager.cpp:2892
+							if (player->m_uid == info.uid) {
+								// taskmanager.cpp:2894
+								player->m_identity = info.identity;
+								// taskmanager.cpp:2895
+								player->m_titleTypeId = info.titleTypeId;
+								break;
+							}
 						}
 					}
 				}
@@ -2740,14 +2741,17 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:3268
 			unsigned char result = packet.Decode1();
 			// taskmanager.cpp:3269
-			if (result == 0) {
+			switch (result) {
+			case 0:
 				// taskmanager.cpp:3273
 				CSharedDoc::Instance()->m_userInfo.schoolNo = packet.Decode4();
 				// taskmanager.cpp:3274
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xc7\xd0\xb1\xb3\xb0\xa1 \xba\xaf\xb0\xe6\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
-			} else {
+				break;
+			default:
 				// taskmanager.cpp:3280
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xc7\xd0\xb1\xb3 \xba\xaf\xb0\xe6\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
+				break;
 			}
 		}
 		break;
@@ -2892,10 +2896,10 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:3445
 					if (IsLocalContent((localContentType_t)0x57) && IsUccClothes(item.m_typeId)) {
 						// taskmanager.cpp:3448
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_myItemList.begin(); it != CSharedDoc::Instance()->m_myItemList.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_myItemList.begin(); it != CSharedDoc::Instance()->m_myItemList.end(); it++) {
 							// taskmanager.cpp:3450
-							if (it->m_typeId == item.m_typeId && strcmp(it->m_uccKey, item.m_uccKey) == 0) {
-								it->m_uccSeq = item.m_uccSeq;
+							if (it->m_typeId == item.m_typeId && strcmp(it->m_uccKey, item.m_uccKey) == 0 && it->m_uccSeq == item.m_uccSeq) {
 								// taskmanager.cpp:3453
 								isNew = false;
 								break;
@@ -2904,7 +2908,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					}
 					// taskmanager.cpp:3461
 					{
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_myPartsList.begin(); it != CSharedDoc::Instance()->m_myPartsList.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_myPartsList.begin(); it != CSharedDoc::Instance()->m_myPartsList.end(); it++) {
 							// taskmanager.cpp:3463
 							if (it->m_serial == item.m_serial) {
 								isNew = false;
@@ -2916,7 +2921,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				case 4:
 					// taskmanager.cpp:3477
 					{
-						for (std::map<unsigned int, sItemInfo>::iterator it = CSharedDoc::Instance()->m_myItemMap.begin(); it != CSharedDoc::Instance()->m_myItemMap.end(); ++it) {
+						std::map<unsigned int, sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_myItemMap.begin(); it != CSharedDoc::Instance()->m_myItemMap.end(); it++) {
 							// taskmanager.cpp:3479
 							if (it->second.m_serial == item.m_serial) {
 								isNew = false;
@@ -2928,7 +2934,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				case 5:
 					// taskmanager.cpp:3493
 					{
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_myGearList.begin(); it != CSharedDoc::Instance()->m_myGearList.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_myGearList.begin(); it != CSharedDoc::Instance()->m_myGearList.end(); it++) {
 							// taskmanager.cpp:3495
 							if (it->m_serial == item.m_serial) {
 								// taskmanager.cpp:3498
@@ -2952,7 +2959,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				case 6:
 					// taskmanager.cpp:3523
 					{
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_itemInfoList.begin(); it != CSharedDoc::Instance()->m_itemInfoList.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_itemInfoList.begin(); it != CSharedDoc::Instance()->m_itemInfoList.end(); it++) {
 							// taskmanager.cpp:3525
 							if (it->m_serial == item.m_serial) {
 								// taskmanager.cpp:3528
@@ -2976,7 +2984,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				case 8:
 					// taskmanager.cpp:3553
 					{
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_myExtraItemList.begin(); it != CSharedDoc::Instance()->m_myExtraItemList.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_myExtraItemList.begin(); it != CSharedDoc::Instance()->m_myExtraItemList.end(); it++) {
 							// taskmanager.cpp:3555
 							if (it->m_serial == item.m_serial) {
 								isNew = false;
@@ -2988,7 +2997,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				case 9:
 					// taskmanager.cpp:3569
 					{
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_myExtraItemList2.begin(); it != CSharedDoc::Instance()->m_myExtraItemList2.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_myExtraItemList2.begin(); it != CSharedDoc::Instance()->m_myExtraItemList2.end(); it++) {
 							// taskmanager.cpp:3571
 							if (it->m_serial == item.m_serial) {
 								isNew = false;
@@ -3000,7 +3010,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				case 0xe:
 					// taskmanager.cpp:3585
 					{
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_mySkinList.begin(); it != CSharedDoc::Instance()->m_mySkinList.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_mySkinList.begin(); it != CSharedDoc::Instance()->m_mySkinList.end(); it++) {
 							// taskmanager.cpp:3587
 							if (it->m_serial == item.m_serial) {
 								isNew = false;
@@ -3012,7 +3023,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				case 0x1c:
 					// taskmanager.cpp:3601
 					{
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_myExtraItemList3.begin(); it != CSharedDoc::Instance()->m_myExtraItemList3.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_myExtraItemList3.begin(); it != CSharedDoc::Instance()->m_myExtraItemList3.end(); it++) {
 							// taskmanager.cpp:3603
 							if (it->m_serial == item.m_serial) {
 								isNew = false;
@@ -3024,7 +3036,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				case 0x1d:
 					// taskmanager.cpp:3617
 					{
-						for (std::list<sItemInfo>::iterator it = CSharedDoc::Instance()->m_myExtraItemList4.begin(); it != CSharedDoc::Instance()->m_myExtraItemList4.end(); ++it) {
+						std::list<sItemInfo>::iterator it;
+						for (it = CSharedDoc::Instance()->m_myExtraItemList4.begin(); it != CSharedDoc::Instance()->m_myExtraItemList4.end(); it++) {
 							// taskmanager.cpp:3619
 							if (it->m_serial == item.m_serial) {
 								isNew = false;
@@ -3037,7 +3050,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:3630
 					if (IsLocalContent((localContentType_t)0x56)) {
 						// taskmanager.cpp:3634
-						for (std::list<sFurniture_List>::iterator it = CSharedDoc::Instance()->m_furnitureList.begin(); it != CSharedDoc::Instance()->m_furnitureList.end(); ++it) {
+						std::list<sFurniture_List>::iterator it;
+						for (it = CSharedDoc::Instance()->m_furnitureList.begin(); it != CSharedDoc::Instance()->m_furnitureList.end(); it++) {
 							// taskmanager.cpp:3636
 							if (it->m_id == item.m_serial) {
 								isNew = false;
@@ -3174,7 +3188,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						std::list<sCards> &cardList = CSharedDoc::Instance()->m_myCardList;
 						bool found = false;
 						// taskmanager.cpp:3774
-						for (std::list<sCards>::iterator it = cardList.begin(); it != cardList.end(); it++) {
+						std::list<sCards>::iterator it;
+						for (it = cardList.begin(); it != cardList.end(); it++) {
 							// taskmanager.cpp:3776
 							if (it->m_guid == card.m_guid) {
 								found = true;
@@ -3253,7 +3268,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				packet.DecodeBuffer(&card, sizeof(sCards));
 				// taskmanager.cpp:4009
 				std::list<sCards> &cardList = CSharedDoc::Instance()->m_myCardList;
-				for (std::list<sCards>::iterator it = cardList.begin(); it != cardList.end(); it++) {
+				std::list<sCards>::iterator it;
+				for (it = cardList.begin(); it != cardList.end(); it++) {
 					// taskmanager.cpp:4012
 					if (it->m_typeId == card.m_typeId) {
 						// taskmanager.cpp:4014
@@ -3294,8 +3310,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					info.effectValue = pCard->m_effectValue;
 				}
 				// taskmanager.cpp:4043
-				switch (info.kind) {
-				case 2:
+				if (info.kind == 2) {
 					// taskmanager.cpp:4045
 					if (pCard->m_effectType == 1) {
 						// taskmanager.cpp:4046
@@ -3328,15 +3343,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						CCardManager::Instance()->SetSPCardAlarm(true);
 					}
 					// taskmanager.cpp:4078
-					break;
-				case 1:
-					// taskmanager.cpp:4081
-					info.slot -= 4;
-				case 0:
+				} else if (info.kind == 0 || info.kind == 1) {
+					if (info.kind == 1) {
+						// taskmanager.cpp:4081
+						info.slot -= 4;
+					}
 					{
 						// taskmanager.cpp:4085
 						std::list<sSCardAvilityPeriodInfo> &periodList = CSharedDoc::Instance()->m_cardPeriodList[0];
-						for (std::list<sSCardAvilityPeriodInfo>::iterator it = periodList.begin(); it != periodList.end(); it++) {
+						std::list<sSCardAvilityPeriodInfo>::iterator it;
+						for (it = periodList.begin(); it != periodList.end(); it++) {
 							// taskmanager.cpp:4087
 							if (it->partsId == info.partsId) {
 								// taskmanager.cpp:4089
@@ -3350,7 +3366,6 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						// taskmanager.cpp:4098
 						CSharedDoc::Instance()->m_cardPeriodList[0].push_back(info);
 					}
-					break;
 				}
 				// taskmanager.cpp:4103
 				CCardManager::Instance()->UpdateCardBuffDlg();
@@ -3387,7 +3402,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				packet.DecodeBuffer(&info, sizeof(info));
 				// taskmanager.cpp:4135
 				std::list<sSCardAvilityPeriodInfo> &periods = CSharedDoc::Instance()->m_cardPeriodList[0];
-				for (std::list<sSCardAvilityPeriodInfo>::iterator it = periods.begin(); it != periods.end(); it++) {
+				std::list<sSCardAvilityPeriodInfo>::iterator it;
+				for (it = periods.begin(); it != periods.end(); it++) {
 					// taskmanager.cpp:4138
 					if (it->id == info.id) {
 						// taskmanager.cpp:4140
@@ -3473,7 +3489,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			packet.DecodeBuffer(&info, sizeof(info));
 			// taskmanager.cpp:4216
 			std::list<sSCardAvilityPeriodInfo>& periodList = CSharedDoc::Instance()->m_cardPeriodList[0];
-			for (std::list<sSCardAvilityPeriodInfo>::iterator it = periodList.begin(); it != periodList.end(); ++it) {
+			std::list<sSCardAvilityPeriodInfo>::iterator it;
+			for (it = periodList.begin(); it != periodList.end(); it++) {
 				// taskmanager.cpp:4224
 				if (it->id == info.id) {
 					// taskmanager.cpp:4227
@@ -3610,10 +3627,10 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:4373
 			unsigned short count = packet.Decode2();
 			// taskmanager.cpp:4375
-			for (int i = 0; i < count; i++) {
+			for (unsigned short i = 0; i < count; i++) {
 				sGiftInfo gift;
 				// taskmanager.cpp:4378
-				packet.DecodeBuffer(&gift, sizeof(gift));
+				packet.DecodeBuffer(&gift, 0xFB);   // the wire record, one byte short of sizeof(sGiftInfo)
 				// taskmanager.cpp:4380
 				CSharedDoc::Instance()->m_chatManager.FilteringHack(gift.m_message, false);
 				// taskmanager.cpp:4381
@@ -3645,7 +3662,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:4399
 				CSharedDoc::Instance()->m_lobbyStateFlag2 = true;
 				// taskmanager.cpp:4400
-				CTaskManager::Instance()->ChangeTask("CRealMyRoomTask", "", true);
+				CTaskManager::Instance()->ChangeTask("CRealMyRoomTask", "", false);
 				// taskmanager.cpp:4401
 				AfxPostMsg(0, "RealMyRoom", 0, (intptr_t)"REALMYROOM", 0, 0, 0);
 				// taskmanager.cpp:4402
@@ -3678,10 +3695,10 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:4430
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2C, 8, 0, 0, 0, 0));
 				// taskmanager.cpp:4432
-				for (int i = 0; i < count; i++) {
+				for (unsigned short i = 0; i < count; i++) {
 					sGiftInfo gift;
 					// taskmanager.cpp:4435
-					packet.DecodeBuffer(&gift, sizeof(gift));
+					packet.DecodeBuffer(&gift, 0xFB);   // the wire record, one byte short of sizeof(sGiftInfo)
 					// taskmanager.cpp:4437
 					CSharedDoc::Instance()->m_chatManager.FilteringHack(gift.m_message, false);
 					// taskmanager.cpp:4440
@@ -4123,7 +4140,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:4895
 		CSharedDoc::Instance()->m_userInfo.galleryGuid = CSharedDoc::Instance()->m_roomPlayers[0].m_guid;
 		// taskmanager.cpp:4898
-		if (IsLocalContent((localContentType_t)0x57) == true) {
+		if (IsLocalContent((localContentType_t)0x57)) {
 			// taskmanager.cpp:4900
 			RequestUccInfo(CSharedDoc::Instance()->m_roomPlayers[0]);
 		}
@@ -5767,7 +5784,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:7529
 					unsigned char count = packet.Decode1();
 					// taskmanager.cpp:7530
-					for (int i = 0; i < count; i++) {
+					for (unsigned char i = 0; i < count; i++) {
 						// taskmanager.cpp:7532
 						sNoteInfo note;
 						// taskmanager.cpp:7533
@@ -6199,7 +6216,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:8139
 		CSharedDoc::Instance()->m_controlServerService = packet.Decode4();
 		// taskmanager.cpp:8141
-		if (IsLocalContent((localContentType_t)0x56) == true) {
+		if (IsLocalContent((localContentType_t)0x56)) {
 			// taskmanager.cpp:8143
 			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x22F, 0, 0, 0, 0, 0);
 		}
@@ -6313,7 +6330,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			std::list<sItemInfo> &itemList = CSharedDoc::Instance()->m_itemInfoList;
 			bool found = false;
 			// taskmanager.cpp:8273
-			for (std::list<sItemInfo>::iterator it = itemList.begin(); it != itemList.end(); ++it) {
+			std::list<sItemInfo>::iterator it;
+			for (it = itemList.begin(); it != itemList.end(); ++it) {
 				// taskmanager.cpp:8275
 				if (it->m_serial == item.m_serial
 					// taskmanager.cpp:8276
@@ -6345,7 +6363,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			break;
 		{
 			// taskmanager.cpp:8332
-			unsigned short result = packet.Decode2();
+			int result = packet.Decode2();
 			// taskmanager.cpp:8333
 			unsigned char request = packet.Decode1();
 			// taskmanager.cpp:8334
@@ -8340,7 +8358,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:10555
 			unsigned short count = packet.Decode2();
 			// taskmanager.cpp:10556
-			for (int i = 0; i < count; i++) {
+			for (unsigned short i = 0; i < count; i++) {
 				// taskmanager.cpp:10558
 				ranktype::sListInfo info;
 				// taskmanager.cpp:10559
@@ -8464,7 +8482,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:10662
 			unsigned short count = packet.Decode2();
 			// taskmanager.cpp:10663
-			for (int i = 0; i < count; i++) {
+			for (unsigned short i = 0; i < count; i++) {
 				// taskmanager.cpp:10665
 				ranktype::sListInfo info;
 				// taskmanager.cpp:10666
@@ -8822,7 +8840,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11003
 			unsigned short count = packet.Decode2();
 			// taskmanager.cpp:11004
-			if (count == 0)
+			if (count <= 0)
 				break;
 			// taskmanager.cpp:11006
 			CSharedDoc::Instance()->m_giftList2.clear();
@@ -8830,7 +8848,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			for (unsigned short i = 0; i < count; i++) {
 				sGiftInfo gift;
 				// taskmanager.cpp:11012
-				packet.DecodeBuffer(&gift, sizeof(gift));
+				packet.DecodeBuffer(&gift, 0xFB);   // the wire record, one byte short of sizeof(sGiftInfo)
 				// taskmanager.cpp:11014
 				CSharedDoc::Instance()->m_chatManager.FilteringHack(gift.m_message, false);
 				// taskmanager.cpp:11017
@@ -9069,7 +9087,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		break;
 	case 0x111:
 		// taskmanager.cpp:11257
-		if (IsLocalContent((localContentType_t)0x2E) == true) {
+		if (IsLocalContent((localContentType_t)0x2E)) {
 			// taskmanager.cpp:11259
 			IActor *pLobby = AfxGetTask()->GetActor("Lobby");
 			// taskmanager.cpp:11260
@@ -9243,13 +9261,29 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11678
 			pDlg->SetCaption("\xbd\xc5\xb1\xd4\xb0\xa1\xc0\xd4 \xc0\xcc\xba\xa5\xc6\xae");
 			// taskmanager.cpp:11680
+#ifdef PG_PORT
 			{ WRect pg_rect(-1.0f, -1.0f, 301.0f, 309.0f); pDlg->SetDlgSize(pg_rect); }
+#else
+			pDlg->SetDlgSize(WRect(-1.0f, -1.0f, 301.0f, 309.0f));
+#endif
 			// taskmanager.cpp:11685
+#ifdef PG_PORT
 			{ WRect pg_rect(0.0f, 0.0f, 256.0f, 220.0f); pDlg->SetBackGroundImage(0, 0, pg_rect, "event_new_02_a", true); }
+#else
+			pDlg->SetBackGroundImage(0, 0, WRect(0.0f, 0.0f, 256.0f, 220.0f), "event_new_02_a", true);
+#endif
 			// taskmanager.cpp:11691
+#ifdef PG_PORT
 			{ WRect pg_rect(256.0f, 0.0f, 314.0f, 247.0f); pDlg->SetBackGroundImage(2, 0, pg_rect, "event_new_02_b", true); }
+#else
+			pDlg->SetBackGroundImage(2, 0, WRect(256.0f, 0.0f, 314.0f, 247.0f), "event_new_02_b", true);
+#endif
 			// taskmanager.cpp:11694
+#ifdef PG_PORT
 			{ WRect pg_rect(114.0f, 247.0f, 0.0f, 0.0f); pDlg->SetOkButton(pg_rect, true); }
+#else
+			pDlg->SetOkButton(WRect(114.0f, 247.0f, 0.0f, 0.0f), true);
+#endif
 			// taskmanager.cpp:11696
 			pDlg->SetDesc("8\xbf\xf9 31\xc0\xcf \xc6\xce\xbe\xdf \xc8\xa8\xc6\xe4\xc0\xcc\xc1\xf6\xbf\xa1\xbc\xad \xc8\xae\xc0\xce\xc7\xcf\xbc\xbc\xbf\xe4.");
 			// taskmanager.cpp:11698
@@ -9262,13 +9296,29 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11710
 			pDlg->SetCaption("\xbd\xc5\xb1\xd4\xb0\xa1\xc0\xd4 \xc0\xcc\xba\xa5\xc6\xae");
 			// taskmanager.cpp:11712
+#ifdef PG_PORT
 			{ WRect pg_rect(-1.0f, -1.0f, 342.0f, 334.0f); pDlg->SetDlgSize(pg_rect); }
+#else
+			pDlg->SetDlgSize(WRect(-1.0f, -1.0f, 342.0f, 334.0f));
+#endif
 			// taskmanager.cpp:11717
+#ifdef PG_PORT
 			{ WRect pg_rect(0.0f, 0.0f, 256.0f, 256.0f); pDlg->SetBackGroundImage(0, 0, pg_rect, "event_new_03_a", true); }
+#else
+			pDlg->SetBackGroundImage(0, 0, WRect(0.0f, 0.0f, 256.0f, 256.0f), "event_new_03_a", true);
+#endif
 			// taskmanager.cpp:11723
+#ifdef PG_PORT
 			{ WRect pg_rect(256.0f, 0.0f, 333.0f, 256.0f); pDlg->SetBackGroundImage(2, 0, pg_rect, "event_new_03_b", true); }
+#else
+			pDlg->SetBackGroundImage(2, 0, WRect(256.0f, 0.0f, 333.0f, 256.0f), "event_new_03_b", true);
+#endif
 			// taskmanager.cpp:11726
+#ifdef PG_PORT
 			{ WRect pg_rect(127.0f, 273.0f, 0.0f, 0.0f); pDlg->SetOkButton(pg_rect, true); }
+#else
+			pDlg->SetOkButton(WRect(127.0f, 273.0f, 0.0f, 0.0f), true);
+#endif
 			// taskmanager.cpp:11728
 			pDlg->SetDesc("8\xbf\xf9 31\xc0\xcf \xc6\xce\xbe\xdf \xc8\xa8\xc6\xe4\xc0\xcc\xc1\xf6\xbf\xa1\xbc\xad \xc8\xae\xc0\xce\xc7\xcf\xbc\xbc\xbf\xe4.");
 			// taskmanager.cpp:11730
@@ -9452,7 +9502,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		break;
 	case 0x138:
 		// taskmanager.cpp:11975
-		if (IsLocalContent((localContentType_t)0x59) == true) {
+		if (IsLocalContent((localContentType_t)0x59)) {
 			// taskmanager.cpp:11978
 			unsigned char result = packet.Decode1();
 			// taskmanager.cpp:11980
@@ -10306,7 +10356,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						// taskmanager.cpp:12820
 						if (S5::UTIL::ErasePartsCardAll(partsId, cards)) {
 							// taskmanager.cpp:12822
-							for (std::list<unsigned long>::iterator it = cards.begin(); it != cards.end(); it++)
+							for (std::list<unsigned long>::iterator it = cards.begin(); it != cards.end(); ++it)
 								// taskmanager.cpp:12823
 								pForm->PushList(*it);
 						}
@@ -10503,7 +10553,6 @@ CTaskManager::~CTaskManager(void) {
 		delete m_pBackGround;
 		m_pBackGround = NULL;
 	}
-	delete m_pWork;
 }
 
 // taskmanager.cpp:14071

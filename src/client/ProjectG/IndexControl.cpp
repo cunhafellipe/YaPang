@@ -115,21 +115,26 @@ void CIndexControl::Draw(WPoint& pos) {
 		}
 
 		m_pos = pos;
-		WPoint drawPos = m_pos;
+		float x = m_pos.x;
+		float y = m_pos.y;
 
 		float width = m_curIndexCount * m_indexRect.w;
 
 		switch (m_align) {
 		case 1:
-			drawPos.x -= width * 0.5f;
+			x -= width * 0.5f;
 			break;
 		case 2:
-			drawPos.x -= width;
+			x -= width;
 			break;
 		}
 
 		for (unsigned long i = 0; i < m_curIndexCount; i++) {
-			WRect rect = WRect(m_indexRects[i]) + WRect(drawPos.x, drawPos.y, drawPos.x, drawPos.y);
+			WRect rect = m_indexRects[i];
+			rect.x += x;
+			rect.y += y;
+			rect.w += x;
+			rect.h += y;
 
 			if (i != 0) {
 				pGI->SetTextColor(m_disabledColor, 0xffffffff);
@@ -167,22 +172,27 @@ void CIndexControl::Draw(WPoint& pos) {
 // indexcontrol.cpp:251
 bool CIndexControl::Click(void) {
 	bool result = false;
-	WPoint pos = m_pos;
+	float x = m_pos.x;
+	float y = m_pos.y;
 
 	float width = m_curIndexCount * m_indexRect.w;
 
 	switch (m_align) {
 	case 1:
-		pos.x -= width * 0.5f;
+		x -= width * 0.5f;
 		break;
 	case 2:
-		pos.x -= width;
+		x -= width;
 		break;
 	}
 
 	for (unsigned long i = 0; i < m_curIndexCount; i++) {
 		const WPoint& mouse = g_pFresh->GetManager()->GetMousePos();
-		WRect rect = WRect(m_indexRects[i]) + WRect(pos.x, pos.y, pos.x, pos.y);
+		WRect rect = m_indexRects[i];
+		rect.x += x;
+		rect.y += y;
+		rect.w += x;
+		rect.h += y;
 
 		if (mouse.x >= rect.x && mouse.x <= rect.w && mouse.y >= rect.y && mouse.y <= rect.h) {
 			if (m_selectedIndex != i) {

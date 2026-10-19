@@ -172,12 +172,12 @@ void CClub::Process(float time) {
 
 	if (m_prevClubIndex != m_clubIndex) {
 
-		m_flags |= 1;
+		m_flags.Enable(1);
 
 		if (GetType() != GetType(m_prevClubIndex))
-			m_flags |= 2;
+			m_flags.Enable(2);
 		else
-			m_flags &= ~2;
+			m_flags.Disable(2);
 
 		GOLFDOC()->GetBar().m_accuracy = GetType() == 3 ? BAR_START : 105.0f;
 		GOLFDOC()->GetBar().m_prevAccuracy = GOLFDOC()->GetBar().m_accuracy;
@@ -189,7 +189,7 @@ void CClub::Process(float time) {
 	} else {
 
 
-		m_flags &= ~3;
+		m_flags.Disable(3);
 	}
 }
 
@@ -294,7 +294,7 @@ void CClub::BarProcess(float time) {
 	switch (m_bar) {
 	case 0:
 
-		if (m_flags & 1)
+		if (m_flags.GetFlag(1))
 			m_barDelay = 0.0f;
 
 		m_barDelay += time;
@@ -308,7 +308,7 @@ void CClub::BarProcess(float time) {
 		break;
 
 	case 1:
-		if ((m_flags & 1) && (!CChatMsg::Instance()->IsActive() || !m_itemWindow)) {
+		if (m_flags.GetFlag(1) && (!CChatMsg::Instance()->IsActive() || !m_itemWindow)) {
 			m_bar = 3;
 			m_barAlpha = 0.0f;
 			m_barPosition = 456.0f;
@@ -342,7 +342,7 @@ void CClub::BarProcess(float time) {
 		break;
 
 	case 2:
-		if ((m_flags & 1) && !CChatMsg::Instance()->IsActive() && !m_itemWindow) {
+		if (m_flags.GetFlag(1) && !CChatMsg::Instance()->IsActive() && !m_itemWindow) {
 
 			if (GolfBall().m_groundType == 2) {
 
@@ -480,7 +480,8 @@ void CClub::SelectBestClub(const WVector &target) {
 	float dx = ball.m_pos.x - target.x;
 	float dz = ball.m_pos.z - target.z;
 
-	float dist = (float)sqrt(dx * dx + dz * dz) * 0.3125f;
+	dx *= dx;
+	float dist = (float)sqrt(dx + dz * dz) * 0.3125f;
 	m_approachClubIndex = 0;
 
 	if (dist < 10.0f)
@@ -548,13 +549,14 @@ void CClub::SelectBestClub(const WVector &target) {
 			if (club->m_index >= 13)
 				continue;
 
-			if ((float)club->m_lie < GetPVS().GetGroundSlope(meshIndex) + 0.06981317f) {
+			if (club->m_lie < GetPVS().GetGroundSlope(meshIndex) + 0.06981317f) {
 				m_approachClubIndex++;
 				continue;
 			}
 
 			float range = GetRange(club->m_name);
-			float score = club->m_barSpeed * 0.5f - Abs(range - dist);
+			float diff = Abs(range - dist);
+			float score = club->m_barSpeed * 0.5f - diff;
 
 			if (range > dist)
 				score += 10.0f;
@@ -711,10 +713,10 @@ float CClub::GetRange(const char *name) {
 				int power = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power;
 				range = GetPowerShotFactor() + power + luckyRange;
 			} else {
-				range = club->m_range + GetPowerShotFactor(); range = (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + range;
+				range = club->m_range + GetPowerShotFactor() + (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power;
 			}
 		} else {
-			range = club->m_range + GetPowerShotFactor(); range = (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power * 2.0f + range;
+			range = club->m_range + GetPowerShotFactor() + (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power * 2.0f;
 		}
 		break;
 
@@ -733,7 +735,7 @@ float CClub::GetRange(const char *name) {
 			range = (PowerShotType() ? 20.0f : 0.0f) + 60.0f;
 			break;
 		case 4:
-			range = range + GetPowerShotFactor();
+			range = club->m_range;
 			break;
 		}
 		break;
@@ -811,7 +813,6 @@ float CClub::GetPower(void) {
 		aux += CCardManager::Instance()->GetTotalRange(withPowerRange);
 	}
 
-	float range;
 	switch (m_pClub->m_type) {
 	case 0:
 
@@ -823,30 +824,30 @@ float CClub::GetPower(void) {
 		if (CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_clubSet.typeId == 0x10000012) {
 
 
-			range = GetAirNightLuckyRange(m_pClub->m_name);
+			float range = GetAirNightLuckyRange(m_pClub->m_name);
 			power = GetAirNightLuckyPower(m_pClub->m_name);
 			if (range > 0.0f && power > 0.0f) {
 
 
-				return ((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + powerShot) / range * 1.5f + 1.0f) * power;
+				power = ((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + powerShot) / range * 1.5f + 1.0f) * power;
 
 			} else {
 
 
-				range = m_pClub->m_range; power = m_pClub->m_power; return ((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + powerShot) / range * 1.5f + 1.0f) * power;
+				power = ((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power + powerShot) / m_pClub->m_range * 1.5f + 1.0f) * m_pClub->m_power;
 			}
+		} else {
+
+
+
+
+
+			power = (((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power) * 2.0f + powerShot) / m_pClub->m_range * 1.5f + 1.0f) * m_pClub->m_power;
 		}
 
 
 
-
-
-
-		return (((aux * 0.5f + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_power) * 2.0f + powerShot) / m_pClub->m_range * 1.5f + 1.0f) * m_pClub->m_power;
-
-
-
-
+		break;
 	case 1:
 		return (powerShot / m_pClub->m_range + 1.0f) * m_pClub->m_power
 			+ (float)m_pClub->m_power / m_pClub->m_range * aux * 1.3f;
@@ -925,6 +926,7 @@ void CClub::SetClub(unsigned char index) {
 	m_pClub = SelectClub(index);
 	m_clubIndex = m_pClub->m_index;
 }
+
 
 // Nameless per-unit rdata constant: degrees to radians.
 extern "C" {

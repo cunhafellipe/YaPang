@@ -180,8 +180,10 @@ void CLensFlare::Render(WView* view) {
 		m_sprites[3]->Render(view, angle[i], 0x20800000);
 	}
 
-	WRect src(0.0f, 0.0f, 1.0f, 1.0f);
-	WRect dst;
+	WRECT src;
+	WRECT dst;
+	src.x = src.y = 0.0f;
+	src.w = src.h = 1.0f;
 
 	float dx = vtx.sx / view->GetWidth() - 0.5f;
 	float dy = vtx.sy / view->GetHeight() - 0.5f;
@@ -191,8 +193,9 @@ void CLensFlare::Render(WView* view) {
 		WOverlay* overlay = m_overlays[ms_lenzTable[j].overlay];
 		int r = rand() % 500;
 
-		dst.w = (r * 0.0001f + 1.0f) * ms_lenzTable[j].scale * view->GetWidth() * unit;
-		dst.h = dst.w;
+		float size = (r * 0.0001f + 1.0f) * ms_lenzTable[j].scale * view->GetWidth() * unit;
+		dst.w = size;
+		dst.h = size;
 		dst.x = (dx * ms_lenzTable[j].position + 0.5f) * view->GetWidth() - dst.w * 0.5f;
 		dst.y = (dy * ms_lenzTable[j].position + 0.5f) * view->GetHeight() - dst.w * 0.5f;
 		overlay->Render(view, src, dst, 0xC00000, ms_lenzTable[j].color, 0.0f, 0);

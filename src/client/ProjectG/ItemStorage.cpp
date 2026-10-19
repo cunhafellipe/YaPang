@@ -186,34 +186,34 @@ void FrItemStorageNotice::OnOwnerDrawPrintOut(intptr_t id) {
 		"\xc3\xd6\xb1\xd9 \xba\xf3\xb9\xf8\xc7\xcf\xb0\xd4 \xb9\xdf\xbb\xfd\xc7\xcf\xb4\xc2 \xb0\xe8\xc1\xa4\xb5\xb5\xbf\xeb \xc7\xd8\xc5\xb7 \xbb\xe7\xb7\xca\xb8\xa6 \xb9\xe6\xc1\xf6\xc7\xcf\xbf\xa9",
 		// "and let users play PangYa more safely,"
 		"\xc0\xaf\xc0\xfa \xbf\xa9\xb7\xaf\xba\xd0\xb2\xb2\xbc\xad \xb4\xf5\xbf\xed \xbe\xc8\xbd\xc9\xc7\xcf\xb0\xed \xc6\xce\xbe\xdf\xb8\xa6 \xc0\xcc\xbf\xeb\xc7\xcf\xbd\xc7 \xbc\xf6 \xc0\xd6\xb5\xb5\xb7\xcf",
-		"",
 		// "we opened the 'Dolfini's secret safe' system!"
 		"'\xb5\xb9\xc7\xc7\xb4\xcf\xc0\xc7 \xba\xf1\xb9\xd0\xb1\xdd\xb0\xed' \xbd\xc3\xbd\xba\xc5\xdb\xc0\xbb \xbf\xc0\xc7\xc2\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9!",
+		"",
 		// "To use Dolfini's secret safe safely,"
 		"\xb5\xb9\xc7\xc7\xb4\xcf\xc0\xc7 \xba\xf1\xb9\xd0\xb1\xdd\xb0\xed\xb8\xa6 \xbe\xc8\xc0\xfc\xc7\xcf\xb0\xd4 \xc0\xcc\xbf\xeb\xc7\xcf\xbd\xc7 \xbc\xf6 \xc0\xd6\xb5\xb5\xb7\xcf,"
 	};
 
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
-	WPoint pt(GetRect().x, GetRect().y);
+	WRect rc = GetRect();
 
 	if (pGDI) {
-		float x = pt.x + 10.0f;
+		float x = rc.x + 10.0f;
 
 		for (int i = 0; i < 7; i++) {
-			pGDI->Print(WPoint(x, (float)i * 15.0f + pt.y + 45.0f), 0, lines[i]);
+			pGDI->Print(WPoint(x, (float)i * 15.0f + rc.y + 45.0f), 0, lines[i]);
 		}
 	}
 
 	// "on first use"
-	pGDI->Print(WPoint(pt.x + 10.0f, pt.y + 150.0f), 0, "\xc3\xd6\xc3\xca \xbb\xe7\xbf\xeb\xbd\xc3");
+	pGDI->Print(WPoint(rc.x + 10.0f, rc.y + 150.0f), 0, "\xc3\xd6\xc3\xca \xbb\xe7\xbf\xeb\xbd\xc3");
 	pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
 	pGDI->SetTextStyle(1);
 	// "set a 4-digit number code"
-	pGDI->Print(WPoint(pt.x + 80.0f, pt.y + 150.0f), 0, "4\xc0\xda\xb8\xae\xc0\xc7 \xbc\xfd\xc0\xda \xbe\xcf\xc8\xa3\xb8\xa6 \xbc\xb3\xc1\xa4");
+	pGDI->Print(WPoint(rc.x + 80.0f, rc.y + 150.0f), 0, "4\xc0\xda\xb8\xae\xc0\xc7 \xbc\xfd\xc0\xda \xbe\xcf\xc8\xa3\xb8\xa6 \xbc\xb3\xc1\xa4");
 	pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 	pGDI->SetTextStyle(0);
 	// "you must"
-	pGDI->Print(WPoint(pt.x + 220.0f, pt.y + 150.0f), 0, "\xc7\xd8 \xc1\xd6\xbc\xc5\xbe\xdf \xc7\xd5\xb4\xcf\xb4\xd9.");
+	pGDI->Print(WPoint(rc.x + 220.0f, rc.y + 150.0f), 0, "\xc7\xd8 \xc1\xd6\xbc\xc5\xbe\xdf \xc7\xd5\xb4\xcf\xb4\xd9.");
 }
 
 // itemstorage.cpp:94
@@ -257,9 +257,9 @@ FrItemStorageAccessPanel::~FrItemStorageAccessPanel(void) {
 
 // itemstorage.cpp:139
 bool FrItemStorageAccessPanel::InputPassword(unsigned char number) {
+	bool ret = false;
 	char szNumber[0x20] = "\0";
 	char szPrev[4];
-	bool ret = false;
 
 	switch (m_formType) {
 	case 0:
@@ -543,7 +543,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	if (pGDI) {
-		WPoint pt(GetRect().x, GetRect().y);
+		WRect rc = GetRect();
 
 		const Bitmap* pTextBox = g_pFresh->GetBitmap("text_box");
 		const Bitmap* pTip = g_pFresh->GetBitmap("btn_tip_o");
@@ -555,28 +555,28 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 			len = strlen(m_newPassword);
 
 			if (m_inputStep == 1 && pTextBox) {
-				pGDI->DrawTexture(pTextBox, WRect(pt.x + 79.0f, pt.y + 30.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
+				pGDI->DrawTexture(pTextBox, WRect(rc.x + 79.0f, rc.y + 30.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
 			}
 
-			pGDI->Print(WPoint(pt.x + 20.0f, pt.y + 35.0f), 0, "\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "password"
+			pGDI->Print(WPoint(rc.x + 20.0f, rc.y + 35.0f), 0, "\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "password"
 
 			if (len > 0 && pTip) {
 				for (i = 0; i < len; i++) {
-					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + pt.x + 82.0f, pt.y + 32.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
+					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 82.0f, rc.y + 32.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 				}
 			}
 
 			len = strlen(m_confirmPassword);
 
 			if (m_inputStep == 2 && pTextBox) {
-				pGDI->DrawTexture(pTextBox, WRect(pt.x + 79.0f, pt.y + 55.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
+				pGDI->DrawTexture(pTextBox, WRect(rc.x + 79.0f, rc.y + 55.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
 			}
 
-			pGDI->Print(WPoint(pt.x + 20.0f, pt.y + 60.0f), 0, "\xc8\xae\xc0\xce\xc0\xd4\xb7\xc2");   // "confirm"
+			pGDI->Print(WPoint(rc.x + 20.0f, rc.y + 60.0f), 0, "\xc8\xae\xc0\xce\xc0\xd4\xb7\xc2");   // "confirm"
 
 			if (len > 0 && pTip) {
 				for (i = 0; i < len; i++) {
-					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + pt.x + 82.0f, pt.y + 57.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
+					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 82.0f, rc.y + 57.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 				}
 			}
 			break;
@@ -586,15 +586,15 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 		case 4: {
 			len = strlen(m_newPassword);
 
-			pGDI->Print(WPoint(pt.x + 20.0f, pt.y + 55.0f), 0, "\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "password"
+			pGDI->Print(WPoint(rc.x + 20.0f, rc.y + 55.0f), 0, "\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "password"
 
 			if (pTextBox) {
-				pGDI->DrawTexture(pTextBox, WRect(pt.x + 79.0f, pt.y + 50.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
+				pGDI->DrawTexture(pTextBox, WRect(rc.x + 79.0f, rc.y + 50.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
 			}
 
 			if (len > 0 && pTip) {
 				for (i = 0; i < len; i++) {
-					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + pt.x + 82.0f, pt.y + 52.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
+					pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 82.0f, rc.y + 52.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 				}
 			}
 			break;
@@ -604,27 +604,27 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 			case 0:
 				len = strlen(m_password);
 
-				pGDI->Print(WPoint(pt.x + 20.0f, pt.y + 55.0f), 0, "\xb1\xb8\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "old password"
+				pGDI->Print(WPoint(rc.x + 20.0f, rc.y + 55.0f), 0, "\xb1\xb8\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "old password"
 
 				if (pTextBox) {
-					pGDI->DrawTexture(pTextBox, WRect(pt.x + 88.0f, pt.y + 50.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
+					pGDI->DrawTexture(pTextBox, WRect(rc.x + 88.0f, rc.y + 50.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
 				}
 
 				if (len > 0 && pTip) {
 					for (i = 0; i < len; i++) {
-						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + pt.x + 92.0f, pt.y + 52.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 92.0f, rc.y + 52.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 					}
 				}
 				break;
 			default:
-				pGDI->Print(WPoint(pt.x + 20.0f, pt.y + 35.0f), 0, "\xbb\xf5\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "new password"
-				pGDI->Print(WPoint(pt.x + 30.0f, pt.y + 60.0f), 0, "\xc8\xae\xc0\xce\xc0\xd4\xb7\xc2");   // "confirm"
+				pGDI->Print(WPoint(rc.x + 20.0f, rc.y + 35.0f), 0, "\xbb\xf5\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3");   // "new password"
+				pGDI->Print(WPoint(rc.x + 30.0f, rc.y + 60.0f), 0, "\xc8\xae\xc0\xce\xc0\xd4\xb7\xc2");   // "confirm"
 
 				if (pTextBox) {
 					if (m_inputStep == 1) {
-						pGDI->DrawTexture(pTextBox, WRect(pt.x + 88.0f, pt.y + 30.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pTextBox, WRect(rc.x + 88.0f, rc.y + 30.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
 					} else {
-						pGDI->DrawTexture(pTextBox, WRect(pt.x + 88.0f, pt.y + 55.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pTextBox, WRect(rc.x + 88.0f, rc.y + 55.0f, 88.0f, 21.0f), 0xFFFFFFFF, 0);
 					}
 				}
 
@@ -632,7 +632,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 
 				if (len > 0 && pTip) {
 					for (i = 0; i < len; i++) {
-						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + pt.x + 92.0f, pt.y + 32.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 92.0f, rc.y + 32.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 					}
 				}
 
@@ -640,7 +640,7 @@ void FrItemStorageAccessPanel::OnOwnerDrawPrintOut(intptr_t id) {
 
 				if (len > 0 && pTip) {
 					for (i = 0; i < len; i++) {
-						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + pt.x + 92.0f, pt.y + 57.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pTip, WRect((float)i * 22.0f + rc.x + 92.0f, rc.y + 57.0f, 16.0f, 16.0f), 0xFFFFFFFF, 0);
 					}
 				}
 				break;
@@ -808,7 +808,8 @@ void FrItemStorageAccessPanel::OnLBDownConfirm(void) {
 	case 1:
 	case 3:
 	case 4:
-		if (m_inputStep == 1) {
+		switch (m_inputStep) {
+		case 1: {
 			int len = strlen(m_newPassword);
 
 			if (len < 4) {
@@ -820,6 +821,8 @@ void FrItemStorageAccessPanel::OnLBDownConfirm(void) {
 				m_inputStep = 3;
 				Close(FrOK, true);
 			}
+			break;
+		}
 		}
 		break;
 	case 2:
@@ -934,11 +937,11 @@ void FrItemStorageAccessPanel::OnLBDownCancel(void) {
 			}
 			break;
 		case 1:
-			if (strlen(m_newPassword) == 0) {
+			if (strlen(m_newPassword) != 0) {
 				memset(m_newPassword, 0, sizeof(m_newPassword));
-				m_inputStep = 0;
 			} else {
 				memset(m_newPassword, 0, sizeof(m_newPassword));
+				m_inputStep = 0;
 			}
 			break;
 		case 2:
@@ -1668,10 +1671,7 @@ void CItemStorage::AddStoredItemInfo(const sStoredItemInfo& info) {
 	TSafeNew<sStoredItemInfo>(pStored, 1);
 
 	if (pStored) {
-		// sStoredItemInfo::operator= (globalnetworkdefine.h:2991) is
-		// inline in the original; ours is declared out of line.
-		pStored->slot = info.slot;
-		pStored->item = info.item;
+		memcpy(pStored, &info, sizeof(sStoredItemInfo));
 		m_storedItemInfo.push_back(pStored);
 
 		if (IsLocalContent((localContentType_t)0x57) && IsUccClothes(pStored->item.typeId)) {
@@ -1743,8 +1743,8 @@ bool CItemStorage::CheckStoredItemInfo(sStoredItemInfo& stored, const sItemInfo&
 
 	memset(&stored, 0, sizeof(stored));
 
-	stored.item.typeId = info.m_typeId;
-	stored.item.guid = info.m_serial;
+	stored.SetTypeID(info.m_typeId);
+	stored.SetGuid(info.m_serial);
 	strcpy(stored.item.uccCopierNick, info.m_reserved5E);   // sItemInfo 0x5E holds the UCC copier's nick
 	strcpy(stored.item.uccIdx, info.m_uccKey);
 
@@ -1754,11 +1754,11 @@ bool CItemStorage::CheckStoredItemInfo(sStoredItemInfo& stored, const sItemInfo&
 			ret = false;
 			break;
 		}
-		stored.item.count = 1;
+		stored.SetCount(1);
 		ret = true;
 		break;
 	case 2:
-		stored.item.count = 1;
+		stored.SetCount(1);
 		ret = true;
 		break;
 	case 4:
@@ -1790,7 +1790,7 @@ void CItemStorage::ReqPopStoredItemInfo(const FrListItem& item) {
 
 // itemstorage.cpp:2030
 void CItemStorage::ReqPopStoredItemInfo(const sStoredItemInfo& info) {
-	if (info.item.count > 1) {
+	if (info.GetCount() > 1) {
 		if (m_pItemCounter == 0) {
 			m_pItemCounter = CreateForm<FrItemCounter>(g_pFresh->GetManager(), this, "item_storage_item_counter", 0);
 		}
@@ -1808,7 +1808,7 @@ void CItemStorage::ReqPopStoredItemInfo(const sStoredItemInfo& info) {
 			stored.item = info.item;
 			m_pItemCounter->Open((FRESH_RESULT_CALLBACK)&CItemStorage::OnResultItemCounter, 9);
 		}
-	} else if (info.item.count == 1) {
+	} else if (info.GetCount() == 1) {
 		if (m_pItemConfirm == 0) {
 			m_pItemConfirm = CreateForm<FrItemConfirm>(g_pFresh->GetManager(), this, "item_storage_item_confirm", 0);
 		}
@@ -1864,7 +1864,7 @@ void CItemStorage::ReqPushStoredItemInfo(const sItemInfo& info) {
 				}
 		}
 
-			if (stored.item.count > 1) {
+			if (stored.GetCount() > 1) {
 				if (m_pItemCounter == 0) {
 					m_pItemCounter = CreateForm<FrItemCounter>(g_pFresh->GetManager(), this, "item_storage_item_counter", 0);
 				}
@@ -1878,7 +1878,7 @@ void CItemStorage::ReqPushStoredItemInfo(const sItemInfo& info) {
 					m_pItemCounter->SetStoredItemInfo(stored);
 					m_pItemCounter->Open((FRESH_RESULT_CALLBACK)&CItemStorage::OnResultItemCounter, 9);
 				}
-			} else if (stored.item.count == 1) {
+			} else if (stored.GetCount() == 1) {
 				if (m_pItemConfirm == 0) {
 					m_pItemConfirm = CreateForm<FrItemConfirm>(g_pFresh->GetManager(), this, "item_storage_item_confirm", 0);
 				}
@@ -1892,7 +1892,7 @@ void CItemStorage::ReqPushStoredItemInfo(const sItemInfo& info) {
 					m_pItemConfirm->SetStoredItemInfo(stored);
 					m_pItemConfirm->Open((FRESH_RESULT_CALLBACK)&CItemStorage::OnResultItemConfirm, 9);
 				}
-			} else if (stored.item.count == 0) {
+			} else if (stored.GetCount() == 0) {
 				FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 				pForm->SetMessage("\xba\xb8\xb0\xfc \xc7\xd2 \xbc\xf6 \xbe\xf8\xb4\xc2 \xbe\xc6\xc0\xcc\xc5\xdb \xc0\xd4\xb4\xcf\xb4\xd9.", true);
 				pForm->Open((FRESH_RESULT_CALLBACK)0, 9);
@@ -1948,7 +1948,7 @@ void CItemStorage::MakeStoredItemInfo(FrListBox*& pListBox) {
 }
 
 // itemstorage.cpp:2226
-void CItemStorage::DrawStoredItemInfo(FrListBox*& pListBox, const FrListItem& item) {
+void CItemStorage::DrawStoredItemInfo(PG_ORIG_CONST FrListBox*& pListBox, const FrListItem& item) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	if (pGDI && pListBox) {

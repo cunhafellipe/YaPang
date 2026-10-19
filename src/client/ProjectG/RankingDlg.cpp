@@ -377,7 +377,7 @@ void FrRankingDlg::OnProc(const float dt) {
 	if (m_userInfoDelay > 0.0f) {
 		m_userInfoDelay -= dt;
 
-		if (m_userInfoDelay <= 0.0f) {
+		if (m_userInfoDelay < 0.0f) {
 			SetVisibleUserInfo(true);
 			SetAllControlsEnable(true);
 		}
@@ -612,7 +612,7 @@ void FrRankingDlg::SetListItemInfo(FrListItem* pItem) {
 
 	ranktype::sListInfo* pInfo = (ranktype::sListInfo*)pItem->pData;
 	if (pInfo->uid == m_userInfo.uid) {
-		WOverlay::DrawBox(g_view, WRect(pItem->pos.x + 1.0f, pItem->pos.y - 5.0f, m_pRankList->GetItemWidth() + 17.0f, (float)m_pRankList->GetItemHeight()), 0, 0xa0ffff00, 0.0f);
+		WOverlay::DrawBox(g_view, WRect(1.0f, -5.0f, m_pRankList->GetItemWidth() + 17.0f, (float)m_pRankList->GetItemHeight()) + pItem->pos, 0, 0xa0ffff00, 0.0f);
 		color = 0xff000000;
 	}
 

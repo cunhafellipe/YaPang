@@ -550,7 +550,7 @@ bool WPolySoup::LoadMapCheckData(unsigned char hole) {
 
 	unsigned char index = GetHoleIndex(hole) - 1;
 
-	if (WSingleton<CSharedDoc>::Instance()->m_pCurCourse != 0 && WSingleton<CSharedDoc>::Instance()->m_pCurCourse->courseFlags >> 4 == 2) {
+	if (GetDiffFlag() == 2) {
 		pFile->Seek(8, 1);
 
 		pFile->Read(&GOLFDOC()->m_holeData[hole - 1].m_teePos.x, 4);
@@ -1126,11 +1126,11 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 			continue;
 		}
 
-		char *pExt = strrchr(fxName, '.');
-		if (pExt == 0 || strlen(pExt) < 4) {
+		char *pDot = strrchr(fxName, '.');
+		if (pDot == 0 || strlen(pDot) < 4) {
 			continue;
 		}
-		pExt++;
+		char *pExt = pDot + 1;
 
 		if (stricmp(pExt, "spr") == 0) {
 			((CFxSpray *)pFx)->SetLight(g_lightset);
@@ -1168,19 +1168,19 @@ void WPolySoup::ProcessPostLoadPet(sModel *pModel) {
 	for (w_bound_box *pBox = pModel->m_pPuppet->m_bbList.Start(); pBox; pBox = pModel->m_pPuppet->m_bbList.Next()) {
 		char *pOption = pBox->info->option;
 
-		if (_stricmp(pBox->info->name, "night_only") == 0) {
+		if (stricmp(pBox->info->name, "night_only") == 0) {
 			if (GOLFDOC()->m_day) {
 				if (pBox->bone && pBox->bone->GetChild()) {
 					pBox->bone->GetChild()->SetInvisible(true, true);
 				}
 			}
-		} else if (_stricmp(pBox->info->name, "day_only") == 0) {
+		} else if (stricmp(pBox->info->name, "day_only") == 0) {
 			if (!GOLFDOC()->m_day) {
 				if (pBox->bone && pBox->bone->GetChild()) {
 					pBox->bone->GetChild()->SetInvisible(true, true);
 				}
 			}
-		} else if (_stricmp(pBox->info->name, "center") == 0) {
+		} else if (stricmp(pBox->info->name, "center") == 0) {
 			WSliceStr slice = pOption;
 			slice.Get("*wind", "%f", &pModel->m_windFactor);
 			slice.Get("*nocol", "%d", &pModel->m_reservedByte);
@@ -1193,7 +1193,7 @@ void WPolySoup::ProcessPostLoadPet(sModel *pModel) {
 					pModel->m_pPuppet->EnableAlphaBlend();
 				}
 			}
-		} else if (_stricmp(pBox->info->name, "npc") != 0) {
+		} else if (stricmp(pBox->info->name, "npc") != 0) {
 			if (strstr(pBox->info->name, "sound")) {
 				sSoundBox soundBox;
 				soundBox.m_interval = -1.0f;
@@ -1206,7 +1206,7 @@ void WPolySoup::ProcessPostLoadPet(sModel *pModel) {
 				soundBox.m_box.center = pBox->info->spherePivot * pBox->bone->GetMatrix();
 
 				m_soundBoxes.push_back(soundBox);
-			} else if (strstr(_strlwr(pBox->info->name), "abv")) {
+			} else if (strstr(strlwr(pBox->info->name), "abv")) {
 				pBox->bone->HideBone(false);
 			}
 		}
@@ -1229,16 +1229,16 @@ void WPolySoup::ProcessPostLoadPet(sModel *pModel) {
 			continue;
 		}
 
-		char *pExt = strrchr(fxName, '.');
-		if (pExt == 0 || strlen(pExt) < 4) {
+		char *pDot = strrchr(fxName, '.');
+		if (pDot == 0 || strlen(pDot) < 4) {
 			continue;
 		}
-		pExt++;
-		if (_stricmp(pExt, "spr") != 0 && _stricmp(pExt, "seq") != 0) {
+		char *pExt = pDot + 1;
+		if (stricmp(pExt, "spr") != 0 && stricmp(pExt, "seq") != 0) {
 			continue;
 		}
 
-		if (_strcmpi(kind, "tree") == 0) {
+		if (strcmpi(kind, "tree") == 0) {
 			ApplyFx(pModel, pBox->bone->GetChild(), fxName);
 			continue;
 		}
@@ -1252,7 +1252,7 @@ void WPolySoup::ProcessPostLoadPet(sModel *pModel) {
 		defines.m_values[0] = pModel->m_scale;
 		defines.m_count = 1;
 
-		if (_stricmp(pExt, "spr") == 0) {
+		if (stricmp(pExt, "spr") == 0) {
 			CFx::Instance()->Attach(attacher, fxName, false, &defines);
 		} else {
 			CFx::Instance()->Attach(attacher, fxName, false, &defines);
@@ -1293,11 +1293,11 @@ void WPolySoup::ApplyFx(sModel *pModel, WBone *pBone, const char *name) {
 		}
 	}
 
-	if (pBone->GetChild()) {
-		ApplyFx(pModel, pBone->GetChild(), name);
-	}
 	if (pBone->GetNext()) {
 		ApplyFx(pModel, pBone->GetNext(), name);
+	}
+	if (pBone->GetChild()) {
+		ApplyFx(pModel, pBone->GetChild(), name);
 	}
 }
 
@@ -1564,7 +1564,7 @@ bool WPolySoup::IsPointInPoly(const std::vector<WVector> &points, const WVector 
 		winding += delta;
 	}
 
-	return (winding > 0 ? winding : -winding) == 4;
+	return (winding > 0 ? winding : -winding) == 4 ? true : false;
 }
 
 // polysoup.cpp:1616
@@ -1615,22 +1615,22 @@ WVector WPolySoup::PosInWorld(const std::vector<WVector> &points, const WVector 
 	toPos.y = 0.0f;
 	float dist = sqrtf(WDotProduct(toPos, toPos));
 
+	WVector cur;
+	WVector crossCur;
+	WVector next;
+	WVector crossNext;
 	if (IsClockWise(points, dir)) {
 		for (int i = 0; i < numPoints; i++) {
-			WVector cur;
 			cur = points[i] - dir;
 			cur.y = 0.0f;
 			if (WDotProduct(cur, toPos) < 0.0f)
 				continue;
-			WVector crossCur;
 			crossCur = WCrossProduct(toPos, cur);
 
-			WVector next;
 			next = points[(i + 1) % numPoints] - dir;
 			next.y = 0.0f;
 			if (WDotProduct(next, toPos) < 0.0f)
 				continue;
-			WVector crossNext;
 			crossNext = WCrossProduct(toPos, next);
 
 			if (crossCur.y < 0.0f && crossNext.y > 0.0f) {
@@ -1642,23 +1642,19 @@ WVector WPolySoup::PosInWorld(const std::vector<WVector> &points, const WVector 
 		}
 	} else {
 		for (int i = 0; i < numPoints; i++) {
-			WVector cur;
 			cur = points[i] - dir;
 
 			if (WDotProduct(cur, toPos) < 0.0f)
 				continue;
 
-			WVector crossCur;
 			crossCur = WCrossProduct(toPos, cur);
 
-			WVector next;
 			next = points[(i + 1) % numPoints] - dir;
 			next.y = 0.0f;
 
 			if (WDotProduct(next, toPos) < 0.0f)
 				continue;
 
-			WVector crossNext;
 			crossNext = WCrossProduct(toPos, next);
 
 			if (crossCur.y > 0.0f && crossNext.y < 0.0f) {
@@ -1671,9 +1667,9 @@ WVector WPolySoup::PosInWorld(const std::vector<WVector> &points, const WVector 
 	}
 
 	toPos.Normalize();
-	toPos *= dist;
+	WVector result = toPos * dist + dir;
 
-	return toPos + dir;
+	return result;
 }
 
 // polysoup.cpp:1739
@@ -1703,9 +1699,9 @@ float WPolySoup::GetCameraRadius(WVector a, WVector b, WVector c) {
 
 // polysoup.cpp:1766
 bool WPolySoup::IsClockWise(const std::vector<WVector> &points, const WVector &pos) {
-	WVector2D a(points[1].x - pos.x, points[1].z - pos.z), b(points[0].x - pos.x, points[0].z - pos.z);
+	float cross = WCrossProduct(points[0] - pos, points[1] - pos).y;
 
-	if (a.x * b.y - b.x * a.y > 0.0f) {
+	if (cross > 0.0f) {
 		return true;
 	}
 	return false;
@@ -1864,7 +1860,7 @@ void WPolySoup::SetAdditionModel(const char *name, const WVector &pos) {
 	pModel->m_matrix.ym = pos.y;
 	pModel->m_matrix.zm = pos.z;
 
-	pModel->m_basePos = (pModel->m_aabb.min + pModel->m_aabb.max) * 0.5f;
+	pModel->m_basePos = (pModel->m_aabb.max + pModel->m_aabb.min) * 0.5f;
 	pModel->m_center = pos * 0.5f;
 	pModel->m_radius = (pModel->m_aabb.max - pModel->m_aabb.min).Magnitude() * 0.5f;
 	pModel->m_scale = m_models[4]->m_scale;
@@ -2402,15 +2398,22 @@ struct SmDdsHeader {
 	unsigned long m_height;               // 0x08
 	unsigned long m_width;                // 0x0C
 	unsigned long m_linearSize;           // 0x10
-	UNKNOWN(0x14, 0x18);
+	unsigned long m_depth;                // 0x14
 	unsigned long m_mipMapCount;          // 0x18
-	UNKNOWN(0x1C, 0x48);
+	unsigned long m_alphaBitDepth;        // 0x1C
+	unsigned long m_reserved;             // 0x20
+	void *m_pSurface;                     // 0x24
+	unsigned long m_colorKeys[4][2];      // 0x28, four DDCOLORKEY
 	unsigned long m_formatSize;           // 0x48, the pixel format's size
 	unsigned long m_formatFlags;          // 0x4C
 	unsigned long m_fourCC;               // 0x50
-	UNKNOWN(0x54, 0x68);
+	unsigned long m_rgbBitCount;          // 0x54
+	unsigned long m_bitMasks[4];          // 0x58, R, G, B, A
 	unsigned long m_caps;                 // 0x68
-	UNKNOWN(0x6C, 0x7C);
+	unsigned long m_caps2;                // 0x6C
+	unsigned long m_caps3;                // 0x70
+	unsigned long m_caps4;                // 0x74
+	unsigned long m_textureStage;         // 0x78
 };
 CHECK_SIZE(SmDdsHeader, 0x7C);
 CHECK_FIELD(SmDdsHeader, m_size, 0x00);
@@ -2508,8 +2511,7 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 				if (k == numVtx) {
 					pVerts[numVtx] = pVtx[vtx];
 					pColors[numVtx] = color;
-					pUVs[numVtx][0] = pUV[uv][0];
-					pUVs[numVtx][1] = pUV[uv][1];
+					memcpy(pUVs[numVtx], pUV[uv], sizeof(float[2]));
 					pMesh->indexList[i * 3 + j] = numVtx;
 					numVtx++;
 				} else {
@@ -2527,8 +2529,7 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 
 				if (k == numVtx) {
 					pVerts[numVtx] = pSrc->vecList[vtx];
-					pUVs[numVtx][0] = pUV[uv][0];
-					pUVs[numVtx][1] = pUV[uv][1];
+					memcpy(pUVs[numVtx], pUV[uv], sizeof(float[2]));
 					pColors[numVtx] = pSrc->vtxColorList[vtx] | 0xFFFFFF;
 					pMesh->indexList[i * 3 + j] = numVtx;
 					numVtx++;
@@ -3056,8 +3057,9 @@ void WPolySoup::PlaceHoleCup(void) {
 
 	std::vector<sCupVtx> cupVtxs;
 	std::vector<sHoleTri> tris;
-	WVector center(0.0f, 0.0f, 0.0f);
+	std::vector<WVector> unusedPoints; // never filled; its constructor alone remains
 	std::vector<sHoleMesh> meshes;
+	WVector center;
 
 	WMatrix inv;
 	inv = ~m_pBgModel->m_pPuppet->GetRootBone()->GetMatrix();
@@ -3284,25 +3286,42 @@ bool WPolySoup::IsInPoly(WVector &pos, std::vector<sCupVtx> &verts) {
 // Whether the segments (a, b) and (c, d) cross on the XZ plane: each
 // segment's ends lie on opposite sides of the other.
 bool WPolySoup::AreCrossed(WVector *a, WVector *b, WVector *c, WVector *d) {
-	WVector2D e(b->x - a->x, b->z - a->z);
+	WVector2D e, v;
+	float side1, side2;
+
+	e.x = b->x - a->x;
+	e.y = b->z - a->z;
 	e /= sqrtf(e.x * e.x + e.y * e.y);
-	WVector2D v(c->x - a->x, c->z - a->z);
+
+	v.x = c->x - a->x;
+	v.y = c->z - a->z;
 	v /= sqrtf(v.x * v.x + v.y * v.y);
-	float side1 = e.x * v.y - v.x * e.y;
-	v = WVector2D(d->x - a->x, d->z - a->z);
+
+	side1 = e.x * v.y - v.x * e.y;
+
+	v.x = d->x - a->x;
+	v.y = d->z - a->z;
 	v /= sqrtf(v.x * v.x + v.y * v.y);
-	float side2 = e.x * v.y - v.x * e.y;
+
+	side2 = e.x * v.y - v.x * e.y;
 
 	if (side2 * side1 > 0.0f)
 		return false;
 
-	e = WVector2D(d->x - c->x, d->z - c->z);
+	e.x = d->x - c->x;
+	e.y = d->z - c->z;
 	e /= sqrtf(e.x * e.x + e.y * e.y);
-	v = WVector2D(a->x - c->x, a->z - c->z);
+
+	v.x = a->x - c->x;
+	v.y = a->z - c->z;
 	v /= sqrtf(v.x * v.x + v.y * v.y);
+
 	side1 = e.x * v.y - v.x * e.y;
-	v = WVector2D(b->x - c->x, b->z - c->z);
+
+	v.x = b->x - c->x;
+	v.y = b->z - c->z;
 	v /= sqrtf(v.x * v.x + v.y * v.y);
+
 	side2 = e.x * v.y - v.x * e.y;
 
 	if (side2 * side1 > 0.0f)
@@ -3607,13 +3626,14 @@ void WPolySoup::AddNewHolecupTri(std::vector<sHoleMesh> &meshes, sHoleTri &tri, 
 			int j;
 			for (j = 0; j < numVtxs; j++) {
 				sHoleVtx &other = (*pVtxs)[j];
-				if (WisEqual(other.m_pos.x, vtx.m_pos.x, 0.00001f) && WisEqual(other.m_pos.y, vtx.m_pos.y, 0.00001f) && WisEqual(other.m_pos.z, vtx.m_pos.z, 0.00001f)
-					&& WisEqual(other.m_normal.x, vtx.m_normal.x, 0.00001f) && WisEqual(other.m_normal.y, vtx.m_normal.y, 0.00001f) && WisEqual(other.m_normal.z, vtx.m_normal.z, 0.00001f)
-					&& WisEqual(other.m_uv[0], vtx.m_uv[0], 0.00001f) && WisEqual(other.m_uv[1], vtx.m_uv[1], 0.00001f)) {
+				if (WisEqual(other.m_pos.x, vtx.m_pos.x, data_a111e4) && WisEqual(other.m_pos.y, vtx.m_pos.y, data_a111e4) && WisEqual(other.m_pos.z, vtx.m_pos.z, data_a111e4)
+					&& WisEqual(other.m_normal.x, vtx.m_normal.x, data_a111e4) && WisEqual(other.m_normal.y, vtx.m_normal.y, data_a111e4) && WisEqual(other.m_normal.z, vtx.m_normal.z, data_a111e4)
+					&& WisEqual(other.m_uv[0], vtx.m_uv[0], data_a111e4) && WisEqual(other.m_uv[1], vtx.m_uv[1], data_a111e4)) {
 					if (tri.m_pMesh->uvBackup == 0)
 						break;
 
-					if (WisEqual(other.m_uvBackup[0], vtx.m_uvBackup[0], 0.00001f) && WisEqual(other.m_uvBackup[1], vtx.m_uvBackup[1], 0.00001f))
+					// The original tests m_uvBackup[0] twice.
+					if (WisEqual(other.m_uvBackup[0], vtx.m_uvBackup[0], data_a111e4) && WisEqual(other.m_uvBackup[0], vtx.m_uvBackup[0], 0.00001f))
 						break;
 				}
 			}
@@ -3755,8 +3775,8 @@ void WPolySoup::ApplyHoleMesh(sHoleMesh &mesh, std::vector<sHoleTri> &tris) {
 			}
 
 			// then the hole mesh's own triangles
-			for (int k = 0; dst < indexNum; dst++, k++)
-				pIndexList[dst] = (unsigned short)mesh.m_indices[k];
+			for (int i = dst, k = 0; i < indexNum; i++, k++)
+				pIndexList[i] = (unsigned short)mesh.m_indices[k];
 			break;
 		}
 	}
@@ -3794,8 +3814,8 @@ void WPolySoup::DigHolecup(std::vector<sCupVtx> &cupVtxs, std::vector<sHoleTri> 
 	if (!pMesh)
 		return;
 
-	while (pMesh->next)
-		pMesh = pMesh->next;
+	for (w_mesh *pNext = pMesh->next; pNext; pNext = pNext->next)
+		pMesh = pNext;
 
 	w_mesh *pCup = new w_mesh;
 	memset(pCup, 0, sizeof(w_mesh));
@@ -3834,13 +3854,13 @@ void WPolySoup::DigHolecup(std::vector<sCupVtx> &cupVtxs, std::vector<sHoleTri> 
 	center = center * inv;
 	float bottom = cupVtxs.begin()->m_pos.y - 1.0f;
 	// The light direction in the bone's space (rotation only), reversed.
-	WVector toLight = WVector(inv.xx * g_lightset.nearone.x + inv.xy * g_lightset.nearone.y + inv.xz * g_lightset.nearone.z,
+	WVector toLight;
+	toLight = WVector(inv.xx * g_lightset.nearone.x + inv.xy * g_lightset.nearone.y + inv.xz * g_lightset.nearone.z,
 		inv.yx * g_lightset.nearone.x + inv.yy * g_lightset.nearone.y + inv.yz * g_lightset.nearone.z,
 		inv.zx * g_lightset.nearone.x + inv.zy * g_lightset.nearone.y + inv.zz * g_lightset.nearone.z) * -1.0f;
 	toLight.Normalize();
 
-	int i;
-	for (i = 0; i < numCupVtxs; i++) {
+	for (int i = 0; i < numCupVtxs; i++) {
 		WVector dir;
 		dir = WVector(center.x - cupVtxs[i].m_pos.x, 0.0f, center.z - cupVtxs[i].m_pos.z);
 		dir.Normalize();
@@ -3865,7 +3885,7 @@ void WPolySoup::DigHolecup(std::vector<sCupVtx> &cupVtxs, std::vector<sHoleTri> 
 		pCup->uvData[i * 2 + 1][0] = u;
 		pCup->uvData[i * 2 + 1][1] = 0.90625f;
 
-		float lit = (toLight.z * dir.z + toLight.x * dir.x + toLight.y * dir.y) * 255.0f;
+		float lit = (toLight * dir) * 255.0f;
 		unsigned long color;
 		if (lit <= 0.0f)
 			color = g_lightset.ambient;
@@ -3882,34 +3902,34 @@ void WPolySoup::DigHolecup(std::vector<sCupVtx> &cupVtxs, std::vector<sHoleTri> 
 	// The floor quad, a square of 2 * radius around the cup's centre.
 	unsigned long floorColor = g_lightset.ambient | 0xFF000000;
 	for (int k = 0; k < 4; k++) {
-		int v = numCupVtxs * 2 + k;
-		pCup->vecList[v] = center + WVector((k & 1) ? 1.0f : -1.0f, 0.0f, (k & 2) ? -1.0f : 1.0f) * radius;
-		pCup->vecList[v].y = bottom;
+		pCup->vecList[numCupVtxs * 2 + k] = center + WVector((k & 1) ? 1.0f : -1.0f, 0.0f, (k & 2) ? -1.0f : 1.0f) * radius;
+		pCup->vecList[numCupVtxs * 2 + k].y = bottom;
 
-		pCup->normList[v] = up;
+		pCup->normList[numCupVtxs * 2 + k] = up;
 
-		pCup->uvData[v][0] = 0.0f;
-		pCup->uvData[v][1] = 0.96875f;
+		pCup->uvData[numCupVtxs * 2 + k][0] = 0.0f;
+		pCup->uvData[numCupVtxs * 2 + k][1] = 0.96875f;
 
-		pCup->originalVtxColorList[v] = floorColor;
-		pCup->vtxColorList[v] = floorColor;
+		pCup->originalVtxColorList[numCupVtxs * 2 + k] = floorColor;
+		pCup->vtxColorList[numCupVtxs * 2 + k] = floorColor;
 	}
 
 	// The wall's quads, then the floor's in the last slot.
-	for (i = 0; i < numCupVtxs - 1; i++) {
-		pCup->indexList[i * 6 + 0] = i * 2;
-		pCup->indexList[i * 6 + 1] = i * 2 + 2;
-		pCup->indexList[i * 6 + 2] = i * 2 + 1;
-		pCup->indexList[i * 6 + 3] = i * 2 + 1;
-		pCup->indexList[i * 6 + 4] = i * 2 + 2;
-		pCup->indexList[i * 6 + 5] = i * 2 + 3;
+	int j;
+	for (j = 0; j < numCupVtxs - 1; j++) {
+		pCup->indexList[j * 6 + 0] = j * 2;
+		pCup->indexList[j * 6 + 1] = j * 2 + 2;
+		pCup->indexList[j * 6 + 2] = j * 2 + 1;
+		pCup->indexList[j * 6 + 3] = j * 2 + 1;
+		pCup->indexList[j * 6 + 4] = j * 2 + 2;
+		pCup->indexList[j * 6 + 5] = j * 2 + 3;
 	}
-	pCup->indexList[i * 6 + 0] = numCupVtxs * 2;
-	pCup->indexList[i * 6 + 1] = numCupVtxs * 2 + 1;
-	pCup->indexList[i * 6 + 2] = numCupVtxs * 2 + 2;
-	pCup->indexList[i * 6 + 3] = numCupVtxs * 2 + 2;
-	pCup->indexList[i * 6 + 4] = numCupVtxs * 2 + 1;
-	pCup->indexList[i * 6 + 5] = numCupVtxs * 2 + 3;
+	pCup->indexList[j * 6 + 0] = numCupVtxs * 2;
+	pCup->indexList[j * 6 + 1] = numCupVtxs * 2 + 1;
+	pCup->indexList[j * 6 + 2] = numCupVtxs * 2 + 2;
+	pCup->indexList[j * 6 + 3] = numCupVtxs * 2 + 2;
+	pCup->indexList[j * 6 + 4] = numCupVtxs * 2 + 1;
+	pCup->indexList[j * 6 + 5] = numCupVtxs * 2 + 3;
 
 	WBone::CalcMeshAABB(*m_pBgModel->m_pPuppet->GetRootBone(), *pCup);
 }
@@ -3919,12 +3939,13 @@ void WPolySoup::FindNewHolecupVtxs(std::vector<sCupVtx> &cupVtxs, std::vector<sH
 	for (std::vector<sHoleTri>::iterator tri = tris.begin(); tri != tris.end(); ++tri) {
 		std::vector<sCupVtx>::iterator prev = cupVtxs.begin();
 
-		bool prevIn = IsInTri(prev->m_pos, tri->m_pVertex);
+		bool inside[2]; // [0] the previous vertex, [1] the current one
+		inside[0] = IsInTri(prev->m_pos, tri->m_pVertex);
 
 		for (std::vector<sCupVtx>::iterator cur = prev + 1; cur != cupVtxs.end(); ++cur) {
-			bool curIn = IsInTri(cur->m_pos, tri->m_pVertex);
+			inside[1] = IsInTri(cur->m_pos, tri->m_pVertex);
 
-			if (prevIn != curIn) {
+			if (inside[0] ^ inside[1]) {
 				for (int i = 0; i < 3; i++) {
 					sCupVtx vtx;
 
@@ -3939,7 +3960,7 @@ void WPolySoup::FindNewHolecupVtxs(std::vector<sCupVtx> &cupVtxs, std::vector<sH
 			}
 
 			prev = cur;
-			prevIn = curIn;
+			inside[0] = inside[1];
 		}
 	}
 
@@ -3995,12 +4016,13 @@ void WPolySoup::CStaticPetGrp::Build(std::vector<sModel*> models, int option) {
 	prevName = "\0";
 	int group = 0;
 	int index = 0;
+	int count = 1;
 	while (group < numGroups) {
-		int count = 1;
-		if (models[index]->m_pPuppet != 0 && models[index]->m_subOrder == 0 && strcmpi(models[index]->m_name, prevName) != 0) {
-			prevName = models[index]->m_name;
+		sModel **ppModel = &models[index];
+		if ((*ppModel)->m_pPuppet != 0 && (*ppModel)->m_subOrder == 0 && strcmpi((*ppModel)->m_name, prevName) != 0) {
+			prevName = (*ppModel)->m_name;
 			for (int j = index + 1; j < option; j++) {
-				if (models[index]->m_subOrder != 0 || strcmpi(models[j]->m_name, prevName) != 0) {
+				if ((*ppModel)->m_subOrder != 0 || strcmpi(ppModel[j - index]->m_name, prevName) != 0) {
 					break;
 				}
 				count++;
@@ -4011,13 +4033,14 @@ void WPolySoup::CStaticPetGrp::Build(std::vector<sModel*> models, int option) {
 				ppPuppets[k] = models[index + k]->m_pPuppet;
 			}
 
-			m_ppGroups[group] = g_resrcmng->xGetStaticPuppetGrp(count, models[index]->m_name, ppPuppets);
+			m_ppGroups[group] = g_resrcmng->xGetStaticPuppetGrp(count, (*ppModel)->m_name, ppPuppets);
 			index += count;
 			group++;
 			delete[] ppPuppets;
 		} else {
 			index++;
 		}
+		count = 1;
 	}
 
 	WSingleton<CSceneManager>::Instance()->RegisterElement((eObjType)2, 0, this, "StaticPetGrp", 2, 0);

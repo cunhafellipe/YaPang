@@ -28,8 +28,8 @@ extern WMatrix g_camera;
 ntFlutter::ntFlutter(int count, const std::string& name, int unused) : m_frags(0), m_name(name) {
 	memset(m_pets, 0, sizeof(m_pets));
 
-	m_area.min = WVector(-112.0f, -78.4f, -112.0f);
-	m_area.max = WVector(112.0f, 33.6f, 112.0f);
+	m_area.min = WVector(-112.0f, -112.0f * 0.7f, -112.0f);
+	m_area.max = WVector(112.0f, 112.0f * 0.3f, 112.0f);
 
 	Reset(count, 1.0f);
 }
@@ -83,7 +83,8 @@ void ntFlutter::Process(float fDelta, float fTime) {
 
 	WVector size = m_area.max - m_area.min;
 
-	for (int i = 0; i < m_count; i++) {
+	int i;
+	for (i = 0; i < m_count; i++) {
 		m_frags[i].center += fDelta * Wind().GetWind(m_frags[i].center);
 		m_frags[i].center.y -= fDelta * fTime * 34.295296f;
 
@@ -103,7 +104,7 @@ void ntFlutter::Process(float fDelta, float fTime) {
 		m_frags[i].visible = (m_frags[i].pos - g_camera.pivot) % g_camera.za > 0.0f;
 	}
 
-	for (int i = 0; i < 10; i++) {
+	for (i = 0; i < 10; i++) {
 		if (m_pets[i])
 			m_pets[i]->Process(fDelta);
 	}

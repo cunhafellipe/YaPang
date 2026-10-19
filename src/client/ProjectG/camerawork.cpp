@@ -133,7 +133,7 @@ CCameraWork::CCameraWork()
 	}
 
 	for (int i = 0; i < m_puttCameraCount; i++) {
-		m_puttWeightTotal += puttTable[i].m_weight > 0 ? puttTable[i].m_weight : 0;
+		m_puttWeightTotal += Max(0, puttTable[i].m_weight);
 
 		if (puttTable[i].m_ballVisibilitySafe)
 			m_safeCameras.push_back(i + PUTT_CAMERA_BASE);
@@ -331,9 +331,9 @@ float CCameraWork::LoadCamera(eCamMode mode, char *name, const WVector &target) 
 	m_bankAngle = 0.0f;
 
 	if (mode == 0 || mode == 2) {
-		unsigned long tidChar = GOLFDOC()->GetPartTidList(GOLFDOC()->m_myPlayerIndex).m_tidChar;
+		CPartTidList& tidList = GOLFDOC()->GetPartTidList(GOLFDOC()->m_myPlayerIndex);
 
-		m_pScriptPuppet = FindHoleInCam(tidChar);
+		m_pScriptPuppet = FindHoleInCam(tidList.m_tidChar);
 	} else if (mode == 1) {
 		if (m_pCameraPuppet == 0) {
 			switch (WSingleton<CSharedDoc>::Instance()->m_roomType) {
@@ -350,15 +350,14 @@ float CCameraWork::LoadCamera(eCamMode mode, char *name, const WVector &target) 
 
 		m_pScriptPuppet = m_pCameraPuppet;
 	} else if (mode == 3) {
-		unsigned long tidChar = GOLFDOC()->GetPartTidList(GOLFDOC()->m_myPlayerIndex).m_tidChar;
-		m_pScriptPuppet = FindHoleInCam(tidChar);
+		m_pScriptPuppet = FindHoleInCam(GOLFDOC()->GetPartTidList(GOLFDOC()->m_myPlayerIndex).m_tidChar);
 
-		name = 0;
+		char *motion = 0;
 
 		rand();
 
-		AfxGetTask()->GetActor("Player") << MsgObject(0, 0x2715, (intptr_t)&name, 0, 0, 0, 0);
-		name = MakeStr("%s_%02d", name, 1);
+		AfxGetTask()->GetActor("Player") << MsgObject(0, 0x2715, (intptr_t)&motion, 0, 0, 0, 0);
+		name = MakeStr("%s_%02d", motion, 1);
 	} else {
 		m_pScriptPuppet = 0;
 	}
@@ -375,11 +374,10 @@ float CCameraWork::LoadCamera(eCamMode mode, char *name, const WVector &target) 
 		float length = m_pScriptMotion->e - m_pScriptMotion->s;
 
 		for (w_motion_data *next = m_pScriptPuppet->FindMotionData(m_pScriptMotion->nextmotion); next; next = m_pScriptPuppet->FindMotionData(next->nextmotion)) {
-			float nextLength = next->e - next->s;
-			if (WAbsBySign(nextLength) < data_9eb420[4])
+			if (WAbsBySign(next->e - next->s) < data_9eb420[4])
 				break;
 
-			length += nextLength;
+			length += next->e - next->s;
 
 			if ((mode == 0 || mode == 203) && length > 10.0f) {
 				length = 10.0f;
@@ -629,8 +627,7 @@ void CCameraWork::SetCamera(int type, bool immediately) {
 	case 20: {
 		WPuppet *pPuppet = CSceneManager::Instance()->GetPuppet(MakeStr("PLAYER_%d", GOLFDOC()->m_myPlayerIndex));
 
-		WBone *pHeadNub = pPuppet->FindBone("Bip01 HeadNub"); WBone *pHead = pPuppet->FindBone("Bip01 Head");
-		m_destCamera = 0.7f * pHead->GetMatrix().pivot + 0.3f * pHeadNub->GetMatrix().pivot;
+		m_destCamera = 0.7f * pPuppet->FindBone("Bip01 Head")->GetMatrix().pivot + 0.3f * pPuppet->FindBone("Bip01 HeadNub")->GetMatrix().pivot;
 		m_sourceCamera = m_destCamera - RotMat(GOLFDOC()->GetCameraData().m_yaw + 0.34906584f, 1).za * 3.0f;
 		m_sourceCamera.y += 0.5f;
 		m_phase0Time = -1.0f;
@@ -1051,7 +1048,7 @@ void CCameraWork::CheckCameraType(bool replay) {
 		if (replay)
 			chance = 5;
 
-		if (sqrt(toCup.z * toCup.z + toCup.x * toCup.x) < 16.0f) {
+		if (sqrt(toCup.x * toCup.x + toCup.z * toCup.z) < 16.0f) {
 			int r = rand();
 
 			switch (powerFlags) {
@@ -1086,7 +1083,7 @@ void CCameraWork::CheckCameraType(bool replay) {
 
 		IActor *pCaddie = AfxGetTask()->GetActor("Caddie");
 		if (pCaddie) {
-			sCaddieShotState *pState = 0;
+			sCaddieShotState *pState;  // the original leaves it uninitialized
 			pCaddie << MsgObject(0, 0x1e0, (intptr_t)&pState, 0, 0, 0, 0);
 
 			if (pState == 0 || !pState->m_keepLongShotCamera)
@@ -1209,7 +1206,7 @@ void CCameraWork::InitCtrlPoints(int type) {
 		vel = ball.PreData(spinIndex)->m_velocity;
 		m_bezierPoints[2] = vel * 1.5f + ball.PreData(spinIndex)->m_pos + side;
 		if (ball.m_landed)
-			m_bezierPoints[3] = ball.PreData(ball.m_preDataCount)->m_pos + WVector(0.0f, 30.0f, 0.0f) + vel * 5.0f;
+			m_bezierPoints[3] = ball.PreData(ball.m_preDataCount)->m_pos + WVector(0.0f, 30.0f, 0.0f) + side * 5.0f;
 		else
 			m_bezierPoints[3] = ball.PreData(ball.m_preDataCount)->m_pos + WVector(0.0f, 10.0f, 0.0f) + side;
 		break;
@@ -1956,8 +1953,8 @@ void CCameraWork::Chase_and_FollowCamera(float elapsed, float time) {
 	}
 
 	float t = speed * 0.001f;
-	if (t < 0.00001f)
-		t = 0.00001f;
+	if (t < data_9eb420[4])
+		t = data_9eb420[4];
 	else if (t > 0.1f)
 		t = 0.1f;
 
@@ -1977,7 +1974,7 @@ void CCameraWork::CircleCamera(float elapsed, float time) {
 		WVector dir = GolfBall().m_pos - m_sourceCamera;
 
 		dir.y = 0.0f;
-		m_introDistance = sqrt(dir.z * dir.z + dir.x * dir.x); dir.Normalize(); dir = WCrossProduct(dir, WVector::UNIT_POS_Y); m_sourceCamera += dir * (m_introDistance * data_9eb420[0]) * elapsed;
+		m_introDistance = sqrt(dir.x * dir.x + dir.z * dir.z); dir.Normalize(); dir = WCrossProduct(dir, WVector::UNIT_POS_Y); m_sourceCamera += dir * (m_introDistance * data_9eb420[0]) * elapsed;
 	} else {
 		m_sourceCamera += GolfBall().m_velocity * 0.75f * elapsed;
 		m_destCamera += GolfBall().m_velocity * 0.75f * elapsed;
@@ -2221,7 +2218,7 @@ void CCameraWork::TomahawkACamera(float elapsed, float time) {
 		WMatrix view = MakeCameraMatrix(GolfBall().m_pos, GolfBall().m_pos - GolfBall().m_velocity);
 
 		m_sourceCamera = WVector(-0.7f, -0.3f, m_cameraTime - 3.0f) * view;
-		m_destCamera = GolfBall().PreData(m_preDataFrame - 25 > 0 ? m_preDataFrame - 25 : 0)->m_pos;
+		m_destCamera = GolfBall().PreData(Max(0, m_preDataFrame - 25))->m_pos;
 	} else {
 		if (m_workTime > m_duration)
 			m_nextCameraType = 4;
@@ -2262,7 +2259,7 @@ void CCameraWork::SpikeACamera(float elapsed, float time) {
 
 		WVector dir = GolfBall().m_pos - m_sourceCamera;
 
-		dir.y = 0.0f; m_introDistance = sqrt(dir.z * dir.z + dir.x * dir.x); dir.Normalize(); dir = WCrossProduct(dir, WVector::UNIT_POS_Y);
+		dir.y = 0.0f; m_introDistance = sqrt(dir.x * dir.x + dir.z * dir.z); dir.Normalize(); dir = WCrossProduct(dir, WVector::UNIT_POS_Y);
 		float s = (m_workTime - m_duration) * 0.02f;
 		if (s < 1.0f) {
 			m_sourceCamera += dir * ((s * 1.2f + 1.0f) * m_introDistance * 2.0943952f) * elapsed;
@@ -2284,8 +2281,7 @@ void CCameraWork::TopViewCamera(float elapsed, float time) {
 	m_destCamera = m_destCamera * 0.9f + GolfBall().m_pos * 0.1f;
 
 	WVector dir = m_baseMatrix.pivot - GolfBall().PreData(GolfBall().m_preDataCount)->m_pos;
-	float distance = GolfBall().m_velocity.Magnitude() * 2.0f;
-	distance = distance < 100.0f ? 100.0f : (distance > 150.0f ? 150.0f : distance);
+	float distance = Between(100.0f, GolfBall().m_velocity.Magnitude() * 2.0f, 150.0f);
 
 	dir.y = 0.0f; dir.Normalize();
 
@@ -2333,13 +2329,14 @@ void CCameraWork::SideCamera(float elapsed, float time) {
 
 // camerawork.cpp:2955
 void CCameraWork::BallSideCamera(float elapsed, float time) {
-	WVector back = GolfBall().m_velocity;
+	WVector back;
+	back = GolfBall().m_velocity;
 	WVector side;
 	side = WCrossProduct(WVector::UNIT_POS_Y, back);
 	back = back.Normalize() * GolfBall().GetRadius() * 2.0f;
 	side = side.Normalize() * GolfBall().GetRadius() * 1.2f;
 
-	float t = MinOf(1.0f, (time + m_workTime) / m_phase2Time);
+	float t = (time + m_workTime) / m_phase2Time < 1.0f ? (time + m_workTime) / m_phase2Time : 1.0f;
 
 	m_destCamera = GolfBall().m_pos + side - back;
 	m_sourceCamera = (m_destCamera - m_baseMatrixCopy.pivot) * t + m_baseMatrixCopy.pivot - back;

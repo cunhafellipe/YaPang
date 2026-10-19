@@ -372,17 +372,9 @@ private:
 	unsigned char m_weather;    // 0x304, the hole's weather a replayed shot restores (ChangeGameMode 0x10000)
 	unsigned char m_shotNumber; // 0x305, the shot of the hole SaveShot reports in its chat message
 	PADDING(0x306, 0x308);
-	// 0x308, the bar of the replayed shot: DoStand copies it into CGolfDoc::m_bar.
-	// LoadShot copies its 0xC dword into CSharedDoc::m_replayValue5BC0 as an
-	// int; that member is likely a float (gui_control copies it back into
-	// sBar::m_prevAccuracy), and the union goes once it is one.
-	union {
-		sBar m_shotBar;
-		struct {
-			UNKNOWN(0x308, 0x314);
-			int m_savedReplayValue; // 0x314, LoadShot restores CSharedDoc::m_replayValue5BC0 from it
-		} m_shotBarRaw;
-	};
+	// 0x308, the bar of the replayed shot: DoStand copies it into CGolfDoc::m_bar,
+	// LoadShot its m_prevAccuracy into CSharedDoc::m_replayPrevAccuracy.
+	sBar m_shotBar;
 	WVector m_shotBallPos;      // 0x32C, the ball's position of the recorded shot (ChangeGameMode 0x10000)
 	float m_shotYaw;            // 0x338, the camera yaw a replayed shot restores (SetEnvironmentVariableA)
 	float m_shotLieSlope;       // 0x33C, CGolfBall::m_lieSlope at the shot, restored in playback (ChangeGameMode 0x40)

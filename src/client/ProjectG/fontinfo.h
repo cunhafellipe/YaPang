@@ -577,7 +577,7 @@ public:
 	void PreCalcMatchHoleInBonus(void);
 	void PreCalcTeamHoleInBonus(void);
 	void PreCalc(bool bFlag);
-	bool IsFinalized(void) { return (m_flags >> 4) & 1; }  // fontinfo.h:612, flag 0x10
+	bool IsFinalized(void) { return (m_flags & 0x10) ? true : false; }  // fontinfo.h:612, flag 0x10
 
 protected:
 	void ResetVars(int nFlags, int nCaseState);
@@ -888,6 +888,11 @@ FONTINFO_FONTINFO_INLINE void CFontInfo::SetColor(unsigned long color) {
 // fontinfo.h:795
 FONTINFO_FONTINFO_INLINE bool CCalipers::IsVisiblePowerBar(void) const {
 	return m_nPowerBarState == 1 ? true : false;
+}
+
+// fontinfo.h:796
+FONTINFO_FONTINFO_INLINE void CCalipers::VisiblePowerBar(int nState) {
+	m_nPowerBarState = nState;
 }
 
 #endif

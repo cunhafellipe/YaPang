@@ -122,7 +122,7 @@ void FrRandomBoxProgress::OnProc(const float dt) {
 		m_duration = 0;
 		FrForm::OnCancel();
 	} else {
-		int percent = (int)(m_elapsed / m_duration * 100.0f);
+		int percent = (int)(100.0f * (m_elapsed / m_duration));
 		if (percent < 100) {
 			m_pWaitBar->SetPos(percent);
 		}
