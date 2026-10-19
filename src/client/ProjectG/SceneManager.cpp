@@ -26,7 +26,7 @@
 #include "ClientSetting.h"
 #include "polysoup.h"
 #include "sky.h"
-#include "AutoTarget.h"
+#include "autotarget.h"
 #include "golfball.h"
 #include "quadtree.h"
 #include "wfont.h"

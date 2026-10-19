@@ -17,7 +17,7 @@
 #include "headicon.h"
 #include "polysoup.h"
 #include "PowerGauge.h"
-#include "SceneManager.h"
+#include "scenemanager.h"
 #include "SharedDoc.h"
 #include "commonutil.h"
 #include "quadtree.h"

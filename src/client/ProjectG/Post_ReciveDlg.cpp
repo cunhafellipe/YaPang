@@ -1,5 +1,5 @@
 // Original: d:\build\custom\temp\code\client\projectg\post_recivedlg.cpp
-#include "post_recivedlg.h"
+#include "Post_ReciveDlg.h"
 #include "ObjectFactory.h"
 #include "commonutil.h"
 #include "fresh.h"

@@ -13,7 +13,7 @@
 #include "fxsequence.h"
 #include "SoundManager.h"
 #include "polysoup.h"
-#include "QuadTree.h"
+#include "quadtree.h"
 #include "wutil.h"
 #include "slicestr.h"
 #include "cardsystem.h"

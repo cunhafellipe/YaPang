@@ -9,7 +9,7 @@
 #include "bitmap.h"
 #include "singleton.h"
 #include "CapturedBg.h"
-#include "frcursor.h"
+#include "FrCursor.h"
 #include "frgraphicinterface.h"
 
 // frbutton.cpp:19 (run-time type and factory registration of FrButton)

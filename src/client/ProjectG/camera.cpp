@@ -27,7 +27,7 @@
 #include "commonutil.h"
 #include "polysoup.h"
 #include "HelpMsg.h"
-#include "Fresh.h"
+#include "fresh.h"
 #include "frwndmanager.h"
 #include "user_info.h"
 #include "messengerdlg.h"

@@ -4,7 +4,7 @@
 #include "SharedDoc.h"
 #include "GolfDoc.h"
 #include "golfball.h"
-#include "IContentsDoc.h"
+#include "icontentsdoc.h"
 #include "scenemanager.h"
 #include "wpuppet.h"
 #include "wresrcmng.h"

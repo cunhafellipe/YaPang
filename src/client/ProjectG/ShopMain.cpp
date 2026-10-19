@@ -1,7 +1,7 @@
 // Original: d:\build\custom\temp\code\client\projectg\shopmain.cpp
 #include <stdio.h>
 
-#include "shopmain.h"
+#include "ShopMain.h"
 #include "TaskMain.h"
 #include "RTTI.h"
 #include "frscrollbar.h"

@@ -12,7 +12,7 @@
 #include "commonutil.h"
 #include "shared/classdefine.h"
 #include "quadtree.h"
-#include "SceneManager.h"
+#include "scenemanager.h"
 #include "SharedDoc.h"
 #include "ClientSetting.h"
 #include "client/Wangreal/include/wview.h"

@@ -38,7 +38,7 @@
 #include "hackingmanager.h"
 #include "InputManager.h"
 #include "Localize.h"
-#include "LoginInfo.h"
+#include "logininfo.h"
 #include "messengerdlg.h"
 #include "OptionDlg.h"
 #include "ProjectG.h"

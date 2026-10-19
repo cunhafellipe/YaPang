@@ -3,7 +3,7 @@
 #define REALMYROOMMAIN_TOOLTIP_INLINE
 #define REALMYROOMMAIN_REALMYROOM_AVATAR_INLINE
 #include "NetworkSystem.h"
-#include "realmyroommain.h"
+#include "RealMyRoomMain.h"
 #include "ToolTip.h"
 #include "AnotherHand.h"
 #include "ObjectFactory.h"

@@ -21,7 +21,7 @@
 #include "messengerdlg.h"
 #include "UccLibrary.h"
 #include "Intrusion.h"
-#include "MouseCursor.h"
+#include "mousecursor.h"
 #include "ProjectG.h"
 #include "ChatMsg.h"
 #include "DetailedRoomInfoDlg.h"

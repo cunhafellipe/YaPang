@@ -30,7 +30,7 @@
 #include "RecycleDlg.h"
 #include "EquipDlg.h"
 #include "commonutil.h"
-#include "GhostManager.h"
+#include "ghostmanager.h"
 #include "TaskManager.h"
 #include "cardsystem.h"
 #include "mousecursor.h"

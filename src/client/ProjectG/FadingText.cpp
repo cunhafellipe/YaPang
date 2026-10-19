@@ -3,8 +3,8 @@
 
 #include "client/Fresh/include/fresh.h"
 #include "client/Fresh/include/frgraphicinterface.h"
-#include "client/Fresh/include/FrWndManager.h"
-#include "client/Fresh/include/FrWnd.h"
+#include "client/Fresh/include/frwndmanager.h"
+#include "client/Fresh/include/frwnd.h"
 
 #include <windows.h>
 #include <string.h>

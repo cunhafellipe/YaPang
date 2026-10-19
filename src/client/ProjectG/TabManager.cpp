@@ -3,7 +3,7 @@
 
 #include <stdarg.h>
 
-#include "FrWnd.h"
+#include "frwnd.h"
 
 // tabmanager.cpp:9
 CTabManager::CTabManager(void) {

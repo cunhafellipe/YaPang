@@ -1,5 +1,5 @@
 // Original: d:\build\custom\temp\code\client\projectg\ucceditbrushdlg.cpp
-#include "ucceditbrushdlg.h"
+#include "UccEditBrushDlg.h"
 #include "ObjectFactory.h"
 #include "frarea.h"
 #include "UccLibrary.h"

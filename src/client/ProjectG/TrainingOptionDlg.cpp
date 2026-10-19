@@ -11,7 +11,7 @@
 #include "shared/classdefine.h"
 #include "TaskManager.h"
 #include "actor.h"
-#include "golfdoc.h"
+#include "GolfDoc.h"
 #include "scenemanager.h"
 #include "wind.h"
 

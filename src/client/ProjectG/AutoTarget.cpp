@@ -4,7 +4,7 @@
 #include "quadtree.h"
 #include "club.h"
 #include "SharedDoc.h"
-#include "golfdoc.h"
+#include "GolfDoc.h"
 
 #include <math.h>
 
