@@ -121,10 +121,9 @@ LEVEL_INFO LEVEL_TABLE[71] = {
 
 // The exception log written next to a ghost file and zipped into it.
 // Defined after Export: Export reads the pointer from memory instead of
-// folding the literal.
-namespace {
+// folding the literal. (Already inside the file's anonymous namespace, which
+// the definition below reopens.)
 extern const char *const GHOST_EXCEPTION_LOG_FILENAME;
-}
 
 // ghostdocument.cpp:27
 // Copies the bits of a value into a variable of another type of the same

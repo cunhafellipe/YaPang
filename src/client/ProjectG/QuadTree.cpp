@@ -54,7 +54,9 @@ float RayIntersectAABB(const Waabb &aabb, const WVector &pos, const WVector &mov
 
 // File-local float table in .rdata (no symbol): {pi, degrees to radians,
 // FLT_MAX, epsilon}; [3] is the epsilon the zero tests below compare with.
-extern "C" const float data_a11514[4];
+extern "C" const float data_a11514[4] = {
+	3.14159265358979f, 3.14159265358979f / 180.0f, 3.402823466e+38f, 1e-5f
+};
 
 
 namespace intersection {
