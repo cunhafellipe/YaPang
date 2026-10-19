@@ -6,9 +6,6 @@
 #include "../include/wresrcmng.h"
 #include "../include/wview.h"
 
-// The four corners as (1 = w1/h1, 2 = w2/h2) pairs, in drawing order.
-static int corner[4][2] = { { 1, 2 }, { 2, 2 }, { 2, 1 }, { 1, 1 } };
-
 // Texture coordinates of the four corners, in texels of a 256 grid.
 static int uv[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
 
@@ -159,6 +156,8 @@ void W3dAniSpr::Render(WView* view, int type, w_spr_align align, int nSprNum) {
 
 // w3danispr.cpp:168
 void W3dAniSpr::Render(WView* view, float angle, int type, int nSprNum) {
+	// The four corners as (1 = w1/h1, 2 = w2/h2) pairs, in drawing order.
+	static int match[4][2] = { { 1, 2 }, { 2, 2 }, { 2, 1 }, { 1, 1 } };
 
 
 
@@ -179,7 +178,7 @@ void W3dAniSpr::Render(WView* view, float angle, int type, int nSprNum) {
 
 	for (int i = 0; i < 4; i++) {
 		float x, y;
-		Rotate(corner[i][0] == 1 ? w1 : w2, corner[i][1] == 1 ? h1 : h2, x, y, angle);
+		Rotate(match[i][0] == 1 ? w1 : w2, match[i][1] == 1 ? h1 : h2, x, y, angle);
 
 
 
@@ -208,9 +207,12 @@ void W3dAniSpr::Render(WView* view, float angle, int type, int nSprNum) {
 
 }
 
+// The four corners as (1 = w1/h1, 2 = w2/h2) pairs, in drawing order. File
+// scope in the original (unlike the other overloads' function-local copies).
+static int match[4][2] = { { 1, 2 }, { 2, 2 }, { 2, 1 }, { 1, 1 } };
+
 // w3danispr.cpp:216
 void W3dAniSpr::Render(WView* view, const WVector& angle, int type, int nSprNum) {
-
 
 
 	_WSPRITE* pSprite = FindSprite(nSprNum);
@@ -227,7 +229,7 @@ void W3dAniSpr::Render(WView* view, const WVector& angle, int type, int nSprNum)
 
 	for (int i = 0; i < 4; i++) {
 
-		WVector p = WVector(corner[i][0] == 1 ? w1 : w2, corner[i][1] == 1 ? h1 : h2, 0.0f) * RotMat(angle);
+		WVector p = WVector(match[i][0] == 1 ? w1 : w2, match[i][1] == 1 ? h1 : h2, 0.0f) * RotMat(angle);
 
 
 
@@ -258,6 +260,8 @@ void W3dAniSpr::Render(WView* view, const WVector& angle, int type, int nSprNum)
 
 // w3danispr.cpp:263
 void W3dAniSpr::Render(WView* view, const WMatrix& rot, int type, int nSprNum) {
+	// The four corners as (1 = w1/h1, 2 = w2/h2) pairs, in drawing order.
+	static int match[4][2] = { { 1, 2 }, { 2, 2 }, { 2, 1 }, { 1, 1 } };
 
 
 
@@ -275,7 +279,7 @@ void W3dAniSpr::Render(WView* view, const WMatrix& rot, int type, int nSprNum) {
 
 	for (int i = 0; i < 4; i++) {
 
-		WVector p = WVector(corner[i][0] == 1 ? w1 : w2, corner[i][1] == 1 ? h1 : h2, 0.0f) * rot;
+		WVector p = WVector(match[i][0] == 1 ? w1 : w2, match[i][1] == 1 ? h1 : h2, 0.0f) * rot;
 
 
 

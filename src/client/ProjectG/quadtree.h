@@ -130,7 +130,6 @@ public:
 		sColData();
 
 		unsigned char m_objType;        // 0x0, the sModel::m_subOrder of the object hit (IntersectObj)
-		PADDING(0x1, 0x2);
 		short m_objIndex;       // 0x2, the object hit, negative for the ground (GetObjColNum)
 		int m_triIndex;         // 0x4, the triangle hit in the object (IntersectObj)
 		int m_frame;            // 0x8, frame of the contact (GetBounceCount)

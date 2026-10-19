@@ -487,17 +487,19 @@ void FrScoreDlg::OnHoleListOwnerDraw(intptr_t param) {
 	if (!pGDI)
 		return;
 
-	float x = w * 0.055555556f + pItem->pos.x;
-	float y = h * 0.5f + pItem->pos.y - 6.0f;
+	WPoint pt;
+	pt.x = w * 0.055555556f + pItem->pos.x;
+	pt.y = h * 0.5f + pItem->pos.y - 6.0f;
 
 	if (!pItem->pData)
 		return;
 
 	for (unsigned char i = m_bFront9 ? 0 : 9; i < (m_bFront9 ? 9 : 18); i++) {
-		if (i <= WSingleton<CSharedDoc>::Instance()->m_holes &&
-			WSingleton<CSharedDoc>::Instance()->m_courseHoleOn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] > 0) {
-			DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
-			x += w * 0.11111111f;
+		if (i <= WSingleton<CSharedDoc>::Instance()->m_holes) {
+			if (WSingleton<CSharedDoc>::Instance()->m_courseHoleOn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] > 0) {
+				DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_holeOrder[i]), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+				pt.x += w * 0.11111111f;
+			}
 		}
 	}
 }
@@ -521,8 +523,9 @@ void FrScoreDlg::OnParListOwnerDraw(intptr_t param) {
 		return;
 
 	float baseX = w * 0.055555556f;
-	float x = baseX + pItem->pos.x;
-	float y = h * 0.5f + pItem->pos.y - 6.0f;
+	WPoint pt;
+	pt.x = baseX + pItem->pos.x;
+	pt.y = h * 0.5f + pItem->pos.y - 6.0f;
 
 	if (!pItem->pData)
 		return;
@@ -532,12 +535,12 @@ void FrScoreDlg::OnParListOwnerDraw(intptr_t param) {
 		if (i <= WSingleton<CSharedDoc>::Instance()->m_holes &&
 			WSingleton<CSharedDoc>::Instance()->m_courseHoleOn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1] > 0) {
 			total += WSingleton<CSharedDoc>::Instance()->m_courseHoleOn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1];
-			DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_courseHoleOn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1]), WPoint(x, y), 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
+			DrawDigit(pGDI, MakeStr("%d", WSingleton<CSharedDoc>::Instance()->m_courseHoleOn[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1]), pt, 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
 		}
-		x += 38.0f;
+		pt.x += 38.0f;
 	}
 
-	DrawDigit(pGDI, MakeStr("%d", total), WPoint(baseX + pItem->pos.x + 355.0f, y), 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
+	DrawDigit(pGDI, MakeStr("%d", total), WPoint(baseX + pItem->pos.x + 355.0f, pt.y), 0xFF9FF5B8, FrGDI::ALIGN_CENTER, false);
 }
 
 // scoredlg.cpp:505
@@ -719,8 +722,9 @@ void FrScoreDlg::OnTotalListOwnerDraw(PG_MSGARG param) {
 
 		0x809B9DFF, 0, 0.0f);
 
-	float y = h * 0.5f + pItem->pos.y - 6.0f;
-	float x = w * 0.25f + pItem->pos.x;
+	WPoint pt;
+	pt.y = h * 0.5f + pItem->pos.y - 6.0f;
+	pt.x = w * 0.25f + pItem->pos.x;
 
 	switch (m_type) {
 	case 2:
@@ -728,14 +732,14 @@ void FrScoreDlg::OnTotalListOwnerDraw(PG_MSGARG param) {
 
 
 
-		DrawDigit(pGDI, MakeStr("%I64d", pRival->m_pang), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+		DrawDigit(pGDI, MakeStr("%I64d", pRival->m_pang), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 
 
-		x = w * 0.75f + pItem->pos.x;
+		pt.x = w * 0.75f + pItem->pos.x;
 
 
 
-		DrawDigit(pGDI, MakeStr(pRival->m_score == 0 ? "%d" : "%+I64d", pRival->m_pang), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+		DrawDigit(pGDI, MakeStr(pRival->m_score == 0 ? "%d" : "%+I64d", pRival->m_pang), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 		break;
 
 	case 0:
@@ -759,21 +763,21 @@ void FrScoreDlg::OnTotalListOwnerDraw(PG_MSGARG param) {
 
 
 
-			DrawDigit(pGDI, MakeStr("%d", shots), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			DrawDigit(pGDI, MakeStr("%d", shots), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 
 
-			x = w * 0.75f + pItem->pos.x;
-			DrawDigit(pGDI, MakeStr(pRival->m_score == 0 ? "%d" : "%+d", score), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			pt.x = w * 0.75f + pItem->pos.x;
+			DrawDigit(pGDI, MakeStr(pRival->m_score == 0 ? "%d" : "%+d", score), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 
 		} else {
 
 
-			DrawDigit(pGDI, MakeStr("%d", pRival->m_totalShots), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			DrawDigit(pGDI, MakeStr("%d", pRival->m_totalShots), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 
 
 
-			x = w * 0.75f + pItem->pos.x;
-			DrawDigit(pGDI, MakeStr(pRival->m_score == 0 ? "%d" : "%+d", pRival->m_score), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+			pt.x = w * 0.75f + pItem->pos.x;
+			DrawDigit(pGDI, MakeStr(pRival->m_score == 0 ? "%d" : "%+d", pRival->m_score), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 		}
 		break;
 	}
@@ -782,11 +786,11 @@ void FrScoreDlg::OnTotalListOwnerDraw(PG_MSGARG param) {
 
 
 
-		DrawDigit(pGDI, MakeStr("%d", pRival->m_uniteGuildIndex), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+		DrawDigit(pGDI, MakeStr("%d", pRival->m_uniteGuildIndex), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 
 
-		x = w * 0.75f + pItem->pos.x;
-		DrawDigit(pGDI, MakeStr("%d", pRival->m_uniteGuildIndex), WPoint(x, y), 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
+		pt.x = w * 0.75f + pItem->pos.x;
+		DrawDigit(pGDI, MakeStr("%d", pRival->m_uniteGuildIndex), pt, 0xFFFFFFFF, FrGDI::ALIGN_CENTER, false);
 		break;
 	}
 }
@@ -892,28 +896,27 @@ void FrScoreDlg::OnDraw(void) {
 
 	float height = WSingleton<CSharedDoc>::Instance()->m_roomType == 6 ? 116.0f : 58.0f;
 
-	WPoint from;
-	WPoint to;
+	WPoint line[2]; // from, to
 
-	to.x = from.x = m_rect.x + 129.0f;
-	from.y = m_rect.y + 126.0f;
-	to.y = from.y + height;
+	line[0].x = line[1].x = m_rect.x + 129.0f;
+	line[0].y = m_rect.y + 126.0f;
+	line[1].y = line[0].y + height;
 
 
 
 
 	for (int i = 0; i < 10; i++) {
-		g_view->DrawLine2D(from, to, 0xFF000000, 0xFF000000, 0);
-		from.x += 38.0f;
-		to.x += 38.0f;
+		g_view->DrawLine2D(line[0], line[1], 0xFF000000, 0xFF000000, 0);
+		line[0].x += 38.0f;
+		line[1].x += 38.0f;
 	}
 
 
-	from.x += 27.0f;
-	to.x += 27.0f;
+	line[0].x += 27.0f;
+	line[1].x += 27.0f;
 
 
-	g_view->DrawLine2D(from, to, 0xFF000000, 0xFF000000, 0);
+	g_view->DrawLine2D(line[0], line[1], 0xFF000000, 0xFF000000, 0);
 }
 
 // scoredlg.cpp:895
@@ -944,8 +947,8 @@ void FrScoreDlg::SetTypeBtn(void) {
 // scoredlg.cpp:917
 void FrScoreDlg::DrawShot(FrListItem* pItem) {
 
-	float w = (float)m_pList[4]->GetItemWidth();
-	float h = (float)m_pList[4]->GetItemHeight();
+	float w = (float)m_pList[1]->GetItemWidth();
+	float h = (float)m_pList[1]->GetItemHeight();
 
 	int shown = 0;
 	int curHole = GetMyCurHoleInGuildMatch();
@@ -1032,14 +1035,13 @@ void FrScoreDlg::DrawGraph(FrListItem* pItem) {
 
 
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
-	WPoint to;
-	WPoint from;
-	from.x = pItem->pos.x;
-	to.x = w + pItem->pos.x;
-	from.y = to.y = midY;
+	WPoint line[2]; // from, to
+	line[0].x = pItem->pos.x;
+	line[1].x = w + pItem->pos.x;
+	line[0].y = line[1].y = midY;
 
 
-	g_view->DrawLine2D(from, to, 0xFF95FFB3, 0xFF95FFB3, 0);
+	g_view->DrawLine2D(line[0], line[1], 0xFF95FFB3, 0xFF95FFB3, 0);
 
 
 
@@ -1055,8 +1057,8 @@ void FrScoreDlg::DrawGraph(FrListItem* pItem) {
 
 	int score = Between(-3, pData->m_holeScore[WSingleton<CSharedDoc>::Instance()->m_holeOrder[start] - 1], 3);
 	unsigned long color = GetScoreColor(score);
-	from.x = w * 0.055555556f + pItem->pos.x;
-	from.y = (float)score * step + midY;
+	line[0].x = w * 0.055555556f + pItem->pos.x;
+	line[0].y = (float)score * step + midY;
 
 
 	for (int i = start + 1; i < end; i++) {
@@ -1073,15 +1075,15 @@ void FrScoreDlg::DrawGraph(FrListItem* pItem) {
 					score = Between(-3, pData->m_holeScore[WSingleton<CSharedDoc>::Instance()->m_holeOrder[i] - 1], 3);
 					unsigned long nextColor = GetScoreColor(score);
 
-					to.x = w * 0.11111111f + from.x;
-					to.y = (float)score * step + midY;
+					line[1].x = w * 0.11111111f + line[0].x;
+					line[1].y = (float)score * step + midY;
 
 
-					g_view->DrawLine2D(from, to, color, nextColor, 0);
+					g_view->DrawLine2D(line[0], line[1], color, nextColor, 0);
 
 
 
-					from = to;
+					line[0] = line[1];
 					color = nextColor;
 				}
 			}

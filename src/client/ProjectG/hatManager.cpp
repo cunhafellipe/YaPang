@@ -171,16 +171,16 @@ bool WStrStr_JP(char *out, unsigned short *text, int textLen, unsigned short *wo
 				continue;
 		}
 
-		unsigned short *textPos = &text[i + 1];
 		unsigned short *wordPos = &word[1];
+		unsigned short *textPos = &text[i + 1];
 
 		while (*textPos != 0 && *wordPos != 0) {
-			bool differ;
+			bool same;
 			if (*textPos < 0x80 && *wordPos < 0x80)
-				differ = tolower(*wordPos) != tolower(*textPos);
+				same = tolower(*wordPos) == tolower(*textPos);
 			else
-				differ = *textPos != *wordPos;
-			if (differ) {
+				same = *textPos == *wordPos;
+			if (!same) {
 				int k;
 				for (k = 0; k < 28; k++) {
 					if (*textPos == FakeTable[k])
@@ -260,7 +260,7 @@ bool WStrCmp_JP(unsigned short *word, int wordLen, unsigned short *text, int tex
 
 	for (int i = 0; i < wordLen - 1; i++) {
 		if (word[i] < 0x80 && *text < 0x80) {
-			if (tolower(text[i]) != tolower(word[i]))
+			if (tolower(word[i]) != tolower(text[i]))
 				return true;
 		} else {
 			if (word[i] != text[i])
@@ -447,7 +447,7 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 
 	char lastMessage[0x400];
 
-	if (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().flagBlock & 8) {
+	if (WSingleton<CSharedDoc>::Instance()->GetFlagBlock() & 8) {
 		WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)\xC3\xA4\xC6\xC3 \xC0\xCC\xBF\xEB \xC1\xA6\xC0\xE7 \xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xC3\xA4\xC6\xC3\xC0\xBB \xC0\xCC\xBF\xEB\xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
 		return;
 	}
@@ -552,7 +552,7 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 				std::string line(message);
 
 				WSendPacket packet(GCR_INVITE_TO_GUILD);
-				packet.EncodeStr(std::string(line.c_str()));
+				packet.EncodeStr(line.c_str());
 				packet.Send(SEND_TO_MSN);
 			} else {
 				MsgObject msg(0, 3, (intptr_t)"\xC1\xF6\xB1\xDD\xC0\xBA \xB1\xE6\xB5\xE5 \xB4\xEB\xC8\xAD\xB8\xA6 \xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFFCC00, 0, 0, 0);
@@ -596,8 +596,7 @@ bool ChatManager::Filtering(char *text) {
 	int textLen = MultiByteToWideChar(0, 0, text, strlen(text) + 1, wideText, 0x400);
 
 	for (i = 0; i < m_chatFilterCount; i++) {
-		char *word = (char *)m_chatFilter[i];
-		int wordLen = MultiByteToWideChar(0, 0, word, strlen(word) + 1, wideWord, 0x400);
+		int wordLen = MultiByteToWideChar(0, 0, (char *)m_chatFilter[i], strlen((char *)m_chatFilter[i]) + 1, wideWord, 0x400);
 
 		if (BABO_STR::WStrStr(text, wideText, textLen, wideWord, wordLen, false))
 			found = true;
@@ -704,7 +703,8 @@ const char *ChatManager::FilteringNick(char *nick) {
 			for (int j = i + 1; j < nickLen - 1; j++) {
 				if (wideNick[j] == ')') {
 					unsigned short emoticon[256] = { 0 };
-					memmove(emoticon, &wideNick[i + 1], (&wideNick[j] - &wideNick[i + 1]) * sizeof(unsigned short));
+					unsigned short *start = &wideNick[i + 1];
+					memmove(emoticon, start, (&wideNick[j] - start) * sizeof(unsigned short));
 
 					const char *reason = FilteringEmoticon(emoticon);
 					if (reason)
@@ -834,7 +834,7 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 	if (i == len)
 		return;
 
-	if (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().flagBlock & 8) {
+	if (WSingleton<CSharedDoc>::Instance()->GetFlagBlock() & 8) {
 		WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)\xC3\xA4\xC6\xC3 \xC0\xCC\xBF\xEB \xC1\xA6\xC0\xE7 \xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xC3\xA4\xC6\xC3\xC0\xBB \xC0\xCC\xBF\xEB\xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
 		return;
 	}
@@ -924,7 +924,7 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 				std::string line(message);
 
 				WSendPacket packet(GCR_INVITE_TO_GUILD);
-				packet.EncodeStr(std::string(line.c_str()));
+				packet.EncodeStr(line.c_str());
 				packet.Send(SEND_TO_MSN);
 			} else {
 				MsgObject msg(0, 3, (intptr_t)"\xC1\xF6\xB1\xDD\xC0\xBA \xB1\xE6\xB5\xE5 \xB4\xEB\xC8\xAD\xB8\xA6 \xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFFCC00, 0, 0, 0);
@@ -986,8 +986,8 @@ int ChatManager::CheckChatCommand(const char *text, int type) {
 		if (i < sizeof(ChatCmd) / sizeof(ChatCmd[0])) {
 			switch (i) {
 			case 0: {
-				char name[0x18];
 				int identity = 0;
+				char name[0x18];
 
 				int count = sscanf(args, "%s %d %s", command, &identity, name);
 
@@ -1017,7 +1017,7 @@ int ChatManager::CheckChatCommand(const char *text, int type) {
 				break;
 			}
 			case 2:
-				if (((unsigned long)WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity >> 6) & 1) {
+				if (ItemDropMode()) {
 					int rate = 0;
 
 					int count = sscanf(args, "%s %d", command, &rate);
@@ -1070,11 +1070,11 @@ int ChatManager::SaveChatHistory(int index, int type) {
 	char fileName[MAX_PATH];
 
 	if (index < 0) {
-		int i = 1;
+		index = 1;
 		do {
-			sprintf(fileName, "history/chatting/chat%03d.txt", i++);
+			sprintf(fileName, "history/chatting/chat%03d.txt", index++);
 		} while (_access(fileName, 0) != -1);
-		index = i - 1;
+		index--;
 	} else {
 		index++;
 		sprintf(fileName, "history/chatting/chat%03d.txt", index);

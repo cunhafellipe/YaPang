@@ -196,28 +196,34 @@ inline sItemInfo::sItemInfo(void) {
 	m_typeId = 0;
 	m_remainHours = 0;
 	m_reserved16 = 0;
-	for (int i = 0; i < 5; i++) {
-		m_clubStatLevel[i] = 0;
-	}
-	for (int i = 0; i < 4; i++) {
-		m_reserved18[i] = 0;
-	}
+	memset(m_clubStatLevel, 0, sizeof(m_clubStatLevel));
+	memset(m_reserved18, 0, sizeof(m_reserved18));
 	memset(m_uccName, 0, sizeof(m_uccName));
 	memset(m_uccKey, 0, sizeof(m_uccKey));
 	memset(m_reserved5E, 0, sizeof(m_reserved5E));
-	for (int i = 0; i < 12; i++) {
-		m_cardSlots[i] = 0;
-	}
+	memset(m_cardSlots, 0, sizeof(m_cardSlots));
 	m_charCardSlotCount = 0;
 	m_caddieCardSlotCount = 0;
 	m_uccStatus = 0;
 	m_uccSeq = 0;
 }
 
+// GolfRule.cpp defines GOLFRULE_GLOBALGAMEDEFINE_INLINE empty before its
+// includes, so its object holds the out-of-line copy of sItemInfo::operator==
+// (0x43fbe0) every unit can link against. EquipDlg.cpp defines
+// EQUIPDLG_GLOBALGAMEDEFINE_DECL_ONLY: the original's equipdlg object saw
+// only the declaration, so cl kept std::find over the item list out of line
+// there (FrEquipDlg::OpenInformation calls GolfRule's copy, 0x446620).
+#ifndef GOLFRULE_GLOBALGAMEDEFINE_INLINE
+#define GOLFRULE_GLOBALGAMEDEFINE_INLINE inline
+#endif
+
+#ifndef EQUIPDLG_GLOBALGAMEDEFINE_DECL_ONLY
 // globalgamedefine.h:1978
-inline bool sItemInfo::operator==(const unsigned long &typeId) const {
+GOLFRULE_GLOBALGAMEDEFINE_INLINE bool sItemInfo::operator==(const unsigned long &typeId) const {
 	return m_typeId == typeId;
 }
+#endif
 
 // A caddie the player owns (CSharedDoc keeps them in a std::map keyed by
 // id); 0x19 bytes, byte-packed (FrCaddieInfoDlg::GetCaddieInfo copies it with
@@ -669,8 +675,10 @@ struct sBriefUserInfo {
 	unsigned char angel : 1;      // 0x2D, bit 5: the angel badge on the lobby user list (drawn before manner)
 	unsigned long guildUID;       // 0x2E, the guild sort key
 	char guildMark[0xC];          // 0x32, the guild emblem (CGuildActor::ChangeGuildEmblem)
-	unsigned char invisible : 1;  // 0x3E, bit 0: an administrator hidden from picking (AvatarByRayIntersect skips them)
-	unsigned char lobbyFlags;     // 0x3F, bit 2: a hidden administrator stays in the lobby's user map (CTask::OnPacketCommon 0x44)
+	unsigned short invisible : 1;   // 0x3E, bit 0: an administrator hidden from picking (AvatarByRayIntersect skips them)
+	unsigned short : 9;
+	unsigned short stayInLobby : 1; // 0x3E, bit 10: a hidden administrator stays in the lobby's user map (CTask::OnPacketCommon 0x44)
+	unsigned short : 5;
 	unsigned long nickColorType;  // 0x40, 1: the nick is drawn in 0xFF33DBFF instead of white (OnRoomList_UserListOwnerDraw)
 	PADDING(0x44, 0xC4);
 };
@@ -687,7 +695,6 @@ CHECK_FIELD(sBriefUserInfo, identityBits, 0x21);
 CHECK_FIELD(sBriefUserInfo, rankValue, 0x29);
 CHECK_FIELD(sBriefUserInfo, guildUID, 0x2E);
 CHECK_FIELD(sBriefUserInfo, titleTypeId, 0x25);
-CHECK_FIELD(sBriefUserInfo, lobbyFlags, 0x3F);
 CHECK_FIELD(sBriefUserInfo, nickColorType, 0x40);
 
 // The game style of a room; its enumerators are not transcribed yet.
@@ -951,9 +958,10 @@ CHECK_FIELD(sMailInfo, isRead, 0x35A);
 CHECK_FIELD(sMailInfo, itemList, 0x35B);
 CHECK_FIELD(sMailInfo, state, 0x367);
 
-// A player's public profile, byte-packed (CSharedDoc keeps the local player's
-// at 0x3E2, GetPangyaUserInfo). Only the members the transcribed functions
-// read are named; the size is not known yet.
+// A player's public profile, byte-packed, 0x10D bytes (CSharedDoc keeps the
+// local player's at 0x3E2, GetPangyaUserInfo; CSharedDoc::SetIndex copies it
+// whole into sUserInfo). Only the members the transcribed functions read are
+// named.
 #pragma pack(push, 1)
 struct sPangYaUserInfo {
 	// globalgamedefine.h:1354 (inline; emitted by taskmain.cpp)
@@ -980,7 +988,18 @@ struct sPangYaUserInfo {
 	UNKNOWN(0x5D, 0x69);
 	unsigned long guildUID;       // 0x69
 	unsigned long guildPosition;  // 0x6D
-	unsigned char eventFlags;     // 0x71, bit 1 (mask 2): the recycle event is on (FrRecycleDlg::SetEventMessage)
+	union {
+		unsigned char eventFlags; // 0x71, bit 1 (mask 2): the recycle event is on (FrRecycleDlg::SetEventMessage)
+		struct {
+			unsigned char eventFlag0 : 1;
+			unsigned char gender : 1;      // bit 1
+			unsigned char eventFlag2 : 1;
+			unsigned char eventFlag3 : 1;  // bit 3 (CTask::OnPacketCommon, CIntrusion::DoIntrusionAccess)
+			unsigned char eventFlag4 : 1;  // bit 4
+			unsigned char eventFlag5 : 1;  // bit 5
+			unsigned char : 2;
+		} eventBits;              // 0x71, the same flags as bits
+	};
 	UNKNOWN(0x72, 0x73);
 	short bsUsableTimes;          // 0x73, Bongdari shop: plays usable (CSharedDoc::GetBsUsableTimes)
 	short bsUsableBonusTimes;     // 0x75, Bongdari shop: bonus plays usable (CSharedDoc::GetBsUsableBonusTimes)
@@ -989,8 +1008,12 @@ struct sPangYaUserInfo {
 	unsigned long flagBlock;      // 0x7D
 	int timeBlock;                // 0x81, CSharedDoc::SetTimeBlock
 	int nameByEdit;               // 0x85, 1: mail is addressed by the name typed in the receiver edit
+	char loginId[0x16];           // 0x89, the account's login id (CSharedDoc::m_loginId)
+	UNKNOWN(0x9F, 0x109);
+	unsigned long uid;            // 0x109, the player's UID (CSharedDoc::m_myUID, sUserInfo::m_uid)
 };
 #pragma pack(pop)
+CHECK_SIZE(sPangYaUserInfo, 0x10D);
 CHECK_FIELD(sPangYaUserInfo, id, 0x00);
 CHECK_FIELD(sPangYaUserInfo, nickname, 0x16);
 CHECK_FIELD(sPangYaUserInfo, guildName, 0x2C);
@@ -1010,6 +1033,8 @@ CHECK_FIELD(sPangYaUserInfo, pointEventPoints, 0x79);
 CHECK_FIELD(sPangYaUserInfo, flagBlock, 0x7D);
 CHECK_FIELD(sPangYaUserInfo, timeBlock, 0x81);
 CHECK_FIELD(sPangYaUserInfo, nameByEdit, 0x85);
+CHECK_FIELD(sPangYaUserInfo, loginId, 0x89);
+CHECK_FIELD(sPangYaUserInfo, uid, 0x109);
 
 // A course of the game (the map id the server sends).
 enum eMapType {
@@ -1397,5 +1422,14 @@ CHECK_FIELD(sSCardAvilityPeriodInfo, startTime, 0x1C);
 CHECK_FIELD(sSCardAvilityPeriodInfo, endTime, 0x2C);
 CHECK_FIELD(sSCardAvilityPeriodInfo, kind, 0x3C);
 CHECK_FIELD(sSCardAvilityPeriodInfo, use, 0x40);
+
+// globalgamedefine.h:3965
+// Prize kinds 3 to 5, which CGolfRule::AddExtPrize leaves out (they bring no
+// item).
+static bool IsNoItemPrizeKind(int kind) {
+	if (kind >= 3 && kind <= 5)
+		return true;
+	return false;
+}
 
 #endif // PG_SHARED_GLOBALGAMEDEFINE_H

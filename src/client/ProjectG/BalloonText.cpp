@@ -252,18 +252,18 @@ void ntBalloonText::Render(WView *view) {
 		textY = y - manager->m_bottomHeight - manager->m_frameCenter->GetHeight() - height + 5;
 
 		rect.left = (int)((textX - manager->m_leftWidth - frameX) * scale + frameX);
-		rect.top = y - manager->m_bottomHeight - manager->m_frameCenter->GetHeight() - height - manager->m_topHeight + 5;
-		rect.right = manager->m_rightWidth + manager->m_leftWidth + maxWidth;
-		rect.bottom = manager->m_bottomHeight + height + manager->m_topHeight;
+		rect.top = y - ntBalloonTextManager::Instance()->m_bottomHeight - ntBalloonTextManager::Instance()->m_frameCenter->GetHeight() - height - ntBalloonTextManager::Instance()->m_topHeight + 5;
+		rect.right = ntBalloonTextManager::Instance()->m_rightWidth + ntBalloonTextManager::Instance()->m_leftWidth + maxWidth;
+		rect.bottom = ntBalloonTextManager::Instance()->m_bottomHeight + height + ntBalloonTextManager::Instance()->m_topHeight;
 		WOverlay::DrawFrameOverlay9(view, manager->m_frame, rect, color);
 
-		manager = ntBalloonTextManager::Instance();
-		int w = manager->m_frameCenter->GetWidth();
-		int h = manager->m_frameCenter->GetHeight();
-		manager->m_frameCenter->RenderWithShear(view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect((float)(x - w / 2), (float)y - h, w, h), 0.0f, 0x80000, color);
+		ntBalloonTextManager::Instance()->m_frameCenter->RenderWithShear(view, WRect(0.0f, 0.0f, 1.0f, 1.0f),
+			WRect((float)(x - ntBalloonTextManager::Instance()->m_frameCenter->GetWidth() / 2), (float)y - ntBalloonTextManager::Instance()->m_frameCenter->GetHeight(),
+				ntBalloonTextManager::Instance()->m_frameCenter->GetWidth(), ntBalloonTextManager::Instance()->m_frameCenter->GetHeight()),
+			0.0f, 0x80000, color);
 	} else {
-		int frameX = textX - manager->m_leftWidth;
 		textY = y - manager->m_thinkFrame1->GetHeight() - height - 19;
+		int frameX = textX - manager->m_leftWidth;
 
 		rect.left = (int)((textX - frameX - 24) * scale + frameX);
 		rect.top = y - manager->m_thinkFrame1->GetHeight() - height - 43;
@@ -271,10 +271,10 @@ void ntBalloonText::Render(WView *view) {
 		rect.bottom = height + 48;
 		WOverlay::DrawFrameOverlay1(view, manager->m_thinkFrame2, 24.0f, 24.0f, 24.0f, 24.0f, rect, color);
 
-		manager = ntBalloonTextManager::Instance();
-		int w = manager->m_thinkFrame1->GetWidth();
-		int h = manager->m_thinkFrame1->GetHeight();
-		manager->m_thinkFrame1->RenderWithShear(view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect((float)(x - w / 2), (float)y - h, w, h), 0.0f, 0x80000, color);
+		ntBalloonTextManager::Instance()->m_thinkFrame1->RenderWithShear(view, WRect(0.0f, 0.0f, 1.0f, 1.0f),
+			WRect((float)(x - ntBalloonTextManager::Instance()->m_thinkFrame1->GetWidth() / 2), (float)y - ntBalloonTextManager::Instance()->m_thinkFrame1->GetHeight(),
+				ntBalloonTextManager::Instance()->m_thinkFrame1->GetWidth(), ntBalloonTextManager::Instance()->m_thinkFrame1->GetHeight()),
+			0.0f, 0x80000, color);
 	}
 
 	for (int i = 0; i < lineCount; i++) {

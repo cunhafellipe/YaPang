@@ -73,8 +73,8 @@ void CStatBar::Render(const WPoint& pos) {
 		WRect rect;
 		rect.x = pos.x;
 		rect.y = (m_barHeight + m_barGap) * index + pos.y;
-		rect.w = m_bars[i].m_curPos / m_bars[i].m_rangeLimit * 100.0f;
 		rect.h = m_barHeight;
+		rect.w = m_bars[i].m_curPos / m_bars[i].m_rangeLimit * 100.0f;
 		pGDI->DrawTexture(m_bars[i].m_pBitmap, rect, 0xFFFFFFFF, 0);
 
 		pGDI->SetTextStyle(0);
@@ -312,8 +312,7 @@ void FrSubEquipBar::Initialize(void) {
 	}
 
 	m_sortList.sort();
-	std::list<_sortitem>::iterator it;
-	for (it = m_sortList.begin(); it != m_sortList.end(); ++it) {
+	for (std::list<_sortitem>::iterator it = m_sortList.begin(); it != m_sortList.end(); ++it) {
 		m_pSubEquipList->AddItem(&(*it));
 	}
 
@@ -1258,9 +1257,10 @@ inline T MaxOf(T a, T b) {
 void FrPlayerDlg::SetLevelBar(void) {
 	unsigned long charTypeId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_characterInfo.typeId;
 	const char* charLevels = (const char*)&WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_characterInfo.unknown6A;
-	unsigned long clubTypeId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_clubSet.typeId;
-	unsigned long caddieId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_equipHead;
-	const short* clubLevels = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_clubSet.statLevel;
+	// The original recomputes the player's address here (an unsigned index) and reuses the first one for the find below.
+	unsigned long clubTypeId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[(unsigned int)m_playerIndex].m_clubSet.typeId;
+	const short* clubLevels = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[(unsigned int)m_playerIndex].m_clubSet.statLevel;
+	unsigned long caddieId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[(unsigned int)m_playerIndex].m_equipHead;
 	std::map<unsigned int, sCharacterInfo>::const_iterator charIt = WSingleton<CSharedDoc>::Instance()->m_characterMap.find(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_characterId);
 	const unsigned long* parts = charIt->second.partTypeIds;
 	const unsigned long* cards = charIt->second.auxParts.tids;
@@ -1458,6 +1458,9 @@ void FrPlayerDlg::SetCaddieControl(eButtonDir dir) {
 		if (m_pCaddieNextBtn != NULL)
 			m_pCaddieNextBtn->Enable(++it != caddieMap.end());
 		break;
+
+	default:
+		return;
 	}
 
 	SetLevelBar();
@@ -1586,7 +1589,8 @@ void FrPlayerDlg::SetCaddie(unsigned long typeId) {
 		return;
 	}
 
-	unsigned long caddieId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_equipHead = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_caddieInfo.id;
+	unsigned long caddieId = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_caddieInfo.id;
+	WSingleton<CSharedDoc>::Instance()->m_roomPlayers[m_playerIndex].m_equipHead = caddieId;
 
 	if (caddieId != 0) {
 		std::map<unsigned int, sCaddieInfo>& caddieMap = WSingleton<CSharedDoc>::Instance()->m_caddieMap;

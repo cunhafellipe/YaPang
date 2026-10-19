@@ -36,7 +36,7 @@ void CRing::Init(void) {
 
 	m_bActive = false;
 
-	m_center.x = m_center.y = m_center.z = 0.0f;
+	m_center.Reset();
 	m_radius = 3.0f;
 	m_width = 0.6f;
 
@@ -68,11 +68,12 @@ void CRing::Display(void) {
 	if (!m_bActive)
 		return;
 
+	int i, j;
 	WTVertex v[4];
 	WTVertex* vl[5];
 
-	for (int i = 0; i < m_count; i++) {
-		for (int j = 0; j < 4; j++) {
+	for (i = 0; i < m_count; i++) {
+		for (j = 0; j < 4; j++) {
 			WVector p = (j & 2) ? m_pOuter[(i + 1) % m_count] : m_pOuter[i];
 			float s = (j & 1) ? -1.0f : 1.0f;
 			p.y += s * m_width * 0.5f; v[j].SetPosition(p); v[j].diffuse = 0x32FFFFFF; v[j].tu = (j & 2) ? (float)(i + 1) / m_count : (float)i / m_count;
@@ -88,8 +89,8 @@ void CRing::Display(void) {
 		g_view->DrawPolygonFan(vl, (m_hTexture & 0x7FF) | 0xC00000, 0x400, false);
 	}
 
-	for (int i = 0; i < m_count; i++) {
-		for (int j = 0; j < 4; j++) {
+	for (i = 0; i < m_count; i++) {
+		for (j = 0; j < 4; j++) {
 			WVector p = (j & 2) ? m_pInner[(i + 1) % m_count] : m_pInner[i];
 			float s = (j & 1) ? -1.0f : 1.0f;
 			p.y += s * (m_width * m_innerRatio) * 0.5f; v[j].SetPosition(p); v[j].diffuse = 0x50FFFFFF; v[j].tu = (j & 2) ? (float)(i + 1) / m_count : (float)i / m_count;

@@ -120,8 +120,10 @@ LEVEL_INFO LEVEL_TABLE[71] = {
 };
 
 // The exception log written next to a ghost file and zipped into it.
+// Defined after Export: Export reads the pointer from memory instead of
+// folding the literal.
 namespace {
-const char *const GHOST_EXCEPTION_LOG_FILENAME = "ghost_exception_log.txt";
+extern const char *const GHOST_EXCEPTION_LOG_FILENAME;
 }
 
 // ghostdocument.cpp:27
@@ -875,14 +877,18 @@ bool CGhostDocument::Import(unsigned char *data, unsigned int size) {
 
 	if (cardCount != 0) {
 		m_cardList.reserve(cardCount);
+	}
 
-		for (unsigned int i = 0; i < cardCount; i++) {
-			GHOST_CARD_DATA card; memset(&card, 0, sizeof(card)); memcpy(&card, buffer.m_buffer + buffer.m_position, header.m_cardDataSize); buffer.m_position += header.m_cardDataSize;
-			m_cardList.push_back(card);
-		}
+	for (unsigned int i = 0; i < cardCount; i++) {
+		GHOST_CARD_DATA card; memset(&card, 0, sizeof(card)); memcpy(&card, buffer.m_buffer + buffer.m_position, header.m_cardDataSize); buffer.m_position += header.m_cardDataSize;
+		m_cardList.push_back(card);
 	}
 
 	return true;
+}
+
+namespace {
+const char *const GHOST_EXCEPTION_LOG_FILENAME = "ghost_exception_log.txt";
 }
 
 // ghostdocument.cpp:940

@@ -585,12 +585,12 @@ void CTutorialMain::SetCompleteStates(void) {
 				break;
 
 			case 1:
-				if (doc->m_tutorialData[0] == 0xFF) {
-					if (doc->m_tutorialData[1] & data_9f7be8[i].m_mask)
-						m_Tutorials[i].m_status = 1;
-				} else {
+				if (doc->m_tutorialData[0] != 0xFF) {
 					m_Tutorials[i].m_status = 2;
+					break;
 				}
+				if (doc->m_tutorialData[1] & data_9f7be8[i].m_mask)
+					m_Tutorials[i].m_status = 1;
 				break;
 
 			case 2:
@@ -982,9 +982,9 @@ void CTutorialMain::OnTutorialListOwnerDraw(PG_MSGARG param) {
 		return;
 
 	float x = item->pos.x;
+	float rowY[3] = { 0.0f };
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
 
-	float rowY[3] = { 0.0f };
 	int topRow = m_tutorialListBox->GetScrollBar()->GetCurTopRow_Int();
 	if (topRow == 0) {
 		rowY[0] = 119.0f;
@@ -1005,10 +1005,11 @@ void CTutorialMain::OnTutorialListOwnerDraw(PG_MSGARG param) {
 
 		pGDI->DrawTexture(m_images[61], WRect(550.0f, rowY[0] + 21.0f, 194.0f, 19.0f), 0xFFFFFFFF, 0);
 
-		float mx = g_input->GetMousePoint().x - x;
-		float my = g_input->GetMousePoint().y - rowY[0];
+		WPoint pt;
+		pt.x = g_input->GetMousePoint().x - x;
+		pt.y = g_input->GetMousePoint().y - rowY[0];
 
-		int hit = IsInArea(item->idx, WPoint(mx, my));
+		int hit = IsInArea(item->idx, pt);
 		for (int i = 0; i < 8; i++) {
 			if (m_Tutorials[i].m_pending == 0) {
 				const Bitmap *img;
@@ -1090,10 +1091,11 @@ void CTutorialMain::OnTutorialListOwnerDraw(PG_MSGARG param) {
 			course = m_images[43];
 		pGDI->DrawTexture(course, WRect(x + 40.0f, rowY[1] + 91.0f, 85.0f, 48.0f), 0xFFFFFFFF, 0);
 
-		float mx = g_input->GetMousePoint().x - x;
-		float my = g_input->GetMousePoint().y - rowY[1];
+		WPoint pt;
+		pt.x = g_input->GetMousePoint().x - x;
+		pt.y = g_input->GetMousePoint().y - rowY[1];
 
-		int hit = IsInArea(item->idx, WPoint(mx, my));
+		int hit = IsInArea(item->idx, pt);
 		for (int i = 0; i < 6; i++) {
 			if (m_Tutorials[i + 8].m_pending == 0) {
 				const Bitmap *img;
@@ -1162,7 +1164,7 @@ void CTutorialMain::OnTutorialListOwnerDraw(PG_MSGARG param) {
 		break;
 	}
 
-	pGDI->DrawTexture(m_images[50], WRect(669.0f, 63.0f, 18.0f, 19.0f), 0xFFFFFFFF, 0);
+	pGDI->DrawTexture(m_images[50], WRect(670.0f, 63.0f, 18.0f, 19.0f), 0xFFFFFFFF, 0);
 }
 
 // tutorialmain.cpp:1309
@@ -1525,8 +1527,7 @@ void CTutorialMain::CheckEnable(int index) {
 		}
 	} else {
 		int cleared = 0;
-		int count = m_TutoCondition[index].m_count;
-		for (int i = 0; i < count; i++) {
+		for (int i = 0; i < m_TutoCondition[index].m_count; i++) {
 			int id = m_TutoCondition[index].m_start + i;
 			sTutorialInfo *info = FindTutorialList(id);
 			if (info == 0)
@@ -1536,7 +1537,7 @@ void CTutorialMain::CheckEnable(int index) {
 				cleared++;
 		}
 
-		if (cleared == count) {
+		if (cleared == m_TutoCondition[index].m_count) {
 			sTutorialInfo *info = FindTutorialList(unlock);
 			if (info == 0)
 				return;
@@ -1558,8 +1559,15 @@ bool CTutorialMain::IsCompleteQuest(int category, int index) {
 
 // tutorialmain.cpp:1815
 bool CTutorialMain::IsCompleteCategory(int category) {
-	int start = category;
-	int end = category;
+	// The original leaves both bounds unset for an unknown category (the
+	// compiler reads them from the argument's stack home).
+#ifdef PG_PORT
+	int start = 0;
+	int end = 0;
+#else
+	int start;
+	int end;
+#endif
 	switch (category) {
 	case 0:
 		start = 0;

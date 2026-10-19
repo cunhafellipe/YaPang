@@ -219,25 +219,25 @@ void FrDowngradeDlg::OnPowerBarInit(intptr_t param) {
 // downgradedlg.cpp:191
 void FrDowngradeDlg::OnControlBarInit(intptr_t param) {
 	m_pBar[1] = DYNAMIC_CAST(FrGaugeBar, param);
-	m_pBar[1]->SetRange(0, 50, 0);
+	m_pBar[1]->SetRange(0, 30, 0);
 }
 
 // downgradedlg.cpp:198
 void FrDowngradeDlg::OnImpactBarInit(intptr_t param) {
 	m_pBar[2] = DYNAMIC_CAST(FrGaugeBar, param);
-	m_pBar[2]->SetRange(0, 50, 0);
+	m_pBar[2]->SetRange(0, 30, 0);
 }
 
 // downgradedlg.cpp:204
 void FrDowngradeDlg::OnSpinBarInit(intptr_t param) {
 	m_pBar[3] = DYNAMIC_CAST(FrGaugeBar, param);
-	m_pBar[3]->SetRange(0, 50, 0);
+	m_pBar[3]->SetRange(0, 30, 0);
 }
 
 // downgradedlg.cpp:211
 void FrDowngradeDlg::OnCurveBarInit(intptr_t param) {
 	m_pBar[4] = DYNAMIC_CAST(FrGaugeBar, param);
-	m_pBar[4]->SetRange(0, 50, 0);
+	m_pBar[4]->SetRange(0, 30, 0);
 }
 
 // downgradedlg.cpp:217
@@ -409,7 +409,7 @@ void FrDowngradeDlg::SetEnchantNumber(int stat) {
 
 // downgradedlg.cpp:384
 void FrDowngradeDlg::SetLevelBar(void) {
-	int i;
+	unsigned char i;
 	int value;
 	int maxValue;
 	if (m_bClub == 0) {

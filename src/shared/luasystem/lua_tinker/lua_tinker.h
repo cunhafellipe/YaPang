@@ -9,8 +9,11 @@
 #undef long
 #endif
 
+#if defined(__GNUC__) && !defined(__clang__)
+#include <type_traits> // std::is_void in the GCC functor below
+#endif
+
 extern "C" {
-#include <type_traits>
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"

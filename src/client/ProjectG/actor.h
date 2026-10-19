@@ -2,6 +2,7 @@
 #ifndef PG_CLIENT_PROJECTG_ACTOR_H
 #define PG_CLIENT_PROJECTG_ACTOR_H
 
+#include <bitset>
 #include <map>
 #include <string>
 #include <vector>
@@ -114,7 +115,11 @@ protected:
 	void RemoveSkipList(unsigned long layer);
 
 protected:
-	int m_flag;                 // 0x4
+	// 0x4: per-actor state bits, a std::bitset (tested as mov/shr/test 1, set
+	// and reset as or/and on memory: docs/tough_problems/022). Bit roles are
+	// CGrid's, the one user found so far: 0 camera out of range, 1 static
+	// grid, 2 hidden, 3 grid settled (cup cell drawn), 4 club changed.
+	std::bitset<5> m_flag;
 	int m_priority;             // 0x8
 	unsigned long m_skipLayer;  // 0xc
 	CTask *m_pTask;             // 0x10

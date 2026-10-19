@@ -100,8 +100,10 @@ sFRESH_ENTRY FrResultDlg::_MsgEntries[] = {
 	{ 0, FRCMD_NONE, FrFuncNone, (FRESH_PMSG)0 }
 };
 
-// The title font's texture list (data at 0xab7900).
-static char* s_resultFontFiles[] = { "[bigfont.jpg", "[font_wind.jpg" };
+// The title font's texture list (no public symbol).
+extern "C" {
+static char* data_ab7900[] = { "[bigfont.jpg", "[font_wind.jpg" };
+}
 
 // resultdlg.cpp:61
 FrResultDlg::FrResultDlg(void) {
@@ -118,7 +120,7 @@ FrResultDlg::FrResultDlg(void) {
 
 	tagWTITLEFONT info;
 	memset(&info, 0, sizeof(info));
-	info.filename = s_resultFontFiles;
+	info.filename = data_ab7900;
 	info.fontw = 32;
 	info.fonth = 32;
 	info.numPages = 1;
@@ -253,7 +255,7 @@ void FrResultDlg::OnProc(const float dt) {
 	if (m_pExhibition) {
 		const WRect& rect = m_pStageArea->GetRect();
 
-		if (m_stageRect.x != rect.x || m_stageRect.y != rect.y) {
+		if (rect.x != m_stageRect.x || rect.y != m_stageRect.y) {
 			m_pExhibition->SetCenter(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f);
 			m_stageRect = rect;
 		}
@@ -345,8 +347,9 @@ void FrResultDlg::OnStageOwnerDraw(void) {
 	const WRect& rect = m_pStageArea->GetRect();
 
 
-	float x = rect.x + 333.0f;
-	float y = rect.y + 34.0f;
+	WPoint pos;
+	pos.x = rect.x + 333.0f;
+	pos.y = rect.y + 34.0f;
 
 	char* text;
 
@@ -365,7 +368,7 @@ void FrResultDlg::OnStageOwnerDraw(void) {
 
 
 	if (m_pTitleFont) {
-		m_pTitleFont->Print(g_view, x, y, text, 0, 0xFFFFFFFF, 0);
+		m_pTitleFont->Print(g_view, pos.x, pos.y, text, 0, 0xFFFFFFFF, 0);
 	}
 }
 
@@ -645,14 +648,13 @@ void FrResultDlg::OnGetItemOwnerDraw(void) {
 	// The items won in the game.
 	for (std::vector<unsigned long>::iterator it = WSingleton<CSharedDoc>::Instance()->m_gainedItemList[0].begin(); it != WSingleton<CSharedDoc>::Instance()->m_gainedItemList[0].end(); ++it) {
 		const Bitmap* pBitmap;
-		unsigned long type = *it >> 26;
-		if (type == 6) {
+		if ((*it >> 26) == 6) {
 			IFF_STRUCT::sItem* pItem = ItemManager()->FindItem(*it);
 			if (pItem == 0)
 				continue;
 
 			pBitmap = g_pFresh->GetManager()->GetBitmap("ITEMS", pItem->m_icon);
-		} else if (type == 0x1D) {
+		} else if ((*it >> 26) == 0x1D) {
 			IFF_STRUCT::sQuestDrop* pDrop = ItemManager()->FindQuestDrop(*it);
 			if (pDrop == 0)
 				continue;
@@ -1131,13 +1133,13 @@ void FrResultTeamDlg::OnRedInit(PG_MSGARG param) {
 // resultdlg.cpp:1218
 void FrResultTeamDlg::OnRedOwnerDraw(void) {
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
-		WPoint pos = m_pRedArea->GetRect().TopLeft();
+		WRect rect = m_pRedArea->GetRect();
 
 		if (m_pRedEmblem) {
-			g_pFresh->GetManager()->GetGDI()->DrawTexture(m_pRedEmblem, WRect(pos.x + 10.0f, pos.y + 1.0f, m_pRedEmblem->Width(), m_pRedEmblem->Height()), 0xFFFFFFFF, 0);
+			g_pFresh->GetManager()->GetGDI()->DrawTexture(m_pRedEmblem, WRect(rect.x + 10.0f, rect.y + 1.0f, m_pRedEmblem->Width(), m_pRedEmblem->Height()), 0xFFFFFFFF, 0);
 		}
 
-		g_pFresh->GetManager()->PrintText(WPoint(pos.x, pos.y + 30.0f), 0, m_guildMatch.m_guildName[0], -1.0f, 0xFFFFFFFF);
+		g_pFresh->GetManager()->PrintText(WPoint(rect.x, rect.y + 30.0f), 0, m_guildMatch.m_guildName[0], -1.0f, 0xFFFFFFFF);
 	}
 }
 
@@ -1157,13 +1159,13 @@ void FrResultTeamDlg::OnBlueInit(PG_MSGARG param) {
 // resultdlg.cpp:1261
 void FrResultTeamDlg::OnBlueOwnerDraw(void) {
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
-		WPoint pos = m_pBlueArea->GetRect().TopLeft();
+		WRect rect = m_pBlueArea->GetRect();
 
 		if (m_pBlueEmblem) {
-			g_pFresh->GetManager()->GetGDI()->DrawTexture(m_pBlueEmblem, WRect(pos.x + 10.0f, pos.y + 1.0f, m_pBlueEmblem->Width(), m_pBlueEmblem->Height()), 0xFFFFFFFF, 0);
+			g_pFresh->GetManager()->GetGDI()->DrawTexture(m_pBlueEmblem, WRect(rect.x + 10.0f, rect.y + 1.0f, m_pBlueEmblem->Width(), m_pBlueEmblem->Height()), 0xFFFFFFFF, 0);
 		}
 
-		g_pFresh->GetManager()->PrintText(WPoint(pos.x, pos.y + 30.0f), 0, m_guildMatch.m_guildName[1], -1.0f, 0xFFFFFFFF);
+		g_pFresh->GetManager()->PrintText(WPoint(rect.x, rect.y + 30.0f), 0, m_guildMatch.m_guildName[1], -1.0f, 0xFFFFFFFF);
 	}
 }
 
@@ -1498,7 +1500,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		myData = WSingleton<CSharedDoc>::Instance()->m_gameResultList[MyIndex()];
 	}
 
-	WRect rect = m_pMyInfoArea->GetRect();
+	WPoint areaPos(m_pMyInfoArea->GetRect().x, m_pMyInfoArea->GetRect().y);
 
 	float lineY = 0.0f;
 	int space = gdi->SetSpace(0);
@@ -1510,8 +1512,8 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		bgIndex = myData.m_team;
 
 	if (m_pRankBgBitmaps[bgIndex]) {
-		float bgX = rect.x + 13.0f;
-		float bgY = (11.0f - (float)(m_pRankBgBitmaps[bgIndex]->Height() / 2)) + rect.y;
+		float bgX = areaPos.x + 13.0f;
+		float bgY = (11.0f - (float)(m_pRankBgBitmaps[bgIndex]->Height() / 2)) + areaPos.y;
 		WRect bgRect(bgX, bgY, (float)m_pRankBgBitmaps[bgIndex]->Width(), (float)m_pRankBgBitmaps[bgIndex]->Height());
 
 		gdi->DrawTexture(m_pRankBgBitmaps[bgIndex], bgRect, 0xFFFFFFFF, 0);
@@ -1519,8 +1521,8 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		gdi->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 		gdi->SetTextStyle(1);
 
+		float halfW = (float)(m_pRankBgBitmaps[bgIndex]->Width() / 2);
 		bgY += 2.0f;
-		WPoint rankPos(bgX + (float)(m_pRankBgBitmaps[bgIndex]->Width() / 2), bgY);
 
 		unsigned char rank;
 		if (m_resultDlgType == 2)
@@ -1529,9 +1531,9 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 			rank = myData.m_rank;
 
 		if (rank < 0xFF)
-			gdi->Print(rankPos, 1, "%d", rank);
+			gdi->Print(WPoint(bgX + halfW, bgY), 1, "%d", rank);
 		else
-			gdi->Print(rankPos, 1, "-");
+			gdi->Print(WPoint(bgX + halfW, bgY), 1, "-");
 
 		gdi->SetTextStyle(0);
 		gdi->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -1542,7 +1544,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 	m_pLevelBitmap = g_pFresh->GetBitmap(MakeStr("level_%03d", myData.m_level + 1));
 
 	if (m_pLevelBitmap) {
-		WRect levelRect(rect.x + 47.0f, (11.0f - (float)(m_pLevelBitmap->Height() / 2)) + rect.y, (float)m_pLevelBitmap->Width(), (float)m_pLevelBitmap->Height());
+		WRect levelRect(areaPos.x + 47.0f, (11.0f - (float)(m_pLevelBitmap->Height() / 2)) + areaPos.y, (float)m_pLevelBitmap->Width(), (float)m_pLevelBitmap->Height());
 
 		gdi->DrawTexture(m_pLevelBitmap, levelRect, 0xFFFFFFFF, 0);
 	}
@@ -1551,7 +1553,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		m_pEmblemBitmap = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(myData.m_emblemName);
 
 		if (m_pEmblemBitmap) {
-			WRect emblemRect(rect.x + 110.0f, (11.0f - (float)(m_pEmblemBitmap->Height() / 2)) + rect.y, (float)m_pEmblemBitmap->Width(), (float)m_pEmblemBitmap->Height());
+			WRect emblemRect(areaPos.x + 110.0f, (11.0f - (float)(m_pEmblemBitmap->Height() / 2)) + areaPos.y, (float)m_pEmblemBitmap->Width(), (float)m_pEmblemBitmap->Height());
 
 			gdi->DrawTexture(m_pEmblemBitmap, emblemRect, 0xFFFFFFFF, 0);
 		}
@@ -1581,19 +1583,19 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		}
 	}
 
-	WPoint namePos(rect.x + 141.0f, lineY);
+	WPoint namePos(areaPos.x + 141.0f, lineY);
 	g_pFresh->GetManager()->PrintText(namePos, 0, myData.m_nickname, -1.0f, 0xFFFFFFFF);
 
-	WPoint scorePos(rect.x + 270.0f, lineY);
+	WPoint scorePos(areaPos.x + 270.0f, lineY);
 	if (m_resultDlgType == 2)
 		gdi->Print(scorePos, 2, "%d", myData.m_uniteGuildIndex);
 	else
 		gdi->Print(scorePos, 2, "%d", myData.m_score);
 
-	WPoint pangPos(rect.x + 340.0f, lineY);
+	WPoint pangPos(areaPos.x + 340.0f, lineY);
 	gdi->Print(pangPos, 2, "%I64d", myData.m_pang);
 
-	WPoint bonusPos(rect.x + 347.0f, lineY);
+	WPoint bonusPos(areaPos.x + 347.0f, lineY);
 	gdi->SetTextColor(0xFF006493, 0xFFFFFFFF);
 
 	if (myData.m_extraPang > 0) {
@@ -1610,7 +1612,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 
 	if (myData.m_identity & 0x80) {
 		if (m_pBonusIcon) {
-			WRect iconRect(rect.x + 408.0f, (11.0f - (float)(m_pBonusIcon->Height() / 2)) + rect.y, (float)m_pBonusIcon->Width(), (float)m_pBonusIcon->Height());
+			WRect iconRect(areaPos.x + 408.0f, (11.0f - (float)(m_pBonusIcon->Height() / 2)) + areaPos.y, (float)m_pBonusIcon->Width(), (float)m_pBonusIcon->Height());
 
 			gdi->DrawTexture(m_pBonusIcon, iconRect, 0xFFFFFFFF, 0);
 			drawn = true;
@@ -1620,7 +1622,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 	IFF_ITEM_COMMON* pMascot = ItemManager()->FindCommonItem(myData.m_mascotTypeId);
 
 	if (pMascot) {
-		WRect mascotRect(rect.x + 453.0f, (11.0f - (float)(m_pBonusMascot01->Height() / 2)) + rect.y, (float)m_pBonusMascot01->Width(), (float)m_pBonusMascot01->Height());
+		WRect mascotRect(areaPos.x + 453.0f, (11.0f - (float)(m_pBonusMascot01->Height() / 2)) + areaPos.y, (float)m_pBonusMascot01->Width(), (float)m_pBonusMascot01->Height());
 
 		if (pMascot->m_typeId == 0x40000001) {
 			gdi->DrawTexture(m_pBonusMascot01, mascotRect, 0xFFFFFFFF, 0);
@@ -1644,7 +1646,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 	}
 
 	if (myData.m_itemBoostFlags == 1) {
-		WRect maRect(rect.x + 470.0f, (11.0f - (float)(m_pBonusMa->Height() / 2)) + rect.y, (float)m_pBonusMa->Width(), (float)m_pBonusMa->Height());
+		WRect maRect(areaPos.x + 470.0f, (11.0f - (float)(m_pBonusMa->Height() / 2)) + areaPos.y, (float)m_pBonusMa->Width(), (float)m_pBonusMa->Height());
 
 		gdi->DrawTexture(m_pBonusMa, maRect, 0xFFFFFFFF, 0);
 		drawn = true;
@@ -1654,17 +1656,17 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		WRect ma2Rect(0.0f, 0.0f, (float)m_pBonusMa2->Width(), (float)m_pBonusMa2->Height());
 
 		if (myData.m_itemBoostFlags == 1) {
-			ma2Rect.x = (float)(m_pBonusMa2->Width() / 2) + rect.x + 470.0f;
-			ma2Rect.y = (11.0f - (float)(m_pBonusMa2->Height() / 2)) + rect.y;
+			ma2Rect.x = (float)(m_pBonusMa2->Width() / 2) + areaPos.x + 470.0f;
+			ma2Rect.y = (11.0f - (float)(m_pBonusMa2->Height() / 2)) + areaPos.y;
 		} else {
-			ma2Rect.x = rect.x + 470.0f;
-			ma2Rect.y = (11.0f - (float)(m_pBonusMa2->Height() / 2)) + rect.y;
+			ma2Rect.x = areaPos.x + 470.0f;
+			ma2Rect.y = (11.0f - (float)(m_pBonusMa2->Height() / 2)) + areaPos.y;
 		}
 
 		gdi->DrawTexture(m_pBonusMa2, ma2Rect, 0xFFFFFFFF, 0);
 	} else if (drawn != true) {
 		if (m_pZeroIcon) {
-			WRect zeroRect(rect.x + 440.0f, (11.0f - (float)(m_pZeroIcon->Height() / 2)) + rect.y, (float)m_pZeroIcon->Width(), (float)m_pZeroIcon->Height());
+			WRect zeroRect(areaPos.x + 440.0f, (11.0f - (float)(m_pZeroIcon->Height() / 2)) + areaPos.y, (float)m_pZeroIcon->Width(), (float)m_pZeroIcon->Height());
 
 			gdi->DrawTexture(m_pZeroIcon, zeroRect, 0xFFFFFFFF, 0);
 		}
@@ -1772,7 +1774,7 @@ void FrUniteResultDlg::OnRankListOwnerDraw(PG_MSGARG param) {
 
 		int rank;
 		if (m_resultDlgType == 2) {
-			if (WSingleton<CSharedDoc>::Instance()->m_userInfo.guid == pData->m_uid)
+			if (pData->m_uid == MyGuid(false))
 				m_uniteGuildRank = pItem->no + 1;
 
 			rank = pItem->no + 1;
@@ -1780,10 +1782,7 @@ void FrUniteResultDlg::OnRankListOwnerDraw(PG_MSGARG param) {
 			rank = pData->m_rank;
 		}
 
-		if (rank < 0xFF)
-			gdi->Print(WPoint(rankX, bgY), 1, "%d", rank);
-		else
-			gdi->Print(WPoint(rankX, bgY), 1, "-");
+		rank < 0xFF ? gdi->Print(WPoint(rankX, bgY), 1, "%d", rank) : gdi->Print(WPoint(rankX, bgY), 1, "-");
 
 		gdi->SetTextStyle(0);
 		gdi->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -1810,7 +1809,7 @@ void FrUniteResultDlg::OnRankListOwnerDraw(PG_MSGARG param) {
 	}
 
 	if (m_bTikiReport) {
-		if (WSingleton<CSharedDoc>::Instance()->m_myUID == pData->m_id) {
+		if (pData->m_id == MyUID()) {
 			gdi->SetTextColor(0xFF000000, 0xFFFFFFFF);
 			gdi->SetTextStyle(1);
 		} else {
@@ -1821,7 +1820,7 @@ void FrUniteResultDlg::OnRankListOwnerDraw(PG_MSGARG param) {
 			gdi->SetTextStyle(0);
 		}
 	} else {
-		if (WSingleton<CSharedDoc>::Instance()->m_userInfo.guid == pData->m_uid) {
+		if (pData->m_uid == MyGuid(false)) {
 			gdi->SetTextColor(0xFF000000, 0xFFFFFFFF);
 			gdi->SetTextStyle(1);
 		} else {
@@ -1924,7 +1923,7 @@ void FrUniteResultDlg::OnRankListOwnerDraw(PG_MSGARG param) {
 
 	int medal = -1;
 	if (m_resultDlgType != 3 && !(IsLocalContent((localContentType_t)0x2B) && WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit >= 100)) {
-		if (WSingleton<CSharedDoc>::Instance()->m_holeOrder[0] == pData->m_hole) {
+		if (pData->m_hole == GetStartHole()) {
 			medal = -1;
 		} else {
 			medal = GetMedalIndex(pData->m_uid);
@@ -2001,7 +2000,7 @@ void FrUniteResultDlg::OnRankListLBtnUp(void) {
 			m_pScoreDlg->EnableDrag(false);
 
 			if (m_selectedUid == 0xFFFFFFFF)
-				m_selectedUid = MyUID();
+				m_selectedUid = WSingleton<CSharedDoc>::Instance()->m_userInfo.guid;
 
 			m_pScoreDlg->SetPlayer(m_selectedUid);
 			m_pScoreDlg->SetVisibleCloseBtn(true);
@@ -2055,10 +2054,10 @@ void FrUniteResultDlg::OnDescAreaInit(PG_MSGARG param) {
 
 // resultdlg.cpp:2590
 void FrUniteResultDlg::OnDescAreaOwnerDraw(PG_MSGARG param) {
-	WPoint pos = m_pDescArea->GetRect().TopLeft();
+	WRect rect = m_pDescArea->GetRect();
 
-	pos.x += 15.0f;
-	pos.y -= 1.0f;
+	rect.x += 15.0f;
+	rect.y -= 1.0f;
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 
 	pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -2075,7 +2074,7 @@ void FrUniteResultDlg::OnDescAreaOwnerDraw(PG_MSGARG param) {
 		}
 	}
 
-	WPoint textPos = pos;
+	WPoint textPos = rect.TopLeft();
 	if (text) {
 		g_pFresh->GetManager()->PrintText(textPos, 0, text, -1.0f, 0xFFFFFFFF);
 	}
@@ -2102,8 +2101,8 @@ void FrUniteResultDlg::OnAwardAreaOwnerDraw(PG_MSGARG param) {
 
 	IFF_STRUCT::sMatch* pMatch = ItemManager()->FindMatch(WSingleton<CSharedDoc>::Instance()->m_matchTypeId);
 
+	WRect rc = GetRect();
 	float x = GetRect().x + 505.0f;
-	float y = GetRect().y;
 
 	bool drawn = false;
 	if (pMatch) {
@@ -2126,7 +2125,7 @@ void FrUniteResultDlg::OnAwardAreaOwnerDraw(PG_MSGARG param) {
 			if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[i].m_uid != myData.m_id)
 				continue;
 
-			WRect rect(x, (381.0f - (float)(m_pPrizeBitmaps[i]->Height() / 2)) + y, (float)m_pPrizeBitmaps[i]->Width(), (float)m_pPrizeBitmaps[i]->Height());
+			WRect rect(x, (381.0f - (float)(m_pPrizeBitmaps[i]->Height() / 2)) + rc.y, (float)m_pPrizeBitmaps[i]->Width(), (float)m_pPrizeBitmaps[i]->Height());
 
 			gdi->DrawTexture(m_pPrizeBitmaps[i], rect, 0xFFFFFFFF, 0);
 
@@ -2135,10 +2134,10 @@ void FrUniteResultDlg::OnAwardAreaOwnerDraw(PG_MSGARG param) {
 			if (!m_bKeepTooltip[1])
 				m_bKeepTooltip[1] = SetTooltip(rect, i);
 		} else {
-			if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[i].m_uid != WSingleton<CSharedDoc>::Instance()->m_userInfo.guid)
+			if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[i].m_uid != MyGuid(false))
 				continue;
 
-			WRect rect(x, (381.0f - (float)(m_pPrizeBitmaps[i]->Height() / 2)) + y, (float)m_pPrizeBitmaps[i]->Width(), (float)m_pPrizeBitmaps[i]->Height());
+			WRect rect(x, (381.0f - (float)(m_pPrizeBitmaps[i]->Height() / 2)) + rc.y, (float)m_pPrizeBitmaps[i]->Width(), (float)m_pPrizeBitmaps[i]->Height());
 
 			gdi->DrawTexture(m_pPrizeBitmaps[i], rect, 0xFFFFFFFF, 0);
 
@@ -2179,8 +2178,8 @@ void FrUniteResultDlg::OnItemAreaOwnerDraw(PG_MSGARG param) {
 	WRect rect = GetRect();
 
 	float offset = 0.0f;
-	const Bitmap* pBitmap = 0;
 	float couponOffset = 0.0f;
+	const Bitmap* pBitmap = 0;
 
 	// The award players' prize items (sAwardPlayer::m_pang holds a type id here).
 	for (int i = 0; i < 12; i++) {
@@ -2207,7 +2206,7 @@ void FrUniteResultDlg::OnItemAreaOwnerDraw(PG_MSGARG param) {
 				if (ItemManager()->GetCouponKind(WSingleton<CSharedDoc>::Instance()->m_awardPlayers[i].m_pang) == 1)
 					couponOffset = -10.0f;
 
-				gdi->DrawTexture(pBitmap, WRect(186.0f - ((float)pBitmap->Width() + offset) + rect.x, 191.0f - (float)((pBitmap->Height() - 23) / 2) + rect.y + couponOffset, (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0);
+				gdi->DrawTexture(pBitmap, WRect(372.0f - ((float)pBitmap->Width() + offset) + rect.x, 382.0f - (float)((pBitmap->Height() - 23) / 2) + rect.y + couponOffset, (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0);
 
 				offset += (float)pBitmap->Width();
 			}
@@ -2227,7 +2226,7 @@ void FrUniteResultDlg::OnItemAreaOwnerDraw(PG_MSGARG param) {
 		if (pIcon == 0)
 			continue;
 
-		WRect iconRect(186.0f - ((float)pIcon->Width() + offset) + rect.x, 191.0f - (float)((pIcon->Height() - 23) / 2) + rect.y, (float)pIcon->Width(), (float)pIcon->Height());
+		WRect iconRect(372.0f - ((float)pIcon->Width() + offset) + rect.x, 382.0f - (float)((pIcon->Height() - 23) / 2) + rect.y, (float)pIcon->Width(), (float)pIcon->Height());
 		gdi->DrawTexture(pIcon, iconRect, 0xFFFFFFFF, 0);
 
 		if (count > 1) {
@@ -2242,7 +2241,7 @@ void FrUniteResultDlg::OnItemAreaOwnerDraw(PG_MSGARG param) {
 	if (offset < 0.01f) {
 		const Bitmap* pZero = g_pFresh->GetBitmap("icon_zero_vs");
 
-		gdi->DrawTexture(pZero, WRect(rect.x + 260.0f, 191.0f - (float)(pZero->Height() / 2) + rect.y, (float)pZero->Width(), (float)pZero->Height()), 0xFFFFFFFF, 0);
+		gdi->DrawTexture(pZero, WRect(rect.x + 260.0f, 382.0f - (float)(pZero->Height() / 2) + rect.y, (float)pZero->Width(), (float)pZero->Height()), 0xFFFFFFFF, 0);
 	}
 }
 
@@ -2264,11 +2263,12 @@ void FrUniteResultDlg::OnTeamResultOwnerDraw(PG_MSGARG param) {
 		return;
 
 	WRect rect = GetRect();
-	float x = rect.x + 13.0f;
 
-	gdi->DrawTexture(m_pRankBgBitmaps[0], WRect(x, (468.0f - (float)(m_pRankBgBitmaps[0]->Height() / 2)) + rect.y, (float)m_pRankBgBitmaps[0]->Width(), (float)m_pRankBgBitmaps[0]->Height()), 0xFFFFFFFF, 0);
+	WRect redBgRect(rect.x + 13.0f, (468.0f - (float)(m_pRankBgBitmaps[0]->Height() / 2)) + rect.y, (float)m_pRankBgBitmaps[0]->Width(), (float)m_pRankBgBitmaps[0]->Height());
+	gdi->DrawTexture(m_pRankBgBitmaps[0], redBgRect, 0xFFFFFFFF, 0);
 
-	gdi->DrawTexture(m_pRankBgBitmaps[1], WRect(x, (492.0f - (float)(m_pRankBgBitmaps[1]->Height() / 2)) + rect.y, (float)m_pRankBgBitmaps[1]->Width(), (float)m_pRankBgBitmaps[1]->Height()), 0xFFFFFFFF, 0);
+	WRect blueBgRect(rect.x + 13.0f, (492.0f - (float)(m_pRankBgBitmaps[1]->Height() / 2)) + rect.y, (float)m_pRankBgBitmaps[1]->Width(), (float)m_pRankBgBitmaps[1]->Height());
+	gdi->DrawTexture(m_pRankBgBitmaps[1], blueBgRect, 0xFFFFFFFF, 0);
 
 	if (m_resultDlgType == 1) {
 		const Bitmap* pRed = g_pFresh->GetBitmap("icon_redteam");
@@ -2311,8 +2311,7 @@ void FrUniteResultDlg::OnTeamResultOwnerDraw(PG_MSGARG param) {
 		pResult = g_pFresh->GetBitmap("30in_team_blueteam_win");
 	} else {
 		if (IsLocalContent((localContentType_t)0x14) && m_bTikiReport) {
-			sRivalData& data = WSingleton<CSharedDoc>::Instance()->m_gameResultList[m_tikiReportRank];
-			if (data.m_team == 0)
+			if (WSingleton<CSharedDoc>::Instance()->m_gameResultList[m_tikiReportRank].m_team == 0)
 				pResult = g_pFresh->GetBitmap("30in_team_redteam_draw");
 			else
 				pResult = g_pFresh->GetBitmap("30in_team_blueteam_draw");
@@ -2418,12 +2417,9 @@ FrUniteResultDlg::FrUniteResultDlg(void) {
 	m_pZeroIcon = 0;
 	m_pCurTooltip = 0;
 
-	m_pTooltips[0] = 0;
-	m_pTooltips[1] = 0;
-	m_pTooltips[2] = 0;
-	m_pTooltips[3] = 0;
-	m_pTooltips[4] = 0;
-	m_pTooltips[5] = 0;
+	for (int i = 0; i < 6; i++) {
+		m_pTooltips[i] = 0;
+	}
 
 	m_expTickTime = 0.0f;
 	m_resultDlgType = 0;
@@ -2436,6 +2432,7 @@ FrUniteResultDlg::FrUniteResultDlg(void) {
 	m_selectedUid = 0xffffffff;
 	m_teamAnimTime = 0.0f;
 	m_elapsedTime = 0.0f;
+	m_uniteGuildRank = 0;
 	m_bKeepTooltip[0] = false;
 	m_bKeepTooltip[1] = false;
 
@@ -2443,12 +2440,12 @@ FrUniteResultDlg::FrUniteResultDlg(void) {
 
 	char* angelFontFile = "[font_angel.jpg";
 	m_titleFontInfo1.filename = &angelFontFile;
-	m_titleFontInfo1.numPages = 1;
-	m_titleFontInfo1.fontw = 6;
+	m_titleFontInfo1.flag = 0;
 	m_titleFontInfo1.fonth = 11;
+	m_titleFontInfo1.fontw = 6;
+	m_titleFontInfo1.numPages = 1;
 	m_titleFontInfo1.texw = 128;
 	m_titleFontInfo1.texh = 32;
-	m_titleFontInfo1.flag = 0;
 	m_titleFontInfo1.pCharSet = "1234567890";
 	m_bTikiReport = false;
 	GetLocalTime(&m_tikiReportTime);
@@ -2457,7 +2454,7 @@ FrUniteResultDlg::FrUniteResultDlg(void) {
 	m_pTitleFont1->Create(&m_titleFontInfo1);
 
 	memset(&m_titleFontInfo2, 0, sizeof(m_titleFontInfo2));
-	m_titleFontInfo2.filename = &s_resultFontFiles[1];
+	m_titleFontInfo2.filename = &data_ab7900[1];
 	m_titleFontInfo2.fontw = 16;
 	m_titleFontInfo2.fonth = 16;
 	m_titleFontInfo2.numPages = 1;
@@ -2552,7 +2549,7 @@ bool FrUniteResultDlg::OnInit(void) {
 
 	if (IsLocalContent((localContentType_t)10)) {
 
-		if (AdminMode()) {
+		if (IsAdministrator(0xFFFFFFFF)) {
 
 			CGMToolkit* pToolkit = WSingleton<CGMToolkit>::Instance();
 
@@ -2589,11 +2586,10 @@ bool FrUniteResultDlg::OnInit(void) {
 
 
 
-	float y = m_pRankListBox->GetRect().y;
-	float h = m_pRankListBox->GetRect().h;
+	WRect rect = m_pRankListBox->GetRect();
 	WPoint pt;
 	pt.x = m_pNextLevelText->GetRect().x;
-	pt.y = y + h + 100.0f;
+	pt.y = rect.y + rect.h + 100.0f;
 	m_pNextLevelText->MoveWindow(pt);
 
 
@@ -3044,10 +3040,9 @@ void FrUniteResultDlg::SetTikiReportState(SYSTEMTIME& time) {
 	m_tikiReportTime = time;
 	m_tikiReportRank = 0;
 
-	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
 	int index = 0;
-	for (std::vector<sGameResultInfo>::iterator it = pDoc->m_gameResultList.begin(); it != pDoc->m_gameResultList.end(); ++it, ++index) {
-		if (it->m_id == pDoc->m_myUID) {
+	for (std::vector<sGameResultInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_gameResultList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_gameResultList.end(); ++it, ++index) {
+		if (it->m_id == WSingleton<CSharedDoc>::Instance()->m_myUID) {
 			m_tikiReportRank = index;
 			break;
 		}

@@ -5,11 +5,11 @@
 // tea.cpp:48
 void Decipher(const unsigned int* const v, unsigned int* const w, const unsigned int* const k)
 {
-	unsigned int sum = 0xE3779B90;
-	unsigned int delta = 0x9E3779B9;
-
 	w[0] = v[0];
 	w[1] = v[1];
+
+	unsigned int sum = 0xE3779B90;
+	unsigned int delta = 0x9E3779B9;
 
 	for (int i = 0; i < 16; i++) {
 		w[1] -= ((w[0] << 4 ^ w[0] >> 5) + w[0]) ^ (sum + k[sum >> 11 & 3]);

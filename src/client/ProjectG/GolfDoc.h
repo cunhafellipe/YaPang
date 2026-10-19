@@ -10,6 +10,7 @@
 #include "encrypttypes.h"
 #include "TaskManager.h"
 #include "wlist.h"
+#include "wflag.h"
 
 #include <list>
 #include <map>
@@ -207,7 +208,7 @@ struct sPlayerData {
 	unsigned long m_bonusFlags;         // 0x4D0, the round's bonus flags: CPangInfo::Record tests 0x1000, 0x4000 and 0x40000-0x800000
 	                                    // (bonuses to the other players), PreCalc*HoleInBonus clear 0x1000 and set 0x2000;
 	                                    // CGolfRule::SendShotResult sends the whole word (bit meanings not known)
-	int m_ghostAwardBase;               // 0x4D4, zeroed by the constructor; read by CGhostPlayer::SendAwardResult (meaning not known)
+	WFlags m_ghostAwardBase;            // 0x4D4, flag 1: the disappointed putt pose was played (CGolfRule::DoFlyBall_Stopped); reset by ResetData; read by CGhostPlayer::SendAwardResult
 	unsigned char m_rivalLevel;         // 0x4D8, the rival's difficulty level
 	unsigned char m_attribute;          // 0x4D9, low two bits of the room entry's attribute (the team index in a team game)
 	unsigned char m_partnerIndex;       // 0x4DA, the team partner's player index, 0xFF for none
@@ -228,7 +229,7 @@ struct sPlayerData {
 	WCrypticValue<int> m_control;       // 0x52C
 	WCrypticValue<int> m_spin;          // 0x53C
 	WCrypticValue<int> m_curve;         // 0x54C
-	bool m_chatPenalty;                 // 0x55C, the player is under a chat penalty: cleared by ChatManager::CheckPenaltyTime when its time is up (HeadIcon shows it)
+	unsigned char m_chatPenalty;        // 0x55C, the player is under a chat penalty: cleared by ChatManager::CheckPenaltyTime when its time is up (HeadIcon shows it)
 	sWinningPrize m_prizeItems;         // 0x55D, the items AddPrize awards (CSharedDoc::SetWinningPrize)
 	unsigned char m_extPrizeCount;      // 0x575, the m_extPrizes in use (CSharedDoc::SetExtPrize adds to it; AddPlayer clears it)
 	sPrizeInfo m_extPrizes[128];        // 0x576, the extra prizes (CSharedDoc::SetExtPrize, CGolfRule::AddExtPrize)
@@ -377,10 +378,21 @@ CHECK_FIELD(sRoundResult, m_itemPang, 0x19);
 // the original packs it to 1 byte). CGolfRule::SendShotResult sends the
 // local player's to the server (packet 0x1B), which relays it to every
 // player (CGolfTask's message 0x62).
+// A position as three plain floats: sShotResult is copied with rep movsd /
+// movsb, so its position is not a WVector (whose operator= is out of line).
+// Same member names as WVector (x, y, z and p[]).
+struct sPos3 {
+	union {
+		struct { float x, y, z; };
+		float p[3];
+	};
+};
+CHECK_SIZE(sPos3, 0xC);
+
 #pragma pack(push, 1)
 struct sShotResult {
 	unsigned long m_uid;    // 0x0, the player the result is about: CGolfTask's message 0x62 stores it at CSharedDoc::GetIndex(m_uid)
-	WVector m_pos;          // 0x4, where the ball stopped (sPlayerData::m_ballPos); reset to the tee by InitShotResultMsg
+	sPos3 m_pos;            // 0x4, where the ball stopped (sPlayerData::m_ballPos); reset to the tee by InitShotResultMsg
 	unsigned char m_resultType;     // 0x10, how the shot ended: 3 the ball's m_landed is set, 4 holed, 2 stopped after a bounce, 5 stopped without one
 	unsigned char m_powerShotLevel; // 0x11, sPlayerData::m_powerShotLevel; InitShotResultMsg clears it
 	unsigned char m_replayMask; // 0x12, the sender's CGolfRule::m_replayFlags; CGolfRule's message 0x79 ANDs it into m_replayFlags

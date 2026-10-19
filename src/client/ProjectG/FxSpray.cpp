@@ -59,6 +59,12 @@ WVector operator/(const WVector& v, float f);
 // Wangreal (wmath), not declared in wmath.h yet.
 int WisZero(const float& f, float eps);
 
+// Nameless per-unit rdata constants: degrees to radians, and the
+// "no limit" value of the attachment limits.
+extern "C" {
+static const float data_a11894[2] = { 0.017453292f, FLT_MAX };
+}
+
 // fxspray.cpp:20
 CFxParticle::CFxParticle(void) {
 	m_pSprite = 0;
@@ -189,7 +195,7 @@ static float GetAngle(const WVector& a, const WVector& b) {
 // fxspray.cpp:162
 CFxSpray::CFxSpray(CFxBox& box) : m_box(box) {
 	Reset();
-	m_fAttachLimitA = m_fAttachLimitB = FLT_MAX; memset(m_pMatrix, 0, sizeof(m_pMatrix));
+	m_fAttachLimitB = m_fAttachLimitA = FLT_MAX; memset(m_pMatrix, 0, sizeof(m_pMatrix));
 	memset(m_pOffset, 0, sizeof(m_pOffset));
 }
 
@@ -213,8 +219,8 @@ void CFxSpray::Reset(void) {
 	m_matrix.Reset();
 	m_baseMatrix.Reset();
 
-	m_outputDir.x = m_outputDir.y = m_outputDir.z = 0.0f;
-	m_outputPos.x = m_outputPos.y = m_outputPos.z = 0.0f;
+	m_outputDir.Reset();
+	m_outputPos.Reset();
 
 	m_outputAlpha = 0;
 	m_pSpawner = 0;
@@ -239,14 +245,14 @@ void CFxSpray::Reset(void) {
 	m_param.m_fFriction = 0.0f;
 	m_param.m_fGroundFriction = 0.0f; m_param.m_bScaleArea = m_param.m_iLifetimeMax = 1000;
 	m_param.m_gravity = WVector::ZERO;
-	m_param.m_ground.x = -1000.0f;
-	m_param.m_ground.y = 0.0f;
-	m_param.m_ground.z = 0.0f;
+	m_param.m_fGroundHeight = -1000.0f;
+	m_param.m_fGroundBounce = 0.0f;
+	m_param.m_fGroundRadius = 0.0f;
 
 	m_param.m_lightSource = 0;
 	m_param.m_lightColor = 0xFFFFFF; m_param.m_dstBlend = m_param.m_srcBlend = 0x800000;
 
-	m_param.m_initialMinVel = m_param.m_initialMaxVel = WVector::ZERO;
+	m_param.m_initialVel.min = m_param.m_initialVel.max = WVector::ZERO;
 	m_param.m_fWindScaleA = m_param.m_fWindScaleB = 0.0f;
 	m_param.m_wind.x = m_param.m_wind.y = m_param.m_wind.z = 0.0f;
 	m_param.m_extOrientation = 0;
@@ -275,7 +281,7 @@ void CFxSpray::Reset(void) {
 	m_param.m_frames.clear();
 	m_param.m_fDistLimitA = m_param.m_fDistLimitB = 0.0f;
 	m_param.m_bSphereKind2 = false;
-	m_param.m_fSphereAngle = 0;
+	m_fSphereAngle = 0;
 	memset(&m_defines, 0, sizeof(m_defines));
 }
 
@@ -351,7 +357,7 @@ bool CFxSpray::ParseLine(const char* line) {
 	char a[16][0x104];
 
 	tokens.GetToken(key, "=", 1);
-	TrimA(key, " \t\n\r");
+	TrimA(key, " \t\n\r\0");
 
 	for (int i = 0; i < 16; i++) {
 		tokens.GetToken(a[i], ",", 1);
@@ -371,7 +377,8 @@ bool CFxSpray::ParseLine(const char* line) {
 
 			if (FXBOX_RESOURCE_MANAGER(m_box) == 0)
 				return false;
-			if (!strcmpi(FXBOX_RESOURCE_MANAGER(m_box)->FindMatchFile(name), name))
+			const char* match = FXBOX_RESOURCE_MANAGER(m_box)->FindMatchFile(name);
+			if (!strcmpi(match, name))
 				return false;
 
 			strcpy(m_param.m_sourceName, a[0]);
@@ -464,8 +471,8 @@ bool CFxSpray::ParseLine(const char* line) {
 		}
 	}
 	else if (!strcmpi(key, "init_velocity")) {
-		m_param.m_initialMinVel = WVector((float)atof(a[0]), (float)atof(a[1]), (float)atof(a[2]));
-		m_param.m_initialMaxVel = WVector((float)atof(a[3]), (float)atof(a[4]), (float)atof(a[5]));
+		m_param.m_initialVel.min = WVector((float)atof(a[0]), (float)atof(a[1]), (float)atof(a[2]));
+		m_param.m_initialVel.max = WVector((float)atof(a[3]), (float)atof(a[4]), (float)atof(a[5]));
 	}
 	else if (!strcmpi(key, "add_velocity")) {
 		sVel vel;
@@ -542,9 +549,9 @@ bool CFxSpray::ParseLine(const char* line) {
 		m_param.m_gravities.push_back(gravity);
 	}
 	else if (!strcmpi(key, "ground")) {
-		m_param.m_ground.x = (float)atof(a[0]);
-		m_param.m_ground.y = (float)atof(a[1]);
-		m_param.m_ground.z = (float)atof(a[2]);
+		m_param.m_fGroundHeight = (float)atof(a[0]);
+		m_param.m_fGroundBounce = (float)atof(a[1]);
+		m_param.m_fGroundRadius = (float)atof(a[2]);
 	}
 	else if (!strcmpi(key, "blend")) {
 		if (!strcmpi(a[0], "normal"))
@@ -746,7 +753,7 @@ bool CFxSpray::Process(float fDelta) {
 
 	// Camera quake keys: a random shake of m_outputDir, m_outputPos the
 	// amplitude-weighted average of the keys' directions.
-	m_outputPos.x = m_outputPos.y = m_outputPos.z = 0.0f;
+	m_outputPos.Reset();
 	bool bQuake = false;
 	std::list<sQuake>::iterator quake = m_param.m_quakes.begin();
 	WVector ampSum(0.0f, 0.0f, 0.0f);
@@ -771,7 +778,7 @@ bool CFxSpray::Process(float fDelta) {
 						+ *(const WVector*)&quake->m_keys[1].p0
 					: *(const WVector*)&quake->m_keys[1].p0;
 
-				m_outputDir.x = m_outputDir.y = m_outputDir.z = 0.0f;
+				m_outputDir.Reset();
 				m_outputDir.x += (float)(rand() % 20001 - 10000) * amp.x * 0.00005f;
 				m_outputDir.y += (float)(rand() % 20001 - 10000) * amp.y * 0.00005f;
 				m_outputDir.z += (float)(rand() % 20001 - 10000) * amp.z * 0.00005f;
@@ -786,7 +793,7 @@ bool CFxSpray::Process(float fDelta) {
 	}
 
 	if (!bQuake) {
-		m_outputDir.x = m_outputDir.y = m_outputDir.z = 0.0f;
+		m_outputDir.Reset();
 	}
 	else {
 		if (!(WAbsBySign(ampSum.x) < WMATH_EPSILON))
@@ -884,16 +891,14 @@ bool CFxSpray::Process(float fDelta) {
 					}
 				}
 
-				// m_ground: x the height above the spray, y the bounce in
-				// percent, z the particle's radius.
 				WVector bg = GetBgPos(particle);
-				float height = bg.y + m_param.m_ground.x;
-				if (m_box.CheckGroundCollision(oldPos, pos, height, m_param.m_ground.z)) {
-					float depth = pos.y - m_param.m_ground.z;
+				float height = bg.y + m_param.m_fGroundHeight;
+				if (m_box.CheckGroundCollision(oldPos, pos, height, m_param.m_fGroundRadius)) {
+					float depth = pos.y - m_param.m_fGroundRadius;
 					depth = height - depth > 0.0f ? height - depth : depth - height;
 
-					pos.y = oldPos.y < pos.y ? height - m_param.m_ground.z : height + m_param.m_ground.z;
-					particle->m_dir.y = m_param.m_ground.y * particle->m_dir.y * -0.01f;
+					pos.y = oldPos.y < pos.y ? height - m_param.m_fGroundRadius : height + m_param.m_fGroundRadius;
+					particle->m_dir.y = m_param.m_fGroundBounce * particle->m_dir.y * -0.01f;
 					float speedY = Abs(particle->m_dir.y);
 
 					if ((depth < 0.03f && speedY < depth) || speedY < 0.01f
@@ -982,29 +987,28 @@ bool CFxSpray::Process(float fDelta) {
 				WVector local;
 				local = (pos - GetBgPos(particle)) * ~boneRot;
 
+				bool bInside;
 				if (!m_param.m_bRoundArea) {
 					WVector vmin(m_param.m_area.min.x - WMATH_EPSILON, m_param.m_area.min.y - WMATH_EPSILON, m_param.m_area.min.z - WMATH_EPSILON);
 					WVector vmax(m_param.m_area.max.x + WMATH_EPSILON, m_param.m_area.max.y + WMATH_EPSILON, m_param.m_area.max.z + WMATH_EPSILON);
 					Waabb box(vmin, vmax);
-					if (!box.IsInclude(local)) {
-						InitParticle(m_param.m_bRegenAtSamePos, particle, 100.0f, 0.0f, area, true);
-						bRegenerated = false;
-						++it;
-						continue;
-					}
+					bInside = box.IsInclude(local);
 				}
 				else {
 					WVector d = local - m_param.m_area.min;
 					float dist = sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
-					if (!(dist < m_param.m_area.max.y + 0.0001f)) {
-						InitParticle(m_param.m_bRegenAtSamePos, particle, 100.0f, 0.0f, area, true);
-						bRegenerated = false;
-						++it;
-						continue;
-					}
+					bInside = dist < m_param.m_area.max.y + 0.0001f;
 				}
 
-				particle->m_fScale = GetVolumeFactor(area, local, m_param.m_area, m_param.m_fAreaScaleXZ, m_param.m_fAreaScaleY, m_param.m_bRoundArea);
+				if (bInside) {
+					particle->m_fScale = GetVolumeFactor(area, local, m_param.m_area, m_param.m_fAreaScaleXZ, m_param.m_fAreaScaleY, m_param.m_bRoundArea);
+				}
+				else {
+					InitParticle(m_param.m_bRegenAtSamePos, particle, 100.0f, 0.0f, area, true);
+					bRegenerated = false;
+					++it;
+					continue;
+				}
 			}
 
 			if (particle->m_pPetBody) {
@@ -1076,8 +1080,7 @@ bool CFxSpray::Process(float fDelta) {
 			}
 
 			WVector dir = particle->m_dir;
-			WVector side = particle->m_dir.x < WMATH_EPSILON && particle->m_dir.x > -WMATH_EPSILON
-					&& particle->m_dir.z < WMATH_EPSILON && particle->m_dir.z > -WMATH_EPSILON
+			WVector side = IsEqual(particle->m_dir.x, 0.0f) && IsEqual(particle->m_dir.z, 0.0f)
 				? WVector::UNIT_POS_Z
 				: WCrossProduct(WVector::UNIT_POS_Y, particle->m_dir);
 			WVector up = WCrossProduct(dir, side);
@@ -1108,9 +1111,7 @@ bool CFxSpray::Process(float fDelta) {
 
 	m_fTime += fDelta;
 
-	if (m_particles.size() == 0 && !bGenerating)
-		return false;
-	return true;
+	return m_particles.size() > 0 || bGenerating;
 }
 
 // fxspray.cpp:1388
@@ -1121,8 +1122,8 @@ void CFxSpray::Display(WView* pView) {
 	if (!m_bActive)
 		return;
 
-	pView->SetScreenCenter(m_fAttachLimitA == FLT_MAX ? pView->GetWidth() * 0.5f : m_fAttachLimitA,
-		m_fAttachLimitB == FLT_MAX ? pView->GetHeight() * 0.5f : m_fAttachLimitB);
+	pView->SetScreenCenter(m_fAttachLimitA == data_a11894[1] ? pView->GetWidth() * 0.5f : m_fAttachLimitA,
+		m_fAttachLimitB == data_a11894[1] ? pView->GetHeight() * 0.5f : m_fAttachLimitB);
 	pView->UpdateCamera();
 
 	m_displayedCount2 = m_displayedCount = 0;
@@ -1135,7 +1136,7 @@ void CFxSpray::Display(WView* pView) {
 		else {
 			WSphere sphere(m_param.m_area.min, m_param.m_area.max.x);
 			pView->DrawSphere(sphere, 0xFFFF0000, 0x40, 0);
-			sphere.radius = m_param.m_area.max.y;
+			sphere = WSphere(m_param.m_area.min, m_param.m_area.max.y);
 			pView->DrawSphere(sphere, 0xFFFF0000, 0x40, 0);
 		}
 
@@ -1175,10 +1176,9 @@ WMatrix CFxSpray::Rotate(float fTime, float fScale) {
 	mat.Reset();
 	std::list<sNozzleRot>::iterator end = m_param.m_axisRots.end();
 	for (std::list<sNozzleRot>::iterator it = m_param.m_axisRots.begin(); it != end; ++it) {
-		const sNozzleRot& rot = *it;
-		if (fTime >= (float)rot.t0 && (float)rot.t1 >= fTime) {
-			float angle = (fTime - rot.t0) > 0.0f ? (fTime - rot.t0) * (rot.a1 - rot.a0) / (rot.t1 - rot.t0) + rot.a0 : rot.a0;
-			mat = RotMat(rot.axis, angle * fScale);
+		if (fTime >= (float)it->t0 && (float)it->t1 >= fTime) {
+			float angle = (fTime - it->t0) > 0.0f ? (fTime - it->t0) * (it->a1 - it->a0) / (it->t1 - it->t0) + it->a0 : it->a0;
+			mat = RotMat(it->axis, angle * fScale);
 		}
 	}
 	return mat;
@@ -1191,10 +1191,9 @@ WMatrix CFxSpray::RotateNozzle(float fTime, float fScale) {
 	mat.Reset();
 	std::list<sNozzleRot>::iterator end = m_param.m_nozzleRots.end();
 	for (std::list<sNozzleRot>::iterator it = m_param.m_nozzleRots.begin(); it != end; ++it) {
-		const sNozzleRot& rot = *it;
-		if (fTime >= (float)rot.t0 && (float)rot.t1 >= fTime) {
-			float angle = (fTime - rot.t0) > 0.0f ? (fTime - rot.t0) * (rot.a1 - rot.a0) / (rot.t1 - rot.t0) + rot.a0 : rot.a0;
-			mat = RotMat(rot.axis, angle * fScale);
+		if (fTime >= (float)it->t0 && (float)it->t1 >= fTime) {
+			float angle = (fTime - it->t0) > 0.0f ? (fTime - it->t0) * (it->a1 - it->a0) / (it->t1 - it->t0) + it->a0 : it->a0;
+			mat = RotMat(it->axis, angle * fScale);
 		}
 	}
 	return mat;
@@ -1218,9 +1217,10 @@ void CFxSpray::Revolute(float fTime, float fScale) {
 			m_spawnDir -= m_pos;
 
 			for (std::list<sNozzleRot>::iterator r = m_param.m_axisRots.begin(); r != m_param.m_axisRots.end(); ++r) {
-				r->axis += prev;
-				r->axis = (r->axis - it->center) * rot + it->center;
-				r->axis -= m_pos;
+				WVector& axis = r->axis;
+				axis += prev;
+				axis = (axis - it->center) * rot + it->center;
+				axis -= m_pos;
 			}
 		}
 	}
@@ -1284,7 +1284,7 @@ bool CFxSpray::Generate(float fTime) {
 		ScaleArea(area, m_param.m_area, m_param.m_bRoundArea, m_param.m_fAreaScaleXZ, m_param.m_fAreaScaleY);
 
 	for (std::list<sGen>::iterator gen = m_param.m_gens.begin(); gen != m_param.m_gens.end(); ++gen) {
-		if (fTime > (float)gen->t1 && gen->generated >= gen->count)
+		if (!(fTime <= (float)gen->t1) && gen->generated >= gen->count)
 			continue;
 
 		bGenerated = true;
@@ -1294,9 +1294,8 @@ bool CFxSpray::Generate(float fTime) {
 		}
 
 		int n;
-		int dt;
-		if (fTime < (float)gen->t1 && (dt = gen->t1 - gen->t0) > 0)
-			n = (int)((fTime - (float)gen->t0) * gen->count / dt + 0.0001f) - gen->generated + 1;
+		if (fTime < (float)gen->t1 && gen->t1 - gen->t0 > 0)
+			n = (int)((fTime - (float)gen->t0) * gen->count / (gen->t1 - gen->t0) + 0.0001f) - gen->generated + 1;
 		else
 			n = gen->count - gen->generated;
 
@@ -1354,45 +1353,37 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 			// A ring about the x axis: radius max.x, length max.z, the
 			// particles spread evenly over all the generation keys.
 			float radius = m_param.m_area.max.x;
-			float angle = m_param.m_fSphereAngle;
+			float angle = m_fSphereAngle;
 			int total = 0;
 			for (std::list<sGen>::iterator gen = m_param.m_gens.begin(); gen != m_param.m_gens.end(); ++gen)
 				total += gen->count;
 
-			float length = m_param.m_area.max.z;
-			pParticle->m_basePos.x = (float)(rand() % 20001) * length * 0.00005f - m_param.m_area.max.z * 0.5f;
-			pParticle->m_basePos.y = sinf(angle * 0.017453292f) * radius;
-			pParticle->m_basePos.z = cosf(angle * 0.017453292f) * radius;
+			pParticle->m_basePos.x = m_box.Random(0.0f, m_param.m_area.max.z) - m_param.m_area.max.z * 0.5f;
+			pParticle->m_basePos.y = sinf(angle * data_a11894[0]) * radius;
+			pParticle->m_basePos.z = cosf(angle * data_a11894[0]) * radius;
 
-			m_param.m_fSphereAngle += 360.0f / total;
+			m_fSphereAngle += 360.0f / total;
 		}
 		else {
 			pParticle->m_basePos = m_box.Random(m_param.m_area.min, m_param.m_area.max.x, m_param.m_area.max.y, m_param.m_area.max.z);
 		}
 	}
 
-	pParticle->m_bubbleOffset = WVector(0.0f, 0.0f, 0.0f);
+	pParticle->m_bubbleOffset.Reset();
 	pParticle->m_pos = GetBgPos();
 	pParticle->m_rot = m_matrix;
 
 	pParticle->m_bGrounded = false;
-	WVector vel = m_box.Random(m_param.m_initialMinVel, m_param.m_initialMaxVel);
-	float fScale = fSpeed * 0.01f;
-	vel.x *= fScale;
-	vel.y *= fScale;
-	vel.z *= fScale;
+	WVector vel = m_box.Random(m_param.m_initialVel.min, m_param.m_initialVel.max);
+	vel *= fSpeed * 0.01f;
 	pParticle->m_dir = vel;
 
-	WVector axis;
-	if (vel.x == 0.0f && vel.z == 0.0f)
-		axis = WVector::UNIT_POS_Z;
-	else
-		axis = WCrossProduct(vel, WVector::UNIT_POS_Y);
+	WVector axis = (vel.x == 0.0f && vel.z == 0.0f) ? WVector::UNIT_POS_Z : WCrossProduct(vel, WVector::UNIT_POS_Y);
 
-	pParticle->m_dir = pParticle->m_dir * RotMat(axis - pParticle->m_basePos, (float)(rand() % 20001) * fSpread * 0.00005f);
-	pParticle->m_dir = pParticle->m_dir * RotMat(vel, (float)(rand() % 20001) * 0.00031415927f);
+	pParticle->m_dir = pParticle->m_dir * RotMat(axis - pParticle->m_basePos, m_box.Random(0.0f, fSpread));
+	pParticle->m_dir = pParticle->m_dir * RotMat(vel, m_box.Random(0.0f, g_2_PI));
 	pParticle->m_dir = pParticle->m_dir * m_baseMatrix;
-	pParticle->m_fWindScale = (float)(rand() % 20001) * (m_param.m_fWindScaleB - m_param.m_fWindScaleA) * 0.00005f + m_param.m_fWindScaleA;
+	pParticle->m_fWindScale = m_box.Random(m_param.m_fWindScaleA, m_param.m_fWindScaleB);
 	pParticle->m_offset = WVector(0.0f, 0.0f, 0.0f);
 
 	WMatrix bone;
@@ -1404,7 +1395,7 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 	WVector push;
 	if (m_param.m_extOrientation) {
 		if (m_param.m_extOrientation == 7) {
-			push = m_param.m_wind * pParticle->m_fWindScale * ~rot + pParticle->m_dir;
+			push = pParticle->m_fWindScale * m_param.m_wind * ~rot + pParticle->m_dir;
 			pParticle->m_dir = pParticle->m_dir * rot;
 		}
 		else {
@@ -1412,7 +1403,8 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 
 			if (m_param.m_extOrientation & 1) {
 				WVector up = WVector::UNIT_POS_Y;
-				WVector v = up * rot;
+				WVector v;
+				v = up * rot;
 				v.x = 0.0f;
 				angles.x = GetAngle(up, v);
 				if (!(WAbsBySign(v.z) < WMATH_EPSILON))
@@ -1421,7 +1413,8 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 
 			if (m_param.m_extOrientation & 2) {
 				WVector up = WVector::UNIT_POS_Z;
-				WVector v = up * rot;
+				WVector v;
+				v = up * rot;
 				v.y = 0.0f;
 				angles.y = GetAngle(up, v);
 				if (!(WAbsBySign(v.x) < WMATH_EPSILON))
@@ -1430,7 +1423,8 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 
 			if (m_param.m_extOrientation & 4) {
 				WVector up = WVector::UNIT_POS_X;
-				WVector v = up * rot;
+				WVector v;
+				v = up * rot;
 				v.z = 0.0f;
 				angles.z = GetAngle(up, v);
 				if (!(WAbsBySign(v.y) < WMATH_EPSILON))
@@ -1439,12 +1433,12 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 
 			WMatrix orient;
 			orient = ~RotMat(angles);
-			push = (m_param.m_wind * pParticle->m_fWindScale + pParticle->m_dir * orient) * ~rot;
+			push = (pParticle->m_fWindScale * m_param.m_wind + pParticle->m_dir * orient) * ~rot;
 			pParticle->m_dir = pParticle->m_dir * orient;
 		}
 	}
 	else {
-		push = (m_param.m_wind * pParticle->m_fWindScale + pParticle->m_dir) * ~rot;
+		push = (pParticle->m_fWindScale * m_param.m_wind + pParticle->m_dir) * ~rot;
 	}
 
 	if (bSecond
@@ -1511,7 +1505,7 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 	pParticle->m_rotSpeed = m_box.Random(m_param.m_initRotation.min, m_param.m_initRotation.max) * m_baseMatrix;
 	pParticle->m_rotation = m_box.Random(m_param.m_initAngle.min, m_param.m_initAngle.max) * m_baseMatrix;
 
-	pParticle->m_fBaseSize = pParticle->m_fSize = (float)(rand() % 20001) * (m_param.m_initSize[1] - m_param.m_initSize[0]) * 0.00005f + m_param.m_initSize[0];
+	pParticle->m_fBaseSize = pParticle->m_fSize = m_box.Random(m_param.m_initSize[0], m_param.m_initSize[1]);
 	pParticle->m_fSizeParam = m_param.m_initSize[2];
 
 	pParticle->m_color.value = 0xFFFFFFFF;
@@ -1528,14 +1522,9 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 
 	pParticle->m_fScale = GetVolumeFactor(area, pParticle->m_basePos, m_param.m_area, m_param.m_fAreaScaleXZ, m_param.m_fAreaScaleY, m_param.m_bRoundArea);
 
-	float lifeMax = (float)m_param.m_iLifetimeMax;
-	float lifeMin = (float)m_param.m_bScaleArea;
-	pParticle->m_fLifeTime = (float)(rand() % 20001) * (lifeMax - lifeMin) * 0.00005f + lifeMin;
+	pParticle->m_fLifeTime = m_box.Random((float)m_param.m_bScaleArea, (float)m_param.m_iLifetimeMax);
 	pParticle->m_fLifeLeft = pParticle->m_fLifeTime;
-
-	float frameMax = (float)m_param.m_initFrame[1];
-	float frameMin = (float)m_param.m_initFrame[0];
-	pParticle->m_frame = (int)((float)(rand() % 20001) * (frameMax - frameMin) * 0.00005f + frameMin);
+	pParticle->m_frame = (int)m_box.Random((float)m_param.m_initFrame[0], (float)m_param.m_initFrame[1]);
 	pParticle->m_fFrameTime = 0.0f;
 	pParticle->m_fTailTime = 0.0f;
 
@@ -1694,8 +1683,8 @@ void CFxSpray::DrawTail(WView* pView, CFxParticle* pParticle, const WVector& pos
 	int len = pParticle->m_tails.GetLen();
 	CFxParticle::sTail* pLast = pParticle->m_tails.GetTail(1);
 
-	FxColor color;
 	if (pParticle->m_pSprite) {
+		FxColor color;
 		color.bytes[0] = (unsigned char)(pParticle->m_color.bytes[0] * (len - 1) / len + m_param.m_tailBytes[3] / len);
 		color.bytes[1] = (unsigned char)(pParticle->m_color.bytes[1] * (len - 1) / len + m_param.m_tailBytes[2] / len);
 		color.bytes[2] = (unsigned char)(pParticle->m_color.bytes[2] * (len - 1) / len + m_param.m_tailBytes[1] / len);
@@ -1722,6 +1711,7 @@ void CFxSpray::DrawTail(WView* pView, CFxParticle* pParticle, const WVector& pos
 		CFxParticle::sTail* pCur = pParticle->m_tails.GetHead(i);
 		CFxParticle::sTail* pNext = pParticle->m_tails.GetHead(i + 1);
 
+		FxColor color;
 		color.bytes[0] = (unsigned char)(pParticle->m_color.bytes[0] * i / len + m_param.m_tailBytes[3] * (len - i) / len);
 		color.bytes[1] = (unsigned char)(pParticle->m_color.bytes[1] * i / len + m_param.m_tailBytes[2] * (len - i) / len);
 		color.bytes[2] = (unsigned char)(pParticle->m_color.bytes[2] * i / len + m_param.m_tailBytes[1] * (len - i) / len);
@@ -1855,7 +1845,7 @@ unsigned long CFxSpray::GetParticleColor(const WView* view, const WVector& pos, 
 	if (m_param.m_fDistLimitB > 0.0f) {
 		float dist = (view->camera.pivot - pos).Magnitude();
 		if (!(dist < m_param.m_fDistLimitA)) {
-			if (!(dist <= m_param.m_fDistLimitB))
+			if (dist > m_param.m_fDistLimitB)
 				return 0;
 			fade = 1.0f - Between(0.0f, (dist - m_param.m_fDistLimitA) / (m_param.m_fDistLimitB - m_param.m_fDistLimitA), 1.0f);
 		} else {

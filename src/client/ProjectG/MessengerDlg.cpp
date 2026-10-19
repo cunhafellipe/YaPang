@@ -1,5 +1,6 @@
 // Original: d:\build\custom\temp\code\client\projectg\messengerdlg.cpp
 #define MESSENGERDLG_SHAREDDOC_INLINE
+#define MESSENGERDLG_SHAREDDOC_DECL_ONLY
 #include "messengerdlg.h"
 #include "ObjectFactory.h"
 #include "fresh.h"
@@ -1618,7 +1619,7 @@ extern "C" int data_af7798;
 void CMessengerInfo::Open(bool) {
 	if (WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_MSN)->m_bConnected == 0 || !WNetworkSystem::Instance()->IsConnectionComplete(WNetworkSystem::NET_UNIT_MSN)) {
 		// "Connecting to the messenger server...."
-		Notify2("¸Þ½ÅÀú¼­¹ö¿¡ Á¢¼ÓÁß....");
+		Notify2("ï¿½Þ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½....");
 
 		unsigned long now = GetTickCount();
 
@@ -1628,7 +1629,7 @@ void CMessengerInfo::Open(bool) {
 				data_af7784[0] = 0;
 			} else {
 				// "Please try again later."
-				Notify2("Àá½Ã ÈÄ¿¡ ÀÌ¿ëÇØ ÁÖ½Ê½Ã¿À.");
+				Notify2("ï¿½ï¿½ï¿½ ï¿½Ä¿ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½Ö½Ê½Ã¿ï¿½.");
 				return;
 			}
 		}
@@ -1755,10 +1756,11 @@ void CMessengerInfo::Toggle(void) {
 
 		std::list<sChatSlot>::iterator it;
 		for (it = chatList.begin(); it != chatList.end(); ++it) {
-			if (it->pChatDlg != NULL) {
-				it->pChatDlg->GetClientRect(it->rcChatDlg);
-				it->pChatDlg->SaveTempChat(*it);
-				it->pChatDlg->SetFadeout(true);
+			sChatSlot& slot = *it;
+			if (slot.pChatDlg != NULL) {
+				slot.pChatDlg->GetClientRect(slot.rcChatDlg);
+				slot.pChatDlg->SaveTempChat(slot);
+				slot.pChatDlg->SetFadeout(true);
 			}
 		}
 
@@ -1795,22 +1797,23 @@ void CMessengerInfo::Toggle(void) {
 				} else {
 					std::list<sChatSlot>::iterator it;
 					for (it = chatList.begin(); it != chatList.end(); ++it) {
-						if (!it->bReceived && it->pChatDlg == NULL && it->uid == uid) {
-							it->pChatDlg = CreateForm<FrMessengerChatDlg>(g_pFresh->GetManager(), this, "messenger_chat", 0);
+						sChatSlot& slot = *it;
+						if (!slot.bReceived && slot.pChatDlg == NULL && slot.uid == uid) {
+							slot.pChatDlg = CreateForm<FrMessengerChatDlg>(g_pFresh->GetManager(), this, "messenger_chat", 0);
 
 							if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false))
-								it->pChatDlg->Adjust(it->rcChatDlg);
+								slot.pChatDlg->Adjust(slot.rcChatDlg);
 
-							it->pChatDlg->SetFixed(true);
-							it->pChatDlg->Open((FRESH_RESULT_CALLBACK)0, it->rcChatDlg.TopLeft(), 0xC);
-							it->pChatDlg->SetUID(it->uid);
-							it->pChatDlg->SetTopmost(true);
-							it->pChatDlg->SetFadeout(bVisible);
+							slot.pChatDlg->SetFixed(true);
+							slot.pChatDlg->Open((FRESH_RESULT_CALLBACK)0, slot.rcChatDlg.TopLeft(), 0xC);
+							slot.pChatDlg->SetUID(slot.uid);
+							slot.pChatDlg->SetTopmost(true);
+							slot.pChatDlg->SetFadeout(bVisible);
 
 							bChatRestored = true;
-							it->pChatDlg->RestoreChat(*it);
+							slot.pChatDlg->RestoreChat(slot);
 
-							pLastChat = it->pChatDlg;
+							pLastChat = slot.pChatDlg;
 						}
 					}
 				}
@@ -1974,11 +1977,12 @@ void CMessengerInfo::Process(float dt) {
 
 		if (g_input->GetButton(RIGHT_BUTTON) == 1 || g_input->GetButton(LEFT_BUTTON) == 1) {
 			const WPoint& pt = g_pFresh->GetManager()->GetInputState()->mousePos;
+			std::list<sChatSlot>& chatList = CMessengerInfo::Instance()->m_chatDlgList;
 			WRect rc;
 
 			bool bOutside = true;
 			std::list<sChatSlot>::iterator it;
-			for (it = CMessengerInfo::Instance()->m_chatDlgList.begin(); it != CMessengerInfo::Instance()->m_chatDlgList.end(); ++it) {
+			for (it = chatList.begin(); it != chatList.end(); ++it) {
 				if (it->pChatDlg != NULL) {
 					it->pChatDlg->GetClientRect(rc);
 
@@ -2254,8 +2258,10 @@ void CMessengerInfo::SetMyStatus(MSN::eStatusType status) {
 
 // messengerdlg.cpp:4078
 bool CMessengerInfo::IsVisible(void) {
+	std::list<sChatSlot>& chatList = CMessengerInfo::Instance()->m_chatDlgList;
+
 	std::list<sChatSlot>::iterator it;
-	for (it = CMessengerInfo::Instance()->m_chatDlgList.begin(); it != CMessengerInfo::Instance()->m_chatDlgList.end(); ++it) {
+	for (it = chatList.begin(); it != chatList.end(); ++it) {
 		if (it->pChatDlg != NULL) {
 			return true;
 		}
@@ -2316,3 +2322,4 @@ void CMessengerInfo::InvalidateCurrentServer(void) {
 		}
 	}
 }
+

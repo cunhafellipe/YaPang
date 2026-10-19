@@ -526,9 +526,9 @@ void CSky::GenerateStars(int count) {
 		WView* view = g_view;
 		attacher.m_pOffset[0] = &view->camera.pivot;
 
-		pSequence->m_pAttacher = &attacher;
 		pSequence->m_fDistLimitA = attacher.m_fLimitA;
 		pSequence->m_fDistLimitB = attacher.m_fLimitB;
+		pSequence->m_pAttacher = &attacher;
 		attacher.m_pMatrix[0] = NULL;
 		m_fxBox->AddSequence(pSequence);
 
@@ -899,7 +899,7 @@ void CSky::RenderBillboardCloud(WView* view) {
 				verts[k].SetPosition(pos);
 				verts[k].tu = m_clouds[i].m_flip ? ((k & 2) ? 0.0f : 1.0f) : ((k & 2) ? 1.0f : 0.0f);
 				verts[k].tv = (float)(((~k) & 1) + m_clouds[i].m_texIndex) * 0.25f;
-				verts[k].diffuse = ModifyColor(m_skyColor, WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_fogBrightness)
+				verts[k].diffuse = ModifyColor(m_skyColor, GOLFDOC()->m_fogBrightness)
 					| ((unsigned long)(unsigned char)(int)m_clouds[i].m_alpha << 24);
 			}
 			view->DrawPolygonFan(vl, (m_cloudTex & 0x7FF) | 0x20300000, 0x400, false);

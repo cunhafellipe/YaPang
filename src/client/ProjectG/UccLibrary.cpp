@@ -110,23 +110,25 @@ void CreateItemThumbnail(const Bitmap* pTexture, const Bitmap* pMask, Bitmap* pD
 	unsigned char r, g, b, a;
 	Bitmap resized;
 
+	WSize size;
+	WPoint offset;
 	float scale = 64.0f / Max(pTexture->Width(), pTexture->Height());
-	float width = pTexture->Width() * scale;
-	float height = pTexture->Height() * scale;
-	float offsetX = (64.0f - width) * 0.5f;
-	float offsetY = (84.0f - height) * 0.5f;
+	size.w = pTexture->Width() * scale;
+	size.h = pTexture->Height() * scale;
+	offset.x = (64.0f - size.w) * 0.5f;
+	offset.y = (84.0f - size.h) * 0.5f;
 
-	GetResizedImage(pTexture, pMask, &resized, (int)width, (int)height);
+	GetResizedImage(pTexture, pMask, &resized, (int)size.w, (int)size.h);
 
 	pDest->Create(64, 84, 32);
 	for (int y = 0; y < 84; y++) {
 		for (int x = 0; x < 64; x++) {
-			if (x < offsetX || x >= offsetX + width || y < offsetY || y >= offsetY + height) {
+			if (x < offset.x || x >= offset.x + size.w || y < offset.y || y >= offset.y + size.h) {
 				pDest->SetPixel(x, y, 0xFF, 0xFF, 0xFF, 0);
 				continue;
 			}
 
-			resized.GetPixel(x - (int)offsetX, y - (int)offsetY, r, g, b, a);
+			resized.GetPixel(x - (int)offset.x, y - (int)offset.y, r, g, b, a);
 			pDest->SetPixel(x, y, r, g, b, a);
 		}
 	}

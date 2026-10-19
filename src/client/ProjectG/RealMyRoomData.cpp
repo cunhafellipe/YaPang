@@ -333,7 +333,7 @@ bool CRealMyRoomData::AddModel(sFurniture_List furniture) {
 			pModel = new cModel;
 			furniture.m_flags |= 1;
 			std::list<sFurniture_List>::iterator it;
-			for (it = CSharedDoc::Instance()->m_furnitureList.begin(); it != CSharedDoc::Instance()->m_furnitureList.end(); ++it) {
+			for (it = CSharedDoc::Instance()->m_furnitureList.begin(); CSharedDoc::Instance()->m_furnitureList.end() != it; ++it) {
 				if (it->m_typeId == furniture.m_typeId && it->m_id == furniture.m_id) {
 					pModel->m_pFurniture = &*it;
 					bFound = true;
@@ -378,7 +378,7 @@ bool CRealMyRoomData::AddModel(sFurniture_List furniture) {
 			pModel = new cModel;
 			furniture.m_flags |= 1;
 			std::list<sFurniture_List>::iterator it;
-			for (it = CSharedDoc::Instance()->m_furnitureList.begin(); it != CSharedDoc::Instance()->m_furnitureList.end(); ++it) {
+			for (it = CSharedDoc::Instance()->m_furnitureList.begin(); CSharedDoc::Instance()->m_furnitureList.end() != it; ++it) {
 				if (it->m_typeId == furniture.m_typeId && it->m_id == furniture.m_id) {
 					pModel->m_pFurniture = &*it;
 					bFound = true;
@@ -463,12 +463,13 @@ bool CRealMyRoomData::SaveModel(bool bSave) {
 
 	if (posterList.GetCount() > 0) {
 		for (pModel = posterList.Start(); pModel; pModel = posterList.Next()) {
+			Waabb box;
 			Waabb other;
 			WVector corner;
 
 			switch (pModel->m_handle) {
 			case 0: {
-				Waabb box = pModel->m_pModelData->m_aabb;
+				box = pModel->m_pModelData->m_aabb;
 				box.max.z = 0.0f;
 				box.min.z = 0.0f;
 
@@ -511,7 +512,7 @@ bool CRealMyRoomData::SaveModel(bool bSave) {
 			}
 			case 1:
 			case 2: {
-				Waabb box = pModel->m_pModelData->m_aabb;
+				box = pModel->m_pModelData->m_aabb;
 				box.max.x = 0.0f;
 				box.min.x = 0.0f;
 
@@ -850,9 +851,7 @@ void CRealMyRoomData::DeleteList(void) {
 
 // realmyroomdata.cpp:1426
 void CRealMyRoomData::ResetList(bool all) {
-	cModel *pModel;
-
-	for (pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
+	for (cModel *pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
 		if (pModel && pModel->m_pModelData) {
 			CSceneManager::Instance()->DeleteElement(pModel->m_pModelData->m_name);
 
@@ -869,7 +868,7 @@ void CRealMyRoomData::ResetList(bool all) {
 	ChangeFloorTexture(NULL, true);
 
 	if (all) {
-		for (pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
+		for (cModel *pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
 			m_modelList -= pModel;
 
 			if (pModel->m_pModelData) {
@@ -882,7 +881,7 @@ void CRealMyRoomData::ResetList(bool all) {
 			delete pModel;
 		}
 	} else {
-		for (pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
+		for (cModel *pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
 			m_modelList -= pModel;
 
 			if (pModel->m_pModelData) {
@@ -894,7 +893,7 @@ void CRealMyRoomData::ResetList(bool all) {
 		}
 	}
 
-	for (pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) { if (pModel) delete pModel; } m_modelList.Reset();
+	for (cModel *pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) { if (pModel) delete pModel; } m_modelList.Reset();
 
 	m_modelList.Reset();
 	m_pSelectModel = NULL;
@@ -1101,15 +1100,17 @@ static void ClipVelocity(const WVector &in, const WVector &normal, WVector &out,
 // piece puts the model back where the saved list has it.
 void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 	IFF_STRUCT::sFurniture *pFurniture;
-	WVector move(0.0f, 0.0f, 0.0f);
+	WVector move;
+	move.Reset();
 	trace_s trace;
 
 	if (m_pSelectModel)
 		pFurniture = ItemManager()->FindFurniture(m_pSelectModel->m_pFurniture->m_typeId);
 
-	WVector delta(0.0f, 0.0f, 0.0f);
+	WVector delta;
 
 	if (pFurniture->m_modelType == 1 || pFurniture->m_modelType == 2 || pFurniture->m_modelType == 3) {
+		WVector step;
 		GetPVS().TraceOBB_Avatar_genPosition(m_pSelectModel->m_pModelData->m_basePos, m_targetPos, &trace, m_pSelectModel->m_pModelData);
 
 		if (trace.m_endPos.x == m_pSelectModel->m_pModelData->m_basePos.x && trace.m_endPos.z == m_pSelectModel->m_pModelData->m_basePos.z)
@@ -1120,42 +1121,43 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 		GetPVS().TraceOBB_WallSliding(m_pSelectModel->m_pModelData->m_basePos, m_targetPos, &trace, m_pSelectModel->m_pModelData, 0, false);
 
 		move = trace.m_endPos - m_pSelectModel->m_pModelData->m_basePos;
-		delta = move;
+		step = move;
 
-		m_bDropped = GetPVS().TraceOBB_Object(m_pSelectModel->m_pModelData->m_basePos, delta + m_pSelectModel->m_pModelData->m_basePos, m_pSelectModel->m_pModelData->m_aabb, &trace, m_pSelectModel->m_pModelData, false);
+		m_bDropped = GetPVS().TraceOBB_Object(m_pSelectModel->m_pModelData->m_basePos, step + m_pSelectModel->m_pModelData->m_basePos, m_pSelectModel->m_pModelData->m_aabb, &trace, m_pSelectModel->m_pModelData, false);
 
 		WVector slide = trace.m_endPos - m_pSelectModel->m_pModelData->m_basePos;
 
-		m_targetPos = delta + m_pSelectModel->m_pModelData->m_basePos;
+		m_targetPos = step + m_pSelectModel->m_pModelData->m_basePos;
 
 		if (mode == 2) {
-			if (delta.x == 0.0f && delta.z == 0.0f)
-				delta = move;
+			if (step.x == 0.0f && step.z == 0.0f)
+				step = move;
 			else
-				delta = slide;
+				step = slide;
 		} else if (mode == 3) {
-			delta = move;
+			step = move;
 		} else {
-			delta = move;
+			step = move;
 		}
 
 		if (pFurniture->m_modelType == 2 || pFurniture->m_modelType == 3)
-			delta.y = 0.0f;
+			step.y = 0.0f;
 
-		m_pSelectModel->m_pModelData->m_basePos += delta;
-		m_pSelectModel->m_pModelData->m_obb.center += delta;
+		m_pSelectModel->m_pModelData->m_basePos += step;
+		m_pSelectModel->m_pModelData->m_obb.center += step;
 
 		m_pSelectModel->m_pModelData->m_matrix.pivot.x = m_pSelectModel->m_pModelData->m_basePos.x;
 		m_pSelectModel->m_pModelData->m_matrix.pivot.y = m_pSelectModel->m_pModelData->m_basePos.y;
 		m_pSelectModel->m_pModelData->m_matrix.pivot.z = m_pSelectModel->m_pModelData->m_basePos.z;
-		m_pSelectModel->m_pModelData->m_aabb.min += delta;
-		m_pSelectModel->m_pModelData->m_aabb.max += delta;
+		m_pSelectModel->m_pModelData->m_aabb.min += step;
+		m_pSelectModel->m_pModelData->m_aabb.max += step;
 
 		m_pSelectModel->m_pModelData->m_pPuppet->ApplyBones(NULL, m_pSelectModel->m_pModelData->m_matrix);
 		m_pSelectModel->m_pModelData->m_pPuppet->UpdateBound(true, false);
 
 		m_pSelectModel->Apply_ChangeModelData();
 	} else if (pFurniture->m_modelType == 5) {
+		delta.Reset();
 		if (GetPVS().CheckPickRoom(m_targetPos)) {
 			WVector normal;
 			int wall = GetPVS().Get_WallSlidingAngle(m_targetPos, m_pSelectModel->m_pModelData, normal);
@@ -1166,7 +1168,7 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 				if (wall != m_pSelectModel->m_handle && m_pSelectModel->m_handle >= 0) {
 					m_pSelectModel->m_handle = wall;
 
-					move = WVector(0.0f, 0.0f, 0.0f);
+					move.Reset();
 					switch (wall) {
 					case 0:
 						if (m_pSelectModel->m_angle != 0.0f) {
@@ -1203,10 +1205,10 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 
 				GetPVS().TraceOBB_WallSliding(m_pSelectModel->m_pModelData->m_basePos, m_targetPos, &trace, m_pSelectModel->m_pModelData, m_pSelectModel->m_handle + 1, false);
 
-				delta = trace.m_endPos - m_pSelectModel->m_pModelData->m_basePos;
+				WVector slide = trace.m_endPos - m_pSelectModel->m_pModelData->m_basePos;
 
-				m_pSelectModel->m_pModelData->m_basePos += delta;
-				m_pSelectModel->m_pModelData->m_obb.center += delta;
+				m_pSelectModel->m_pModelData->m_basePos += slide;
+				m_pSelectModel->m_pModelData->m_obb.center += slide;
 
 				m_pSelectModel->SetPosition(m_pSelectModel->m_pModelData->m_basePos);
 
@@ -1307,7 +1309,7 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 
 					move = trace.m_endPos - m_pSelectModel->m_pModelData->m_basePos;
 
-					if (move.x == 0.0f && move.y == 0.0f && (m_targetPos.x != m_pSelectModel->m_pModelData->m_basePos.x || m_targetPos.y != m_pSelectModel->m_pModelData->m_basePos.y))
+					if (move.x == 0.0f && move.y == 0.0f && (m_pSelectModel->m_pModelData->m_basePos.x != m_targetPos.x || m_pSelectModel->m_pModelData->m_basePos.y != m_targetPos.y))
 						m_bDropped = true;
 					else
 						m_bDropped = false;
@@ -1347,7 +1349,7 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 		pForm->SetMessage("\xb0\xa1\xb1\xb8\xb0\xa1 \xc3\xe6\xb5\xb9\xb5\xc7\xb4\xc2 \xc0\xa7\xc4\xa1\xbf\xa1 \xb3\xf5\xbf\xa9\xbc\xad \xb4\xd9\xbd\xc3 \xb9\xe8\xc4\xa1\xc7\xcf\xbc\xc5\xbe\xdf \xc7\xd5\xb4\xcf\xb4\xd9.", false);
 		pForm->Open((FRESH_RESULT_CALLBACK)0, 3);
 
-		delta = WVector(0.0f, 0.0f, 0.0f);
+		delta.Reset();
 		for (std::list<sFurniture_List>::iterator it = m_furnitureList.begin(); it != m_furnitureList.end(); ++it) {
 			sFurniture_List furniture = *it;
 			if (m_pSelectModel->m_pFurniture->m_id == furniture.m_id) {
@@ -1399,7 +1401,8 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 	WVector newPos;
 	WVector result = WVector::ZERO;
 
-	WVector roomMax = GetPVS().m_pBaseModel->m_aabb.max;
+	Waabb roomAABB;
+	GetPVS().GetAABB(roomAABB);
 
 	switch (mode) {
 	case 2: {
@@ -1435,7 +1438,7 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 		move = m_targetPos - pModel->m_pModelData->m_basePos;
 
 		move.y = 0.0f;
-		move.z = (roomMax.z - 0.5f)
+		move.z = (roomAABB.max.z - 0.5f)
 			- fabs(pModel->m_pModelData->m_aabb.max.z - pModel->m_pModelData->m_aabb.min.z);
 
 		dir = move;
@@ -1490,7 +1493,8 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 WVector CRealMyRoomData::SlideWallPosition(cModel *pModel, WPolySoup::sModel *pData) {
 	WVector zero = WVector::ZERO;
 
-	WVector roomMax = GetPVS().m_pBaseModel->m_aabb.max;
+	Waabb roomAABB;
+	GetPVS().GetAABB(roomAABB);
 
 	WMatrix rot;
 	pModel->m_pModelData->m_matrix.GetRotMatrix(&rot);
@@ -1505,11 +1509,11 @@ WVector CRealMyRoomData::SlideWallPosition(cModel *pModel, WPolySoup::sModel *pD
 	move = m_targetPos.Normalize() - pModel->m_pModelData->m_basePos;
 
 	if (angle == 90.0f) {
-		move.x = (roomMax.x - 0.5f) - fabs(pModel->m_pModelData->m_aabb.max.x - pModel->m_pModelData->m_aabb.min.x);
+		move.x = (roomAABB.max.x - 0.5f) - fabs(pModel->m_pModelData->m_aabb.max.x - pModel->m_pModelData->m_aabb.min.x);
 	} else if (angle == 0.0f) {
-		move.z = (roomMax.z - 0.5f) - fabs(pModel->m_pModelData->m_aabb.max.z - pModel->m_pModelData->m_aabb.min.z);
+		move.z = (roomAABB.max.z - 0.5f) - fabs(pModel->m_pModelData->m_aabb.max.z - pModel->m_pModelData->m_aabb.min.z);
 	} else if (angle == 270.0f || angle == -90.0f) {
-		move.x = (roomMax.x - 0.5f)
+		move.x = (roomAABB.max.x - 0.5f)
 			- fabs(pModel->m_pModelData->m_aabb.max.x - pModel->m_pModelData->m_aabb.min.x);
 	}
 
@@ -1547,10 +1551,13 @@ WVector CRealMyRoomData::SlideWallPosition(cModel *pModel, WPolySoup::sModel *pD
 // Moves the selected model a step toward the target position against the
 // room's back wall, sliding along what it hits.
 void CRealMyRoomData::SetModelPosition(void) {
-	WVector delta(0.0f, 0.0f, 0.0f);
+	WVector delta;
+	delta.Reset();
 	WPolySoup::sModel *pData = new WPolySoup::sModel;
 
-	WVector roomMax = GetPVS().m_pBaseModel->m_aabb.max;
+	Waabb roomAABB;
+	GetPVS().GetAABB(roomAABB);
+	WVector newPos;
 
 	for (cModel *pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
 		if (m_pSelectModel && strcmp(pModel->m_pModelData->m_name, m_pSelectModel->m_pModelData->m_name) == 0) {
@@ -1558,23 +1565,24 @@ void CRealMyRoomData::SetModelPosition(void) {
 
 			IFF_STRUCT::sFurniture *pFurniture = ItemManager()->FindFurniture(pModel->m_pFurniture->m_typeId);
 			WVector move;
-			WVector newPos;
+			WVector step;
 
 			move = m_targetPos - pModel->m_pModelData->m_basePos;
-			move.z = (roomMax.z - 0.5f)
+			move.z = (roomAABB.max.z - 0.5f)
 				- fabs(pModel->m_pModelData->m_aabb.max.z - pModel->m_pModelData->m_aabb.min.z);
 			WVector dir = move;
 
 			move.Normalize();
 
-			move = move * 17.0f * 0.04f;
-			if (fabs(dir.x) < fabs(move.x))
-				move.x = dir.x;
-			if (fabs(dir.y) < fabs(move.y))
-				move.y = dir.y;
+			step = move * 17.0f * 0.04f;
+			if (fabs(dir.x) < fabs(step.x))
+				step.x = dir.x;
+			if (fabs(dir.y) < fabs(step.y))
+				step.y = dir.y;
 
-			newPos = move + pModel->m_pModelData->m_basePos;
-			WVector slide(0.0f, 0.0f, 0.0f);
+			newPos = step + pModel->m_pModelData->m_basePos;
+			WVector slide;
+			slide.Reset();
 
 			trace_s trace;
 			if (GetPVS().TraceAABB_BackGround(pModel->m_pModelData->m_basePos, newPos, pModel->m_pModelData->m_aabb, &trace, pModel->m_pModelData)) {
@@ -1585,8 +1593,8 @@ void CRealMyRoomData::SetModelPosition(void) {
 				if (pFurniture->m_modelType == 5) {
 					delta.z = 0.0f;
 					if (delta.x == 0.0f && delta.y == 0.0f) {
-						if (WDotProduct(trace.m_plane.normal, move) < 0.99f) {
-							ClipVelocity(move, trace.m_plane.normal, slide, 1.001f);
+						if (WDotProduct(trace.m_plane.normal, step) < 0.99f) {
+							ClipVelocity(step, trace.m_plane.normal, slide, 1.001f);
 
 							newPos = pModel->m_pModelData->m_basePos;
 
@@ -1603,8 +1611,8 @@ void CRealMyRoomData::SetModelPosition(void) {
 				else {
 					delta.y = 0.0f;
 					if (delta.x == 0.0f && delta.z == 0.0f) {
-						if (WDotProduct(trace.m_plane.normal, move) < 0.99f) {
-							ClipVelocity(move, trace.m_plane.normal, slide, 1.001f);
+						if (WDotProduct(trace.m_plane.normal, step) < 0.99f) {
+							ClipVelocity(step, trace.m_plane.normal, slide, 1.001f);
 
 							newPos = pModel->m_pModelData->m_basePos;
 
@@ -1821,18 +1829,18 @@ void cModel::OBBToAABB() {
 	// Each corner goes through a temporary copied into the array, and the
 	// sums are grouped per corner as the original adds them (the ext1/ext2
 	// pair is shared between corners).
-	WVector n0 = ext0 * -1.0f;
 	WVector n1 = ext1 * -1.0f;
 	WVector n2 = ext2 * -1.0f;
+	WVector n0 = ext0 * -1.0f;
 	WVector corner[8];
-	corner[0] = center + (n0 + (ext1 + n2));
-	corner[1] = center + (n0 + (n1 + n2));
-	corner[2] = center + (n1 + n2) + ext0;
-	corner[3] = center + (ext1 + n2) + ext0;
-	corner[4] = center + n0 + (ext1 + ext2);
-	corner[5] = center + n0 + (n1 + ext2);
-	corner[6] = center + (n1 + ext2) + ext0;
-	corner[7] = center + (ext1 + ext2) + ext0;
+	corner[0] = WVector(center.x + (n0.x + (ext1.x + n2.x)), center.y + (n0.y + (ext1.y + n2.y)), center.z + (n0.z + (ext1.z + n2.z)));
+	corner[1] = WVector(center.x + (n0.x + (n1.x + n2.x)), center.y + (n0.y + (n1.y + n2.y)), center.z + (n0.z + (n1.z + n2.z)));
+	corner[2] = WVector(center.x + (ext0.x + (n1.x + n2.x)), center.y + (ext0.y + (n1.y + n2.y)), center.z + (ext0.z + (n1.z + n2.z)));
+	corner[3] = WVector(center.x + (ext0.x + (ext1.x + n2.x)), center.y + (ext0.y + (ext1.y + n2.y)), center.z + (ext0.z + (ext1.z + n2.z)));
+	corner[4] = WVector(center.x + (n0.x + (ext1.x + ext2.x)), center.y + (n0.y + (ext1.y + ext2.y)), center.z + (n0.z + (ext1.z + ext2.z)));
+	corner[5] = WVector(center.x + (n0.x + (n1.x + ext2.x)), center.y + (n0.y + (n1.y + ext2.y)), center.z + (n0.z + (n1.z + ext2.z)));
+	corner[6] = WVector(center.x + (ext0.x + (n1.x + ext2.x)), center.y + (ext0.y + (n1.y + ext2.y)), center.z + (ext0.z + (n1.z + ext2.z)));
+	corner[7] = WVector(center.x + (ext0.x + (ext1.x + ext2.x)), center.y + (ext0.y + (ext1.y + ext2.y)), center.z + (ext0.z + (ext1.z + ext2.z)));
 
 	WVector *pCorner = corner;
 	for (int count = 8; count != 0; count--, pCorner++) {

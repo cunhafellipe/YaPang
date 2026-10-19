@@ -43,6 +43,13 @@ const unsigned long CSpot::m_adwColors[5] = { 0xffff0000, 0xffff8a00, 0xffffde00
 // Turn rate (radians per second) of the range quad and the hole indicator.
 static const float s_turnRate = 3.1415927f;
 
+// The original squares m_unknownb4 through a by-value inline (each use copies
+// the value into a parameter slot and multiplies it again); no header line
+// marks name it.
+static inline float Square(float x) {
+	return x * x;
+}
+
 IObject* CSpotMakeInstance(void) {
 	return new CSpot;
 }
@@ -181,13 +188,13 @@ void CSpot::OnInit(void) {
 	m_unknown30.Reset();
 
 	m_unknown80 = true;
-	m_unknown18c = true;
 	m_unknown4c = 1.0f;
 	m_unknown84 = 2.0f;
 	m_unknown88 = 12.0f;
 	m_unknown94 = 20.0f;
 	m_unknown98 = 20.0f;
 	m_unknown74 = 0.0f;
+	m_unknown18c = true;
 	m_rangeSpread = 0;
 	m_unknownd0 = 0;
 
@@ -262,6 +269,7 @@ void CSpot::OnProcess(float elapsed) {
 		m_bRegistered = !m_bRegistered;
 	}
 
+	WVector dir;
 	switch (CSharedDoc::Instance()->m_roomType) {
 	case 4:
 	case 5:
@@ -277,7 +285,6 @@ void CSpot::OnProcess(float elapsed) {
 				if (CSharedDoc::Instance()->m_roomType == 10) {
 					if (i == MyIndex()) {
 						if (GolfBall().m_preDataIndex >= 0 && GolfBall().m_preDataIndex < GolfBall().m_preDataCount) {
-							WVector dir;
 							dir = GetHoleCupPos() - GolfBall().m_pos;
 							dir.y = 0.0f;
 							CSharedDoc::Instance()->m_gameResultList[i].m_approachDistanceCopy = (int)floorf(0.3125f * (WVectorLen(dir) * 10.0f));
@@ -288,17 +295,15 @@ void CSpot::OnProcess(float elapsed) {
 						SendMsg(this, "Score", 0x2a, 0, 0, 0, 0);
 					} else if (m_pRivals[i].m_fade < 1.0f) {
 						float rate = GetMovingRate(m_pRivals[i].m_fade);
-						WVector dir;
 						dir = GetHoleCupPos() - ((1.0f - rate) * m_pRivals[i].m_pos + rate * CSharedDoc::Instance()->m_gameResultList[i].m_ballPos);
 						dir.y = 0.0f;
 						CSharedDoc::Instance()->m_gameResultList[i].m_approachDistanceCopy = (int)floorf(0.3125f * (WVectorLen(dir) * 10.0f));
 					}
 				} else if (m_pRivals[i].m_fade > 1.0f) {
 					m_pRivals[i].m_fade = 1.0f;
-					WVector dir;
 					dir = CSharedDoc::Instance()->m_gameResultList[i].m_ballPos - GOLFDOC()->GetHoleData(m_pRivals[i].m_hole).m_cupPos;
 					dir.y = 0.0f;
-					if (sqrtf(dir.z * dir.z + dir.x * dir.x) < GolfBall().GetRadius() * 2.0f) {
+					if (WVectorLen(dir) < GolfBall().GetRadius() * 2.0f) {
 						m_pRivals[i].m_fade = -1.0f;
 						m_pRivals[i].m_hole = CSharedDoc::Instance()->m_holeOrder[GetHoleIndex(m_pRivals[i].m_hole)];
 					}
@@ -340,8 +345,7 @@ void CSpot::OnProcess(float elapsed) {
 			m_unknownb8 = 1.0f;
 		}
 
-		float t = m_unknownb4;
-		m_groundPower = GetPVS().GetMinPowerOnGround() * (1.0f - t * t) + GetPVS().GetMaxPowerOnGround() * (t * t);
+		m_groundPower = GetPVS().GetMinPowerOnGround() * (1.0f - Square(m_unknownb4)) + GetPVS().GetMaxPowerOnGround() * Square(m_unknownb4);
 	} else {
 		m_groundPower = 1.0f;
 	}
@@ -395,12 +399,15 @@ void CSpot::Display(void) {
 	}
 
 	if (m_bRegistered) {
+		// One counter for every player/rival loop below (one frame slot in the original).
+		unsigned char i;
+
 		if (GOLFDOC()->GameMode() & 0x200) {
 			switch (CSharedDoc::Instance()->m_roomType) {
 			case 0:
 			case 3:
 			case 7:
-				for (unsigned char i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
+				for (i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
 					if (GOLFDOC()->GetPlayer(i)->m_state == 0 && i != GOLFDOC()->m_myPlayerIndex && PLAYER(i)->m_holes[GOLFDOC()->m_currentHole - 1] != 0) {
 						pos = g_view->Projection(PLAYER(i)->m_ballPos);
 						if (0.0f < pos.z && pos.z < 1.0f) {
@@ -413,7 +420,7 @@ void CSpot::Display(void) {
 				}
 				break;
 			case 1:
-				for (unsigned char i = 0; i < 2; i++) {
+				for (i = 0; i < 2; i++) {
 					if (TEAM(i)->m_state == 0 && i != PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute && TEAM(i)->m_holes[GOLFDOC()->m_currentHole - 1] != 0) {
 						pos = g_view->Projection(TEAM(i)->m_ballPos);
 						if (0.0f < pos.z && pos.z < 1.0f) {
@@ -426,7 +433,7 @@ void CSpot::Display(void) {
 				break;
 			case 6:
 				if (!CProjectG::Instance()->HidePI()) {
-					for (unsigned char i = 0; i < CSharedDoc::Instance()->m_gameResultList.size(); i++) {
+					for (i = 0; i < CSharedDoc::Instance()->m_gameResultList.size(); i++) {
 						if (CSharedDoc::Instance()->m_gameResultList[i].m_state == 0 && CSharedDoc::Instance()->m_gameResultList[i].m_uid != MyGuid(true) && m_pRivals[i].m_hole == GOLFDOC()->m_currentHole && !(m_pRivals[i].m_fade < 0.0f) && CSharedDoc::Instance()->m_userInfo.guildUID == CSharedDoc::Instance()->m_gameResultList[i].m_hasEmblem) {
 							float t = m_pRivals[i].m_fade;
 							pos = g_view->Projection(GetPVS().GetGroundPoint((1.0f - GetMovingRate(t)) * m_pRivals[i].m_pos + GetMovingRate(t) * CSharedDoc::Instance()->m_gameResultList[i].m_ballPos, false, NULL, true));
@@ -445,7 +452,7 @@ void CSpot::Display(void) {
 			case 9:
 			case 10:
 				if (!CProjectG::Instance()->HidePI()) {
-					for (unsigned char i = 0; i < CSharedDoc::Instance()->m_gameResultList.size(); i++) {
+					for (i = 0; i < CSharedDoc::Instance()->m_gameResultList.size(); i++) {
 						if (CSharedDoc::Instance()->m_gameResultList[i].m_state == 0 && CSharedDoc::Instance()->m_gameResultList[i].m_uid != MyGuid(true) && m_pRivals[i].m_hole == GOLFDOC()->m_currentHole && !(m_pRivals[i].m_fade < 0.0f)) {
 							float t = m_pRivals[i].m_fade;
 							pos = g_view->Projection(GetPVS().GetGroundPoint((1.0f - GetMovingRate(t)) * m_pRivals[i].m_pos + GetMovingRate(t) * CSharedDoc::Instance()->m_gameResultList[i].m_ballPos, false, NULL, true));
@@ -461,15 +468,16 @@ void CSpot::Display(void) {
 								m_pOverlayc8->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(pos.x - 4.0f, pos.y - 4.0f, 8.0f, 8.0f), 0, color, 0.0f, 0);
 
 								if (CSharedDoc::Instance()->m_roomType == 10) {
-									if (!CSharedDoc::Instance()->IsCurrentMissionBlind() || (CSharedDoc::Instance()->IsCurrentMissionBlind() && CSharedDoc::Instance()->m_gameResultList[i].m_uid == MyGuid(false))) {
-										m_pMaskedFont->Print(g_view, pos.x - m_pMaskedFont->GetTextWidth(g_view, CSharedDoc::Instance()->m_gameResultList[i].m_nickname) * 0.5f, pos.y - 15.0f, CSharedDoc::Instance()->m_gameResultList[i].m_nickname, 0, 0xffffffff, NULL);
-									} else {
+									if (CSharedDoc::Instance()->IsCurrentMissionBlind() && (!CSharedDoc::Instance()->IsCurrentMissionBlind() || CSharedDoc::Instance()->m_gameResultList[i].m_uid != MyGuid(false))) {
 										continue;
 									}
+
+									m_pMaskedFont->Print(g_view, pos.x - m_pMaskedFont->GetTextWidth(g_view, CSharedDoc::Instance()->m_gameResultList[i].m_nickname) * 0.5f, pos.y - 15.0f, CSharedDoc::Instance()->m_gameResultList[i].m_nickname, 0, 0xffffffff, NULL);
+									m_pMaskedFont->Flush(g_view);
 								} else {
 									m_pMaskedFont->Print(g_view, pos.x - m_pMaskedFont->GetTextWidth(g_view, CSharedDoc::Instance()->m_gameResultList[i].m_nickname) * 0.5f, pos.y - 15.0f, CSharedDoc::Instance()->m_gameResultList[i].m_nickname, 0, 0xffffffff, NULL);
+									m_pMaskedFont->Flush(g_view);
 								}
-								m_pMaskedFont->Flush(g_view);
 							}
 						}
 					}
@@ -477,14 +485,15 @@ void CSpot::Display(void) {
 				break;
 			}
 		} else if (GOLFDOC()->GameMode() & 0x8dca) {
+			WVector p;
 			switch (CSharedDoc::Instance()->m_roomType) {
 			case 0:
 			case 3:
 			case 7:
-				for (unsigned char i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
+				for (i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
 					if (GOLFDOC()->GetPlayer(i)->m_state == 0 && i != GOLFDOC()->m_myPlayerIndex && PLAYER(i)->m_holes[GOLFDOC()->m_currentHole - 1] != 0) {
 						for (unsigned char j = 0; j < 4; j++) {
-							WVector p = PLAYER(i)->m_ballPos;
+							p = PLAYER(i)->m_ballPos;
 							p.x += ((j & 1) ? 1.0f : -1.0f) * 0.5f;
 							p.z += ((j & 2) ? 1.0f : -1.0f) * 0.5f;
 							m_vertices[j].SetPosition(p);
@@ -504,10 +513,9 @@ void CSpot::Display(void) {
 				}
 				break;
 			case 1:
-				for (unsigned char i = 0; i < 2; i++) {
+				for (i = 0; i < 2; i++) {
 					if (TEAM(i)->m_state == 0 && i != PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute && TEAM(i)->m_holes[GOLFDOC()->m_currentHole - 1] != 0) {
 						for (unsigned char j = 0; j < 4; j++) {
-							WVector p;
 							p = TEAM(i)->m_ballPos;
 							p.x += ((j & 1) ? 1.0f : -1.0f) * 0.5f;
 							p.z += ((j & 2) ? 1.0f : -1.0f) * 0.5f;
@@ -529,13 +537,12 @@ void CSpot::Display(void) {
 				break;
 			case 6:
 				if (!CProjectG::Instance()->HidePI()) {
-					for (unsigned char i = 0; i < CSharedDoc::Instance()->m_gameResultList.size(); i++) {
+					for (i = 0; i < CSharedDoc::Instance()->m_gameResultList.size(); i++) {
 						if (CSharedDoc::Instance()->m_gameResultList[i].m_state == 0 && CSharedDoc::Instance()->m_gameResultList[i].m_uid != MyGuid(true) && m_pRivals[i].m_hole == GOLFDOC()->m_currentHole && !(m_pRivals[i].m_fade < 0.0f) && CSharedDoc::Instance()->m_userInfo.guildUID == CSharedDoc::Instance()->m_gameResultList[i].m_hasEmblem) {
 							float t = m_pRivals[i].m_fade;
 							WVector ground = GetPVS().GetGroundPoint((1.0f - GetMovingRate(t)) * m_pRivals[i].m_pos + GetMovingRate(t) * CSharedDoc::Instance()->m_gameResultList[i].m_ballPos, false, NULL, true);
 							if (g_view->InFrustum(ground)) {
 								unsigned long color = CSharedDoc::Instance()->m_gameResultList[i].m_team ? 0x800060ff : 0x80ff0000;
-								WVector p;
 								for (unsigned char j = 0; j < 4; j++) {
 									p = ground;
 									p.x += ((j & 1) ? 1.0f : -1.0f) * 0.5f;
@@ -564,7 +571,7 @@ void CSpot::Display(void) {
 			case 9:
 			case 10:
 				if (!CProjectG::Instance()->HidePI()) {
-					for (unsigned char i = 0; i < CSharedDoc::Instance()->m_gameResultList.size(); i++) {
+					for (i = 0; i < CSharedDoc::Instance()->m_gameResultList.size(); i++) {
 						if (CSharedDoc::Instance()->m_gameResultList[i].m_state == 0 && m_pRivals[i].m_hole == GOLFDOC()->m_currentHole && !(m_pRivals[i].m_fade < 0.0f)) {
 							if (CSharedDoc::Instance()->m_gameResultList[i].m_uid != MyGuid(true) || (CSharedDoc::Instance()->m_roomType == 10 && (GOLFDOC()->GameMode() & 0x800))) {
 								float t = m_pRivals[i].m_fade;
@@ -583,7 +590,6 @@ void CSpot::Display(void) {
 										color = 0x80ffffff;
 									}
 
-									WVector p;
 									for (unsigned char j = 0; j < 4; j++) {
 										p = ground;
 										p.x += ((j & 1) ? 1.0f : -1.0f) * 0.5f;
@@ -605,8 +611,11 @@ void CSpot::Display(void) {
 										if (CSharedDoc::Instance()->IsCurrentMissionBlind() && (!CSharedDoc::Instance()->IsCurrentMissionBlind() || CSharedDoc::Instance()->m_gameResultList[i].m_uid != MyGuid(false))) {
 											continue;
 										}
+
+										m_pMaskedFont->Print(g_view, pos.x - m_pMaskedFont->GetTextWidth(g_view, CSharedDoc::Instance()->m_gameResultList[i].m_nickname) * 0.5f, pos.y - 32.0f, CSharedDoc::Instance()->m_gameResultList[i].m_nickname, 0, 0xffffffff, NULL);
+									} else {
+										m_pMaskedFont->Print(g_view, pos.x - m_pMaskedFont->GetTextWidth(g_view, CSharedDoc::Instance()->m_gameResultList[i].m_nickname) * 0.5f, pos.y - 32.0f, CSharedDoc::Instance()->m_gameResultList[i].m_nickname, 0, 0xffffffff, NULL);
 									}
-									m_pMaskedFont->Print(g_view, pos.x - m_pMaskedFont->GetTextWidth(g_view, CSharedDoc::Instance()->m_gameResultList[i].m_nickname) * 0.5f, pos.y - 32.0f, CSharedDoc::Instance()->m_gameResultList[i].m_nickname, 0, 0xffffffff, NULL);
 									m_pMaskedFont->Flush(g_view);
 								}
 							}
@@ -626,7 +635,8 @@ void CSpot::Display(void) {
 	if (m_unknown78 == -1) {
 		m_indicatorColor = 0xffff0000;
 	} else {
-		float level = (Between(-4.0f, 0.9144f * (d.y / 3.2f), 4.0f) + 4.0f) * 0.5f;
+		float level = Between(-4.0f, 0.9144f * (d.y / 3.2f), 4.0f) + 4.0f;
+		level *= 0.5f;
 		int index = (int)level;
 		float frac = level - index;
 		if (WAbsBySign(frac) < 0.00001f) {
@@ -871,7 +881,7 @@ void CSpot::DrawHoleIndicator(void) {
 			sideSign = -1.0f;
 		}
 		float dirSign = (i & 1) ? 1.0f : -1.0f;
-		m_vertices[i].SetPosition(pos + (dir * dirSign + side * sideSign) * 10.0f);
+		pos += (dir * dirSign + side * sideSign) * 10.0f; m_vertices[i].SetPosition(pos);
 		m_vertices[i].tu = (i & 2) ? 1.0f : 0.0f;
 		m_vertices[i].tv = (i & 1) ? 0.0f : 1.0f;
 		m_vertices[i].diffuse = ((unsigned char)(int)(cupAlpha > camAlpha ? camAlpha : cupAlpha) << 24) | (m_indicatorColor & 0xffffff);

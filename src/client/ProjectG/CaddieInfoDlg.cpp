@@ -193,19 +193,19 @@ void FrCaddieInfoDlg::OnSignUpBtnUp(void) {
 	}
 	m_pContractForm->SetMessage("\xC4\xB3\xB5\xF0\xB8\xA6 \xC0\xE7\xB0\xED\xBF\xEB\xC7\xCF\xB8\xE9 \xBE\xC6\xB7\xA1\xBF\xCD \xB0\xB0\xC0\xCC \xB1\xDD\xBE\xD7\xC0\xCC \\c0xffff0000\\c\xB0\xA8\xBC\xD2\\c0xff000000\\c\xC7\xD5\xB4\xCF\xB4\xD9.\n\n\xC4\xB3\xB5\xF0\xB8\xA6 \\c0xffff0000\\c\xC7\xD1\xB4\xDE\xB0\xA3 \\c0xff000000\\c\xC0\xE7\xB0\xED\xBF\xEB \xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?", false);
 
-	FrStatic* pFee = DYNAMIC_CAST(FrStatic, m_pContractForm->FindChildByName("fee"));
-	if (pFee) {
-		pFee->SetCaption(MakeStr("%d", pCaddie->fee));
+	FrStatic* pStatic = DYNAMIC_CAST(FrStatic, m_pContractForm->FindChildByName("fee"));
+	if (pStatic) {
+		pStatic->SetCaption(MakeStr("%d", pCaddie->fee));
 	}
 
-	FrStatic* pMyPang = DYNAMIC_CAST(FrStatic, m_pContractForm->FindChildByName("mypang"));
-	if (pMyPang) {
-		pMyPang->SetCaption(MakeStr("%I64d", WSingleton<CSharedDoc>::Instance()->m_myPang));
+	pStatic = DYNAMIC_CAST(FrStatic, m_pContractForm->FindChildByName("mypang"));
+	if (pStatic) {
+		pStatic->SetCaption(MakeStr("%I64d", WSingleton<CSharedDoc>::Instance()->m_myPang));
 	}
 
-	FrStatic* pRemainPang = DYNAMIC_CAST(FrStatic, m_pContractForm->FindChildByName("remainpang"));
-	if (pRemainPang) {
-		pRemainPang->SetCaption(MakeStr("%I64d", WSingleton<CSharedDoc>::Instance()->m_myPang - pCaddie->fee));
+	pStatic = DYNAMIC_CAST(FrStatic, m_pContractForm->FindChildByName("remainpang"));
+	if (pStatic) {
+		pStatic->SetCaption(MakeStr("%I64d", WSingleton<CSharedDoc>::Instance()->m_myPang - pCaddie->fee));
 	}
 
 	m_pContractForm->Open((FRESH_RESULT_CALLBACK)&FrCaddieInfoDlg::OnSignUpConfirmDlgResult, 1);

@@ -110,7 +110,7 @@ CRealMyRoom_Avatar::CRealMyRoom_Avatar(const sSlotInfo &slotInfo, const sCharact
 	m_pMain = pMain;
 	m_hasPendingTargetAngle = false;
 
-	m_startPosition = pMain->m_cameraDropOrigin;
+	m_startPosition = m_pMain->m_cameraDropOrigin;
 
 	m_burdenChanged = false;
 	m_pPetFrame = NULL;
@@ -126,8 +126,8 @@ CRealMyRoom_Avatar::CRealMyRoom_Avatar(const sSlotInfo &slotInfo, const sCharact
 	m_balloonTime = 1.0f;
 
 	m_moveDelta.Reset();
-	m_angle = RadianNormalize2PI(slotInfo.m_angle);
-	m_targetAngle = m_angle;
+	float angle = slotInfo.m_angle;
+	m_targetAngle = m_angle = RadianNormalize2PI(angle);
 	SetState(m_state);
 	SetAction(m_action);
 	if (slotInfo.m_tradeTitle) {
@@ -210,10 +210,11 @@ bool CRealMyRoom_Avatar::IsClickable(float x, float y) const {
 					width = 100;
 				}
 
-				int left = screenX - width / 2;
+				RECT rc;
+				rc.left = screenX - width / 2;
 
-				int top = screenY - 8;
-				if (left < x && x < left + width && top < y && y < top + 29) {
+				rc.top = screenY - 8;
+				if (rc.left < x && x < rc.left + width && rc.top < y && y < rc.top + 29) {
 					return true;
 				}
 			}
@@ -410,7 +411,7 @@ void CRealMyRoom_Avatar::ChangeMotion(int motion, const char *name, float blendT
 			m_lastMotionSendTime = now;
 			WSendPacket packet(GCT_SYNC_ACTIVITY);
 			packet.Encode1(7);
-			packet.EncodeStr(name);
+			packet.EncodeStr(std::string(name));
 			packet.Send(SEND_TO_DEFAULT);
 		}
 		break;
@@ -633,8 +634,7 @@ static bool SlideMove(const WVector &velocity, const WVector &pos, const Waabb &
 			continue;
 		}
 
-		planes[numPlanes].normal = trace.m_plane.normal;
-		planes[numPlanes].dis = trace.m_plane.dis;
+		planes[numPlanes] = trace.m_plane;
 		numPlanes++;
 	}
 
@@ -756,11 +756,11 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 				m_position = newPos;
 			}
 			else if (this == WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
-				move = WVector(0.0f, 0.0f, 0.0f);
+				move.Reset();
 			}
 		}
 		else {
-			move = WVector(0.0f, 0.0f, 0.0f);
+			move.Reset();
 		}
 	}
 
@@ -840,20 +840,22 @@ void CRealMyRoom_Avatar::Process(float elapsed) {
 		m_alpha = 1.0f - (cameraDist - 160.0f) * 0.03125f;
 	}
 	else {
-		bool faded = false;
 		if (IsLocalContent((localContentType_t)10)) {
 			CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
 			int guid = m_guid;
-			const sBriefUserInfo &info = (*pDoc->m_userMap.find(guid)).second;
+			std::map<unsigned long, sBriefUserInfo>::iterator it = pDoc->m_userMap.find(guid);
 
-			if (info.identityBits.administrator) {
-				if (!info.invisible) {
-					faded = true;
+			if ((*it).second.identityBits.administrator) {
+				if (!(*it).second.invisible) {
+					m_alpha = 0.1f;
+				}
+				else {
+					m_alpha = 1.0f;
 				}
 			}
-		}
-		if (faded) {
-			m_alpha = 0.1f;
+			else {
+				m_alpha = 1.0f;
+			}
 		}
 		else {
 			m_alpha = 1.0f;
@@ -919,7 +921,8 @@ void CRealMyRoom_Avatar::Render() {
 		if (this != WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar && m_isAdministrator) {
 			CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
 			int guid = m_guid;
-			std::map<unsigned long, sBriefUserInfo>::iterator it = pDoc->m_userMap.find(guid);
+			std::map<unsigned long, sBriefUserInfo>::iterator it;
+			it = pDoc->m_userMap.find(guid);
 
 			if (!sBriefUserInfo((*it).second).invisible) {
 				if (guid != WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid) {
@@ -939,7 +942,9 @@ void CRealMyRoom_Avatar::Render() {
 	}
 
 	if (COption::Instance()->vIsShadowEnabled()) {
-		GetPVS().DrawDecal(m_pMain->m_shadowTexture, pos, WVector(2.9f, 0.0f, 0.0f), WVector(0.0f, 0.0f, 2.9f), 1.0f, m_alpha, (enumPolyBlend)0, false);
+		WVector xAxis(2.9f, 0.0f, 0.0f);
+		WVector zAxis(0.0f, 0.0f, 2.9f);
+		GetPVS().DrawDecal(m_pMain->m_shadowTexture, pos, xAxis, zAxis, 1.0f, m_alpha, (enumPolyBlend)0, false);
 	}
 
 	if (m_pPetFrame != NULL && m_pPetFrame->GetCurAniPet() != NULL) {
@@ -1005,14 +1010,12 @@ void CRealMyRoom_Avatar::RenderOverlay(bool detail) {
 	screen.y = floorf(screen.y);
 
 	if (IsLocalContent((localContentType_t)10)) {
-		CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
-
-		if (m_guid != pDoc->GetPangyaUserInfo().guid) {
+		if (m_guid != WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid) {
 			unsigned long guid = m_guid;
-			std::map<unsigned long, sBriefUserInfo>::iterator it = pDoc->m_userMap.find(guid);
+			std::map<unsigned long, sBriefUserInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_userMap.find(guid);
 			const sBriefUserInfo &info = (*it).second;
 
-			if (info.identityBits.administrator) {
+			if ((*it).second.IsIdentity(4)) {
 				if (!info.invisible) {
 					return;
 				}
@@ -1028,9 +1031,10 @@ void CRealMyRoom_Avatar::RenderOverlay(bool detail) {
 		return;
 	}
 
-	float y = screen.y - 4.0f - 22.0f;
-	FrEmoticon *pEmoticon = g_pFresh->GetManager()->GetEmoticon();
+	float y = screen.y - 4.0f;
 	FrGraphicInterface *pGDI = g_pFresh->GetManager()->GetGDI();
+	y -= 22.0f;
+	FrEmoticon *pEmoticon = g_pFresh->GetManager()->GetEmoticon();
 
 	WOverlay *pIcon;
 	if (m_slotFlag57) {
@@ -1045,12 +1049,19 @@ void CRealMyRoom_Avatar::RenderOverlay(bool detail) {
 
 	float x = screen.x - (pIcon->GetWidth() + pEmoticon->GetTextWidth(m_nickName) + (float)(m_pEmblem != NULL ? m_pEmblem->Width() : 0)) * 0.5f;
 
-	WRECT iconSrc = { 0.0f, 0.0f, 1.0f, 1.0f };
-	WRect iconRect(x, y - 7.0f, pIcon->GetWidth(), pIcon->GetHeight());
-	x += pIcon->GetWidth();
-	unsigned long alphaBits = (unsigned char)(int)(alpha * 255.0f) << 24;
-	unsigned long color = alphaBits | 0xFFFFFF;
-	pIcon->Render(g_view, iconSrc, iconRect, 0, color, 0.0f, 0);
+	WRect iconRect;
+	unsigned long alphaBits;
+	unsigned long color;
+	// The icon's source rect has its own scope: the emblem rect's temporary
+	// below reuses its stack slot.
+	{
+		WRECT iconSrc = { 0.0f, 0.0f, 1.0f, 1.0f };
+		iconRect = WRect(x, y - 7.0f, pIcon->GetWidth(), pIcon->GetHeight());
+		x += pIcon->GetWidth();
+		alphaBits = (unsigned char)(int)(alpha * 255.0f) << 24;
+		color = alphaBits | 0xFFFFFF;
+		pIcon->Render(g_view, iconSrc, iconRect, 0, color, 0.0f, 0);
+	}
 
 	if (m_pEmblem != NULL) {
 		iconRect = WRect(x + 0.5f / (float)m_pEmblem->Width(),
@@ -1206,7 +1217,7 @@ void CRealMyRoom_Avatar::ParsePuppetScript(const char *script) {
 					attacher.m_pMatrix[i] = &pBone->GetMatrix();
 				}
 				else {
-					w_bound_box *pBox = m_pPetFrame->GetBonePet()->m_bbList.Find(boneName);
+					w_bound_box *pBox = m_pPetFrame->GetBonePet()->FindBoundBox(boneName);
 
 					if (pBox) {
 						if (pBox->bone) {
@@ -1259,10 +1270,11 @@ void CRealMyRoom_Avatar::ParsePuppetScript(const char *script) {
 				if (this != WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar) {
 					CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
 					int guid = m_guid;
-					const sBriefUserInfo &info = (*pDoc->m_userMap.find(guid)).second;
+					std::map<unsigned long, sBriefUserInfo>::iterator it;
+					it = pDoc->m_userMap.find(guid);
 
 					if (m_isAdministrator) {
-						if (!sBriefUserInfo(info).invisible) {
+						if (!sBriefUserInfo((*it).second).invisible) {
 							continue;
 						}
 					}
@@ -1379,7 +1391,7 @@ void CRealMyRoom_Avatar::ParseBoundingBoxScript() {
 	static std::vector<CFxSequence *> sequences;
 
 	char token[] = "*fx";
-	WPuppet *pPuppet = m_pPetFrame->GetBonePet();
+	WList<w_bound_box *> &bbList = m_pPetFrame->GetBonePet()->m_bbList;
 
 	unsigned int i;
 	for (i = 0; i < sprays.size(); i++)
@@ -1390,7 +1402,7 @@ void CRealMyRoom_Avatar::ParseBoundingBoxScript() {
 	sprays.clear();
 	sequences.clear();
 
-	for (w_bound_box *pBox = pPuppet->m_bbList.Start(); pBox; pBox = pPuppet->m_bbList.Next()) {
+	for (w_bound_box *pBox = bbList.Start(); pBox; pBox = bbList.Next()) {
 		if (pBox->info->option == NULL || pBox->bone == NULL || pBox->bone->IsInvisible()) {
 			continue;
 		}
@@ -1425,11 +1437,14 @@ void CRealMyRoom_Avatar::ParseBoundingBoxScript() {
 
 			bool partRequired = false;
 
-			while (part[0] == '&') {
+			do {
+				if (part[0] != '&')
+					break;
+
 				partRequired = true;
 				unsigned long tid = atoi(part + 1);
 
-				if (m_pPetFrame->m_partList.FindPart(tid)) {
+				if (m_pPetFrame->GetPartList().FindPart(tid)) {
 					partRequired = false;
 					break;
 				}
@@ -1442,9 +1457,7 @@ void CRealMyRoom_Avatar::ParseBoundingBoxScript() {
 				script = GetStrConst(script, part);
 
 				len = strlen(part);
-				if (len == 0 || len >= 64)
-					break;
-			}
+			} while (len != 0 && len < 64);
 
 			if (partRequired)
 				continue;
@@ -1692,13 +1705,13 @@ CRealMyRoom_Avatar *CRealMyRoom_AvatarManager::AvatarByRayIntersect(const WVecto
 	for (int i = 0; i < 30; i++) {
 		if (m_pAvatars[i]) {
 			if (IsLocalContent((localContentType_t)10)) {
-				CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
-				if (m_pAvatars[i]->m_guid != pDoc->GetPangyaUserInfo().guid) {
+				if (m_pAvatars[i]->m_guid != MyGuid(false)) {
+					CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
 					std::map<unsigned long, sBriefUserInfo>::iterator it;
 					it = pDoc->m_userMap.find(m_pAvatars[i]->m_guid);
 
 					if (!(pDoc->GetPangyaUserInfo().identity & 4)) {
-						if (sBriefUserInfo((*it).second).identityBits.administrator) {
+						if (sBriefUserInfo((*it).second).IsIdentity(4)) {
 							if (!sBriefUserInfo((*it).second).invisible)
 								break;
 						}
@@ -1707,9 +1720,8 @@ CRealMyRoom_Avatar *CRealMyRoom_AvatarManager::AvatarByRayIntersect(const WVecto
 			}
 
 			aabb.min = WVector(-1.0f, 0.0f, -1.0f);
-			aabb.min += m_pAvatars[i]->m_position;
 			aabb.max = WVector(1.0f, 8.0f, 1.0f);
-			aabb.max += m_pAvatars[i]->m_position;
+			aabb.min += m_pAvatars[i]->m_position; aabb.max += m_pAvatars[i]->m_position;
 
 			if (RayIntersectAABB(aabb, pos, dir, NULL, 0.0f) < 1.0f) {
 				return m_pAvatars[i];

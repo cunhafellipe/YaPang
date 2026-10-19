@@ -11,12 +11,10 @@
 // one initialises the library.
 static int s_nLzoInit = 1;
 
-// miniLZO's testmini.c sizes: the work memory is declared OUT_LEN long.
+// miniLZO's testmini.c sizes: the work memory is an OUT_LEN byte array (a
+// char buffer, so /GS places it next to the cookie with the message).
 #define IN_LEN      (128 * 1024L)
 #define OUT_LEN     (IN_LEN + IN_LEN / 16 + 64 + 3)
-
-#define HEAP_ALLOC(var, size) \
-	lzo_align_t __LZO_MMODEL var[((size) + (sizeof(lzo_align_t) - 1)) / sizeof(lzo_align_t)]
 
 // uselzo.cpp:20
 CCompressBuffer::CCompressBuffer(void) {
@@ -83,7 +81,7 @@ int CCompressBuffer::Compress(unsigned char *pSrc, int nSize) {
 
 	char szMsg[128];
 	lzo_uint nOutLen;
-	HEAP_ALLOC(wrkmem, OUT_LEN);
+	unsigned char wrkmem[OUT_LEN];
 	int nResult = lzo1x_1_compress(pSrc, nSize, m_pNewBuffer + 4, &nOutLen, wrkmem);
 	if (nResult != LZO_E_OK) {
 		sprintf(szMsg, "::COMPRESS -> The result should be zero! (res : %d)", nResult);

@@ -252,7 +252,7 @@ void CSecondaryPassword::OnOpenSelfCertifyWebPage(void) {
 	WSingleton<CBrowser>::Instance()->SetPagetype((CBrowser::eWebPage)1);
 	WSingleton<CBrowser>::Instance()->InitializePostArgument();
 	WSingleton<CBrowser>::Instance()->AddPostArgument("sn", "9");
-	WSingleton<CBrowser>::Instance()->AddPostArgument("mn", MakeStr("%d", CLoginInfo::Instance()->AuthUid()));
+	WSingleton<CBrowser>::Instance()->AddPostArgument("mn", MakeStr("%d", LOGININFO()->AuthUid()));
 	WSingleton<CBrowser>::Instance()->OpenPost("https://qa.pangya.gametree.co.kr/InGame/Certify/Default.aspx", false, true);
 }
 

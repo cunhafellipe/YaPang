@@ -3,6 +3,7 @@
 #define PG_CLIENT_PROJECTG_TASKMANAGER_H
 
 #include <list>
+#include <memory>
 #include <queue>
 #include <string>
 
@@ -11,6 +12,7 @@
 #include "singleton.h"
 #include "ObjectFactory.h"
 #include "wlist.h"
+#include "wflag.h"
 #include "AnotherHand.h"
 #include "frcmdtarget.h"
 #include "actor.h"
@@ -80,7 +82,7 @@ public:
 	}
 	virtual void OnInitFinished(void);
 
-	IActor *GetMainActor(void) const;
+	IActor *GetMainActor(void) const;   // taskmanager.h:66 (defined below the class)
 	IActor *GetActor(const char *name);
 	IActor *AddActor(const char *className, const char *name, int, const std::string &);
 	void SetInited(bool inited);
@@ -156,7 +158,7 @@ private:
 protected:
 	CAnotherHand m_anotherHand; // 0x68
 private:
-	unsigned int m_stateFlags; // 0x1F0 (bit 1: inited)
+	WFlags m_stateFlags;  // 0x1F0 (bit 0: Display skips g_view->Clear; bit 1: inited)
 	bool m_bRecieveWhisper; // 0x1F4
 	bool m_pause;           // 0x1F5
 	UNKNOWN(0x1F6, 0x1F8);
@@ -192,7 +194,19 @@ CHECK_FIELD(CTask::TIP_ITEM, m_text, 0x4);
 
 // taskmanager.h:105
 GOLFTASK_TASKMANAGER_INLINE bool CTask::IsInited(void) {
-	return (m_stateFlags >> 1) & 1;
+	return m_stateFlags.GetFlag(2);
+}
+
+// Avatar_Task.cpp defines AVATAR_TASK_TASKMANAGER_INLINE empty before its
+// first include, so its object emits the out-of-line copy of
+// CTask::IsRecieveWhisper, as the original's did.
+#ifndef AVATAR_TASK_TASKMANAGER_INLINE
+#define AVATAR_TASK_TASKMANAGER_INLINE inline
+#endif
+
+// taskmanager.h:107
+AVATAR_TASK_TASKMANAGER_INLINE bool CTask::IsRecieveWhisper(void) {
+	return m_bRecieveWhisper;
 }
 
 // Only the members this project's code uses so far are declared.
@@ -258,7 +272,7 @@ private:
 	std::list<history_t> m_history;            // 0x58
 	std::list<history_t>::iterator m_curHistory; // 0x64
 	int m_naviState;          // 0x68 (NaviOpenLayout; cleared by NaviGoForward)
-	CWork *m_pWork;           // 0x6C (SetWork, ReleaseWork)
+	std::auto_ptr<CWork> m_pWork; // 0x6C (SetWork, ReleaseWork)
 };
 CHECK_SIZE(CTaskManager::history_t, 0x10);
 CHECK_SIZE(CTaskManager::sPostMsg, 0x3C);
@@ -325,11 +339,16 @@ PARTICLE_TASKMANAGER_INLINE CTaskDoc *AfxGetDocument(void) {
 }
 
 // TaskMain.cpp defines TASKMAIN_TASKMANAGER_INLINE empty before its first
-// include, so its object emits the out-of-line copies of GetPreservedTask
-// and AfxGetPreservedTask, as the original's did.
+// include, so its object emits the out-of-line copies of GetMainActor,
+// GetPreservedTask and AfxGetPreservedTask, as the original's did.
 #ifndef TASKMAIN_TASKMANAGER_INLINE
 #define TASKMAIN_TASKMANAGER_INLINE inline
 #endif
+
+// taskmanager.h:66
+TASKMAIN_TASKMANAGER_INLINE IActor *CTask::GetMainActor(void) const {
+	return m_mainActor;
+}
 
 // taskmanager.h:260
 TASKMAIN_TASKMANAGER_INLINE CTask *CTaskManager::GetPreservedTask(void) const {
@@ -353,15 +372,12 @@ TASKMAIN_TASKMANAGER_INLINE CTask *AfxGetPreservedTask(void) {
 
 // taskmanager.h:304
 TASKMANAGER_TASKMANAGER_INLINE void CTaskManager::SetWork(CWork *work) {
-	if (work != m_pWork && m_pWork)
-		delete m_pWork;
-	m_pWork = work;
+	m_pWork.reset(work);
 }
 
 // taskmanager.h:309
 TASKMANAGER_TASKMANAGER_INLINE void CTaskManager::ReleaseWork(void) {
-	CWork *work = m_pWork;
-	m_pWork = 0;
+	CWork *work = m_pWork.release();
 	if (work)
 		delete work;
 }

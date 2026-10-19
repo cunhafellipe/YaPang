@@ -215,16 +215,14 @@ void FirstBoundHistory::DrawIndicator(const WVector& pos, unsigned long color) {
 
 	ground.x = vtx.x;
 	ground.y = vtx.y;
-	{
-		WRECT dst = { ground.x - 10.0f, ground.y - 20.0f, 20.0f, 20.0f };
-		WRECT src = { 0.0f, 0.0f, 1.0f, 1.0f };
-		m_pIndicator->Render(g_view, src, dst, 0, color, 0, 0);
-	}
+	WRECT dst = { ground.x - 10.0f, ground.y - 20.0f, 20.0f, 20.0f };
+	WRECT src = { 0.0f, 0.0f, 1.0f, 1.0f };
+	m_pIndicator->Render(g_view, src, dst, 0, color, 0, 0);
 
 	WVector ballPos = pos;
 
-	WVector cupPos = GOLFDOC()->GetHoleData().m_cupPos;
-	float distance = (float)sqrt((ballPos.x - cupPos.x) * (ballPos.x - cupPos.x) + (ballPos.z - cupPos.z) * (ballPos.z - cupPos.z));
+	WVector diff = ballPos - WVector(GOLFDOC()->GetHoleData().m_cupPos);
+	float distance = (float)sqrt(diff.x * diff.x + diff.z * diff.z);
 	m_pBarFont->Print(ground.x, ground.y - 40.0f - 3.0f, MakeStr("%.1fy", distance * 0.3125f), TITLEFONT_ALIGN_CENTER, 0, 1.0f);
 }
 
@@ -365,8 +363,11 @@ void ShotReview::HandleMsg(const MsgObject &msg) {
 			float height = end.y - start.y;
 
 			float prevHeight = start.y;
-			WVector flat(end.x - start.x, 0.0f, end.z - start.z);
-			float distance = flat.Magnitude();
+			// end becomes the horizontal offset from start.
+			end.x -= start.x;
+			end.y = 0.0f;
+			end.z -= start.z;
+			float distance = end.Magnitude();
 			if (WisZero(distance, 1e-5f)) {
 				distance = 1.0f;
 			}

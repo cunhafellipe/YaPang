@@ -23,8 +23,8 @@ public:
 
 	virtual bool OnInit(void);
 	void BuildHeartCount(void);
-	void DrawInDlg(const char* name, const WPoint& pt);
-	void DrawGauge(const WPoint& pt, unsigned char count);
+	void DrawInDlg(const char* name, PG_PORT_CONST WPoint& pt);
+	void DrawGauge(PG_PORT_CONST WPoint& pt, unsigned char count);
 
 	// valentineeventdlg.h:46
 	void SetGiftFlag(unsigned long flag) {

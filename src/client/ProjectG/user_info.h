@@ -542,6 +542,11 @@ CHECK_SIZE(CUserInfo, 0x58);
 #define TASKMAIN_USER_INFO_INLINE inline
 #endif
 
+// user_info.h:386
+TASKMAIN_USER_INFO_INLINE bool FrUserInfoForm::IsOpenAddFriendDlg(void) const {
+	return m_addFriendDlg ? true : false;
+}
+
 // user_info.h:601
 TASKMAIN_USER_INFO_INLINE FrUserInfoForm *CUserInfo::GetDlg(void) {
 	return m_dlg;

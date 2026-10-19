@@ -329,7 +329,7 @@ void FrChangeRoomInfoDlg::OnGameTypeOwnerDraw(intptr_t param) {
 		break;
 	}
 	case 1: {
-		if (IsLocalContent((localContentType_t)0x2B) && (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity & 4) == 4 && WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit >= 100) {
+		if (IsLocalContent((localContentType_t)0x2B) && IsAdministrator(0xFFFFFFFF) && WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit >= 100) {
 			WRect rc1(rect.x, rect.y, rect.w, rect.h);
 			DrawGameTypeButton(pDevice, 4, rc1, false);
 		} else {
@@ -444,7 +444,7 @@ void FrChangeRoomInfoDlg::OnUserLimitOwnerDraw(intptr_t param) {
 		break;
 	}
 	case 4:
-		if (IsLocalContent((localContentType_t)0x2B) && (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().identity & 4) == 4 && WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit >= 100) {
+		if (IsLocalContent((localContentType_t)0x2B) && IsAdministrator(0xFFFFFFFF) && WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit >= 100) {
 			WRect rc1(rect.x, rect.y, rect.w, rect.h);
 			DrawUserLimitButton(pDevice, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit, rc1);
 		} else {

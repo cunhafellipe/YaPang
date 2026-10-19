@@ -1,7 +1,9 @@
 // Original: d:\build\custom\temp\code\client\projectg\avatar_task.cpp
-// The original holds the out-of-line copy of COption::gSetAvatarNewBie
-// (clientsetting.h:409) in this object.
+// The original holds the out-of-line copies of COption::gSetAvatarNewBie
+// (clientsetting.h:409) and CTask::IsRecieveWhisper (taskmanager.h:107) in
+// this object.
 #define AVATAR_TASK_CLIENTSETTING_INLINE
+#define AVATAR_TASK_TASKMANAGER_INLINE
 #include "TaskManager.h"
 #include "avatar_avatar.h"
 #include "avatar_task.h"
@@ -51,23 +53,8 @@ extern int g_iRecvPacketType;
 // Set once the avatar loading thread loaded the player's own avatar.
 extern bool g_SALoadingState;
 
-// avatar_avatar.h:53
-bool ntAvatarBurden::operator<(const ntAvatarBurden &other) const {
-	return m_key < other.m_key;
-}
-
-// avatar_avatar.h:58 (a burden whose pet frame is the -1 sentinel never matches)
-bool ntAvatarBurden::operator==(const ntAvatarBurden &other) const {
-	return m_key == other.m_key && m_pPetFrame != (CPetFrame *)-1 && other.m_pPetFrame != (CPetFrame *)-1;
-}
-
 // taskmanager.h:102
 void CTask::OnInitFinished(void) {
-}
-
-// taskmanager.h:107
-bool CTask::IsRecieveWhisper(void) {
-	return m_bRecieveWhisper;
 }
 
 // avatar_task.cpp:38 (run-time type and factory registration of ntAvatarChatTask)
@@ -142,7 +129,7 @@ void ntAvatarChatTask::PreLoadInit(void) {
 	}
 
 	if (!IsInited()) {
-		m_stateFlags |= 2;
+		m_stateFlags.Enable(2);
 		OnInitFinished();
 	}
 
@@ -156,11 +143,11 @@ void ntAvatarChatTask::PreLoadInit(void) {
 	m_pLoadingFresh = new Fresh;
 	m_tipDlgState = NULL;
 
-	m_pLoadingFresh->Init("loading.xml", false,
-		m_loadingBackGround != "" ?
-		m_loadingBackGround.c_str()
-		:
-		NULL);
+	if (m_loadingBackGround != "") {
+		m_pLoadingFresh->Init("loading.xml", false, m_loadingBackGround.c_str());
+	} else {
+		m_pLoadingFresh->Init("loading.xml", false, NULL);
+	}
 
 	m_pLoadingFresh->OpenLayout("LOADING", NULL, true);
 
@@ -397,8 +384,7 @@ void ntAvatarChatTask::Process(float dt) {
 	if (g_input->GetDown("ESCAPE", true) == 1 && !g_pFresh->GetManager()->HasEscKeyWindow()) {
 		if (CSharedDoc::Instance()->GetStateTrade()) {
 			// "You cannot leave the chat room while using the shop."
-			std::string msg("\xbb\xf3\xc1\xa1 \xc0\xcc\xbf\xeb\xc1\xdf\xbf\xa1\xb4\xc2 \xb4\xeb\xc8\xad\xb9\xe6\xbf\xa1\xbc\xad \xb3\xaa\xb0\xa5\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
-			CChatMsg::Instance()->AddChatMsg(msg, 0xFFFF00, true, false);
+			CChatMsg::Instance()->AddChatMsg("\xbb\xf3\xc1\xa1 \xc0\xcc\xbf\xeb\xc1\xdf\xbf\xa1\xb4\xc2 \xb4\xeb\xc8\xad\xb9\xe6\xbf\xa1\xbc\xad \xb3\xaa\xb0\xa5\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0xFFFF00, true, false);
 		} else {
 			ShowQuitDialog();
 		}
@@ -520,7 +506,8 @@ int ntAvatarChatTask::OnPacket(WReceivedPacket &packet) {
 					}
 				}
 
-				std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), slotInfo.m_uid);
+				std::list<sSlotInfo>::iterator it;
+				it = std::find(players.begin(), players.end(), slotInfo.m_uid);
 				if (it == players.end()) {
 					players.push_back(slotInfo);
 
@@ -539,7 +526,8 @@ int ntAvatarChatTask::OnPacket(WReceivedPacket &packet) {
 					}
 				}
 
-				std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), slotInfo.m_uid);
+				std::list<sSlotInfo>::iterator it;
+				it = std::find(players.begin(), players.end(), slotInfo.m_uid);
 				if (it == players.end()) {
 					players.push_back(slotInfo);
 
@@ -551,7 +539,8 @@ int ntAvatarChatTask::OnPacket(WReceivedPacket &packet) {
 			case 2: {
 				unsigned long uid = packet.Decode4();
 
-				std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), uid);
+				std::list<sSlotInfo>::iterator it;
+				it = std::find(players.begin(), players.end(), uid);
 
 				if (it != players.end()) {
 					players.erase(it);
@@ -566,7 +555,8 @@ int ntAvatarChatTask::OnPacket(WReceivedPacket &packet) {
 
 				packet.DecodeBuffer(&slotInfo, 0x152);
 
-				std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), uid);
+				std::list<sSlotInfo>::iterator it;
+				it = std::find(players.begin(), players.end(), uid);
 				if (it != players.end()) {
 					GetActor("AvatarChat") << MsgObject(0, 0xE6, uid, (intptr_t)&slotInfo, 0, 0, 0);
 				}
@@ -608,12 +598,13 @@ int ntAvatarChatTask::OnPacket(WReceivedPacket &packet) {
 		unsigned char chatType = packet.Decode1();
 		std::string text;
 
-		bool bWhisper = (chatType >> 7) != 0;
-		chatType &= 0x7F;
-
 		bool bCommand = false;
 		bool bBalloon = false;
 		unsigned long color = 0;
+
+		bool bWhisper = (chatType >> 7) != 0;
+		chatType &= 0x7F;
+
 		packet.DecodeStr(nickName);
 		packet.DecodeStr(message);
 
@@ -876,10 +867,10 @@ int ntAvatarChatTask::OnPacket(WReceivedPacket &packet) {
 		}
 		break;
 
-	case 0x258:
+	case 0x196:
 		break;
 
-	case 0x25D: {
+	case 0x19B: {
 		unsigned long guid = packet.Decode4();
 		ntAvatar *pAvatar = ntAvatarManager::Instance()->FindAvatarByGuid(guid);
 		if (pAvatar) {

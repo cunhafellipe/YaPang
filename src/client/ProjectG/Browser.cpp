@@ -1,5 +1,9 @@
 // Original: d:\build\custom\temp\code\client\projectg\browser.cpp
 #define WVIDEO_WVIDEODEV_INLINE
+// The original's WM_MOUSELAST is 0x20A (WM_MOUSEWHEEL): built for NT 4.0.
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0400
+#endif
 
 #include <windows.h>
 #include <atlbase.h>

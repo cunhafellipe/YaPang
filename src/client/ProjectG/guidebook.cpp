@@ -128,7 +128,11 @@ void FrGuideBookDlg::OnContentInit(intptr_t param) {
 // guidebook.cpp:104
 void FrGuideBookDlg::OnContentOwnerDraw(PG_MSGARG param) {
 	if (m_pPage) {
-		WRect src(0.0f, 0.0f, 1.0f, 1.0f);
+		WRECT src;
+		src.x = 0.0f;
+		src.y = 0.0f;
+		src.w = 1.0f;
+		src.h = 1.0f;
 		WRect dst = m_pContent->GetRect();
 		dst.x += (int)((dst.w - m_pPage->GetWidth() + 1.0f) * 0.5f);
 		dst.y += (int)((dst.h - m_pPage->GetHeight() + 1.0f) * 0.5f);

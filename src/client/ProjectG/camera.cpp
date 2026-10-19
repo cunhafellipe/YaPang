@@ -398,14 +398,13 @@ void CCamera::ProcessMousePick(float dt) {
 	pick = GetPVS().GetRayIntersection(from, dir);
 
 	if (g_input->Get("LCONTROL", true) || g_input->Get("RCONTROL", true)) {
-		pick.y += GolfBall().m_radius;
+		pick.y += GolfBall().GetRadius();
 
 		if (GOLFDOC()->m_dropPending) {
 			WVector ballFromCup, pickFromCup;
-			WVector cup = GOLFDOC()->GetHoleData().m_cupPos;
-			ballFromCup = GolfBall().m_pos - cup;
+			ballFromCup = GolfBall().m_pos - GetHoleCupPos();
 
-			ballFromCup.y = 0; cup = GOLFDOC()->GetHoleData().m_cupPos; pickFromCup = pick - cup; pickFromCup.y = 0; unsigned char groundType = GetPVS().GetGroundType(pick, true, NULL);
+			ballFromCup.y = 0; pickFromCup = pick - GetHoleCupPos(); pickFromCup.y = 0; unsigned char groundType = GetPVS().GetGroundType(pick, true, NULL);
 			bool overlapped = GetPVS().OverlappedWithObject(pick, 0.0f);
 
 			if (!overlapped && (groundType == 0 || (groundType == 1 && !GOLFDOC()->m_pPolySoup->IsOutOfBound(pick) && pickFromCup.Magnitude() > ballFromCup.Magnitude() - 25.6f))) {
@@ -436,7 +435,7 @@ void CCamera::ProcessMousePick(float dt) {
 	if (sqrt(dx * dx + dy * dy) > 10.0f) {
 		dir = pick - GolfBall().m_pos;
 
-		dir.y = 0; float distSq = dir.z * dir.z + dir.x * dir.x; dir.Normalize();
+		dir.y = 0; float distSq = dir.x * dir.x + dir.z * dir.z; dir.Normalize();
 
 		GolfClub().SelectClubByDist(sqrt(distSq) * 0.3125f);
 
@@ -444,7 +443,7 @@ void CCamera::ProcessMousePick(float dt) {
 
 		// The original reads the epsilon from a named constant (0x9ED8B4), not a __real.
 		if (!(WAbsBySign(vec.y) < g_EPSILON)) {
-			float angle = acos(Between(-1.0f, dir.z * g_camera.ya.z + dir.x * g_camera.ya.x + dir.y * g_camera.ya.y, 1.0f));
+			float angle = acos(Between(-1.0f, dir.y * g_camera.ya.y + dir.z * g_camera.ya.z + dir.x * g_camera.ya.x, 1.0f));
 
 			if (!WisZero(angle, 1e-5f)) {
 				if (vec.y > 0.0f) {
@@ -501,7 +500,7 @@ void CCamera::HandleMsg(const MsgObject &msg) {
 		break;
 	case 0xee:
 		m_pos = GOLFDOC()->GetCameraData().m_matrix.pivot;
-		m_at = GOLFDOC()->GetCameraData().m_matrix.za + GOLFDOC()->GetCameraData().m_matrix.pivot;
+		m_at = GOLFDOC()->GetCameraData().m_matrix.pivot + GOLFDOC()->GetCameraData().m_matrix.za;
 		m_at.y += tan(GOLFDOC()->GetCameraData().m_pitch);
 
 		m_zoom = 0;

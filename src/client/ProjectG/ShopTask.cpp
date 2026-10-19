@@ -148,15 +148,15 @@ int CShopTask::OnPacket(WReceivedPacket &packet) {
 				if (it == WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end()) {
 					sItemInfo item;
 					memset(&item, 0, sizeof(item));
-					item.m_serial = serial;
 					item.m_typeId = typeId;
+					item.m_serial = serial;
 					item.m_flags28.flags01 |= 2;
 					item.m_count = (short)count;
 					WSingleton<CSharedDoc>::Instance()->m_itemInfoList.push_back(item);
 				}
 
 				// "Purchase completed.\nYou received bonus %s x%d."
-				GetActor("Shop") << MsgObject(0, 0x241, (intptr_t)MakeStr("\xc1\xa4\xbb\xf3\xc0\xfb\xc0\xb8\xb7\xce \xb1\xb8\xb8\xc5\xb0\xa1 \xbf\xcf\xb7\xe1\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.\n\xba\xb8\xb3\xca\xbd\xba %s %d\xb0\xb3\xb8\xa6 \xb9\xde\xc0\xb8\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9.", ItemManager()->GetItemName(typeId), bonus), 0, 0, 0, 0);
+				GetActor("Shop") << MsgObject(0, 0x241, (intptr_t)MakeStr("\xc1\xa4\xbb\xf3\xc0\xfb\xc0\xb8\xb7\xce \xb1\xb8\xb8\xc5\xb0\xa1 \xbf\xcf\xb7\xe1\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.\n\xba\xb8\xb3\xca\xbd\xba %s %d\xb0\xb3\xb8\xa6 \xb9\xde\xc0\xb8\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9.", WSingleton<CSharedDoc>::Instance()->m_itemManager.GetItemName(typeId), bonus), 0, 0, 0, 0);
 				break;
 			}
 
@@ -321,14 +321,14 @@ int CShopTask::OnPacket(WReceivedPacket &packet) {
 			if (IsLocalContent((localContentType_t)0x60)) {
 				if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
 					WSendPacket send(0x27);
-					send.Encode4(WSingleton<CSharedDoc>::Instance()->m_myUID);
+					send.Encode4(MyUID());
 					send.Encode4(WSingleton<CSharedDoc>::Instance()->m_lastGiftReceiverUID);
 					send.Send(SEND_TO_MSN);
 				}
 			} else {
 				if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
 					WSendPacket send(0x21);
-					send.Encode4(WSingleton<CSharedDoc>::Instance()->m_myUID);
+					send.Encode4(MyUID());
 					send.Encode4(WSingleton<CSharedDoc>::Instance()->m_lastGiftReceiverUID);
 					send.Send(SEND_TO_MSN);
 					WSingleton<CSharedDoc>::Instance()->m_lastGiftReceiverNick = "";

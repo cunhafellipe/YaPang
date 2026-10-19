@@ -189,8 +189,8 @@ bool CGMToolkit::PhraseSaperator(const char *command) {
 
 			int remaining = m_argumentCount;
 			char word[128] = "\0";
-			int position = 0;
 			bool inWord = false;
+			int position = 0;
 
 			for (int i = 1; command[i] != '\0'; i++) {
 				if (command[i] != ' ' && command[i] != '\0') {
@@ -427,10 +427,11 @@ void CGMToolkit::SendPrize(FrListBox *listBox) {
 		sPrize *prize = *it;
 
 		unsigned long lastRank = prize->m_lastRank;
+		int firstRank = prize->m_firstRank;
 
 		if (prize->m_type == 0) {
 			// The players ranked m_firstRank to m_lastRank.
-			for (int rank = prize->m_firstRank; rank <= lastRank; rank++) {
+			for (int rank = firstRank; rank <= lastRank; rank++) {
 				if (rank > count) {
 					break;
 				}
@@ -468,6 +469,7 @@ void CGMToolkit::SendPrize(FrListBox *listBox) {
 				sRivalData *player = (sRivalData *)item->pData;
 				unsigned char award;
 
+				// Case order follows the original jump table labels: 1, 2, 5, 6, 4, 3.
 				switch (prize->m_type) {
 				case 1:
 					if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[1].m_uid != player->m_uid) {
@@ -483,28 +485,28 @@ void CGMToolkit::SendPrize(FrListBox *listBox) {
 					award = 0x66;
 					break;
 
-				case 3:
+				case 5:
 					if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[5].m_uid != player->m_uid) {
 						continue;
 					}
 					award = 0x67;
 					break;
 
-				case 4:
+				case 6:
 					if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[0].m_uid != player->m_uid) {
 						continue;
 					}
 					award = 0x68;
 					break;
 
-				case 5:
+				case 4:
 					if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[4].m_uid != player->m_uid) {
 						continue;
 					}
 					award = 0x69;
 					break;
 
-				case 6:
+				case 3:
 					if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[3].m_uid != player->m_uid) {
 						continue;
 					}
@@ -805,6 +807,7 @@ eGMToolResult CGMToolkit::CommandKickUser(eGMToolkitStatus status) {
 			if (result == GM_RESULT_SUCCEEDED) {
 				packet.Send(SEND_TO_DEFAULT);
 			}
+			return result;
 		}
 	} else {
 		// "This user is not connected to the server or does not exist."
@@ -1331,12 +1334,13 @@ eGMToolResult CGMToolkit::CommandSetPrize(eGMToolkitStatus status) {
 								memset(text, 0, sizeof(text));
 								// "range : rank %d"
 								sprintf(text, "\xb9\xfc   \xc0\xa7 : %d\xb5\xee", prize->m_firstRank);
+								Display(text, 0xC6FF85);
 							} else {
 								memset(text, 0, sizeof(text));
 								// "range : rank %d to rank %d "
 								sprintf(text, "\xb9\xfc   \xc0\xa7 : %d\xb5\xee \xba\xce\xc5\xcd %d\xb5\xee \xb1\xee\xc1\xf6 ", prize->m_firstRank, prize->m_lastRank);
+								Display(text, 0xC6FF85);
 							}
-							Display(text, 0xC6FF85);
 
 							memset(text, 0, sizeof(text));
 							// "item : %s"

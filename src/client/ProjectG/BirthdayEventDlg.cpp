@@ -524,7 +524,7 @@ FrBirthdayEventMissionDlg::FrBirthdayEventMissionDlg(void) {
 	m_fadeTime = 0.0f;
 	m_fadeOut = false;
 
-	for (int i = 0; i < 15; ++i) {
+	for (int i = 0; i < 16; ++i) {
 		m_pNumberImg[i] = g_pFresh->RegisterBitmap(MakeStr("BirthdayEvent_num2_%d", i + 1));
 	}
 }
@@ -562,7 +562,7 @@ void FrBirthdayEventMissionDlg::CalculatePos(unsigned long index, unsigned long 
 
 	GetClientRect(rect);
 	rect.x = g_view->GetWidth() * 0.5f - count * rect.w * 0.5f + index * rect.w;
-	SetRect(rect);
+	SetClientRect(rect);
 }
 
 // birthdayeventdlg.cpp:572

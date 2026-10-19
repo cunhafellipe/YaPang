@@ -68,8 +68,8 @@ bool DirectInputMouse::InitDevice(HWND__ *hwnd, bool exclusive) {
 	DIPROPDWORD dipdw;
 	dipdw.diph.dwSize = sizeof(DIPROPDWORD);
 	dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-	dipdw.diph.dwObj = 0;
 	dipdw.diph.dwHow = DIPH_DEVICE;
+	dipdw.diph.dwObj = 0;
 	dipdw.dwData = 16;
 
 	if (diMouse->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph) != DI_OK) {
@@ -198,7 +198,9 @@ void DirectInputMouse::Update(unsigned long timeStamp) {
 
 	if (m_moveMode) {
 		GetCursorPos(&curPt);
-		MoveWindow(m_myHwnd, curPt.x - m_clientX, curPt.y - m_clientY, m_clientWidth, m_clientHeight, TRUE);
+		curPt.x -= m_clientX;
+		curPt.y -= m_clientY;
+		MoveWindow(m_myHwnd, curPt.x, curPt.y, m_clientWidth, m_clientHeight, TRUE);
 	}
 }
 

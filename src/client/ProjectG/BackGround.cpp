@@ -4,6 +4,7 @@
 #include "bitmap.h"
 #include "wresrcmng.h"
 #include "wvideo.h"
+#include "wutil.h"
 
 // background.cpp:20
 CBackGround::CBackGround(const char* filename, bool bScale)
@@ -64,14 +65,14 @@ void CBackGround::Process(const float deltaTime) {
 		m_u += deltaTime * m_du;
 		m_v += deltaTime * m_dv;
 
-		if ((m_u > 0.0f ? m_u : -m_u) > 1.0f) {
+		if (Abs(m_u) > 1.0f) {
 			if (m_u > 0.0f)
 				m_u = m_u - 1.0f;
 			else
 				m_u = m_u + 1.0f;
 		}
 
-		if ((m_v > 0.0f ? m_v : -m_v) > 1.0f) {
+		if (Abs(m_v) > 1.0f) {
 			if (m_v > 0.0f)
 				m_v = m_v - 1.0f;
 			else

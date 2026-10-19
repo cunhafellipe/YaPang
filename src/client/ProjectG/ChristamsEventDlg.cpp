@@ -87,10 +87,65 @@ public:
 		return ((unsigned char)(int)m_alpha << 24) | 0xffffff;
 	}
 
-	void Create(void);
-	void InitialCreate(void);
-	void Process(float dt);
-	bool IsAlive(void);
+	// christamseventdlg.cpp:88
+	void Create(void) {
+		int left = (int)rcArea.x; int right = (int)(rcArea.w + rcArea.x);
+
+		int x = rand() % right;
+
+		m_pos.x = (float)(x + left); m_pos.y = rcArea.y + 30.0f; m_dir.x = (float)(rand() % 10 - 5);
+		m_dir.y = (float)(rand() % 50 + 1);
+		m_dir.Normalize();
+
+		m_speed = (float)(rand() % 100 + 10);
+
+		int r = rand() % 100;
+		if (r < 20)
+			m_pImg = g_pFresh->GetBitmap("snow1");
+		else if (r < 60)
+			m_pImg = g_pFresh->GetBitmap("snow2");
+		else
+			m_pImg = g_pFresh->GetBitmap("snow3");
+
+		m_alpha = (float)(rand() % 255 + 128);
+		m_bFadeIn = rand() % 2 != 0;
+	}
+
+	// christamseventdlg.cpp:117
+	void InitialCreate(void) {
+		Create();
+		int top = (int)rcArea.y + 30;
+		int bottom = (int)(rcArea.h + rcArea.y);
+
+		m_pos.y = (float)(rand() % bottom + top);
+	}
+
+	// christamseventdlg.cpp:127
+	void Process(float dt) {
+		m_pos += m_dir * m_speed * dt;
+		if (m_bFadeIn) {
+			m_alpha += dt * 64.0f;
+			if (m_alpha > 255.0f) {
+				m_alpha = 255.0f;
+				m_bFadeIn = false;
+			}
+		} else {
+			m_alpha -= dt * 64.0f;
+			if (m_alpha < 128.0f) {
+				m_alpha = 128.0f;
+				m_bFadeIn = true;
+			}
+		}
+	}
+
+	// christamseventdlg.cpp:151
+	bool IsAlive(void) {
+		if (m_pos.x - m_pImg->Width() < rcArea.x || m_pos.x + m_pImg->Width() > rcArea.x + rcArea.w
+			|| m_pos.y + m_pImg->Height() + 30.0f > rcArea.y + rcArea.h) {
+			return false;
+		}
+		return true;
+	}
 
 private:
 	static WRect rcArea;
@@ -106,66 +161,6 @@ public:
 };
 
 WRect cSnow::rcArea;
-
-// christamseventdlg.cpp:88
-void cSnow::Create(void) {
-	int left = (int)rcArea.x; int right = (int)(rcArea.w + rcArea.x);
-
-	int x = rand() % right;
-
-	m_pos.x = (float)(x + left); m_pos.y = rcArea.y + 30.0f; m_dir.x = (float)(rand() % 10 - 5);
-	m_dir.y = (float)(rand() % 50 + 1);
-	m_dir.Normalize();
-
-	m_speed = (float)(rand() % 100 + 10);
-
-	int r = rand() % 100;
-	if (r < 20)
-		m_pImg = g_pFresh->GetBitmap("snow1");
-	else if (r < 60)
-		m_pImg = g_pFresh->GetBitmap("snow2");
-	else
-		m_pImg = g_pFresh->GetBitmap("snow3");
-
-	m_alpha = (float)(rand() % 255 + 128);
-	m_bFadeIn = rand() % 2 != 0;
-}
-
-// christamseventdlg.cpp:117
-void cSnow::InitialCreate(void) {
-	Create();
-	int top = (int)rcArea.y + 30;
-	int bottom = (int)(rcArea.h + rcArea.y);
-
-	m_pos.y = (float)(rand() % bottom + top);
-}
-
-// christamseventdlg.cpp:127
-void cSnow::Process(float dt) {
-	m_pos += m_dir * m_speed * dt;
-	if (m_bFadeIn) {
-		m_alpha += dt * 64.0f;
-		if (m_alpha > 255.0f) {
-			m_alpha = 255.0f;
-			m_bFadeIn = false;
-		}
-	} else {
-		m_alpha -= dt * 64.0f;
-		if (m_alpha < 128.0f) {
-			m_alpha = 128.0f;
-			m_bFadeIn = true;
-		}
-	}
-}
-
-// christamseventdlg.cpp:151
-bool cSnow::IsAlive(void) {
-	if (m_pos.x - m_pImg->Width() < rcArea.x || m_pos.x + m_pImg->Width() > rcArea.x + rcArea.w
-		|| m_pos.y + m_pImg->Height() + 30.0f > rcArea.y + rcArea.h) {
-		return false;
-	}
-	return true;
-}
 
 // christamseventdlg.cpp:163, the falling snowflakes, owned by the dialog
 std::vector<cSnow*> snow;

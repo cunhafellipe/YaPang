@@ -244,8 +244,9 @@ void CTrajectory::HandleMsg(const MsgObject &msg) {
 				pBall->SetAlpha((unsigned char)0xFF);
 			}
 
-			m_pActiveTrace[0] = NULL;
-			m_pActiveTrace[1] = NULL;
+			for (int i = 0; i < 2; i++) {
+				m_pActiveTrace[i] = NULL;
+			}
 
 			if (m_pExplodeMark != NULL) {
 				m_pExplodeMark->Uninit();
@@ -731,11 +732,17 @@ void CBallWindTrack::Display(void) {
 		return;
 	}
 
-	if (m_fLineAlpha > 0.0f && m_vEyeMove.Magnitude() != 0.0f) {
-		for (int i = 0; i < MAX_LINE_EFFECT; i++) {
-			if (m_pLineEffect[i].m_bActive) {
-				g_view->DrawLine(m_pLineEffect[i].m_vStart, ((int)(m_pLineEffect[i].m_nAlpha * m_fLineAlpha) << 24) | 0xFFFFFF, m_pLineEffect[i].m_vEnd, 0, 0x20C00000);
-			}
+	if (!(m_fLineAlpha > 0.0f)) {
+		return;
+	}
+
+	if (m_vEyeMove.Magnitude() == 0.0f) {
+		return;
+	}
+
+	for (int i = 0; i < MAX_LINE_EFFECT; i++) {
+		if (m_pLineEffect[i].m_bActive) {
+			g_view->DrawLine(m_pLineEffect[i].m_vStart, ((int)(m_pLineEffect[i].m_nAlpha * m_fLineAlpha) << 24) | 0xFFFFFF, m_pLineEffect[i].m_vEnd, 0, 0x20C00000);
 		}
 	}
 }
@@ -947,7 +954,8 @@ void CDoughnut::Display(void) {
 	for (int i = 0; i < m_nCount; i++) {
 		if (m_pParticle[i].m_bActive) {
 			for (int j = 0; j < 4; j++) {
-				WVector vPos = m_pParticle[i].m_matrix.pivot;
+				WVector vPos;
+				vPos = m_pParticle[i].m_matrix.pivot;
 				vPos += (m_pParticle[i].m_matrix.xa * ((j & 2) ? 1.0f : -1.0f) + m_pParticle[i].m_matrix.ya * ((j & 1) ? 1.0f : -1.0f)) * (m_pParticle[i].m_fScale * 0.5f);
 
 				m_vertex[j].SetPosition(vPos); m_vertex[j].diffuse = ((int)m_pParticle[i].m_fAlpha << 24) + 0xFFFFFF;

@@ -52,7 +52,7 @@ void CSnow::Reset(int nType, float fValue) {
 
 		for (int j = 0; j < 3; j++) m_frags[i].center.p[j] = g_camera.pivot.p[j] + Random(-1.0f, 1.0f, -1) * 160.0f;
 
-		m_frags[i].pos = WVector(m_frags[i].offset.x + m_frags[i].center.x, m_frags[i].offset.y + m_frags[i].center.y, m_frags[i].offset.z + m_frags[i].center.z);
+		m_frags[i].pos = m_frags[i].center + m_frags[i].offset;
 	}
 }
 
@@ -73,7 +73,7 @@ void CSnow::Process(float fDelta) {
 		m_frags[i].pitch += fDelta * 1.5707964f;
 		float s = sin(m_frags[i].pitch);
 
-		m_frags[i].offset = s * WVector(cos(m_frags[i].yaw) * 4.0f, 0.0f, sin(m_frags[i].yaw) * 4.0f);
+		m_frags[i].offset = s * (WVector(cos(m_frags[i].yaw), 0.0f, sin(m_frags[i].yaw)) * 4.0f);
 		for (int j = 0; j < 3; j++) {
 			if (m_frags[i].center.p[j] > area.max.p[j]) {
 				m_frags[i].center.p[j] -= ceil((m_frags[i].center.p[j] - area.max.p[j]) / size.p[j]) * size.p[j];

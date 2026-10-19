@@ -351,8 +351,9 @@ void FrApproachResultDlg::OnLeftListOwnerDraw(PG_MSGARG param) {
 		if (pData) {
 			sRivalData* pResult = &WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(pData->m_uid)];
 
-			float x = pItem->pos.x;
-			float y = pItem->pos.y;
+			WPoint pt;
+			pt.x = pItem->pos.x;
+			pt.y = pItem->pos.y;
 
 			// the rank frame: the first three places get the first one
 			const Bitmap* pFrame;
@@ -363,7 +364,7 @@ void FrApproachResultDlg::OnLeftListOwnerDraw(PG_MSGARG param) {
 			}
 
 			if (pFrame) {
-				pGDI->DrawTexture(pFrame, WRect(x + 20.0f - pFrame->Width() * 0.5f, y + 6.0f - 2.0f, (float)pFrame->Width(), (float)pFrame->Height()), 0xFFFFFFFF, 0);
+				pGDI->DrawTexture(pFrame, WRect(pt.x + 20.0f - pFrame->Width() * 0.5f, pt.y + 6.0f - 2.0f, (float)pFrame->Width(), (float)pFrame->Height()), 0xFFFFFFFF, 0);
 			}
 
 			pGDI->SetTextStyle(1);
@@ -371,11 +372,11 @@ void FrApproachResultDlg::OnLeftListOwnerDraw(PG_MSGARG param) {
 			pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 
 			if (pData->m_unk09 != 0xFF) {
-				pGDI->Print(WPoint(x + 20.0f, y + 6.0f), 1, "%d", pData->m_unk09);
+				pGDI->Print(WPoint(pt.x + 20.0f, pt.y + 6.0f), 1, "%d", pData->m_unk09);
 			} else if (pData->m_unk00 == 0) {
-				pGDI->Print(WPoint(x + 20.0f, y + 6.0f), 1, "-");
+				pGDI->Print(WPoint(pt.x + 20.0f, pt.y + 6.0f), 1, "-");
 			} else {
-				pGDI->Print(WPoint(x + 20.0f, y + 6.0f), 1, "x");
+				pGDI->Print(WPoint(pt.x + 20.0f, pt.y + 6.0f), 1, "x");
 			}
 
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -387,28 +388,28 @@ void FrApproachResultDlg::OnLeftListOwnerDraw(PG_MSGARG param) {
 				if (pResult->m_hasEmblem) {
 					const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pResult->m_emblemName);
 					if (pEmblem) {
-						pGDI->DrawTexture(pEmblem, WRect(x + 40.0f, y + 6.0f - 7.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pEmblem, WRect(pt.x + 40.0f, pt.y + 6.0f - 7.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
 					}
 				}
 
 				if (!WSingleton<CProjectG>::Instance()->HidePrivacy()) {
-					g_pFresh->GetManager()->PrintText11(WPoint(x + 70.0f, y + 6.0f), 0, pResult->m_nickname, -1.0f, 0xFFFFFFFF);
+					g_pFresh->GetManager()->PrintText11(WPoint(pt.x + 70.0f, pt.y + 6.0f), 0, pResult->m_nickname, -1.0f, 0xFFFFFFFF);
 				}
 
 				if (pData->m_unk12 == 0xFFFFFFFF) {
-					pGDI->Print(WPoint(x + 198.0f, y + 6.0f), 2, "Out");
-					pGDI->Print(WPoint(x + 252.0f, y + 6.0f), 2, "-");
+					pGDI->Print(WPoint(pt.x + 198.0f, pt.y + 6.0f), 2, "Out");
+					pGDI->Print(WPoint(pt.x + 252.0f, pt.y + 6.0f), 2, "-");
 				} else {
 					if (pResult->m_approachDistance == 0xFFFFFFFF)
-						pGDI->Print(WPoint(x + 198.0f, y + 6.0f), 2, "Out");
+						pGDI->Print(WPoint(pt.x + 198.0f, pt.y + 6.0f), 2, "Out");
 					else
-						pGDI->Print(WPoint(x + 198.0f, y + 6.0f), 2, "%d.%dy", pData->m_unk0E / 10, pData->m_unk0E % 10);
+						pGDI->Print(WPoint(pt.x + 198.0f, pt.y + 6.0f), 2, "%d.%dy", pData->m_unk0E / 10, pData->m_unk0E % 10);
 
-					pGDI->Print(WPoint(x + 266.0f, y + 6.0f), 2, "%d.%03d", pData->m_unk12 / 1000, pData->m_unk12 % 1000);
+					pGDI->Print(WPoint(pt.x + 266.0f, pt.y + 6.0f), 2, "%d.%03d", pData->m_unk12 / 1000, pData->m_unk12 % 1000);
 				}
 			}
 
-			pGDI->Print(WPoint(x + 327.0f, y + 6.0f), 2, "%d", pData->m_unk17 + pData->m_unk16 + pData->m_unk0A);
+			pGDI->Print(WPoint(pt.x + 327.0f, pt.y + 6.0f), 2, "%d", pData->m_unk17 + pData->m_unk16 + pData->m_unk0A);
 			pGDI->SetTextStyle(0);
 		}
 	}
@@ -477,8 +478,9 @@ void FrApproachResultDlg::OnRightListOwnerDraw(PG_MSGARG param) {
 		if (pData) {
 			sRivalData* pResult = &WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(pData->m_uid)];
 
-			float x = pItem->pos.x;
-			float y = pItem->pos.y;
+			WPoint pt = pItem->pos;
+
+
 
 			// the rank frame: the first three places get the first one
 			const Bitmap* pFrame;
@@ -489,7 +491,7 @@ void FrApproachResultDlg::OnRightListOwnerDraw(PG_MSGARG param) {
 			}
 
 			if (pFrame) {
-				pGDI->DrawTexture(pFrame, WRect(x + 7.0f - pFrame->Width() * 0.5f, y + 9.0f - 2.0f, (float)pFrame->Width(), (float)pFrame->Height()), 0xFFFFFFFF, 0);
+				pGDI->DrawTexture(pFrame, WRect(pt.x + 7.0f - pFrame->Width() * 0.5f, pt.y + 9.0f - 2.0f, (float)pFrame->Width(), (float)pFrame->Height()), 0xFFFFFFFF, 0);
 			}
 
 			pGDI->SetTextStyle(1);
@@ -497,11 +499,11 @@ void FrApproachResultDlg::OnRightListOwnerDraw(PG_MSGARG param) {
 			pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 
 			if (pData->m_unk09 != 0xFF) {
-				pGDI->Print(WPoint(x + 7.0f, y + 9.0f), 1, "%d", pData->m_unk09);
+				pGDI->Print(WPoint(pt.x + 7.0f, pt.y + 9.0f), 1, "%d", pData->m_unk09);
 			} else if (pData->m_unk00 == 0) {
-				pGDI->Print(WPoint(x + 7.0f, y + 9.0f), 1, "-");
+				pGDI->Print(WPoint(pt.x + 7.0f, pt.y + 9.0f), 1, "-");
 			} else {
-				pGDI->Print(WPoint(x + 7.0f, y + 9.0f), 1, "x");
+				pGDI->Print(WPoint(pt.x + 7.0f, pt.y + 9.0f), 1, "x");
 			}
 
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -513,20 +515,20 @@ void FrApproachResultDlg::OnRightListOwnerDraw(PG_MSGARG param) {
 				if (pResult->m_hasEmblem) {
 					const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pResult->m_emblemName);
 					if (pEmblem) {
-						pGDI->DrawTexture(pEmblem, WRect(x + 20.0f, y + 9.0f - 6.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pEmblem, WRect(pt.x + 20.0f, pt.y + 9.0f - 6.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
 					}
 				}
 
 				if (!WSingleton<CProjectG>::Instance()->HidePrivacy()) {
-					g_pFresh->GetManager()->PrintText11(WPoint(x + 48.0f, y + 9.0f), 0, pResult->m_nickname, -1.0f, 0xFFFFFFFF);
+					g_pFresh->GetManager()->PrintText11(WPoint(pt.x + 48.0f, pt.y + 9.0f), 0, pResult->m_nickname, -1.0f, 0xFFFFFFFF);
 				}
 
 				if (pData->m_unk0E == 0xFFFFFFFF) {
-					pGDI->Print(WPoint(x + 163.0f, y + 9.0f), 2, "Out");
-					pGDI->Print(WPoint(x + 208.0f, y + 9.0f), 2, "-");
+					pGDI->Print(WPoint(pt.x + 163.0f, pt.y + 9.0f), 2, "Out");
+					pGDI->Print(WPoint(pt.x + 208.0f, pt.y + 9.0f), 2, "-");
 				} else {
-					pGDI->Print(WPoint(x + 168.0f, y + 9.0f), 2, "%d.%dy", pData->m_unk0E / 10, pData->m_unk0E % 10);
-					pGDI->Print(WPoint(x + 222.0f, y + 9.0f), 2, "%d.%03d", pData->m_unk12 / 1000, pData->m_unk12 % 1000);
+					pGDI->Print(WPoint(pt.x + 168.0f, pt.y + 9.0f), 2, "%d.%dy", pData->m_unk0E / 10, pData->m_unk0E % 10);
+					pGDI->Print(WPoint(pt.x + 222.0f, pt.y + 9.0f), 2, "%d.%03d", pData->m_unk12 / 1000, pData->m_unk12 % 1000);
 				}
 			}
 
@@ -534,12 +536,12 @@ void FrApproachResultDlg::OnRightListOwnerDraw(PG_MSGARG param) {
 			char szCount[3] = "\0";
 			if (pData->m_unk0A > 0) {
 				if (m_pTreasureBox) {
-					pGDI->DrawTexture(m_pTreasureBox, WRect(x + 213.0f, y + 9.0f - 5.0f, (float)m_pTreasureBox->Width(), (float)m_pTreasureBox->Height()), 0xFFFFFFFF, 0);
+					pGDI->DrawTexture(m_pTreasureBox, WRect(pt.x + 213.0f, pt.y + 9.0f - 5.0f, (float)m_pTreasureBox->Width(), (float)m_pTreasureBox->Height()), 0xFFFFFFFF, 0);
 				}
 
 				itoa(pData->m_unk0A, szCount, 10);
 				if (m_pTitleFont2) {
-					m_pTitleFont2->Print(g_view, x + 230.0f, y + 9.0f + 1.0f, szCount, 0, 0xFFFFFFFF, 0);
+					m_pTitleFont2->Print(g_view, pt.x + 230.0f, (pt.y + 9.0f) + 1.0f, szCount, 0, 0xFFFFFFFF, 0);
 				}
 			}
 
@@ -552,23 +554,23 @@ void FrApproachResultDlg::OnRightListOwnerDraw(PG_MSGARG param) {
 				}
 
 				if (pRank) {
-					pGDI->DrawTexture(pRank, WRect(x + 247.0f, y + 9.0f - 3.5f, (float)pRank->Width(), (float)pRank->Height()), 0xFFFFFFFF, 0);
+					pGDI->DrawTexture(pRank, WRect(pt.x + 247.0f, pt.y + 9.0f - 3.5f, (float)pRank->Width(), (float)pRank->Height()), 0xFFFFFFFF, 0);
 				}
 
 				itoa(pData->m_unk16, szCount, 10);
 				if (m_pTitleFont2) {
-					m_pTitleFont2->Print(g_view, x + 248.0f, y + 9.0f + 1.0f, szCount, 0, 0xFFFFFFFF, 0);
+					m_pTitleFont2->Print(g_view, pt.x + 248.0f, (pt.y + 9.0f) + 1.0f, szCount, 0, 0xFFFFFFFF, 0);
 				}
 			}
 
 			if (pData->m_unk17 > 0) {
 				if (m_pPrizeGoodLuck) {
-					pGDI->DrawTexture(m_pPrizeGoodLuck, WRect(x + 259.0f, y + 9.0f - 5.0f, (float)m_pPrizeGoodLuck->Width(), (float)m_pPrizeGoodLuck->Height()), 0xFFFFFFFF, 0);
+					pGDI->DrawTexture(m_pPrizeGoodLuck, WRect(pt.x + 259.0f, pt.y + 9.0f - 5.0f, (float)m_pPrizeGoodLuck->Width(), (float)m_pPrizeGoodLuck->Height()), 0xFFFFFFFF, 0);
 				}
 
 				itoa(pData->m_unk17, szCount, 10);
 				if (m_pTitleFont2) {
-					m_pTitleFont2->Print(g_view, x + 263.0f, y + 9.0f + 1.0f, szCount, 0, 0xFFFFFFFF, 0);
+					m_pTitleFont2->Print(g_view, pt.x + 263.0f, (pt.y + 9.0f) + 1.0f, szCount, 0, 0xFFFFFFFF, 0);
 				}
 			}
 
@@ -794,11 +796,12 @@ void FrApproachEndDlg::OnListOwnerDraw(PG_MSGARG param) {
 		sApproachResultData* pData = (sApproachResultData*)pItem->pData;
 		if (pData) {
 			WRect rect = GetRect();
-			float x = pItem->pos.x;
-			float y = pItem->pos.y;
+			WPoint pt = pItem->pos;
+
+
 
 			// two passes: the list's line, then the local player's line at the bottom
-			float totalX = x + 320.0f;
+			float totalX = pt.x + 320.0f;
 			float gap = 4.0f;
 			for (int i = 0; i < 2; i++) {
 				sRivalData* pResult = &WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(pData->m_uid)];
@@ -811,7 +814,7 @@ void FrApproachEndDlg::OnListOwnerDraw(PG_MSGARG param) {
 				}
 
 				if (pFrame) {
-					pGDI->DrawTexture(pFrame, WRect(x + 22.0f - pFrame->Width() * 0.5f, y + gap - 2.0f, (float)pFrame->Width(), (float)pFrame->Height()), 0xFFFFFFFF, 0);
+					pGDI->DrawTexture(pFrame, WRect(pt.x + 22.0f - pFrame->Width() * 0.5f, pt.y + gap - 2.0f, (float)pFrame->Width(), (float)pFrame->Height()), 0xFFFFFFFF, 0);
 				}
 
 				pGDI->SetTextStyle(1);
@@ -819,9 +822,9 @@ void FrApproachEndDlg::OnListOwnerDraw(PG_MSGARG param) {
 				pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 
 				if (pData->m_unk09 < 0xFF) {
-					pGDI->Print(WPoint(x + 22.0f, y + gap), 1, "%d", pData->m_unk09);
+					pGDI->Print(WPoint(pt.x + 22.0f, pt.y + gap), 1, "%d", pData->m_unk09);
 				} else {
-					pGDI->Print(WPoint(x + 22.0f, y + gap), 1, "-");
+					pGDI->Print(WPoint(pt.x + 22.0f, pt.y + gap), 1, "-");
 				}
 
 				pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
@@ -833,12 +836,12 @@ void FrApproachEndDlg::OnListOwnerDraw(PG_MSGARG param) {
 					if (pResult->m_hasEmblem) {
 						const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pResult->m_emblemName);
 						if (pEmblem) {
-							pGDI->DrawTexture(pEmblem, WRect(x + 33.0f, y + gap - 5.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
+							pGDI->DrawTexture(pEmblem, WRect(pt.x + 33.0f, pt.y + gap - 5.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
 						}
 					}
 
 					if (!WSingleton<CProjectG>::Instance()->HidePrivacy()) {
-						g_pFresh->GetManager()->PrintText11(WPoint(x + 60.0f, y + gap), 0, pResult->m_nickname, -1.0f, 0xFFFFFFFF);
+						g_pFresh->GetManager()->PrintText11(WPoint(pt.x + 60.0f, pt.y + gap), 0, pResult->m_nickname, -1.0f, 0xFFFFFFFF);
 					}
 				}
 
@@ -846,18 +849,18 @@ void FrApproachEndDlg::OnListOwnerDraw(PG_MSGARG param) {
 				int time = pData->m_unk12;
 
 				if (distance == 0xFFFFFFFF) {
-					pGDI->Print(WPoint(x + 152.0f, y + gap), 0, "out");
-					pGDI->Print(WPoint(x + 212.0f, y + gap), 0, "-");
+					pGDI->Print(WPoint(pt.x + 152.0f, pt.y + gap), 0, "out");
+					pGDI->Print(WPoint(pt.x + 212.0f, pt.y + gap), 0, "-");
 				} else {
-					pGDI->Print(WPoint(x + 152.0f, y + gap), 0, "%d.%d y", distance / 10, distance % 10);
-					pGDI->Print(WPoint(x + 212.0f, y + gap), 0, "%d.%03d\xC3\xCA", time / 1000, time % 1000);
+					pGDI->Print(WPoint(pt.x + 152.0f, pt.y + gap), 0, "%d.%d y", distance / 10, distance % 10);
+					pGDI->Print(WPoint(pt.x + 212.0f, pt.y + gap), 0, "%d.%03d\xC3\xCA", time / 1000, time % 1000);
 				}
 
-				pGDI->Print(WPoint(totalX, y + gap), 2, "%d", pData->m_unk17 + pData->m_unk16 + pData->m_unk0A);
+				pGDI->Print(WPoint(totalX, pt.y + gap), 2, "%d", pData->m_unk17 + pData->m_unk16 + pData->m_unk0A);
 
 				pGDI->SetTextStyle(0);
 
-				y = rect.y;
+				pt.y = rect.y;
 				gap = 355.0f;
 				if (pData->m_uid == WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid)
 					pGDI->SetTextColor(0, 0xFFFFFFFF);

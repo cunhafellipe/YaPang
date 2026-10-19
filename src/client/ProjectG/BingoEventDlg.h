@@ -72,7 +72,7 @@ public:
 	~CBingoLine(void);
 
 	CBingoLine& operator=(const CBingoLine& other);
-	bool operator+=(const CBingoPoint& point);
+	bool operator+=(PG_PORT_CONST CBingoPoint& point);
 
 	int operator[](int index);
 	const int operator[](int index) const;

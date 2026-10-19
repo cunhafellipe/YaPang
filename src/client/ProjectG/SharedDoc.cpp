@@ -194,7 +194,7 @@ sStall::sStall(void) {
 // shareddoc.cpp:123
 CSharedDoc::CSharedDoc(void)
 	: m_curMap(0), m_pCurCourse(NULL), m_roomType(0), m_roomName(), m_holes(18), m_weather(0),
-	  m_shotTimeLimit(0), m_gameTimeLimit(0), m_value4CE4(8), m_string4D4C(""), m_serverProperty(0),
+	  m_shotTimeLimit(0), m_gameTimeLimit(0), m_value4CE4(8), m_string4D4C(""),
 	  m_loginDlgCreated(true) {
 	m_pGolfDoc = NULL;
 	ClearAll();
@@ -205,7 +205,7 @@ CSharedDoc::CSharedDoc(void)
 	memset(m_fileName, 0, sizeof(m_fileName));
 
 	m_replayState = 0;
-	m_replayValue5BC0 = 0;
+	m_replayPrevAccuracy = 0.0f;
 	m_replayStartA = 0;
 	m_replayChannelFlags = 0;
 	m_replayPlayType = -1;
@@ -401,7 +401,7 @@ void CSharedDoc::ClearCommonVars(void) {
 	memset(&m_myFriendInfo, 0, sizeof(m_myFriendInfo));
 	m_value94 = 0;
 	m_controlServerService = 0;
-	m_serverProperty = 0;
+	m_serverProperty.Reset();
 	m_flagAbilityItem = 0;
 	m_numBonusPangItem = 0;
 	m_value5044 = 0;
@@ -1639,7 +1639,7 @@ void CSharedDoc::SetEquipCharCaddieInfoFromMyInfo(void) {
 	memset(&m_roomPlayers[0].m_clubSet, 0, sizeof(m_roomPlayers[0].m_clubSet));
 	memset(&m_roomPlayers[0].m_mascot, 0, sizeof(m_roomPlayers[0].m_mascot));
 
-	memcpy(m_roomPlayers[0].m_nickname, &m_userInfo, 0x10D); // the whole sPangYaUserInfo (our type is still 0x89 bytes)
+	memcpy(m_roomPlayers[0].m_nickname, &m_userInfo, 0x10D); // the whole sPangYaUserInfo
 	m_roomPlayers[0].m_statistics = m_myStatistics;
 	m_roomPlayers[0].m_equip = m_myEquip;
 
@@ -1794,6 +1794,7 @@ void CSharedDoc::Log30sScore(void) {
 	switch (WSingleton<CSharedDoc>::Instance()->m_roomType) {
 	case 4:
 	case 5:
+	case 6:
 	case 9:
 	case 10:
 		break;

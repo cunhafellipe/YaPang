@@ -61,7 +61,7 @@ void LuaOpenUtilityLib(lua_State *L) {
 	lua_tinker::def(L, "get_my_country", get_my_country);
 	lua_tinker::def(L, "get_current_dir", get_current_dir);
 	lua_tinker::def(L, "print_client", print_client);
-	lua_tinker::def(L, "pg_random", pg_random);
+	lua_tinker::def(L, "random", pg_random);
 }
 
 // luautilitylib.cpp:76

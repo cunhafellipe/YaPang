@@ -34,16 +34,20 @@ public:
 	ntAvatarBurden(unsigned long first, unsigned long key, const sCharacterInfo &charInfo, CPetFrame *pPetFrame);
 	~ntAvatarBurden();
 	bool Load();
-	bool operator<(const ntAvatarBurden &) const;
-	bool operator==(const ntAvatarBurden &) const;
+	bool operator<(const ntAvatarBurden &other) PG_PORT_CONST { return m_key < other.m_key; } // avatar_avatar.h:53
+	// avatar_avatar.h:58 (a burden whose pet frame is the -1 sentinel never matches)
+	bool operator==(const ntAvatarBurden &other) PG_PORT_CONST {
+		return m_key == other.m_key && m_pPetFrame != (CPetFrame *)-1 && other.m_pPetFrame != (CPetFrame *)-1;
+	}
 
 	unsigned long m_first;      // 0x0, the value ctor's first argument
 	unsigned long m_key;        // 0x4, the value ctor's second argument; the sort key
 	sCharacterInfo m_charInfo;  // 0x8
 	CPartTidList m_partTidList; // 0x1C4
 	CPetFrame *m_pPetFrame;     // 0x28C
+	UNKNOWN(0x290, 0x294);      // copied with the rest (rep movsd 0xA5 dwords in ntAvatarChatTask::Process)
 };
-CHECK_SIZE(ntAvatarBurden, 0x290);
+CHECK_SIZE(ntAvatarBurden, 0x294);
 CHECK_FIELD(ntAvatarBurden, m_first, 0x0);
 CHECK_FIELD(ntAvatarBurden, m_key, 0x4);
 CHECK_FIELD(ntAvatarBurden, m_charInfo, 0x8);
@@ -150,7 +154,6 @@ private:
 	int m_headIcon;                     // 0x134
 	WVector m_pendingMove;              // 0x138, movement accumulated by SendMove until sent
 	ntAvatarBurden m_burden;            // 0x144
-	UNKNOWN(0x3D4, 0x3D8);
 	bool m_burdenReady;                 // 0x3D8, set by ntAvatarChatTask::Process with m_burden; ntAvatar::Process takes its pet frame
 	sCharacterInfo m_characterInfo;     // 0x3D9, copied by SetCharactorInfo (byte-packed)
 	UNKNOWN(0x595, 0x598);
@@ -288,6 +291,18 @@ BEGIN_LAYOUT_CHECK(ntAvatarManager)
 	CHECK_FIELD(ntAvatarManager, m_overlayDetail, 0xB1);
 	CHECK_FIELD(ntAvatarManager, m_pPVS, 0xB4);
 END_LAYOUT_CHECK
+
+// Avatar_Avatar.cpp defines AVATAR_AVATAR_AVATAR_AVATAR_INLINE empty before
+// its includes: the original holds the out-of-line copy of this inline
+// accessor in Avatar_Avatar's object; every other unit inlines it.
+#ifndef AVATAR_AVATAR_AVATAR_AVATAR_INLINE
+#define AVATAR_AVATAR_AVATAR_AVATAR_INLINE inline
+#endif
+
+// avatar_avatar.h:128
+AVATAR_AVATAR_AVATAR_AVATAR_INLINE const WVector &ntAvatar::GetPosition() const {
+	return m_position;
+}
 
 // TaskMain.cpp defines TASKMAIN_AVATAR_AVATAR_INLINE empty before its
 // includes: the original holds the out-of-line copy of this inline accessor in

@@ -968,21 +968,16 @@ void CRealMyRoomMain::ShowPet(unsigned long typeId) {
 		bool loaded;
 		switch (typeId >> 26) {
 		case 1:
-			switch (m_roomMode) {
-			case 13:
-			case 14:
-			case 15:
+			if (m_roomMode == 13 || m_roomMode == 14 || m_roomMode == 15) {
 				pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f, 0.35f, true);
 				pet->SetArea(rect.w, rect.h);
 
 				pet->SetDistanceRange(16.0f, 20.0f); pet->SetDistance(18.0f, true, false);
-				break;
-			default:
+			} else {
 				pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f + 15.0f, 0.35f, true);
 				pet->SetArea(rect.w, rect.h);
 
 				pet->SetDistanceRange(8.0f, 12.0f); pet->SetDistance(10.0f, true, false);
-				break;
 			}
 
 			// While a UCC is being drawn, show it on the character.
@@ -1370,13 +1365,9 @@ void CRealMyRoomMain::InitMyRoomVariables(void) {
 	m_giftPageCurrent = CSharedDoc::Instance()->m_value5055;
 	m_giftPageGroup = 0;
 
-	m_areaRects[0] = WRect(0, 0, 0, 0);
-	m_areaRects[1] = WRect(0, 0, 0, 0);
-	m_areaRects[2] = WRect(0, 0, 0, 0);
-	m_areaRects[3] = WRect(0, 0, 0, 0);
-	m_areaRects[4] = WRect(0, 0, 0, 0);
-	m_areaRects[5] = WRect(0, 0, 0, 0);
-	m_areaRects[6] = WRect(0, 0, 0, 0);
+	for (int i = 0; i < 7; i++) {
+		m_areaRects[i] = WRect(0, 0, 0, 0);
+	}
 
 	m_pEffectViewWnd = NULL;
 	m_pEffectViewWnd2 = NULL;
@@ -1938,12 +1929,15 @@ void CRealMyRoomMain::ChangeSubTab(subTab_t tab, bool bForce) {
 		break;
 	}
 
-	if (m_roomMode == 8) {
+	switch (m_roomMode) {
+	case 8:
 		if (m_pItemSlotBox)
 			m_pItemSlotBox->SetVisible(true);
-	} else {
+		break;
+	default:
 		if (m_pItemSlotBox)
 			m_pItemSlotBox->SetVisible(false);
+		break;
 	}
 
 	switch (m_roomMode) {
@@ -2035,8 +2029,10 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 		m_pTabTxt[0]->SetBgImg("mt_caddie");
 		TurnOffItemSelect();
 
-		SetSubTabImg(imgs, 0xB);
-		m_pSubTab->AddTab(imgs, 0xA, NULL);
+		for (int i = 0xA; i < 0xB; i++) {
+			SetSubTabImg(imgs, i + 1);
+			m_pSubTab->AddTab(imgs, i, NULL);
+		}
 		break;
 
 	case 1: {
@@ -2061,8 +2057,10 @@ void CRealMyRoomMain::ChangeMainTab(mainTab_t tab, bool bForce) {
 		m_pTabTxt[0]->SetBgImg("mt_mascot");
 		TurnOffItemSelect();
 
-		SetSubTabImg(imgs, 0xD);
-		m_pSubTab->AddTab(imgs, 0xC, NULL);
+		for (int i = 0xC; i < 0xD; i++) {
+			SetSubTabImg(imgs, i + 1);
+			m_pSubTab->AddTab(imgs, i, NULL);
+		}
 		break;
 
 	case 4: {
@@ -2224,7 +2222,7 @@ void CRealMyRoomMain::ChangeCharacter(unsigned long typeId) {
 			WSingleton<CSharedDoc>::Instance()->BuildMyPartTidList(it->second);
 
 			BuildDisplayStand((subTab_t)m_roomMode);
-			SafeLoadPet(&m_charTypeId, false);
+			m_petLoader.WaitUntilWorkDone(9999); if (m_pPetExhibition == NULL || m_pPetExhibition->GetTypeId() != m_charTypeId) m_petLoader.Work(this, 0, &m_charTypeId, true, -1);
 
 			sCharacterInfo& charInfo = WSingleton<CSharedDoc>::Instance()->m_characterMap[WSingleton<CSharedDoc>::Instance()->m_myCharacterId];
 			CRealMyRoom_Avatar* pAvatar = WSingleton<CRealMyRoom_AvatarManager>::Instance()->FindAvatarByGuid(WSingleton<CSharedDoc>::Instance()->m_userInfo.guid);
@@ -2365,13 +2363,13 @@ bool CRealMyRoomMain::ChangeCaddie(unsigned long id) {
 					break;
 				}
 			}
-		}
-	}
 
-	if (result) {
-		const char* name = ItemManager()->GetItemName(m_caddieTypeId);
-		if (name && m_pSelectedName) {
-			m_pSelectedName->SetCaption11(name);
+			if (result) {
+				const char* name = ItemManager()->GetItemName(m_caddieTypeId);
+				if (name && m_pSelectedName) {
+					m_pSelectedName->SetCaption11(name);
+				}
+			}
 		}
 	}
 
@@ -2404,7 +2402,7 @@ void CRealMyRoomMain::ChangeMascot(unsigned long id) {
 		if (m_roomMode == 12) {
 			BuildDisplayStand((subTab_t)12);
 			SafeLoadPet(&m_mascotTypeId, false);
-			TurnOnItemStatus();
+			TurnOffItemStatus();
 
 			m_selItemOn = false;
 			m_pSelItemPrevButton->Enable(false);
@@ -2453,7 +2451,7 @@ int CRealMyRoomMain::ChangeClubset(unsigned long serial) {
 	m_pClubLevels = it->second.m_clubStatLevel;
 
 	int result = 0;
-	IFF_STRUCT::sClubSet* pClubSet = ItemManager()->FindClubSet(m_clubTypeId);
+	IFF_STRUCT::sClubSet* pClubSet = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindClubSet(m_clubTypeId);
 	if (pClubSet) {
 		int level = pClubSet->m_level & 0x7f;
 
@@ -2788,8 +2786,7 @@ void CRealMyRoomMain::DrawAztecList(FrGraphicInterface* pGI, unsigned long typeI
 		WPoint pos(18.0f, 407.0f - rows * 50.0f + (rows - 1) * 5.0f);
 		float top = pos.y - 12.0f;
 		float midH = rows * 50.0f + 15.0f;
-		WRect rect(6.0f, top, 223.0f, 12.0f);
-		pGI->DrawTexture(m_pListBgBitmap[0], rect, 0xFFFFFFFF, 0);
+		pGI->DrawTexture(m_pListBgBitmap[0], WRect(6.0f, top, 223.0f, 12.0f), 0xFFFFFFFF, 0);
 		pGI->DrawTexture(m_pListBgBitmap[1], WRect(6.0f, top + 12.0f, 223.0f, midH), 0xFFFFFFFF, 0);
 		pGI->DrawTexture(m_pListBgBitmap[2], WRect(6.0f, midH + top + 12.0f, 223.0f, 20.0f), 0xFFFFFFFF, 0);
 
@@ -2860,8 +2857,7 @@ void CRealMyRoomMain::DrawClubList(FrGraphicInterface* pGI, unsigned long typeId
 		WPoint pos(18.0f, 407.0f - rows * 50.0f + (rows - 1) * 5.0f);
 		float top = pos.y - 12.0f;
 		float midH = rows * 50.0f + 15.0f;
-		WRect rect(6.0f, top, 223.0f, 12.0f);
-		pGI->DrawTexture(m_pListBgBitmap[0], rect, 0xFFFFFFFF, 0);
+		pGI->DrawTexture(m_pListBgBitmap[0], WRect(6.0f, top, 223.0f, 12.0f), 0xFFFFFFFF, 0);
 		pGI->DrawTexture(m_pListBgBitmap[1], WRect(6.0f, top + 12.0f, 223.0f, midH), 0xFFFFFFFF, 0);
 		pGI->DrawTexture(m_pListBgBitmap[2], WRect(6.0f, midH + top + 12.0f, 223.0f, 20.0f), 0xFFFFFFFF, 0);
 
@@ -4069,6 +4065,7 @@ void CRealMyRoomMain::OnGiftPageOwnerDraw(PG_MSGARG param) {
 	x += (float)m_pGiftPageBitmap[2]->Width();
 
 	unsigned int i;
+	unsigned int areaIndex = 1;
 	for (i = 0; i < shown; i++) {
 		rect.x = x;
 		rect.y = 517.0f;
@@ -4079,9 +4076,10 @@ void CRealMyRoomMain::OnGiftPageOwnerDraw(PG_MSGARG param) {
 		rect.x += (float)(m_pGiftPageBitmap[2]->Width() / 2);
 		rect.y += 3.0f;
 
-		m_areaRects[i + 1] = rect;
-		m_areaRects[i + 1].x -= 5.0f;
-		m_areaRects[i + 1].y -= 5.0f;
+		m_areaRects[areaIndex] = rect;
+		m_areaRects[areaIndex].x -= 5.0f;
+		m_areaRects[areaIndex].y -= 5.0f;
+		areaIndex++;
 
 		pGI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 
@@ -4119,7 +4117,7 @@ void CRealMyRoomMain::OnGiftPageOwnerDraw(PG_MSGARG param) {
 	rect.h = (float)m_pGiftPageBitmap[4]->Height();
 
 	rect.y -= 0.5f;
-	m_areaRects[i + 1] = rect;
+	m_areaRects[areaIndex] = rect;
 
 	if (m_giftPageGroup * 5 < m_giftPageCount) {
 		if (m_giftPageCount - m_giftPageGroup * 5 > 5) {
@@ -4134,31 +4132,35 @@ void CRealMyRoomMain::OnGiftPageOwnerDraw(PG_MSGARG param) {
 	pGI->DrawTexture(m_pGiftPageBitmap[3], WRect(x + (float)m_pGiftPageBitmap[2]->Width(), 517.0f, (float)m_pGiftPageBitmap[3]->Width(), (float)m_pGiftPageBitmap[3]->Height()), 0xFFFFFFFF, 0);
 
 	if (IsLocalContent((localContentType_t)0x5B)) {
+		if (WSingleton<CSharedDoc>::Instance()->m_value5054 == 1) {
+			WSingleton<CSharedDoc>::Instance()->m_value5054 = 0;
+			BuildDisplayStand((subTab_t)0x11);
+		}
+	} else {
+		if (WSingleton<CSharedDoc>::Instance()->m_value5054 == 1) {
+			WSingleton<CSharedDoc>::Instance()->m_value5054 = 0;
+			BuildDisplayStand((subTab_t)0x11);
+		}
 	}
 
-	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
-	if (doc->m_value5054 == 1) {
-		doc->m_value5054 = 0;
-		BuildDisplayStand((subTab_t)0x11);
-	}
-
-	WVector mouse = g_input->GetMousePoint();
+	float mouseY = g_input->GetMousePoint().y, mouseX = g_input->GetMousePoint().x;
 	bool hover = false;
 	int area = 0;
 
-	if (m_areaRects[0].IsInRect(mouse.x, mouse.y)) {
+	if (m_areaRects[0].IsInRect(mouseX, mouseY)) {
 		area = 1;
 		hover = true;
 	}
 
 	for (unsigned int j = 0; j < m_giftPageShownCount; j++) {
-		if (m_areaRects[j + 1].IsInRect(mouse.x, mouse.y)) {
+		const WRect& rc = m_areaRects[j + 1];
+		if (mouseX >= rc.x && mouseX <= rc.x + rc.w && mouseY >= rc.y && mouseY <= rc.h + rc.y) {
 			hover = true;
 		}
 		area++;
 	}
 
-	if (m_areaRects[area + 1].IsInRect(mouse.x, mouse.y)) {
+	if (m_areaRects[area + 1].IsInRect(mouseX, mouseY)) {
 		hover = true;
 	}
 
@@ -4355,11 +4357,11 @@ void CRealMyRoomMain::OnCardPackListDraw(PG_MSGARG param) {
 
 	pGI->Print11(WPoint((x -= 12.0f) + pItem->pos.x, pItem->pos.y + 12.0f), 2, "%s", name);
 
-	int fontHeight = pGI->GetFontHeight11();
+	float fontHeight = (float)pGI->GetFontHeight11();
 	if ((pCards->m_typeId & 0x3C00000) == 0x1000000) {
-		pGI->Print11(WPoint(x + pItem->pos.x, fontHeight + 17.0f + pItem->pos.y), 2, MakeStr("\xB3\xB2\xC0\xBA \xC4\xAB\xB5\xE5 \xC6\xD1 %d\xB0\xB3", pCards->m_count));
+		pGI->Print11(WPoint(x, fontHeight + 17.0f) + pItem->pos, 2, MakeStr("\xB3\xB2\xC0\xBA \xC4\xAB\xB5\xE5 \xC6\xD1 %d\xB0\xB3", pCards->m_count));
 	} else {
-		pGI->Print11(WPoint(x + pItem->pos.x, fontHeight + 17.0f + pItem->pos.y), 2, MakeStr("%d\xB0\xB3", pCards->m_count));
+		pGI->Print11(WPoint(x, fontHeight + 17.0f) + pItem->pos, 2, MakeStr("%d\xB0\xB3", pCards->m_count));
 	}
 
 	if (m_pCardBook != NULL && pItem == m_pCardPackListBox->GetSelected()) {
@@ -4984,9 +4986,9 @@ void CRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 			// realmyroommainui.cpp:6111
 			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 		}
-		// realmyroommainui.cpp:6113
-		pGDI->SetTextStyle(0);
 	}
+	// realmyroommainui.cpp:6113
+	pGDI->SetTextStyle(0);
 
 	// realmyroommainui.cpp:6132
 	if (pBg)
@@ -5881,15 +5883,14 @@ void CRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 				// realmyroommainui.cpp:7039, the report's date: words of
 				// sItemInfo 0x18 (a SYSTEMTIME)
 				sItemInfo *pInfo = (sItemInfo *)pItem->pData;
-				const SYSTEMTIME *pTime = (const SYSTEMTIME *)pInfo->m_reserved18;
 				// realmyroommainui.cpp:7041
 				pGDI->SetTextColor(0xFF4D4D4D, 0xFFFFFFFF);
 				// realmyroommainui.cpp:7042
-				pGDI->Print11(textPos, 2, "%d\xB3\xE2 %d\xBF\xF9 %d\xC0\xCF", pTime->wYear, pTime->wMonth, pTime->wDay);
+				pGDI->Print11(textPos, 2, "%d\xB3\xE2 %d\xBF\xF9 %d\xC0\xCF", ((const SYSTEMTIME *)pInfo->m_reserved18)->wYear, ((const SYSTEMTIME *)pInfo->m_reserved18)->wMonth, ((const SYSTEMTIME *)pInfo->m_reserved18)->wDay);
 				// realmyroommainui.cpp:7043
 				pGDI->SetTextColor(0xFF4D4D4D, 0xFFFFFFFF);
 				// realmyroommainui.cpp:7045
-				pGDI->Print11(textPos2, 2, " %d\xBD\xC3 %d \xBA\xD0", pTime->wHour, pTime->wMinute);
+				pGDI->Print11(textPos2, 2, " %d\xBD\xC3 %d \xBA\xD0", ((const SYSTEMTIME *)pInfo->m_reserved18)->wHour, ((const SYSTEMTIME *)pInfo->m_reserved18)->wMinute);
 				return;
 			}
 			// realmyroommainui.cpp:7048
@@ -6873,7 +6874,7 @@ void CRealMyRoomMain::OnUpgradeInit(PG_MSGARG param) {
 
 // realmyroommainui.cpp:8294
 void CRealMyRoomMain::OnUpgradeUp(void) {
-	IFF_STRUCT::sClubSet* pClubSet = ItemManager()->FindClubSet(m_clubTypeId);
+	IFF_STRUCT::sClubSet* pClubSet = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindClubSet(m_clubTypeId);
 	if (pClubSet != NULL) {
 		// The level bit 7 flags a club set usable only up to its level.
 		unsigned char level = pClubSet->m_level & 0x7f;
@@ -6906,7 +6907,7 @@ void CRealMyRoomMain::OnDowngradeInit(PG_MSGARG param) {
 
 // realmyroommainui.cpp:8330
 void CRealMyRoomMain::OnDowngradeUp(void) {
-	IFF_STRUCT::sClubSet* pClubSet = ItemManager()->FindClubSet(m_clubTypeId);
+	IFF_STRUCT::sClubSet* pClubSet = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindClubSet(m_clubTypeId);
 	if (pClubSet != NULL) {
 		// The level bit 7 flags a club set usable only up to its level.
 		unsigned char level = pClubSet->m_level & 0x7f;
@@ -7119,9 +7120,10 @@ void CRealMyRoomMain::BuildDisplayStand(subTab_t tab) {
 			// realmyroommainui.cpp:8653
 			for (FrListBox::ITEM_LIST::iterator it = m_pUccCopyHideWnd->m_itemList.begin(); it != m_pUccCopyHideWnd->m_itemList.end(); ++it) {
 				// realmyroommainui.cpp:8656
-				if (((sItemInfo *)(*it)->pData)->m_typeId == m_pCharCards[j]) {
+				FrListItem* pItem = *it;
+				if (((sItemInfo *)pItem->pData)->m_typeId == m_pCharCards[j]) {
 					// realmyroommainui.cpp:8657
-					m_pUccCopyHideWnd->SelectItem(*it, false);
+					m_pUccCopyHideWnd->SelectItem(pItem, false);
 					break;
 				}
 			}
@@ -8931,7 +8933,8 @@ bool CRealMyRoomMain::OnCaddieInfoDlgResult(int result, FrForm* pForm) {
 
 			if (pForm != NULL) {
 
-				unsigned long typeId = ((FrCaddieInfoDlg*)pForm)->GetCaddieInfo().typeId;
+				sCaddieInfo info = ((FrCaddieInfoDlg*)pForm)->GetCaddieInfo();
+				unsigned long typeId = info.typeId;
 
 				std::map<unsigned int, IFF_STRUCT::sCaddie>& caddies = ItemManager()->m_caddieMap;
 				for (std::map<unsigned int, IFF_STRUCT::sCaddie>::const_iterator it = caddies.begin(); it != caddies.end(); ++it) {
@@ -9033,10 +9036,11 @@ void CRealMyRoomMain::Net_EquipMascot(void) {
 		}
 	}
 
-	if (WSingleton<CSharedDoc>::Instance()->m_myMascotId != m_mascotId) {
-		if (WSingleton<CSharedDoc>::Instance()->m_myMascotId != 0) {
-			std::map<unsigned int, sMascotInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_myMascotMap.find(WSingleton<CSharedDoc>::Instance()->m_myMascotId);
-			if (it == WSingleton<CSharedDoc>::Instance()->m_myMascotMap.end()) {
+	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
+	if (m_mascotId != pDoc->m_myMascotId) {
+		if (pDoc->m_myMascotId != 0) {
+			std::map<unsigned int, sMascotInfo>::iterator it = pDoc->m_myMascotMap.find(pDoc->m_myMascotId);
+			if (it == pDoc->m_myMascotMap.end()) {
 				return;
 			}
 		}
@@ -9204,14 +9208,18 @@ void CRealMyRoomMain::OpenInformation(unsigned long* pTypeId, sGiftInfo* pGiftIn
 				}
 			}
 
+			bool bFound = true;
 			if (it == pDoc->m_itemInfoList.end()) {
 				for (it = pDoc->m_myPartsList.begin(); it != pDoc->m_myPartsList.end(); ++it) {
 					if (&it->m_typeId == pTypeId)
 						break;
 				}
+
+				if (it == pDoc->m_myPartsList.end())
+					bFound = false;
 			}
 
-			if (it != pDoc->m_myPartsList.end()) {
+			if (bFound) {
 				kind = it->m_stateBits.kind;
 				days = it->m_remainHours / 24;
 				hours = it->m_remainHours % 24;
@@ -9252,14 +9260,15 @@ void CRealMyRoomMain::OpenInformation(unsigned long* pTypeId, sGiftInfo* pGiftIn
 		FrStatic* pStaticAbility = DYNAMIC_CAST(FrStatic, pForm->FindChildByName("static_avility"));
 
 		if (pAbility) {
+			WRect rect;
 			if (bPeriod == true) {
 				pAbility->AddText("\n\n", false, true);
 
-				WRect rect = pStaticAbility->GetRect();
+				rect = pStaticAbility->GetRect();
 				rect.y += 25.0f;
 				pStaticAbility->SetRect(rect);
 			} else {
-				WRect rect = pStaticAbility->GetRect();
+				rect = pStaticAbility->GetRect();
 				rect.y -= 3.0f;
 				pStaticAbility->SetRect(rect);
 			}
@@ -9965,9 +9974,9 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 		sCharacterInfo info;
 		memset(&info, 0, sizeof(info));
 		// realmyroommainui.cpp:12361
-		info.shirtColor = (info.shirtColor & 0xF) | 0x10;
 		info.id = msg.m_param1;
 		info.typeId = msg.m_param2;
+		info.shirtColor = (info.shirtColor & 0xF) | 0x10;
 		// realmyroommainui.cpp:12362
 		ItemManager()->GetDefCombo(info.typeId, info.partTypeIds);
 		// realmyroommainui.cpp:12364
@@ -9987,8 +9996,8 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 		// realmyroommainui.cpp:12373
 		item.m_typeId = msg.m_param2;
 		// realmyroommainui.cpp:12376
-		item.m_stateBits.kind = msg.m_param4;
 		item.m_remainHours = msg.m_param3 * 24;
+		item.m_stateBits.kind = msg.m_param4;
 		item.m_stateBits.flag0 = 1;
 
 		if (IsLocalContent((localContentType_t)0x57) && IsUccClothes(item.m_typeId)) {
@@ -10052,9 +10061,10 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 	case 0xC9: {
 		// realmyroommainui.cpp:12442, a hair colour was bought: param2 its
 		// type id
+		unsigned long hairTypeId = msg.m_param2;
 		sCharacterInfo &myCharacter = WSingleton<CSharedDoc>::Instance()->m_characterMap[WSingleton<CSharedDoc>::Instance()->m_myCharacterId];
 		// realmyroommainui.cpp:12444
-		IFF_STRUCT::sHairStyle *pHair = ItemManager()->FindHairStyle(msg.m_param2);
+		IFF_STRUCT::sHairStyle *pHair = ItemManager()->FindHairStyle(hairTypeId);
 		// realmyroommainui.cpp:12445
 		if (pHair == NULL)
 			break;
@@ -10111,26 +10121,24 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 			break;
 
 		// realmyroommainui.cpp:12502
-		unsigned short count = pBought->count;
+		int count = pBought->count;
 		// realmyroommainui.cpp:12505
 		sCards card;
 		memset(&card, 0, sizeof(card));
 		card.m_guid = id;
 		card.m_typeId = typeId;
 		card.m_count = count;
-		std::list<sCards>::iterator it;
-		for (it = WSingleton<CSharedDoc>::Instance()->m_myCardList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myCardList.end(); ++it) {
+		for (std::list<sCards>::iterator it = WSingleton<CSharedDoc>::Instance()->m_myCardList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myCardList.end(); ++it) {
 			// realmyroommainui.cpp:12508
 			if (it->m_typeId == typeId) {
 				// realmyroommainui.cpp:12510
 				it->m_count += count;
 				// realmyroommainui.cpp:12515
-				break;
+				return;
 			}
 		}
-		if (it == WSingleton<CSharedDoc>::Instance()->m_myCardList.end())
-			// realmyroommainui.cpp:12516
-			WSingleton<CSharedDoc>::Instance()->m_myCardList.push_back(card);
+		// realmyroommainui.cpp:12516
+		WSingleton<CSharedDoc>::Instance()->m_myCardList.push_back(card);
 		// realmyroommainui.cpp:12518
 		break;
 	}
@@ -10650,7 +10658,7 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 			// realmyroommainui.cpp:13228
 			pNotify->SetMessage("\xBC\xBF\xC7\xC1\xB5\xF0\xC0\xDA\xC0\xCE \xC0\xC7\xBB\xF3 \xB5\xEE\xB7\xCF\xBF\xA1 \xBD\xC7\xC6\xD0\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9.", false);
 			// realmyroommainui.cpp:13229
-			pNotify->Open(NULL, 1);
+			pNotify->Open(NULL, 0);
 			// realmyroommainui.cpp:13230
 			break;
 		}
@@ -10852,14 +10860,16 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 		// realmyroommainui.cpp:13455
 		break;
 
-	case 0x22A:
+	case 0x22A: {
 		// realmyroommainui.cpp:13463, the experience (param1) and level
 		// (param2)
+		unsigned char level = (unsigned char)msg.m_param2;
 		WSingleton<CSharedDoc>::Instance()->m_myExp = msg.m_param1;
 		// realmyroommainui.cpp:13464
-		WSingleton<CSharedDoc>::Instance()->m_myLevel = (unsigned char)msg.m_param2;
+		WSingleton<CSharedDoc>::Instance()->m_myLevel = level;
 		// realmyroommainui.cpp:13466
 		break;
+	}
 
 	case 0x221:
 		// realmyroommainui.cpp:13471, open the post writing form
@@ -11089,9 +11099,9 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 				// realmyroommainui.cpp:13704
 				if (pUserInfo->m_addFriendDlg) {
 					// realmyroommainui.cpp:13706
-					const char *info = (const char *)msg.m_param2;
+					const sPangYaUserInfo *info = (const sPangYaUserInfo *)msg.m_param2;
 					// realmyroommainui.cpp:13707
-					pUserInfo->SetRequestFriendData(((const sPangYaUserInfo *)info)->nickname, *(const unsigned long *)(info + 0x109));
+					pUserInfo->SetRequestFriendData(info->nickname, info->uid);
 				}
 			}
 		}
@@ -12204,7 +12214,7 @@ void CRealMyRoomMain::SetListMenu(void) {
 	menu[2] = 7;
 	menu[3] = 4;
 	int count = 4;
-	if (IsLocalContent(static_cast<localContentType_t>(0x66)) && WSingleton<CSharedDoc>::Instance()->IsControlServerService(0x80000)) {
+	if (!IsLocalContent(static_cast<localContentType_t>(0x66)) || WSingleton<CSharedDoc>::Instance()->IsControlServerService(0x80000)) {
 		menu[4] = 3;
 		count = 5;
 	}
@@ -12354,7 +12364,7 @@ void CRealMyRoomMain::OnBtn_MenuListDClick(void) {
 void CRealMyRoomMain::SelectMenu(unsigned char menu) {
 	switch (menu) {
 	case 0:
-		if (!m_flags[0]) {
+		if (!GetFlags(1)) {
 			ControlUiHideMode(1);
 			if (m_cardBookVisible == true) {
 				SetCardBookVisible(true);
@@ -12379,7 +12389,7 @@ void CRealMyRoomMain::SelectMenu(unsigned char menu) {
 		break;
 	}
 	case 2:
-		if (!m_flags[3]) {
+		if (!GetFlags(8)) {
 			ControlUiHideMode(4);
 		} else {
 			ControlUiHideMode(2);
@@ -12410,7 +12420,7 @@ void CRealMyRoomMain::SelectMenu(unsigned char menu) {
 			break;
 		}
 
-		if (!m_itemStorageVisible) {
+		if (!IsItemStorageVisible()) {
 			WSendPacket packet((enumClientPacket)0xD5);
 			packet.Send(SEND_TO_DEFAULT);
 
@@ -12432,7 +12442,7 @@ void CRealMyRoomMain::SelectMenu(unsigned char menu) {
 		}
 		break;
 	case 10: {
-		bool furnitureMode = m_flags[3];
+		bool furnitureMode = GetFlags(8);
 
 		if (furnitureMode == true) {
 			if (WSingleton<CRealMyRoom_AvatarManager>::Instance()->m_pMyAvatar == NULL) {
@@ -13166,7 +13176,7 @@ bool CRealMyRoomMain::OnPostSendDlgResult(int result, FrForm* pForm) {
 
 			packet.Encode1(m_pPostSendDlg->GetSendListSize());
 			packet.Encode8(m_pPostSendDlg->GetSendServiceCharge());
-			packet.EncodeStr(std::string(""));
+			packet.EncodeStr("");
 			packet.EncodeStr(m_pPostSendDlg->GetLetterMsg());
 
 			sMailIncludeItem item;
@@ -14210,16 +14220,22 @@ void CRealMyRoomMain::SetItemStorageVisible(bool visible) {
 void CRealMyRoomMain::DrawCutinFrame(void) {
 	if (m_roomMode == 0x21) {
 		FrListItem* pSelected = m_pUccCopyHideWnd->GetSelected();
-		if (pSelected != NULL) {
-			sItemInfo* pInfo = (sItemInfo*)pSelected->pData;
+		if (pSelected == NULL)
+			return;
+		sItemInfo* pInfo = (sItemInfo*)pSelected->pData;
+		if (pInfo == NULL)
+			return;
 
-			if (pInfo != NULL) {
-				WOverlay* pCutin = GetCutinImg(pInfo->m_typeId);
-				if (pCutin != NULL) {
-					pCutin->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(72.0f, 67.0f, pCutin->GetWidth(), pCutin->GetHeight()), 0, 0xFFFFFFFF, 0.0f, 0);
-				}
-			}
-		}
+		WOverlay* pCutin = GetCutinImg(pInfo->m_typeId);
+		if (pCutin == NULL)
+			return;
+
+		WRect rect;
+		rect.x = 72.0f;
+		rect.y = 67.0f;
+		rect.w = (float)pCutin->GetWidth();
+		rect.h = (float)pCutin->GetHeight();
+		pCutin->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), rect, 0, 0xFFFFFFFF, 0.0f, 0);
 	}
 }
 

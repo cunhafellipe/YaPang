@@ -198,13 +198,13 @@ void CCardManager::SetCaddieCardAvility(const sSCardAvilityPeriodInfo& info, int
 
 	for (int i = 0; i < 24; i++) {
 		if (info.partsTypeId == character.partTypeIds[i] && info.partsId == character.partIds[i]) {
-			int type = card->m_effectType;
-			m_cardAvility[index][type - 1].kind = type;
-			m_cardAvility[index][type - 1].extra = card->m_grade;
+			int type = card->m_effectType - 1;
+			m_cardAvility[index][type].kind = card->m_effectType;
+			m_cardAvility[index][type].extra = card->m_grade;
 
-			if (m_cardAvility[index][type - 1].extra <= card->m_grade) {
-				if (m_cardAvility[index][type - 1].value < card->m_effectValue) {
-					m_cardAvility[index][type - 1].value = card->m_effectValue;
+			if (m_cardAvility[index][type].extra <= card->m_grade) {
+				if (m_cardAvility[index][type].value < card->m_effectValue) {
+					m_cardAvility[index][type].value = card->m_effectValue;
 				}
 			}
 		}

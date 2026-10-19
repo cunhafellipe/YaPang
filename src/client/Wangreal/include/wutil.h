@@ -23,11 +23,12 @@ template <class T, class P> bool TSafeNew(P& p, unsigned int count) {
 
 	if (p == 0 && count > 0) {
 		p = new T[count];
-		if (p == 0) {
-			return false;
+
+		if (p) {
+			ret = true;
 		}
-		ret = true;
 	}
+
 	return ret;
 }
 

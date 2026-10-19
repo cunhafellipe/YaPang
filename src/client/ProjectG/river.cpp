@@ -68,7 +68,7 @@ void CRiver::ReadAttribute(const char* name) {
 	} else if (strstr(name, "*d")) {
 		float depth = 0.0f;
 		int count = sscanf(strchr(name, 'd') + 1, "%f", &depth);
-		if (count == EOF) {
+		if (count + 1 == 0) {
 			depth = 1.0f;
 		}
 
@@ -357,7 +357,7 @@ void ntRiver_Lava::ReadAttribute(const char* name) {
 	if (strstr(name, "*d")) {
 		float depth = 0.0f;
 		int count = sscanf(strchr(name, 'd') + 1, "%f", &depth);
-		if (count == EOF) {
+		if (count + 1 == 0) {
 			depth = 1.0f;
 		}
 
@@ -413,7 +413,7 @@ void CRiver_ex::ReadAttribute(const char* name) {
 	} else if (strstr(name, "*d")) {
 		float depth = 0.0f;
 		int count = sscanf(strchr(name, 'd') + 1, "%f", &depth);
-		if (count == EOF) {
+		if (count + 1 == 0) {
 			depth = 1.0f;
 		}
 

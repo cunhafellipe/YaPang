@@ -205,11 +205,9 @@ int FrAwardDlg::GetMedalIndex(unsigned long uid) {
 		if (index == 0xFF)
 			return 3;
 
-		sRivalData& info = WSingleton<CSharedDoc>::Instance()->m_gameResultList[index];
-
 		for (int i = 0; i < 6; i++) {
-			if (WSingleton<CSharedDoc>::Instance()->m_winnerPlayers[i].m_uid == info.m_uid)
-				return info.m_rank;
+			if (WSingleton<CSharedDoc>::Instance()->m_medalWinners[i].m_uid == WSingleton<CSharedDoc>::Instance()->m_gameResultList[index].m_uid)
+				return WSingleton<CSharedDoc>::Instance()->m_gameResultList[index].m_rank;
 		}
 	} else if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
 		if (WSingleton<CSharedDoc>::Instance()->m_gameResultList.size() < 6)
@@ -220,10 +218,8 @@ int FrAwardDlg::GetMedalIndex(unsigned long uid) {
 		if (index == 0xFF || WSingleton<CSharedDoc>::Instance()->m_gameResultList[index].m_characterType > 3)
 			return 3;
 
-		unsigned long playerUID = WSingleton<CSharedDoc>::Instance()->m_gameResultList[index].m_uid;
-
 		for (int i = 0; i < 6; i++) {
-			if (WSingleton<CSharedDoc>::Instance()->m_winnerPlayers[i].m_uid == playerUID) {
+			if (WSingleton<CSharedDoc>::Instance()->m_medalWinners[i].m_uid == WSingleton<CSharedDoc>::Instance()->m_gameResultList[index].m_uid) {
 				if (i <= 0)
 					return 0;
 				else if (i < 3)

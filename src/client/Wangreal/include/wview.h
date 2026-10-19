@@ -92,17 +92,14 @@ public:
 	void Draw2DTexture(const WRect& dst, const WRect& src, int texhandle, unsigned long color, unsigned long flags);
 	bool InFrustum(const WSphere& sphere) {                                     // wview.h:384
 		for (int i = 0; i < 6; i++) {
-			if (frustum[i].x * sphere.pos.x + frustum[i].z * sphere.pos.z + frustum[i].y * sphere.pos.y + frustum[i].dis > sphere.radius)
+			if (frustum[i] * sphere.pos > sphere.radius)
 				return false;
 		}
 		return true;
 	}
 	bool InFrustum(const Waabb& box) {                                          // wview.h:406
 		for (int i = 0; i < 6; i++) {
-			float z = frustum[i].z < 0.0f ? box.max.z : box.min.z;
-			float y = frustum[i].y < 0.0f ? box.max.y : box.min.y;
-			float x = frustum[i].x < 0.0f ? box.max.x : box.min.x;
-			if (frustum[i].x * x + frustum[i].z * z + frustum[i].y * y + frustum[i].dis > 0.0f)
+			if (frustum[i] * WVector(frustum[i].x < 0.0f ? box.max.x : box.min.x, frustum[i].y < 0.0f ? box.max.y : box.min.y, frustum[i].z < 0.0f ? box.max.z : box.min.z) > 0.0f)
 				return false;
 		}
 		return true;
@@ -116,17 +113,14 @@ public:
 	}
 	bool InFrustumSafe(const Waabb& box) {                                      // wview.h:419
 		for (int i = 0; i < 6; i++) {
-			float z = frustumSafe[i].z < 0.0f ? box.max.z : box.min.z;
-			float y = frustumSafe[i].y < 0.0f ? box.max.y : box.min.y;
-			float x = frustumSafe[i].x < 0.0f ? box.max.x : box.min.x;
-			if (frustumSafe[i].x * x + frustumSafe[i].z * z + frustumSafe[i].y * y + frustumSafe[i].dis > 0.0f)
+			if (frustumSafe[i].z * (frustumSafe[i].z > 0.0f ? box.max.z : box.min.z) + frustumSafe[i].y * (frustumSafe[i].y > 0.0f ? box.max.y : box.min.y) + frustumSafe[i].x * (frustumSafe[i].x > 0.0f ? box.max.x : box.min.x) + frustumSafe[i].dis >= 0.0f)
 				return false;
 		}
 		return true;
 	}
 	bool InFrustumSafe(const WSphere& sphere) {                                 // wview.h:395
 		for (int i = 0; i < 6; i++) {
-			if (!(frustumSafe[i].x * sphere.pos.x + frustumSafe[i].z * sphere.pos.z + frustumSafe[i].y * sphere.pos.y + frustumSafe[i].dis + sphere.radius < 0.0f))
+			if (frustumSafe[i] * sphere.pos + sphere.radius >= 0.0f)
 				return false;
 		}
 		return true;

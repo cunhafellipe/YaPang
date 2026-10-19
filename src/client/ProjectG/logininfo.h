@@ -412,6 +412,17 @@ TASKMAIN_LOGININFO_INLINE const char *LOGINPW(void) {
 	return LOGININFO()->Passwd();
 }
 bool IsWebLogin(void);               // logininfo.h:481
-int IsPcBang(void);                  // logininfo.h:482
+
+// logininfo.h:482. GolfRule.cpp keeps the out-of-line copy the linker kept
+// (GOLFRULE_LOGININFO_INLINE). TaskManager's OnPacketCommon calls that copy, so
+// TaskManager.cpp defines TASKMANAGER_LOGININFO_DECL_ONLY and sees only the
+// declaration.
+#ifdef TASKMANAGER_LOGININFO_DECL_ONLY
+int IsPcBang(void);
+#else
+GOLFRULE_LOGININFO_INLINE int IsPcBang(void) {
+	return CLoginInfo::Instance()->IsPcBang();
+}
+#endif
 
 #endif

@@ -284,24 +284,20 @@ GOLFDOC_WMATH_INLINE WMatrix::WMatrix(float _xx, float _yx, float _zx, float _xy
 // wmath.inl:455
 POOL_WMATH_INLINE WMatrix::WMatrix(const WPlane &plane)
 {
-	WVector n;
-	n.x = plane.x;
-	n.y = plane.y;
-	n.z = plane.z;
-	float d = plane.dis;
+	WPlane n = plane;
 
-	float inv = 1.0f / sqrtf(n.z * n.z + n.y * n.y + n.x * n.x);
+	float inv = 1.0f / sqrtf(n.x * n.x + n.y * n.y + n.z * n.z);
 	n.x *= inv;
 	n.y *= inv;
 	n.z *= inv;
-	d *= inv;
+	float d = n.dis * inv;
 
 	xx = 1.0f - 2.0f * n.x * n.x;
-	yx = n.y * n.x * -2.0f;
-	zx = n.z * n.x * -2.0f;
+	yx = n.x * n.y * -2.0f;
+	zx = n.x * n.z * -2.0f;
 	xy = yx;
 	yy = 1.0f - 2.0f * n.y * n.y;
-	zy = n.z * n.y * -2.0f;
+	zy = n.y * n.z * -2.0f;
 	xz = zx;
 	yz = zy;
 	zz = 1.0f - 2.0f * n.z * n.z;

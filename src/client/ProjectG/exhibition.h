@@ -28,6 +28,22 @@ enum eExhibitType {
 	EXHIBIT_CADDIE = 1
 };
 
+// The change flags of a CExhibition (0x4b0). A type with its own inline
+// constructor: the original constructs it after m_controlFlag, which puts
+// CExhibition's EH state store after the m_controlFlag store.
+struct sExhibitChangeFlags {
+	sExhibitChangeFlags() : facialChanged(false), setByCtor(true) {
+	}
+
+	bool directionChanged;           // 0x0 raised by the 1 s direction change test
+	bool facialChanged;              // 0x1 chat facial pending
+	bool setByCtor;                  // 0x2 set by the constructor, read nowhere in the unit
+};
+CHECK_SIZE(sExhibitChangeFlags, 0x3);
+CHECK_FIELD(sExhibitChangeFlags, directionChanged, 0x0);
+CHECK_FIELD(sExhibitChangeFlags, facialChanged, 0x1);
+CHECK_FIELD(sExhibitChangeFlags, setByCtor, 0x2);
+
 // A model viewer (character, caddie, item...) with its own camera, light and
 // effect box; only the members the unit's code uses are named.
 class CExhibition {
@@ -94,7 +110,7 @@ private:
 	bool m_zoomDragging;             // 0x1a right button held down in the area
 	UNKNOWN(0x1B, 0x1C);
 	float m_alpha;                   // 0x1c raised to 255 by Process
-	float m_checkedDirection;        // 0x20 direction when m_directionChanged was last raised
+	float m_checkedDirection;        // 0x20 direction when m_changed.directionChanged was last raised
 	WVector2D m_angle;               // 0x24 camera angles: x pitch (about x), y direction (about y)
 	float m_pitchSpeed;              // 0x2c recovery speed toward m_defaultAngle.x
 	float m_directionSpeed;          // 0x30 recovery speed toward m_defaultAngle.y
@@ -131,9 +147,7 @@ private:
 	UNKNOWN(0x4A5, 0x4A8);
 	float m_directionCheckTime;      // 0x4a8 1 s period of the direction change test
 	float m_facialTime;              // 0x4ac 2 s period of the chat facial
-	bool m_directionChanged;         // 0x4b0
-	bool m_facialChanged;            // 0x4b1
-	bool m_setByCtor;                // 0x4b2 set by the constructor, read nowhere in the unit
+	sExhibitChangeFlags m_changed;   // 0x4b0
 	UNKNOWN(0x4B3, 0x4B4);
 	CPartTidList m_partTidList;      // 0x4b4
 	CFxSequence* m_pFxSequence1;     // 0x57c deleted by SetCenter
@@ -172,6 +186,7 @@ BEGIN_LAYOUT_CHECK(CExhibition)
 	CHECK_FIELD(CExhibition, m_pPetFrame, 0xA4);
 	CHECK_FIELD(CExhibition, m_model, 0xA8);
 	CHECK_FIELD(CExhibition, m_typeId, 0x498);
+	CHECK_FIELD(CExhibition, m_changed, 0x4B0);
 	CHECK_FIELD(CExhibition, m_motionIndex, 0x8);
 	CHECK_FIELD(CExhibition, m_charMotionSet, 0xC);
 	CHECK_FIELD(CExhibition, m_caddieMotionSet, 0x10);
@@ -179,8 +194,6 @@ BEGIN_LAYOUT_CHECK(CExhibition)
 	CHECK_FIELD(CExhibition, m_lockDirection, 0x19);
 	CHECK_FIELD(CExhibition, m_texHandle, 0xDC);
 	CHECK_FIELD(CExhibition, m_exhibitType, 0x494);
-	CHECK_FIELD(CExhibition, m_directionChanged, 0x4B0);
-	CHECK_FIELD(CExhibition, m_facialChanged, 0x4B1);
 	CHECK_FIELD(CExhibition, m_checkedDirection, 0x20);
 	CHECK_FIELD(CExhibition, m_pitchSpeed, 0x2C);
 	CHECK_FIELD(CExhibition, m_directionSpeed, 0x30);
@@ -209,7 +222,6 @@ BEGIN_LAYOUT_CHECK(CExhibition)
 	CHECK_FIELD(CExhibition, m_sprays, 0x468);
 	CHECK_FIELD(CExhibition, m_sequences, 0x478);
 	CHECK_FIELD(CExhibition, m_texParts, 0x488);
-	CHECK_FIELD(CExhibition, m_setByCtor, 0x4B2);
 	CHECK_FIELD(CExhibition, m_partTidList, 0x4B4);
 	CHECK_FIELD(CExhibition, m_pFxSequence1, 0x57C);
 	CHECK_FIELD(CExhibition, m_pFxSequence2, 0x580);

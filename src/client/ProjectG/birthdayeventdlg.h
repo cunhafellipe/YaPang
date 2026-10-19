@@ -201,8 +201,7 @@ protected:
 
 private:
 	FrArea* m_pMissionNumberArea;          // 0x110 ("MissionNumber")
-	const Bitmap* m_pNumberImg[15];        // 0x114, "BirthdayEvent_num2_%d" for missions 1-15
-	UNKNOWN(0x150, 0x154);
+	const Bitmap* m_pNumberImg[16];        // 0x114, "BirthdayEvent_num2_%d" for missions 1-16
 	unsigned long m_completedMission;      // 0x154
 	float m_fadeTime;                      // 0x158
 	bool m_fadeOut;                        // 0x15c

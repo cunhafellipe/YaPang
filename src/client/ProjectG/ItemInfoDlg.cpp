@@ -376,7 +376,7 @@ void FrItemInfoDlg::SetLevelBar(void) {
 		return;
 	}
 
-	for (int i = 0; i < 5; i++) {
+	for (unsigned char i = 0; i < 5; i++) {
 		int maxValue = pClubSet->m_maxStat[i];
 		int value = (short)m_pTradeItem->stats[i] + pClubSet->m_baseStat[i];
 
@@ -460,7 +460,7 @@ void FrItemInfoDlg::DrawEnchantArrow(void) {
 		return;
 	}
 
-	float x = m_rect.x + 248.0f, y = m_rect.y + 229.0f;
+	WPoint pt(m_rect.x + 248.0f, m_rect.y + 229.0f);
 
 	// One arrow per ability row, 17 pixels apart: the upgrade arrow for an
 	// enchanted one.
@@ -468,7 +468,7 @@ void FrItemInfoDlg::DrawEnchantArrow(void) {
 		int bUpgraded = m_pTradeItem->stats[i] != 0;
 
 		if (m_pEnchantBitmap[bUpgraded] != 0) {
-			pDevice->DrawTexture(m_pEnchantBitmap[bUpgraded], WRect(x, y + i * 17, m_pEnchantBitmap[bUpgraded]->Width(), m_pEnchantBitmap[bUpgraded]->Height()), 0xFFFFFFFF, 0);
+			pDevice->DrawTexture(m_pEnchantBitmap[bUpgraded], WRect(pt.x, pt.y + i * 17, m_pEnchantBitmap[bUpgraded]->Width(), m_pEnchantBitmap[bUpgraded]->Height()), 0xFFFFFFFF, 0);
 		}
 	}
 }

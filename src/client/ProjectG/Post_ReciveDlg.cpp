@@ -383,6 +383,7 @@ void CPost_ReciveDlg::OnPostListInit(intptr_t param) {
 
 // post_recivedlg.cpp:389
 void CPost_ReciveDlg::OnPostListOwnerDraw(intptr_t param) {
+	int i = 0;
 	FrListItem* pItem = (FrListItem*)param;
 	if (!pItem)
 		return;
@@ -415,8 +416,8 @@ void CPost_ReciveDlg::OnPostListOwnerDraw(intptr_t param) {
 	float offsetY;
 	int count;
 	const Bitmap* pIcon;
-	unsigned long typeId = pBrief->m_item.typeId;
 	const char* name = "\xC6\xED\xC1\xF6";   // "Letter"
+	unsigned long typeId = pBrief->m_item.typeId;
 	IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(typeId);
 	if (pCommon && pBrief->m_hasItem != 0) {
 		name = pCommon->m_name;
@@ -494,14 +495,18 @@ void CPost_ReciveDlg::OnPostListOwnerDraw(intptr_t param) {
 		pGI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 
 		const char* fmt = NULL;
-		if ((typeId & 0xFC000000) == 0x40000000) {
+		switch (typeId & 0xFC000000) {
+		case 0x40000000: {
 			IFF_ITEM_COMMON* pTime = ItemManager()->FindCommonItem(typeId);
 			if (pTime) {
 				// "%d days" / "Unlimited"
 				fmt = pTime->m_timeType == 1 ? "%d\xC0\xCF" : "\xB9\xAB\xC1\xA6\xC7\xD1";
 			}
-		} else {
+			break;
+		}
+		default:
 			fmt = "%d\xC0\xCF";   // "%d days"
+			break;
 		}
 
 		if (fmt)
@@ -510,7 +515,7 @@ void CPost_ReciveDlg::OnPostListOwnerDraw(intptr_t param) {
 		const char* text = MakeStr("%d", count);
 		float x = pItem->pos.x + 72.0f;
 
-		for (int i = 0; i < strlen(text); i++)
+		for (i = 0; i < strlen(text); i++)
 			x -= m_pTitleFont->GetCharWidthA(g_view, text[i] - '0');
 
 		m_pTitleFont->Print(g_view, x, pItem->pos.y + 42.0f, text, 0, 0xFFFFFFFF, 0);
@@ -1388,9 +1393,9 @@ void CPost_MessgeDlg::OnPostDescFrame(bool bShow) {
 
 // post_recivedlg.cpp:1951
 void CPost_MessgeDlg::SetGiftDescString(const char* pSender, const char* pContents, const char* pItemName, const char* pItemDesc) {
-	if (m_pReciveUserEdit->GetLine(1, false) != 0) m_pReciveUserEdit->ClearLine();
-	if (m_pLetterContentsEdit->GetLine(1, false) != 0) m_pLetterContentsEdit->ClearLine();
-	if (m_pLetterDateEdit->GetLine(1, false) != 0) m_pLetterDateEdit->ClearLine();
+	if (m_pReciveUserEdit->GetLine(1, false) > 0) m_pReciveUserEdit->ClearLine();
+	if (m_pLetterContentsEdit->GetLine(1, false) > 0) m_pLetterContentsEdit->ClearLine();
+	if (m_pLetterDateEdit->GetLine(1, false) > 0) m_pLetterDateEdit->ClearLine();
 
 	if (pSender == 0) {
 		// "There is no mail that has arrived."
@@ -1519,6 +1524,7 @@ void CPost_Contents::OnPostListInit(intptr_t param) {
 
 // post_recivedlg.cpp:2097
 void CPost_Contents::OnPostListOwnerDraw(intptr_t param) {
+	int i = 0;
 	FrListItem* pItem = (FrListItem*)param;
 	if (!pItem)
 		return;
@@ -1608,7 +1614,7 @@ void CPost_Contents::OnPostListOwnerDraw(intptr_t param) {
 		const char* text = MakeStr("%d", count);
 		float x = pItem->pos.x + 72.0f;
 
-		for (int i = 0; i < strlen(text); i++)
+		for (i = 0; i < strlen(text); i++)
 			x -= m_pTitleFont->GetCharWidthA(g_view, text[i] - '0');
 
 		m_pTitleFont->Print(g_view, x, pItem->pos.y + 60.0f, text, 0, 0xFFFFFFFF, 0);

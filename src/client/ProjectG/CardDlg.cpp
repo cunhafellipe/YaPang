@@ -1651,7 +1651,7 @@ void FrItemAttachCardDlg::OnCaddieSlotBtnOwnerDraw_4(void) {
 }
 
 // carddlg.cpp:1833
-void FrItemAttachCardDlg::OnProc(float fDelta) {
+void FrItemAttachCardDlg::OnProc(const float fDelta) {
 }
 
 // carddlg.cpp:1839
@@ -1776,8 +1776,8 @@ void FrItemAttachCardDlg::SetListCardUsableMyItem(void) {
 			}
 
 			if (pPart->m_caddieCardSlots > 0 || pPart->m_charCardSlots > 0) {
-				item.typeId = it->m_typeId;
 				item.id = it->m_serial;
+				item.typeId = it->m_typeId;
 
 				m_myItemList.push_back(item);
 			}
@@ -1797,8 +1797,8 @@ void FrItemAttachCardDlg::SetListCardUsableMyItem(void) {
 
 			if ((it->m_uccStatus & 1) && (!UccManager()->FindClothes(it->m_typeId, it->m_uccKey) || UccManager()->IsDownloadComplete(it->m_typeId, it->m_uccKey) || NetResourceManager::Instance()->IsDownloadRequested(RESOURCE_TYPE_UCC_CLOTHES, it->m_typeId, it->m_uccKey))) {
 				if (it->m_uccStatus & 1) {
-					item.typeId = it->m_typeId;
 					item.id = it->m_serial;
+					item.typeId = it->m_typeId;
 
 					m_myItemList.push_back(item);
 				}
@@ -2392,14 +2392,16 @@ bool FrSPCardBuffDlg::Close(eFormRet ret, bool bDestroy) {
 		pos = GetRect().TopLeft();
 		float rx = pos.x / g_view->GetWidth();
 
-		SetPosition(WPoint(rx * 800.0f, pos.y / g_view->GetHeight() * 600.0f));
+		pos.x = rx * 800.0f;
+		pos.y = pos.y / g_view->GetHeight() * 600.0f;
+		SetPosition(pos);
 	}
 
 	return FrForm::Close(ret, bDestroy);
 }
 
 // carddlg.cpp:2751
-void FrSPCardBuffDlg::OnProc(float fDelta) {
+void FrSPCardBuffDlg::OnProc(const float fDelta) {
 }
 
 // carddlg.cpp:2756
@@ -2467,24 +2469,23 @@ void FrSPCardBuffDlg::OnSPCardListOwnerDraw(intptr_t nIndex) {
 		return;
 	}
 
-	const char* bitmapName;
+	const Bitmap* pBitmap;
 	if ((pInfo->typeId & 0xFC000000) == 0x7C000000) {
 		IFF_STRUCT::sCard* pCard = ItemManager()->FindCard(pInfo->typeId);
 		if (pCard == 0) {
 			return;
 		}
 
-		bitmapName = pCard->m_bitmap;
+		pBitmap = g_pFresh->GetBitmap(pCard->m_bitmap);
 	} else {
 		IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(pInfo->typeId);
 		if (pCommon == 0) {
 			return;
 		}
 
-		bitmapName = MakeStr("%s_buff", pCommon->m_icon);
+		pBitmap = g_pFresh->GetBitmap(MakeStr("%s_buff", pCommon->m_icon));
 	}
 
-	const Bitmap* pBitmap = g_pFresh->GetBitmap(bitmapName);
 	if (pBitmap == 0) {
 		return;
 	}

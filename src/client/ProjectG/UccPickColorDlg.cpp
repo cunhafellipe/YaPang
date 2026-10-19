@@ -59,8 +59,7 @@ sFRESH_ENTRY FrUccPickColorDlg::_MsgEntries[] = {
 };
 
 // uccpickcolordlg.cpp:34
-FrUccPickColorDlg::FrUccPickColorDlg(void)
-	: m_red(0), m_green(0), m_blue(0) {
+FrUccPickColorDlg::FrUccPickColorDlg(void) {
 	Init();
 }
 
@@ -319,8 +318,8 @@ void FrUccPickColorDlg::OnCancelBtnUp(void) {
 // uccpickcolordlg.cpp:309
 void FrUccPickColorDlg::OnOkBtnUp(void) {
 	if (m_pParent) {
-		m_pParent->SetCurrentColor(m_red, m_green, m_blue);
-		FindColor(m_red, m_green, m_blue);
+		m_pParent->SetCurrentColor(m_color.r, m_color.g, m_color.b);
+		FindColor(m_color.r, m_color.g, m_color.b);
 	}
 
 	OnOK();
@@ -368,7 +367,7 @@ void FrUccPickColorDlg::OnUseColorBtnUp(void) {
 		index = s_nextSlot;
 	}
 
-	m_pParent->m_palette[index].SetPixel(0, 0, m_red, m_green, m_blue, 0xff);
+	m_pParent->m_palette[index].SetPixel(0, 0, m_color.r, m_color.g, m_color.b, 0xff);
 
 	RefreshTexCache(m_pParent->m_palette[index]);
 }
@@ -393,7 +392,7 @@ void FrUccPickColorDlg::FindColor(unsigned char red, unsigned char green, unsign
 
 // uccpickcolordlg.cpp:410
 void FrUccPickColorDlg::SetCurrentColor(unsigned char red, unsigned char green, unsigned char blue) {
-	m_red = red; m_green = green; m_blue = blue;
+	m_color.r = red; m_color.g = green; m_color.b = blue;
 
 	m_newColorBmp.SetPixel(0, 0, red, green, blue, 0xff);
 

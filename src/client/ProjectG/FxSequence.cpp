@@ -28,7 +28,7 @@ CFxSequence::CFxSequence(CFxBox& box, bool bOriginal) : m_box(box) {
 	m_delay = 0.0f;
 	m_fDistLimitA = 3.402823466e+38F;   // FLT_MAX
 	m_fDistLimitB = 3.402823466e+38F;   // FLT_MAX
-	m_matrix.xx = m_matrix.yy = m_matrix.zz = 1.0f; m_matrix.yx = m_matrix.zx = m_matrix.xy = m_matrix.zy = m_matrix.xz = m_matrix.yz = m_matrix.xm = m_matrix.ym = m_matrix.zm = 0.0f;
+	m_matrix.Reset();
 
 	memset(m_pMatrix, 0, sizeof(m_pMatrix));
 	memset(m_pOffset, 0, sizeof(m_pOffset));

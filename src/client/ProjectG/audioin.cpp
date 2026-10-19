@@ -48,7 +48,7 @@ bool AudioIn::start(unsigned long clientThreadId) {
 	for (i = 0; i < 4; i++) {
 		memset(&m_headers[i], 0, sizeof(WAVEHDR));
 		m_headers[i].dwBufferLength = m_bufferSize;
-		m_headers[i].lpData = (LPSTR)VirtualAlloc(0, m_bufferSize, MEM_COMMIT, PAGE_READWRITE);
+		m_headers[i].lpData = (LPSTR)VirtualAlloc(0, m_headers[i].dwBufferLength, MEM_COMMIT, PAGE_READWRITE);
 
 		waveInPrepareHeader(m_hWaveIn, &m_headers[i], sizeof(WAVEHDR));
 

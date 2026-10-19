@@ -509,15 +509,12 @@ void CPoolReflective::MakeNorm(void)
 		for (int x = 0; x < m_width; x++) {
 			if (m_grid[y][x].m_excluded) {
 				// Two edges from the point to its neighbours, inward on the borders.
-				int lastY = m_height - 1;
-				int lastX = m_width - 1;
-
-				if (y == lastY) {
-					dx = m_grid[y][x == lastX ? x - 1 : x + 1].m_pos - m_grid[y][x].m_pos;
+				if (y == m_height - 1) {
+					dx = m_grid[y][x == m_width - 1 ? x - 1 : x + 1].m_pos - m_grid[y][x].m_pos;
 					dz = m_grid[y - 1][x].m_pos - m_grid[y][x].m_pos;
-				} else if (x == lastX) {
+				} else if (x == m_width - 1) {
 					dx = m_grid[y][x - 1].m_pos - m_grid[y][x].m_pos;
-					dz = m_grid[y + 1 == lastY ? y - 1 : y + 1][x].m_pos - m_grid[y][x].m_pos;
+					dz = m_grid[y + 1 == m_height - 1 ? y - 1 : y + 1][x].m_pos - m_grid[y][x].m_pos;
 				} else {
 					dx = m_grid[y][x + 1].m_pos - m_grid[y][x].m_pos;
 					dz = m_grid[y + 1][x].m_pos - m_grid[y][x].m_pos;

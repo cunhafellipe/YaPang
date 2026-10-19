@@ -302,7 +302,7 @@ protected:
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;   // carddlg.cpp:950
 
 	virtual bool OnInit(void);           // carddlg.cpp:1068
-	virtual void OnProc(float fDelta);   // carddlg.cpp:1833
+	virtual void OnProc(const float fDelta);   // carddlg.cpp:1833
 
 	void initCardSlotBtnTxt(void);        // carddlg.cpp:1080
 	void OnAttachCardIconInit(PG_MSGARG param);      // carddlg.cpp:1101
@@ -483,7 +483,7 @@ public:
 	virtual bool Close(eFormRet ret, bool bDestroy);   // carddlg.cpp:2736
 
 protected:
-	virtual void OnProc(float fDelta);   // carddlg.cpp:2751
+	virtual void OnProc(const float fDelta);   // carddlg.cpp:2751
 	void OnSPCardListInit(intptr_t param);    // carddlg.cpp:2811
 	void OnSPCardListOwnerDraw(intptr_t nIndex);
 

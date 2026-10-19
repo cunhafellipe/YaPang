@@ -40,9 +40,7 @@ CBase::CBase(void) : m_pCurBall(0), m_hConditionLine(0), m_hConditionFont(0) {
 
 	m_light.type = LightSet::W_LIGHT_DIRECTIONAL;
 
-	m_light.ambient = 0x808080;
-	m_light.diffuse = 0xFFFFFF;
-	m_light.nearone = WVector(-1.0f, -1.0f, 1.0f).Normalize();
+	m_light.ambient = 0x808080; m_light.diffuse = 0xFFFFFF; m_light.nearone = WVector(-1.0f, -1.0f, 1.0f).Normalize();
 
 	m_normal.Reset();
 	m_matrix90.Reset();
@@ -123,7 +121,7 @@ void CBase::Process(float elapsed) {
 			m_spin *= elapsed * 12.566371f;
 
 			if (GolfClub().GetType() != 3) {
-				m_matrix90 = m_matrix90 * (RotMat(m_spin.x, 1) * RotMat(m_spin.y, 0));
+				m_matrix90 *= RotMat(m_spin.x, 1) * RotMat(m_spin.y, 0);
 			}
 		} else {
 			m_matrix90 = RotMat(GolfBall().m_rotation.x, 1) * RotMat(GolfBall().m_rotation.y, 0);
@@ -131,9 +129,8 @@ void CBase::Process(float elapsed) {
 
 		m_unknownC0 += elapsed * 0.31415927f;
 
-		elapsed *= 1000.0f;
-		CFxBox* pFxBox = &m_fxBox;
-		pFxBox->ProcessAttacher(elapsed);
+		// Called through the base class: the original dispatches it through the vtable.
+		((CFxBox&)m_fxBox).ProcessAttacher(elapsed *= 1000.0f);
 		m_fxBox.Process(elapsed);
 	}
 }

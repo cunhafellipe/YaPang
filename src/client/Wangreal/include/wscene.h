@@ -16,7 +16,7 @@ struct LightSet {
 	};
 
 	LightSet() : type(W_LIGHT_NOT_INITIALIZED), diffuse(0), ambient(0), ambient2(0xffffff) {   // wscene.h:21
-		nearone.Reset();
+		nearone.x = nearone.y = nearone.z = 0.0f;
 	}
 
 	void operator=(const LightSet& l) {   // wscene.h:26

@@ -310,7 +310,7 @@ void FrMapSelectDlg::OnSelectOwnerDraw(intptr_t param) {
 
 
 
-						pGDI->DrawTexture(pRate, WRect(pItem->pos.x + 5.0f, pItem->pos.y + ((float)pBitmap->Height() - (float)pRate->Height() - 2.0f), (float)pRate->Width(), (float)pRate->Height()), 0xFFFFFFFF, 0);
+						pGDI->DrawTexture(pRate, WRect(WPoint(pItem->pos.x + 5.0f, pItem->pos.y + ((float)pBitmap->Height() - (float)pRate->Height() - 2.0f)), (float)pRate->Width(), (float)pRate->Height()), 0xFFFFFFFF, 0);
 					}
 				}
 			}

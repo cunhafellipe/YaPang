@@ -152,7 +152,7 @@ void CRealMyRoomTask::PreLoadInit(void) {
 	}
 
 	if (!IsInited()) {
-		m_stateFlags |= 2;
+		m_stateFlags.Enable(2);
 		OnInitFinished();
 	}
 
@@ -166,11 +166,10 @@ void CRealMyRoomTask::PreLoadInit(void) {
 	m_pLoadingFresh = new Fresh;
 	m_tipDlgState = NULL;
 
-	m_pLoadingFresh->Init("loading.xml", false,
-		m_loadingBackGround != "" ?
-		m_loadingBackGround.c_str()
-		:
-		NULL);
+	if (m_loadingBackGround != "")
+		m_pLoadingFresh->Init("loading.xml", false, m_loadingBackGround.c_str());
+	else
+		m_pLoadingFresh->Init("loading.xml", false, NULL);
 
 	m_pLoadingFresh->OpenLayout("LOADING", NULL, true);
 
@@ -422,7 +421,7 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 		}
 
 		unsigned long ids[0x80];
-		for (int i = 0; i < count; i++) {
+		for (unsigned char i = 0; i < count; i++) {
 			ids[i] = packet.Decode4();
 		}
 		GetActor("RealMyRoom") << MsgObject(0, 0xD5, (intptr_t)ids, count, 0, 0, 0);
@@ -634,6 +633,7 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 			case 4: msg = 0xDA; break;
 			case 5: msg = 0xDB; break;
 			case 14: msg = 0xDC; break;
+			default: continue;
 			}
 
 			GetActor("RealMyRoom") << MsgObject(0, msg, item.guid, item.typeId, 0, 0, 0);
@@ -661,7 +661,7 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 
 	// A stat upgrade (1) or downgrade (2) of a club set or a character
 	// (the answer of 0x4B): u8 type (bit 0: a club set), u8 stat, u32 id,
-	// and for an upgrade the i64 pang it cost.
+	// then the i64 pang it cost (both directions).
 	case 0xA3: {
 		int result = packet.Decode1();
 
@@ -702,6 +702,9 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 				if (it != pDoc->m_characterMap.end())
 					it->second.unknown6A.level[stat]--;
 			}
+
+			__int64 pang = packet.Decode8();
+			WSingleton<CSharedDoc>::Instance()->m_myPang -= pang;
 			break;
 		}
 		}
@@ -721,9 +724,7 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 			unsigned long second = packet.Decode4();
 			unsigned short third = packet.Decode2();
 
-			MsgObject msg(0, 0xDE, second, first, third, 0, 0);
-
-			GetActor("RealMyRoom") << msg;
+			GetActor("RealMyRoom") << MsgObject(0, 0xDE, second, first, third, 0, 0);
 			break;
 		}
 
@@ -782,388 +783,6 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 		}
 		break;
 	}
-
-	// realmyroomtask.cpp:1600
-	case 0x144: {
-		GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
-		GetActor("RealMyRoom") << MsgObject(0, 0x244, 1, 0, 0, 0, 0);
-
-		int count = packet.Decode4();
-
-		sMailIncludeItem item;
-
-		for (int i = 0; i < count; i++) {
-			packet.DecodeBuffer(&item, 0x35);
-			int num = (int)item.count < 1 ? 1 : item.count;
-
-			unsigned long typeId = item.typeId;
-
-			if (typeId == 0x1A000010) {
-				continue;
-			}
-
-			switch (typeId >> 26) {
-			case 1:
-				continue;
-
-			case 2:
-				if (IsLocalContent((localContentType_t)0x57) && IsUccClothes(typeId)) {
-					WSendPacket request((enumClientPacket)0xB1);
-					request.Encode1(1);
-					request.Encode4(item.guid);
-					request.Encode1(1);
-					request.Send((eSendTo)0);
-					break;
-				}
-
-				{
-					sItemInfo info;
-					memset(&info, 0, sizeof(info));
-					info.m_serial = item.guid;
-					info.m_typeId = typeId;
-					info.m_stateBits.kind = item.kind;
-					info.m_remainHours = (int)item.flag / 60 / 24;
-					info.m_flags28.flags01 |= 2;
-
-					WSingleton<CSharedDoc>::Instance()->AddMyPartsList(info);
-				}
-				break;
-
-			case 7: {
-				sCaddieInfo caddie;
-				memset(&caddie, 0, sizeof(caddie));
-				caddie.id = item.guid;
-				caddie.typeId = typeId;
-
-				unsigned short days;
-				if (typeId == 0x1C000001 || typeId == 0x1C000002 || typeId == 0x1C000003 || typeId == 0x1C000007) {
-					days = (int)item.flag / 60 / 24;
-					caddie.flags |= 2;
-					caddie.days = days;
-				} else {
-					days = 0;
-					caddie.days = days;
-					caddie.flags &= ~2;
-				}
-
-				if (typeId >= 0x1C00000C && typeId <= 0x1C00000E) {
-					caddie.level = item.kind;
-					caddie.experience = item.flag;
-				}
-
-				std::map<unsigned int, sCaddieInfo> &caddieMap = WSingleton<CSharedDoc>::Instance()->m_caddieMap;
-				std::map<unsigned int, sCaddieInfo>::iterator it = caddieMap.find(item.guid);
-				if (it != caddieMap.end()) {
-					it->second.days = days;
-					break;
-				}
-
-				caddieMap.insert(std::map<unsigned int, sCaddieInfo>::value_type(item.guid, caddie));
-				break;
-			}
-
-			case 8: {
-				int hours = (int)item.flag / 60;
-				std::map<unsigned int, sCaddieInfo> &caddieMap = WSingleton<CSharedDoc>::Instance()->m_caddieMap;
-				std::map<unsigned int, sCaddieInfo>::iterator it = caddieMap.find(item.guid);
-				if (it == caddieMap.end()) {
-					break;
-				}
-
-				it->second.cadItemTypeId = typeId;
-				it->second.hours = hours;
-				if (it->second.days < hours) {
-					it->second.days = hours;
-				}
-				break;
-			}
-
-			case 6: {
-				sItemInfo info;
-				memset(&info, 0, sizeof(info));
-				info.m_serial = item.guid;
-				info.m_typeId = typeId;
-				info.m_stateBits.kind = item.kind;
-				info.m_count = num;
-				info.m_flags28.flags01 |= 2;
-
-				if (info.m_stateBits.kind) {
-					if (info.m_stateBits.kind == 3) info.m_remainHours = item.flag;
-					else if (info.m_stateBits.kind == 4) info.m_remainHours = item.flag * 24;
-					else if (info.m_stateBits.kind == 5) info.m_remainHours = item.flag * 24 * 30;
-					else if (info.m_stateBits.kind == 2) info.m_remainHours = (int)item.flag / 60;
-				}
-
-				std::list<sItemInfo>::iterator it;
-				for (it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
-					if (it->m_serial == item.guid) {
-						it->m_count = num;
-						break;
-					}
-				}
-
-				if (it == WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end()) {
-					if (IsLocalContent((localContentType_t)0x14)) {
-						if (typeId == 0x1A000042) {
-							info.m_clubStatLevel[1] = packet.Decode2();
-							info.m_clubStatLevel[2] = packet.Decode2();
-
-							info.m_remainHours = 0xA8;
-
-							SYSTEMTIME endTime;
-							packet.DecodeBuffer(&endTime, sizeof(endTime));
-							memcpy(info.m_reserved18, &endTime, sizeof(endTime));
-							info.m_stateBits.kind = 2;
-						}
-					}
-
-					WSingleton<CSharedDoc>::Instance()->m_itemInfoList.push_back(info);
-				}
-				break;
-			}
-
-			case 5: {
-				std::list<sItemInfo>::iterator it;
-				for (it = WSingleton<CSharedDoc>::Instance()->m_myGearList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myGearList.end(); ++it) {
-					if (it->m_serial == item.guid) {
-						it->m_count = num;
-						break;
-					}
-				}
-
-				if (it == WSingleton<CSharedDoc>::Instance()->m_myGearList.end()) {
-					sItemInfo info;
-					memset(&info, 0, sizeof(info));
-					info.m_serial = item.guid;
-					info.m_typeId = typeId;
-					info.m_count = num;
-					info.m_stateBits.kind = 0;
-					info.m_flags28.flags01 |= 2;
-
-					WSingleton<CSharedDoc>::Instance()->m_myGearList.push_back(info);
-				}
-				break;
-			}
-
-			case 3:
-			case 4: {
-				sItemInfo info;
-				memset(&info, 0, sizeof(info));
-				info.m_serial = item.guid;
-				info.m_typeId = typeId;
-				info.m_flags28.flags01 |= 2;
-				memcpy(info.m_clubStatLevel, item.stats, sizeof(item.stats));
-
-				WSingleton<CSharedDoc>::Instance()->m_myItemMap.insert(std::map<unsigned int, sItemInfo>::value_type(item.guid, info));
-				break;
-			}
-
-			case 29: {
-				IFF_STRUCT::sQuestDrop *pDrop = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindQuestDrop(typeId);
-				if (pDrop) {
-					std::list<sItemInfo>::iterator it;
-					for (it = WSingleton<CSharedDoc>::Instance()->m_myExtraItemList4.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myExtraItemList4.end(); ++it) {
-						if (it->m_serial == item.guid) {
-							it->m_count++;
-							break;
-						}
-					}
-
-					if (it == WSingleton<CSharedDoc>::Instance()->m_myExtraItemList4.end()) {
-						sItemInfo info;
-						memset(&info, 0, sizeof(info));
-						info.m_serial = item.guid;
-						info.m_typeId = typeId;
-						info.m_count = 1;
-
-						WSingleton<CSharedDoc>::Instance()->m_myExtraItemList4.push_back(info);
-					}
-				}
-				break;
-			}
-
-			case 16: {
-				sMascotInfo mascot;
-				memset(&mascot, 0, sizeof(mascot));
-				mascot.id = item.guid;
-				strcpy(mascot.message, "PANGYA!");
-				mascot.typeId = typeId;
-				int hours = (int)item.flag / 60;
-				mascot.remainHours = hours;
-
-				SYSTEMTIME now;
-				GetLocalTime(&now);
-				FILETIME fileTime;
-				SystemTimeToFileTime(&now, &fileTime);
-
-				*(__int64 *)&fileTime +=
-					hours * 36000000000i64;
-
-				FileTimeToSystemTime(&fileTime, &now);
-
-				mascot.endTime = now;
-
-				WSingleton<CSharedDoc>::Instance()->AddMascot(&mascot);
-				break;
-			}
-
-			case 28: {
-				sItemInfo info;
-				memset(&info, 0, sizeof(info));
-				info.m_serial = item.guid;
-				info.m_typeId = typeId;
-				info.m_stateBits.kind = item.kind;
-				info.m_count = num;
-				info.m_flags28.flags01 |= 2;
-
-				if (info.m_stateBits.kind) {
-					if (info.m_stateBits.kind == 3) info.m_remainHours = item.flag;
-					else if (info.m_stateBits.kind == 4) info.m_remainHours = item.flag * 24;
-					else if (info.m_stateBits.kind == 5) info.m_remainHours = item.flag * 24 * 30;
-					else if (info.m_stateBits.kind == 2) info.m_remainHours = (int)item.flag / 60;
-				}
-
-				std::list<sItemInfo>::iterator it;
-				for (it = WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.end(); ++it) {
-					if (it->m_serial == item.guid) {
-						it->m_count = num;
-						break;
-					}
-				}
-
-				if (it == WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.end()) {
-					WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.push_back(info);
-				}
-				break;
-			}
-
-			case 31: {
-				IFF_STRUCT::sCard *pCard = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCard(typeId);
-				if (pCard) {
-					sCards card;
-					memset(&card, 0, sizeof(card));
-					card.m_guid = item.guid;
-					card.m_typeId = typeId;
-					card.m_count = num;
-					card.unknown38 = 1; // FIRST PASS: the original stores a byte at 0x38
-
-					bool found = false;
-					std::list<sCards>::iterator it;
-					for (it = WSingleton<CSharedDoc>::Instance()->m_myCardList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myCardList.end(); ++it) {
-						if (it->m_typeId == typeId) {
-							it->m_count = num;
-							found = true;
-							break;
-						}
-					}
-
-					if (!found) {
-						WSingleton<CSharedDoc>::Instance()->m_myCardList.push_back(card);
-					}
-				}
-				break;
-			}
-
-			case 14: {
-				sItemInfo info;
-				memset(&info, 0, sizeof(info));
-				info.m_serial = item.guid;
-				info.m_typeId = typeId;
-				info.m_stateBits.kind = item.kind;
-				info.m_flags28.flags01 |= 2;
-				info.m_remainHours = item.flag * 24;
-
-				WSingleton<CSharedDoc>::Instance()->m_mySkinList.push_back(info);
-				break;
-			}
-
-			case 18: {
-				IFF_STRUCT::sFurniture *pFurniture = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindFurniture(typeId);
-				if (pFurniture) {
-					sFurniture_List furniture;
-					memset(&furniture, 0, sizeof(furniture));
-
-					furniture.m_id = item.guid;
-					furniture.m_typeId = typeId;
-					furniture.m_pos.x = pFurniture->m_pos[0];
-					furniture.m_pos.y = pFurniture->m_pos[1];
-					furniture.m_pos.z = pFurniture->m_pos[2];
-					furniture.m_angle = pFurniture->m_angle;
-					furniture.m_flags &= ~1;
-
-					WSingleton<CSharedDoc>::Instance()->AddFurniture(furniture);
-				}
-				break;
-			}
-			}
-		}
-
-		AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xC6\xED\xC1\xF6\xBF\xA1 \xC6\xF7\xC7\xD4\xB5\xC8 \xBE\xC6\xC0\xCC\xC5\xDB\xC0\xBB \xB8\xB6\xC0\xCC\xB7\xEB\xC0\xB8\xB7\xCE \xC0\xCC\xB5\xBF\xBD\xC3\xC4\xD7\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
-
-		GetActor("RealMyRoom") << MsgObject(0, 0x226, 0, 0, 0, 0, 0);
-		GetActor("RealMyRoom") << MsgObject(0, 0xE1, 0, 0, 0, 0, 0);
-		break;
-	}
-
-	case 0x116:
-		if (IsLocalContent((localContentType_t)0x14)) {
-			GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
-
-			WSingleton<CSharedDoc>::Instance()->m_tikiReportList.clear();
-
-			long count = packet.Decode4();
-			unsigned char header[0x10];
-			packet.DecodeBuffer(header, sizeof(header));
-
-			if (count == 0) {
-				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xBF\xAD\xB6\xF7\xBF\xA1 \xBD\xC7\xC6\xD0 \xC7\xCF\xBF\xB4\xBD\xC0\xB4\xCF\xB4\xD9. ", 0, 0, 0, 0));
-				break;
-			}
-			else if (count == -2) {
-				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xB5\xA5\xC0\xCC\xC5\xB8\xB0\xA1 \xC0\xAF\xC8\xBF\xC7\xCF\xC1\xF6 \xBE\xCA\xC0\xBA \xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
-				break;
-			}
-			else if (count == -1) {
-				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xB3\xAF\xC2\xA5\xB0\xA1 \xC0\xAF\xC8\xBF\xC7\xCF\xC1\xF6 \xBE\xCA\xC0\xBA \xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
-				break;
-			}
-
-			if (IsLocalContent((localContentType_t)0x58)) {
-				WSingleton<CSharedDoc>::Instance()->m_value4843 = 1;
-			}
-
-			unsigned long serial = 0;
-			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x204, (intptr_t)&serial, 0, 0, 0, 0);
-			std::list<sItemInfo>::iterator it;
-			for (it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
-				if (it->m_serial == serial)
-					break;
-			}
-
-			if (it == WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end())
-				return 0;
-
-			for (int i = 0; i < count; ++i) {
-				--it->m_count;
-
-				if (it->m_count <= 0)
-					break;
-			}
-
-			WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
-			GetActor("RealMyRoom") << MsgObject(0, 0xDD, 0, 0, 0, 0, 0);
-
-			for (int j = 0; j < count; ++j) {
-				sCaddieReportData report;
-				packet.DecodeBuffer(&report, sizeof(report));
-				WSingleton<CSharedDoc>::Instance()->m_tikiReportList.push_back(report);
-			}
-
-			WSingleton<CSharedDoc>::Instance()->BuildTikiReportList();
-
-			GetActor("RealMyRoom") << MsgObject(0, 0x205, (intptr_t)header, 0, 0, 0, 0);
-		}
-		break;
 
 	case 0x124:
 		if (IsLocalContent((localContentType_t)0x56)) {
@@ -1377,7 +996,7 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 	}
 
 	case 0x141: {
-		unsigned char result = packet.Decode1();
+		int result = packet.Decode1();
 
 		GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
 		GetActor("RealMyRoom") << MsgObject(0, 0x228, 0x13F, result, 0, 0, 0);
@@ -1413,7 +1032,7 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 	}
 
 	case 0x143: {
-		unsigned char result = packet.Decode1();
+		int result = packet.Decode1();
 
 		GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
 		GetActor("RealMyRoom") << MsgObject(0, 0x228, 0x13F, result, 0, 0, 0);
@@ -1478,21 +1097,393 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 		break;
 	}
 
-	case 0x17A:
-	case 0x17C:
-		break;
+	// realmyroomtask.cpp:1600
+	case 0x144: {
+		GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
+		GetActor("RealMyRoom") << MsgObject(0, 0x244, 1, 0, 0, 0, 0);
 
-	case 0x17B:
-		if (IsLocalContent((localContentType_t)0x71) == true) {
-			unsigned long result = packet.Decode4();
+		int count = packet.Decode4();
 
-			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x23F, 0x17B, result, 0, 0, 0);
+		sMailIncludeItem item;
 
-			CItemStorage *pStorage = WSingleton<CItemStorage>::Instance();
-			if (pStorage) {
-				pStorage->UnLock();
+		for (int i = 0; i < count; i++) {
+			packet.DecodeBuffer(&item, 0x35);
+			int num = (int)item.count < 1 ? 1 : item.count;
+
+			unsigned long typeId = item.typeId;
+			unsigned long guid = item.guid;
+			unsigned char kind = item.kind;
+			unsigned long flag = item.flag;
+
+			if (typeId == 0x1A000010) {
+				continue;
+			}
+
+			switch (typeId >> 26) {
+			case 1:
+				continue;
+
+			case 2:
+				if (IsLocalContent((localContentType_t)0x57) && IsUccClothes(typeId)) {
+					WSendPacket request((enumClientPacket)0xB1);
+					request.Encode1(1);
+					request.Encode4(guid);
+					request.Encode1(1);
+					request.Send((eSendTo)0);
+					break;
+				}
+
+				{
+					sItemInfo info;
+					memset(&info, 0, sizeof(info));
+					info.m_serial = guid;
+					info.m_typeId = typeId;
+					info.m_stateBits.kind = kind;
+					info.m_remainHours = (int)flag / 60 / 24;
+					info.m_flags28.flags01 |= 2;
+
+					WSingleton<CSharedDoc>::Instance()->AddMyPartsList(info);
+				}
+				break;
+
+			case 7: {
+				sCaddieInfo caddie;
+				memset(&caddie, 0, sizeof(caddie));
+				caddie.id = guid;
+				caddie.typeId = typeId;
+
+				unsigned short days;
+				if (typeId == 0x1C000001 || typeId == 0x1C000002 || typeId == 0x1C000003 || typeId == 0x1C000007) {
+					days = (int)flag / 60 / 24;
+					caddie.flags |= 2;
+					caddie.days = days;
+				} else {
+					days = 0;
+					caddie.days = days;
+					caddie.flags &= ~2;
+				}
+
+				if (typeId >= 0x1C00000C && typeId <= 0x1C00000E) {
+					caddie.level = kind;
+					caddie.experience = flag;
+				}
+
+				std::map<unsigned int, sCaddieInfo> &caddieMap = WSingleton<CSharedDoc>::Instance()->m_caddieMap;
+				std::map<unsigned int, sCaddieInfo>::iterator it = caddieMap.find(guid);
+				if (it != WSingleton<CSharedDoc>::Instance()->m_caddieMap.end()) {
+					it->second.days = days;
+					break;
+				}
+
+				caddieMap.insert(std::map<unsigned int, sCaddieInfo>::value_type(guid, caddie));
+				break;
+			}
+
+			case 8: {
+				int hours = (int)flag / 60;
+				std::map<unsigned int, sCaddieInfo> &caddieMap = WSingleton<CSharedDoc>::Instance()->m_caddieMap;
+				std::map<unsigned int, sCaddieInfo>::iterator it = caddieMap.find(guid);
+				if (it == WSingleton<CSharedDoc>::Instance()->m_caddieMap.end()) {
+					break;
+				}
+
+				it->second.cadItemTypeId = typeId;
+				it->second.hours = hours;
+				if (it->second.days < hours) {
+					it->second.days = hours;
+				}
+				break;
+			}
+
+			case 6: {
+				sItemInfo info;
+				memset(&info, 0, sizeof(info));
+				info.m_serial = guid;
+				info.m_typeId = typeId;
+				info.m_stateBits.kind = kind;
+				info.m_count = num;
+				info.m_flags28.flags01 |= 2;
+
+				if (info.m_stateBits.kind) {
+					if (info.m_stateBits.kind == 3) info.m_remainHours = flag;
+					else if (info.m_stateBits.kind == 4) info.m_remainHours = flag * 24;
+					else if (info.m_stateBits.kind == 5) info.m_remainHours = flag * 24 * 30;
+					else if (info.m_stateBits.kind == 2) info.m_remainHours = (int)flag / 60;
+				}
+
+				std::list<sItemInfo>::iterator it;
+				for (it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
+					if (it->m_serial == guid) {
+						it->m_count = num;
+						break;
+					}
+				}
+
+				if (it == WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end()) {
+					if (IsLocalContent((localContentType_t)0x14)) {
+						if (typeId == 0x1A000042) {
+							info.m_clubStatLevel[1] = packet.Decode2();
+							info.m_clubStatLevel[2] = packet.Decode2();
+
+							info.m_remainHours = 0xA8;
+
+							SYSTEMTIME endTime;
+							packet.DecodeBuffer(&endTime, sizeof(endTime));
+							memcpy(info.m_reserved18, &endTime, sizeof(endTime));
+							info.m_stateBits.kind = 2;
+						}
+					}
+
+					WSingleton<CSharedDoc>::Instance()->m_itemInfoList.push_back(info);
+				}
+				break;
+			}
+
+			case 5: {
+				std::list<sItemInfo>::iterator it;
+				for (it = WSingleton<CSharedDoc>::Instance()->m_myGearList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myGearList.end(); ++it) {
+					if (it->m_serial == guid) {
+						it->m_count = num;
+						break;
+					}
+				}
+
+				if (it == WSingleton<CSharedDoc>::Instance()->m_myGearList.end()) {
+					sItemInfo info;
+					memset(&info, 0, sizeof(info));
+					info.m_serial = guid;
+					info.m_typeId = typeId;
+					info.m_count = num;
+					info.m_stateBits.kind = 0;
+					info.m_flags28.flags01 |= 2;
+
+					WSingleton<CSharedDoc>::Instance()->m_myGearList.push_back(info);
+				}
+				break;
+			}
+
+			case 3:
+			case 4: {
+				sItemInfo info;
+				memset(&info, 0, sizeof(info));
+				info.m_serial = item.guid;
+				info.m_typeId = typeId;
+				info.m_flags28.flags01 |= 2;
+				memcpy(info.m_clubStatLevel, item.stats, sizeof(item.stats));
+
+				WSingleton<CSharedDoc>::Instance()->m_myItemMap.insert(std::map<unsigned int, sItemInfo>::value_type(item.guid, info));
+				break;
+			}
+
+			case 29: {
+				IFF_STRUCT::sQuestDrop *pDrop = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindQuestDrop(typeId);
+				if (pDrop) {
+					std::list<sItemInfo>::iterator it;
+					for (it = WSingleton<CSharedDoc>::Instance()->m_myExtraItemList4.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myExtraItemList4.end(); ++it) {
+						if (it->m_serial == guid) {
+							it->m_count++;
+							break;
+						}
+					}
+
+					if (it == WSingleton<CSharedDoc>::Instance()->m_myExtraItemList4.end()) {
+						sItemInfo info;
+						memset(&info, 0, sizeof(info));
+						info.m_serial = guid;
+						info.m_typeId = typeId;
+						info.m_count = 1;
+
+						WSingleton<CSharedDoc>::Instance()->m_myExtraItemList4.push_back(info);
+					}
+				}
+				break;
+			}
+
+			case 16: {
+				sMascotInfo mascot;
+				memset(&mascot, 0, sizeof(mascot));
+				mascot.id = guid;
+				strcpy(mascot.message, "PANGYA!");
+				mascot.typeId = typeId;
+				int hours = (int)flag / 60;
+				mascot.remainHours = hours;
+
+				SYSTEMTIME now;
+				GetLocalTime(&now);
+				FILETIME fileTime;
+				SystemTimeToFileTime(&now, &fileTime);
+
+				*(__int64 *)&fileTime +=
+					hours * 36000000000i64;
+
+				FileTimeToSystemTime(&fileTime, &now);
+
+				mascot.endTime = now;
+
+				WSingleton<CSharedDoc>::Instance()->AddMascot(&mascot);
+				break;
+			}
+
+			case 28: {
+				sItemInfo info;
+				memset(&info, 0, sizeof(info));
+				info.m_serial = guid;
+				info.m_typeId = typeId;
+				info.m_stateBits.kind = kind;
+				info.m_count = num;
+				info.m_flags28.flags01 |= 2;
+
+				if (info.m_stateBits.kind) {
+					if (info.m_stateBits.kind == 3) info.m_remainHours = flag;
+					else if (info.m_stateBits.kind == 4) info.m_remainHours = flag * 24;
+					else if (info.m_stateBits.kind == 5) info.m_remainHours = flag * 24 * 30;
+					else if (info.m_stateBits.kind == 2) info.m_remainHours = (int)flag / 60;
+				}
+
+				std::list<sItemInfo>::iterator it;
+				for (it = WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.end(); ++it) {
+					if (it->m_serial == guid) {
+						it->m_count = num;
+						break;
+					}
+				}
+
+				if (it == WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.end()) {
+					WSingleton<CSharedDoc>::Instance()->m_myExtraItemList3.push_back(info);
+				}
+				break;
+			}
+
+			case 31: {
+				IFF_STRUCT::sCard *pCard = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindCard(typeId);
+				if (pCard) {
+					sCards card;
+					memset(&card, 0, sizeof(card));
+					card.m_guid = guid;
+					card.m_typeId = typeId;
+					card.m_count = num;
+					card.unknown38 = 1; // FIRST PASS: the original stores a byte at 0x38
+
+					bool found = false;
+					std::list<sCards>::iterator it;
+					for (it = WSingleton<CSharedDoc>::Instance()->m_myCardList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_myCardList.end(); ++it) {
+						if (it->m_typeId == typeId) {
+							it->m_count = num;
+							found = true;
+							break;
+						}
+					}
+
+					if (!found) {
+						WSingleton<CSharedDoc>::Instance()->m_myCardList.push_back(card);
+					}
+				}
+				break;
+			}
+
+			case 14: {
+				sItemInfo info;
+				memset(&info, 0, sizeof(info));
+				info.m_serial = guid;
+				info.m_typeId = typeId;
+				info.m_stateBits.kind = kind;
+				info.m_flags28.flags01 |= 2;
+				info.m_remainHours = flag * 24;
+
+				WSingleton<CSharedDoc>::Instance()->m_mySkinList.push_back(info);
+				break;
+			}
+
+			case 18: {
+				IFF_STRUCT::sFurniture *pFurniture = WSingleton<CSharedDoc>::Instance()->m_itemManager.FindFurniture(typeId);
+				if (pFurniture) {
+					sFurniture_List furniture;
+					memset(&furniture, 0, sizeof(furniture));
+
+					furniture.m_id = guid;
+					furniture.m_typeId = typeId;
+					furniture.m_pos.x = pFurniture->m_pos[0];
+					furniture.m_pos.y = pFurniture->m_pos[1];
+					furniture.m_pos.z = pFurniture->m_pos[2];
+					furniture.m_angle = pFurniture->m_angle;
+					furniture.m_flags &= ~1;
+
+					WSingleton<CSharedDoc>::Instance()->AddFurniture(furniture);
+				}
+				break;
+			}
 			}
 		}
+
+		AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xC6\xED\xC1\xF6\xBF\xA1 \xC6\xF7\xC7\xD4\xB5\xC8 \xBE\xC6\xC0\xCC\xC5\xDB\xC0\xBB \xB8\xB6\xC0\xCC\xB7\xEB\xC0\xB8\xB7\xCE \xC0\xCC\xB5\xBF\xBD\xC3\xC4\xD7\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
+
+		GetActor("RealMyRoom") << MsgObject(0, 0x226, 0, 0, 0, 0, 0);
+		GetActor("RealMyRoom") << MsgObject(0, 0xE1, 0, 0, 0, 0, 0);
+		break;
+	}
+
+	case 0x116:
+		if (IsLocalContent((localContentType_t)0x14)) {
+			GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
+
+			WSingleton<CSharedDoc>::Instance()->m_tikiReportList.clear();
+
+			long count = packet.Decode4();
+			SYSTEMTIME reportTime;
+			packet.DecodeBuffer(&reportTime, sizeof(reportTime));
+
+			if (count == 0) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xBF\xAD\xB6\xF7\xBF\xA1 \xBD\xC7\xC6\xD0 \xC7\xCF\xBF\xB4\xBD\xC0\xB4\xCF\xB4\xD9. ", 0, 0, 0, 0));
+				break;
+			}
+			else if (count == -2) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xB5\xA5\xC0\xCC\xC5\xB8\xB0\xA1 \xC0\xAF\xC8\xBF\xC7\xCF\xC1\xF6 \xBE\xCA\xC0\xBA \xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
+				break;
+			}
+			else if (count == -1) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xB3\xAF\xC2\xA5\xB0\xA1 \xC0\xAF\xC8\xBF\xC7\xCF\xC1\xF6 \xBE\xCA\xC0\xBA \xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE \xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0));
+				break;
+			}
+
+			if (IsLocalContent((localContentType_t)0x58)) {
+				WSingleton<CSharedDoc>::Instance()->m_value4843 = 1;
+			}
+
+			unsigned long serial = 0;
+			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x204, (intptr_t)&serial, 0, 0, 0, 0);
+			std::list<sItemInfo>::iterator it;
+			for (it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
+				if (it->m_serial == serial)
+					break;
+			}
+
+			if (it == WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end())
+				return 0;
+
+			for (int i = 0; i < count; ++i) {
+				--it->m_count;
+
+				if (it->m_count <= 0)
+					break;
+			}
+
+			WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
+			GetActor("RealMyRoom") << MsgObject(0, 0xDD, 0, 0, 0, 0, 0);
+
+			for (int j = 0; j < count; ++j) {
+				sCaddieReportData report;
+				packet.DecodeBuffer(&report, sizeof(report));
+				WSingleton<CSharedDoc>::Instance()->m_tikiReportList.push_back(report);
+			}
+
+			WSingleton<CSharedDoc>::Instance()->BuildTikiReportList();
+
+			GetActor("RealMyRoom") << MsgObject(0, 0x205, (intptr_t)&reportTime, 0, 0, 0, 0);
+		}
+		break;
+
+	case 0x17A:
+	case 0x17C:
 		break;
 
 	case 0x121: {
@@ -1705,6 +1696,19 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 			} else {
 				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x23F, 0x175, result, 0, 0, 0);
 			}
+
+			CItemStorage *pStorage = WSingleton<CItemStorage>::Instance();
+			if (pStorage) {
+				pStorage->UnLock();
+			}
+		}
+		break;
+
+	case 0x17B:
+		if (IsLocalContent((localContentType_t)0x71) == true) {
+			unsigned long result = packet.Decode4();
+
+			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x23F, 0x17B, result, 0, 0, 0);
 
 			CItemStorage *pStorage = WSingleton<CItemStorage>::Instance();
 			if (pStorage) {

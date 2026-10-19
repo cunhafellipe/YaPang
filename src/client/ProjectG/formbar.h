@@ -55,7 +55,7 @@ private:
 	void MakeDefault(void);
 	void ReCalcRects(void);
 
-public:
+PG_PROTECTED:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
 

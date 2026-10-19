@@ -57,35 +57,52 @@ void NtreevLogin::SetNtreevUserIdentity(const char* text, _sNtreevUserIdentity& 
 		end = source.find('|', ++begin);
 
 		std::string token;
-		if (begin != std::string::npos) {
-			if (end != std::string::npos) {
-				token.assign(source.begin() + begin, source.begin() + end);
-			} else {
-				token.assign(source.begin() + begin, source.end());
-			}
+		if (begin == std::string::npos) {
+			continue;
+		}
 
-			size_t equal = token.find('=');
+		if (end != std::string::npos) {
+			token.assign(source.begin() + begin, source.begin() + end);
+		} else {
+			token.assign(source.begin() + begin, source.end());
+		}
 
-			key.assign(token.begin(), token.begin() + equal);
-			value.assign(token.begin() + equal + 1, token.end());
+		size_t equal = token.find('=');
 
-			if (stricmp(key.c_str(), "LoginID") == 0) {
-				strncpy(identity.loginId, value.c_str(), 0x32);
-			} else if (stricmp(key.c_str(), "AuthKey") == 0) {
-				strncpy(identity.authKey, value.c_str(), 0x40);
-			} else if (stricmp(key.c_str(), "Sex") == 0) {
-				identity.sex = !(value == "M");
-			} else if (stricmp(key.c_str(), "MemberNo") == 0) {
-				identity.memberNo = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "Age") == 0) {
-				identity.age = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "WardNo") == 0) {
-				identity.wardNo = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "CityCode") == 0) {
-				identity.cityCode = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "PCBangNo") == 0) {
-				identity.pcBangNo = atoi(value.c_str());
-			}
+		key.assign(token.begin(), token.begin() + equal);
+		value.assign(token.begin() + equal + 1, token.end());
+
+		if (stricmp(key.c_str(), "LoginID") == 0) {
+			strncpy(identity.loginId, value.c_str(), 0x32);
+			continue;
+		}
+		if (stricmp(key.c_str(), "AuthKey") == 0) {
+			strncpy(identity.authKey, value.c_str(), 0x40);
+			continue;
+		}
+		if (stricmp(key.c_str(), "Sex") == 0) {
+			identity.sex = !(value == "M");
+			continue;
+		}
+		if (stricmp(key.c_str(), "MemberNo") == 0) {
+			identity.memberNo = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "Age") == 0) {
+			identity.age = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "WardNo") == 0) {
+			identity.wardNo = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "CityCode") == 0) {
+			identity.cityCode = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "PCBangNo") == 0) {
+			identity.pcBangNo = atoi(value.c_str());
+			continue;
 		}
 	} while (end != std::string::npos);
 }
@@ -137,48 +154,69 @@ void NhnLogin::SetNhnUserIdentity(const char* text, _sNhnUserIdentity& identity)
 		end = source.find('|', ++begin);
 
 		std::string token;
-		if (begin != std::string::npos) {
-			if (end != std::string::npos) {
-				token.assign(source.begin() + begin, source.begin() + end);
-			} else {
-				token.assign(source.begin() + begin, source.end());
-			}
+		if (begin == std::string::npos) {
+			continue;
+		}
 
-			size_t equal = token.find('=');
+		if (end != std::string::npos) {
+			token.assign(source.begin() + begin, source.begin() + end);
+		} else {
+			token.assign(source.begin() + begin, source.end());
+		}
 
-			key.assign(token.begin(), token.begin() + equal);
-			value.assign(token.begin() + equal + 1, token.end());
+		size_t equal = token.find('=');
 
-			if (stricmp(key.c_str(), "LoginID") == 0) {
-				strncpy(identity.loginId, value.c_str(), 0x50);
-			} else if (stricmp(key.c_str(), "AuthKey") == 0) {
-				strncpy(identity.authKey, value.c_str(), 0x40);
-			} else if (stricmp(key.c_str(), "SiteCookie") == 0) {
-				strncpy(identity.siteCookie, value.c_str(), 0x3FF);
-			} else if (stricmp(key.c_str(), "Sex") == 0) {
-				identity.sex = !(value == "M");
-			} else if (stricmp(key.c_str(), "MemberNo") == 0) {
-				identity.memberNo = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "Age") == 0) {
-				identity.age = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "WardNo") == 0) {
-				identity.wardNo = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "CityCode") == 0) {
-				identity.cityCode = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "PCBangNo") == 0) {
-				identity.pcBangNo = atoi(value.c_str());
-			} else if (stricmp(key.c_str(), "SiteMemberNo") == 0) {
-				identity.siteMemberNo = _atoi64(value.c_str());
-			} else {
-				char siteCode[32] = { 0 };
-				if (stricmp(key.c_str(), "SiteCode") == 0) {
-					strncpy(siteCode, value.c_str(), 0x1F);
-				}
+		key.assign(token.begin(), token.begin() + equal);
+		value.assign(token.begin() + equal + 1, token.end());
 
-				if (strcmp(siteCode, "NHN") == 0) {
-					identity.provType = 4;
-				}
-			}
+		if (stricmp(key.c_str(), "LoginID") == 0) {
+			strncpy(identity.loginId, value.c_str(), 0x50);
+			continue;
+		}
+		if (stricmp(key.c_str(), "AuthKey") == 0) {
+			strncpy(identity.authKey, value.c_str(), 0x40);
+			continue;
+		}
+		if (stricmp(key.c_str(), "SiteCookie") == 0) {
+			strncpy(identity.siteCookie, value.c_str(), 0x3FF);
+			continue;
+		}
+		if (stricmp(key.c_str(), "Sex") == 0) {
+			identity.sex = !(value == "M");
+			continue;
+		}
+		if (stricmp(key.c_str(), "MemberNo") == 0) {
+			identity.memberNo = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "Age") == 0) {
+			identity.age = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "WardNo") == 0) {
+			identity.wardNo = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "CityCode") == 0) {
+			identity.cityCode = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "PCBangNo") == 0) {
+			identity.pcBangNo = atoi(value.c_str());
+			continue;
+		}
+		if (stricmp(key.c_str(), "SiteMemberNo") == 0) {
+			identity.siteMemberNo = _atoi64(value.c_str());
+			continue;
+		}
+
+		char siteCode[32] = { 0 };
+		if (stricmp(key.c_str(), "SiteCode") == 0) {
+			strncpy(siteCode, value.c_str(), 0x1F);
+		}
+
+		if (strcmp(siteCode, "NHN") == 0) {
+			identity.provType = 4;
 		}
 	} while (end != std::string::npos);
 }

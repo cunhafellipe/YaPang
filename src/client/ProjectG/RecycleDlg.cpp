@@ -174,8 +174,9 @@ FrRecycleDlg::FrRecycleDlg(void) {
 	m_selectedTid = 0;
 	m_selectedPart = 0;
 	m_partSelected = false;
-	// The original also clears 0x545 (byte), 0x548 and 0x54C here: no use
-	// of them is known yet, so they stay unnamed.
+	m_reserved545 = false;
+	m_reserved548 = 0;
+	m_reserved54C = 0;
 	m_pSelectPartBn = NULL;
 	m_pSelectPartDlg = NULL;
 	InitDataCharacterSelect();
@@ -494,7 +495,7 @@ void FrRecycleDlg::OnRecycleItemListOwnerDraw(PG_MSGARG param) {
 		unsigned long color = 0xFFFFFFFF;
 
 		std::map<const sRecycleItem*, int>::iterator it;
-		it = m_haveItemMap.find(pRecycle);
+		it = m_haveItemMap.find((const sRecycleItem*)pRecycle);
 		if (it == m_haveItemMap.end()) {
 			return;
 		}
@@ -759,8 +760,8 @@ bool FrRecycleDlg::OnInit(void) {
 
 	if (m_pExhibition) { delete m_pExhibition; m_pExhibition = 0; }
 
-	float distance = g_view->GetWidth() * 0.03375f;
 	WRect rect = GetRect();
+	float distance = g_view->GetWidth() * 0.03375f;
 
 	m_pExhibition = new CExhibition(rect.x + 438.0f, rect.y + 173.0f,
 		(g_view->GetWidth() * 0.0015625f - (1.0f / g_view->GetRatio() - 1.3333334f) * 0.8f) / g_view->GetHeight() * 99.0000076f, true);
@@ -1101,6 +1102,7 @@ void FrRecycleDlg::InitListCharacterSelect(void) {
 
 // recycledlg.cpp:1220
 void FrRecycleDlg::DrawItem(WPoint pos, unsigned long tid, int count, unsigned char flag, const Bitmap* pBg, unsigned long color) {
+	unsigned int i = 0;
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
 
 	if (!pGI)
@@ -1118,20 +1120,18 @@ void FrRecycleDlg::DrawItem(WPoint pos, unsigned long tid, int count, unsigned c
 	float offY = 0.0f;
 	const Bitmap* pIcon = g_pFresh->GetBitmap(pItem->m_icon);
 
-	unsigned long kind = tid >> 26;
-
-	if (kind == 2) {
+	if ((tid >> 26) == 2) {
 		bSmall = true;
 		offX = -2.0f;
 		offY = -15.0f;
-	} else if (kind == 4) {
+	} else if ((tid >> 26) == 4) {
 		bSmall = true;
 		offX = 1.0f;
 		offY = 2.0f;
-	} else if (kind == 9) {
+	} else if ((tid >> 26) == 9) {
 		offX = -10.0f;
 		offY = -21.0f;
-	} else if (kind == 0x1C) {
+	} else if ((tid >> 26) == 0x1C) {
 		offX = -12.0f;
 		offY = -20.0f;
 	} else if (ItemManager()->GetCouponKind(tid)) {
@@ -1140,14 +1140,14 @@ void FrRecycleDlg::DrawItem(WPoint pos, unsigned long tid, int count, unsigned c
 	} else if (ItemManager()->GetCouponKind(tid) == 3) {
 		offX = -7.0f;
 		offY = 3.0f;
-	} else if (kind == 0x1F) {
+	} else if ((tid >> 26) == 0x1F) {
 		offX = -3.0f;
 		offY = -9.0f;
-	} else if (kind == 0x10) {
+	} else if ((tid >> 26) == 0x10) {
 		flag = 1;
 		offX = -12.0f;
 		offY = -20.0f;
-	} else if (kind == 0x12) {
+	} else if ((tid >> 26) == 0x12) {
 		offX = -4.5f;
 		offY = -9.0f;
 	}
@@ -1167,9 +1167,11 @@ void FrRecycleDlg::DrawItem(WPoint pos, unsigned long tid, int count, unsigned c
 		h *= 0.8f;
 	}
 
-	if (kind == 7) {
-		WRect src(4.0f, 2.0f, w - 6.0f, h - 6.0f);
-		pGI->DrawTexture(pIcon, src, WRect(pos.x + 14.0f, pos.y + 11.0f, w - 6.0f, h - 6.0f), color, 0);
+	if ((tid >> 26) == 7) {
+		w -= 6.0f;
+		h -= 6.0f;
+		WRect src(4.0f, 2.0f, w, h);
+		pGI->DrawTexture(pIcon, src, WRect(pos.x + 14.0f, pos.y + 11.0f, w, h), color, 0);
 	} else {
 		pGI->DrawTexture(pIcon, WRect(pos.x + offX + 14.0f, pos.y + offY + 11.0f, w, h), color, 0);
 	}
@@ -1185,7 +1187,7 @@ void FrRecycleDlg::DrawItem(WPoint pos, unsigned long tid, int count, unsigned c
 		const char* str = MakeStr("%d", count);
 		float x = pos.x + 54.0f;
 
-		for (unsigned int i = 0; i < strlen(str); i++) {
+		for (i = 0; i < strlen(str); i++) {
 			x -= m_pTitleFont->GetCharWidth(g_view, str[i] - '0');
 		}
 
@@ -1255,9 +1257,13 @@ void FrRecycleDlg::DrawRecycleItem(void) {
 						m_pSelectPartBn->SetButtonImg("select_on", FrButton::OVER);
 						m_pSelectPartBn->SetButtonImg("select_on", FrButton::PRESSED);
 
-						float x = GetRect().x + 41.0f;
+						WRect rect;
+						rect.x = GetRect().x + 41.0f;
 
-						m_pSelectPartBn->SetRect(WRect(x, GetRect().y + 387.0f, 40.0f, 41.0f));
+						rect.y = GetRect().y + 387.0f;
+						rect.w = 40.0f;
+						rect.h = 41.0f;
+						m_pSelectPartBn->SetRect(rect);
 					}
 				} else if (m_partSelected == true) {
 					if (m_pSelectPartBn) {

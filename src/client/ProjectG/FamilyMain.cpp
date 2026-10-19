@@ -1426,11 +1426,11 @@ void CFamilyMain::OnDrawEquipListBox(FrListItem* pItem) {
 
 // familymain.cpp:1344
 void CFamilyMain::OnDownBtnStart(void) {
-	WSingleton<CSharedDoc>::Instance()->m_shotTimeLimit = m_timeLimit;
+	SetShotTimeLimit(m_timeLimit);
 	SetCurMap(m_mapIndex);
-	WSingleton<CSharedDoc>::Instance()->m_roomType = 0; strcpy(WSingleton<CSharedDoc>::Instance()->m_roomName, WSingleton<CSharedDoc>::Instance()->m_gameTypeNames[0].name);
-	WSingleton<CSharedDoc>::Instance()->m_holes = m_holeNum;
-	WSingleton<CSharedDoc>::Instance()->m_gameKind = m_holeType;
+	SetGameType(0);
+	SetHoles(m_holeNum);
+	SetHoleType(m_holeType);
 	WSingleton<CSharedDoc>::Instance()->m_roomPlayerList.clear();
 
 	if ((0x28000000 | ((m_mapIndex > 0x7F && m_mapIndex != 0xFD) ? m_mapIndex - 0x80 : m_mapIndex)) == 0x11 ||
@@ -1446,21 +1446,20 @@ void CFamilyMain::OnDownBtnStart(void) {
 
 		cFamily* pFamily = m_families[i];
 		if (pFamily == NULL) {
-			memset(ms_itemslotBackup[i], 0, sizeof(ms_itemslotBackup[i]));
 			slot.m_uid = (unsigned long)-1;
+			memset(ms_itemslotBackup[i], 0, sizeof(ms_itemslotBackup[i]));
 			WSingleton<CSharedDoc>::Instance()->m_roomPlayerList.push_back(slot);
 			continue;
 		}
 
 		pFamily->ConvertUserInfo(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i]);
-		slot.m_uid = i;
-
 		slot.m_connection = (unsigned char)(i + 1);
+		slot.m_uid = i;
 
 		slot.m_level = WSingleton<CSharedDoc>::Instance()->m_myLevel; strncpy(slot.m_nickname, MakeStr("PLAYER%d", i + 1), 0x15);
 		strcpy(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_name, MakeStr("PLAYER%d", i + 1));
 
-		memcpy(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_equipItem, ms_itemslotBackup[i], sizeof(ms_itemslotBackup[i]));
+		memcpy(ms_itemslotBackup[i], WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_equipItem, sizeof(ms_itemslotBackup[i]));
 		IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_caddieInfo.typeId);
 
 		if (pCaddie != NULL && (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_level < (pCaddie->m_level & 0x7F) ||

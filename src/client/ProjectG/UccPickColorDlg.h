@@ -7,6 +7,7 @@
 #include "frform.h"
 #include "bitmap.h"
 #include "ucccolorpicker.h"
+#include "UccLibrary.h"
 
 class FrArea;
 class FrButton;
@@ -66,9 +67,7 @@ protected:
 	FrUccDrawDlg* m_pParent;                  // 0x110
 	Bitmap m_prevColorBmp;                    // 0x114, 1x1, shown by m_pPrevColor
 	Bitmap m_newColorBmp;                     // 0x128, 1x1, shown by m_pNewColor
-	unsigned char m_red;                      // 0x13c, the colour being picked
-	unsigned char m_green;                    // 0x13d
-	unsigned char m_blue;                     // 0x13e
+	sRGB m_color;                             // 0x13c, the colour being picked
 	CUccColorPicker m_colorPicker;            // 0x140
 	CUccColorBrightness m_colorBrightness;    // 0x1cc
 	const Bitmap* m_pSelectColor;             // 0x258, frame drawn around the selected palette colour
@@ -90,9 +89,7 @@ BEGIN_LAYOUT_CHECK(FrUccPickColorDlg)
 	CHECK_FIELD(FrUccPickColorDlg, m_pParent, 0x110);
 	CHECK_FIELD(FrUccPickColorDlg, m_prevColorBmp, 0x114);
 	CHECK_FIELD(FrUccPickColorDlg, m_newColorBmp, 0x128);
-	CHECK_FIELD(FrUccPickColorDlg, m_red, 0x13c);
-	CHECK_FIELD(FrUccPickColorDlg, m_green, 0x13d);
-	CHECK_FIELD(FrUccPickColorDlg, m_blue, 0x13e);
+	CHECK_FIELD(FrUccPickColorDlg, m_color, 0x13c);
 	CHECK_FIELD(FrUccPickColorDlg, m_colorPicker, 0x140);
 	CHECK_FIELD(FrUccPickColorDlg, m_colorBrightness, 0x1cc);
 	CHECK_FIELD(FrUccPickColorDlg, m_pSelectColor, 0x258);

@@ -120,9 +120,8 @@ void AnimatedOverlay::Process(float dt) {
 
 // tutorial.cpp:244
 void AnimatedOverlay::Activate(bool active, bool fade, bool loop) {
-	m_loop = loop;
+	m_active = active; m_loop = loop;
 
-	m_active = active;
 	if (active) {
 		m_frame = 0;
 		m_elapsed = 0;
@@ -221,18 +220,20 @@ void CTutorial::OnInit(void) {
 		return;
 	}
 
-	memset(m_missionCleared, 0, sizeof(m_missionCleared));
+	for (int i = 0; i < 0xF; i++) {
+		m_missionCleared[i] = false;
+	}
 
 	Wind().CheckSpecialWind();
 
 	m_tutorialIndex = -1;
-	m_macroTimer = -1;
 	m_singleMission = false;
 	m_reserved2A0 = 0;
 	m_yesNoForm = 0;
 	m_failCount = 0;
 	m_targetHits = 0;
 	m_macroHold = false;
+	m_macroTimer = -1;
 	m_pulseScale = 1.5f;
 	m_reserved2D0 = 0;
 
@@ -484,9 +485,10 @@ void CTutorial::HandleMsg(const MsgObject &msg) {
 					OpenMissionFailedForm();
 					return;
 				}
-				m_failCount++;
 				m_step = 1;
+				m_failCount++;
 				FreeInput();
+				SendMsg(this, "Screen", 0x1BA, 1, 0, 0, 0);
 				break;
 			case 3:
 				OpenTipCaddieForm(m_texts[0x260].c_str(), (FRESH_RESULT_CALLBACK)&CTutorial::OnTipCaddieNoneResult);
@@ -543,9 +545,9 @@ void CTutorial::HandleMsg(const MsgObject &msg) {
 			default:
 				return;
 			}
+		} else {
+			SendMsg(this, "Screen", 0x1BA, 1, 0, 0, 0);
 		}
-
-		SendMsg(this, "Screen", 0x1BA, 1, 0, 0, 0);
 		break;
 	case 0x14C:
 		ReviewTutorial();
@@ -561,7 +563,7 @@ void CTutorial::HandleMsg(const MsgObject &msg) {
 		break;
 	case 0x155:
 		m_reserved2D8 = (float)msg.m_param1;
-		if ((float)msg.m_param1 < (float)GOLFDOC()->m_value15C) {
+		if (m_reserved2D8 < GOLFDOC()->m_value15C) {
 			GOLFDOC()->m_bar.m_accuracy = (float)GOLFDOC()->m_value15C;
 			SendMsg(0, "GolfRule", 0xA2, 0, 0, 0, 0);
 		}
@@ -581,12 +583,12 @@ void CTutorial::HandleMsg(const MsgObject &msg) {
 			g_input->FreeMouse(LEFT_BUTTON);
 			break;
 		case 2: {
-			const float *value = (const float *)msg.m_param2;
-			GOLFDOC()->m_bar.m_accuracy = *value;
+			float accuracy = *(const float *)msg.m_param2;
+			GOLFDOC()->m_bar.m_accuracy = accuracy;
 			if (msg.m_param3 == 1) {
 				GOLFDOC()->m_bar.m_state = 1;
 			} else if (msg.m_param3 == 2) {
-				GOLFDOC()->m_bar.m_prevAccuracy = *value;
+				GOLFDOC()->m_bar.m_prevAccuracy = accuracy;
 			}
 			break;
 		}
@@ -1087,10 +1089,12 @@ bool CTutorial::OnCompleteFormResult(int result, FrForm *form) {
 		SendMsg(this, "Screen", 0x1BC, result == 1 ? 2 : 1, 0, 0, 0);
 		InitTutorialMode(GOLFDOC()->m_gameState + (result == 1));
 	} else {
-		if (result != 0) {
-			if (!WSingleton<WNetworkSystem>::Instance()->IsConnected((WNetworkSystem::eNetUnit)0)) {
-				g_bQuit = true;
-			}
+		if (result == FrNONE) {
+			return true;
+		}
+
+		if (!WSingleton<WNetworkSystem>::Instance()->IsConnected((WNetworkSystem::eNetUnit)0)) {
+			g_bQuit = true;
 		}
 	}
 
@@ -1219,7 +1223,11 @@ void CTutorial::OpenTipCaddieForm(const char *text, FRESH_RESULT_CALLBACK callba
 		}
 
 		for (unsigned int i = 0; i < 3; i++) {
-			FrButton *button = (FrButton *)((__rtti_obj = m_tipCaddieForm->FindChildByName(data_9f64b0[i])) != 0 ? (((IObject *)__rtti_obj)->IsKindOf(&FrButton::m_RTTI) ? __rtti_obj : 0) : 0);
+			FrButton *button = 0;
+			if ((__rtti_obj = m_tipCaddieForm->FindChildByName(data_9f64b0[i])) != 0) {
+				void *child = __rtti_obj;
+				button = (FrButton *)(((IObject *)child)->IsKindOf(&FrButton::m_RTTI) ? child : 0);
+			}
 			if (button) {
 				bool selected = (i == (unsigned int)m_dialogState);
 				if (selected) {
@@ -1523,7 +1531,9 @@ void CTutorial::PushMacroClub(void) {
 
 	PushMacro((eMacroType)14, "3 ok", 0, 1); PushMacro((eMacroType)9, "204", -1, 1);
 
-	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 0, g_view->GetWidth() * 0.5f - 32.0f, g_view->GetHeight() * 0.48333332f - 32.0f), 0, 1);
+	float x = g_view->GetWidth() * 0.5f - 32.0f;
+
+	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 0, x, g_view->GetHeight() * 0.48333332f - 32.0f), 0, 1);
 	PushMacro((eMacroType)16, MakeStr("%d %.1f %.1f %.1f", 0, 64.0, 64.0, 1.0), 0, 1);
 	PushMacro(MACRO_WAIT, 0, 1500, 1);
 	PushMacro((eMacroType)15, 0, -1, 1);
@@ -1533,7 +1543,7 @@ void CTutorial::PushMacroClub(void) {
 
 	PushMacro((eMacroType)14, "2 ok", 0, 1); PushMacro((eMacroType)9, "206", -1, 1);
 
-	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 0xA, m_tipRect.x + m_tipRect.w - 128.0f, m_tipRect.y + m_tipRect.h + 20.0f), 0, 1);
+	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 0xA, m_tipRect.w + m_tipRect.x - 128.0f, m_tipRect.y + m_tipRect.h + 20.0f), 0, 1);
 	PushMacro((eMacroType)16, MakeStr("%d %.1f %.1f %.1f", 0xA, 128.0, 88.0, 0.5), 0, 1);
 
 	PushMacro((eMacroType)1, "PAGE_DOWN", 200, 5);
@@ -1552,7 +1562,7 @@ void CTutorial::PushMacroClub(void) {
 
 	PushMacro((eMacroType)14, "7 ok", 0, 1); PushMacro((eMacroType)9, "208", -1, 1);
 
-	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 9, m_tipRect.x + m_tipRect.w + 20.0f, m_tipRect.y + m_tipRect.h - 88.0f), 0, 1);
+	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 9, m_tipRect.w + m_tipRect.x + 20.0f, m_tipRect.y + m_tipRect.h - 88.0f), 0, 1);
 	PushMacro((eMacroType)16, MakeStr("%d %.1f %.1f %.1f", 9, 128.0, 88.0, 0.5), 0, 1);
 	PushMacro((eMacroType)15, 0, -1, 1);
 
@@ -1560,7 +1570,7 @@ void CTutorial::PushMacroClub(void) {
 
 	PushMacro((eMacroType)14, "7 ok", 0, 1); PushMacro((eMacroType)9, "209", -1, 1);
 
-	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 1, m_tipRect.x + m_tipRect.w - 128.0f, m_tipRect.y + m_tipRect.h + 20.0f), 0, 1);
+	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 1, m_tipRect.w + m_tipRect.x - 128.0f, m_tipRect.y + m_tipRect.h + 20.0f), 0, 1);
 	PushMacro((eMacroType)16, MakeStr("%d %.1f %.1f %.1f", 1, 128.0, 88.0, 0.5), 200, 1);
 
 	PushMacro(MACRO_WAIT, 0, 1500, 1);
@@ -2953,7 +2963,8 @@ bool CTutorial::CheckCameraTarget(void) {
 
 // tutorial.cpp:4272
 bool CTutorial::CheckClubTarget(void) {
-	WVector reach = GOLFDOC()->m_cameraData.m_matrix.za * (GolfClub().GetRange(0) * 3.2f);
+	const WVector &dir = GOLFDOC()->m_cameraData.m_matrix.za;
+	WVector reach = dir * (GolfClub().GetRange(0) * 3.2f);
 	WVector diff = GOLFDOC()->m_target.m_pos - (GolfBall().m_pos + reach);
 	diff.y = 0.0f;
 
@@ -3015,6 +3026,7 @@ void CTutorial::PopMacro(void) {
 		return;
 	}
 
+	char target[32];
 	switch (m_macros.front().m_type) {
 	case 1:
 		g_input->SetFakeInput(m_macros.front().m_text, m_fakeKeyDown);
@@ -3187,7 +3199,7 @@ void CTutorial::PopMacro(void) {
 		if (ok) {
 			WRect rc;
 			m_tipForm->GetClientRect(rc);
-			ok->MoveWindow(WPoint(rc.w + rc.x - 51.0f, rc.h + rc.y - 25.0f));
+			ok->MoveWindow(WPoint(rc.x + rc.w - 51.0f, rc.y + rc.h - 25.0f));
 		}
 
 		switch (layout) {
@@ -3340,13 +3352,10 @@ void CTutorial::PopMacro(void) {
 	}
 
 	case 22: {
-		char target[32];
 		int msg;
-		sMacroParam param1 = 0;
-		sMacroParam param2 = 0;
-		sMacroParam param3 = 0;
-		sscanf(m_macros.front().m_text, "%s %d " PG_MACRO_PTR " " PG_MACRO_PTR " " PG_MACRO_PTR, target, &msg, &param1, &param2, &param3);
-		SendMsg(this, target, msg, (intptr_t)param1, (intptr_t)param2, (intptr_t)param3, 0);
+		sMacroParam param[3] = { 0, 0, 0 };
+		sscanf(m_macros.front().m_text, "%s %d " PG_MACRO_PTR " " PG_MACRO_PTR " " PG_MACRO_PTR, target, &msg, &param[0], &param[1], &param[2]);
+		SendMsg(this, target, msg, (intptr_t)param[0], (intptr_t)param[1], (intptr_t)param[2], 0);
 		break;
 	}
 
@@ -3410,15 +3419,12 @@ void CTutorial::PopMacro(void) {
 	m_macros.pop();
 
 	if (GOLFDOC()->m_gameState != 7 || !m_macros.empty()) {
-		switch (m_step) {
-		case 1:
-			FreeInput();
-			break;
-
-		case 0:
-		case 5:
+		if (m_step == 0) {
 			BlockInput();
-			break;
+		} else if (m_step == 1) {
+			FreeInput();
+		} else if (m_step == 5) {
+			BlockInput();
 		}
 
 		if (m_specialWait == 0) {

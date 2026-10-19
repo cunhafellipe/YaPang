@@ -78,7 +78,7 @@ CExhibition::CExhibition(float x, float y, float screenScale, bool autoRecover)
 	: m_motionDelay(0.0f), m_initialMotionLength(0.0f), m_motionIndex(-1), m_charMotionSet(-1),
 	  m_caddieMotionSet(-1), m_lockDirection(false), m_zoomDragging(false), m_curDistance(20.0f),
 	  m_pitchLimit(0.0f), m_frame(0.0f), m_pMotionData(NULL), m_pPetFrame(NULL), m_model(NULL),
-	  m_controlFlag(0), m_facialChanged(false), m_setByCtor(true), m_enableZoom(true), m_enableRotate(true) {
+	  m_controlFlag(0), m_enableZoom(true), m_enableRotate(true) {
 	m_center.x = x;
 	m_center.y = y;
 	m_autoRecoverCamera = autoRecover;
@@ -175,6 +175,12 @@ void CExhibition::Zoom(float delta) {
 	m_cameraRecoverTime = 0.0f;
 }
 
+// A control flag bit as a bool: the original tests the materialised result
+// (mov; shr; test reg,1) instead of the flag byte in memory.
+static inline bool TestControlBit(unsigned long flags, unsigned long bit) {
+	return (flags & bit) ? true : false;
+}
+
 // exhibition.cpp:410
 void CExhibition::UpdateCamera(float dt) {
 	if (m_curDistance - m_distance > dt * 15.0f) {
@@ -187,7 +193,7 @@ void CExhibition::UpdateCamera(float dt) {
 	m_camera = RotMat(m_angle.x, 0) * RotMat(m_angle.y, 1);
 	m_camera.pivot = m_camera.za * -m_curDistance;
 
-	if ((m_controlFlag >> 4) & 1 && m_pPetFrame) {
+	if (TestControlBit(m_controlFlag, 0x10) && m_pPetFrame) {
 		// The camera follows the pet's root bone.
 		WBone* pBone = m_pPetFrame->GetBonePet()->FindBone("Bip01");
 		if (pBone) {
@@ -232,17 +238,17 @@ void CExhibition::Process(float dt, bool b) {
 	}
 
 	m_nextMotion = false;
-	if ((m_controlFlag >> 3) & 1 && m_lockDirection && m_zoomDragging && g_input->GetButton(MIDDLE_BUTTON) == 2) {
+	if (TestControlBit(m_controlFlag, 8) && m_lockDirection && m_zoomDragging && g_input->GetButton(MIDDLE_BUTTON) == 2) {
 		m_nextMotion = NextMotion();
 	} else if (m_lockDirection && m_enableRotate) {
 		float pitch = m_angle.x - CInputManager::Instance()->GetMouseDelta().y * 0.01f - m_defaultAngle.x;
-		if ((m_controlFlag >> 2) & 1) {
+		if (TestControlBit(m_controlFlag, 4)) {
 			// The pitch stays within [-60, limit + 15] degrees of the default.
 			if (pitch < m_pitchLimit + 0.2617994f && pitch > -1.0471976f) {
 				m_angle.x -= CInputManager::Instance()->GetMouseDelta().y * 0.01f;
 			}
 		}
-		if ((m_controlFlag >> 1) & 1) {
+		if (TestControlBit(m_controlFlag, 2)) {
 			m_angle.y -= CInputManager::Instance()->GetMouseDelta().x * 0.01f;
 		}
 		if (m_controlFlag & 6) {
@@ -267,8 +273,8 @@ void CExhibition::Process(float dt, bool b) {
 				m_cameraUpdate = 2;
 			} else {
 				float sum = Abs(pitch) + Abs(direction);
-				m_cameraUpdate = 0;
 				float inv = 1.0f / sum;
+				m_cameraUpdate = 0;
 				m_pitchSpeed = pitch * inv * kPi;
 				m_directionSpeed = direction * inv * kPi;
 			}
@@ -304,18 +310,18 @@ void CExhibition::Process(float dt, bool b) {
 	m_directionCheckTime += dt;
 	if (m_directionCheckTime > 1.0f) {
 		m_directionCheckTime -= 1.0f;
-		if (!m_directionChanged && Abs(GetBaseAngle(m_checkedDirection, m_angle.y) - m_angle.y) > kDegree) {
+		if (!m_changed.directionChanged && Abs(GetBaseAngle(m_checkedDirection, m_angle.y) - m_angle.y) > kDegree) {
 			m_checkedDirection = m_angle.y;
-			m_directionChanged = true;
+			m_changed.directionChanged = true;
 		}
 	}
 
-	if (m_facialChanged) {
+	if (m_changed.facialChanged) {
 		m_facialTime += dt;
 		if (m_facialTime > 2.0f) {
 			m_facialTime -= 2.0f;
 			SetPendingTexPart("face", data_a96180[m_charMotionSet][3]);
-			m_facialChanged = false;
+			m_changed.facialChanged = false;
 		}
 	}
 
@@ -366,8 +372,8 @@ int CExhibition::ProcessBongdariShop(float dt) {
 				m_cameraUpdate = 2;
 			} else {
 				float sum = Abs(pitch) + Abs(direction);
-				m_cameraUpdate = 0;
 				float inv = 1.0f / sum;
+				m_cameraUpdate = 0;
 				m_pitchSpeed = pitch * inv * kPi;
 				m_directionSpeed = direction * inv * kPi;
 			}
@@ -384,6 +390,8 @@ int CExhibition::ProcessBongdariShop(float dt) {
 			m_pitchSpeed = m_directionSpeed = 0.0f;
 			m_cameraUpdate = 2;
 		}
+		// fall through
+	case 2:
 		break;
 	case 1:
 		m_pitchSpeed = m_directionSpeed = 0.0f;
@@ -398,9 +406,9 @@ int CExhibition::ProcessBongdariShop(float dt) {
 	m_directionCheckTime += dt;
 	if (m_directionCheckTime > 1.0f) {
 		m_directionCheckTime -= 1.0f;
-		if (!m_directionChanged && Abs(GetBaseAngle(m_checkedDirection, m_angle.y) - m_angle.y) > kDegree) {
+		if (!m_changed.directionChanged && Abs(GetBaseAngle(m_checkedDirection, m_angle.y) - m_angle.y) > kDegree) {
 			m_checkedDirection = m_angle.y;
-			m_directionChanged = true;
+			m_changed.directionChanged = true;
 		}
 	}
 
@@ -444,8 +452,8 @@ void CExhibition::SetDefaultDirection(float direction) {
 
 // exhibition.cpp:824
 bool CExhibition::IsDirectionChanged(void) {
-	if (!m_lockDirection && m_directionChanged) {
-		m_directionChanged = false;
+	if (!m_lockDirection && m_changed.directionChanged) {
+		m_changed.directionChanged = false;
 		return true;
 	}
 	return false;
@@ -468,10 +476,10 @@ void CExhibition::Animate(void) {
 		m_light.nearone = RotVec(WVector(1.0f, -1.0f, 1.0f), m_camera);
 	} else {
 		float x = 0.0f;
-		float y = 1.0f;
-		m_light.nearone = WVector(m_camera.xx * x - m_camera.xy * y + m_camera.xz,
-			m_camera.yx * x - m_camera.yy * y + m_camera.yz,
-			m_camera.zx * x - m_camera.zy * y + m_camera.zz);
+		float y = -1.0f;
+		m_light.nearone = WVector(m_camera.xx * x + m_camera.xy * y + m_camera.xz,
+			m_camera.yx * x + m_camera.yy * y + m_camera.yz,
+			m_camera.zx * x + m_camera.zy * y + m_camera.zz);
 	}
 	m_light.nearone.Normalize();
 
@@ -593,17 +601,17 @@ void CExhibition::ScriptProcess(const w_motion_data* data, float from, float to,
 // motions, visibility, bonus balls).
 void CExhibition::ParsePuppetScript(const char* script) {
 	while (script != NULL) {
-		const char* p = strchr(script, '*');
+		script = strchr(script, '*');
 
-		if (p == NULL)
+		if (script == NULL)
 			return;
 
 		int len = 0;
 
-		while (p[len] != '\0') {
-			if (p[++len] == ' ')
+		while (script[len] != '\0') {
+			if (script[++len] == ' ')
 				break;
-			if (p[len] == '(') {
+			if (script[len] == '(') {
 				len++;
 				break;
 			}
@@ -612,8 +620,8 @@ void CExhibition::ParsePuppetScript(const char* script) {
 		if (len <= 1)
 			return;
 
-		strncpy(data_af67b8[1], p, len);
-		script = p + len; data_af67b8[1][len] = '\0';
+		strncpy(data_af67b8[1], script, len);
+		script += len; data_af67b8[1][len] = '\0';
 
 		if (strcmp(data_af67b8[1], "*fx(") == 0) {
 			char fxName[64];
@@ -648,7 +656,7 @@ void CExhibition::ParsePuppetScript(const char* script) {
 					unsigned long tid = atoi(part + 1);
 
 					if (!found) {
-						if (m_pPetFrame->m_partList.FindPart(tid))
+						if (m_pPetFrame->GetPartList().FindPart(tid))
 							found = true;
 					}
 
@@ -776,7 +784,7 @@ void CExhibition::ParsePuppetScript(const char* script) {
 			if ((len = strlen(texName)) == 0 || strlen(texName) >= 64)
 				return;
 
-			if (m_facialChanged)
+			if (m_changed.facialChanged)
 				return;
 
 			SetPendingTexPart(data_af67b8[0], texName);
@@ -825,7 +833,10 @@ void CExhibition::ParsePuppetScript(const char* script) {
 		} else if (stricmp(data_af67b8[1], "*hidevis(") == 0) {
 			ParseScript_ShowVis(false, script);
 		} else if (strcmp(data_af67b8[1], "*give") == 0) {
-			FrBongdariShopDlg* pShop = FrStaticCast<FrBongdariShopDlg>(g_pFresh->GetDesktop()->FindChildByName("bongdari_shop"));
+			// The unchecked window cast is expanded in place here: cl stops inlining
+			// FrStaticCast in this large function, the original has no call.
+			void* pWnd = g_pFresh->GetDesktop()->FindChildByName("bongdari_shop");
+			FrBongdariShopDlg* pShop = (FrBongdariShopDlg*)(pWnd != 0 ? pWnd : (__rtti_obj = pWnd));
 
 			if (pShop) {
 				w_bound_box* pBox = m_model->m_bbList.Find("out");
@@ -877,8 +888,8 @@ bool CExhibition::InValidArea(void) {
 			return true;
 		}
 	} else if (m_areaRadius > 0.0f) {
-		float dx = point.x - m_center.x;
 		float dy = point.y - m_center.y;
+		float dx = point.x - m_center.x;
 		if (dx * dx + dy * dy < m_areaRadius * m_areaRadius) {
 			return true;
 		}
@@ -897,7 +908,7 @@ void CExhibition::SetCenter(float x, float y) {
 	float fov = g_view->GetFOV();
 	g_view->SetFOV(g_view->GetRatio() * 2.0943952f);
 
-	float height = (float)tan(g_view->GetRatio() * g_view->GetFOV_Unmodified() * 0.6666667f) * m_curDistance * 2.0f;
+	float height = (float)tan(g_view->GetFOV() * 0.5f) * m_curDistance * 2.0f;
 	m_matrix.pivot = WVector(0.0f, -(height * (m_areaSize.y / g_view->GetHeight() * m_screenScale)), 0.0f);
 
 	g_view->SetFOV(fov);
@@ -1629,7 +1640,7 @@ void CExhibition::SetScreenPos(WPuppet* pPuppet) {
 
 	m_defaultDistance = m_distance = m_curDistance;
 
-	float height = (float)tan(g_view->GetFOV_Unmodified() * g_view->GetRatio() * 0.6666667f) * m_curDistance * 2.0f;
+	float height = (float)tan(g_view->GetFOV() * 0.5f) * m_curDistance * 2.0f;
 	m_matrix.pivot = WVector(0.0f, -(height * (m_areaSize.y / g_view->GetHeight() * m_screenScale)), 0.0f);
 
 	g_view->SetFOV(fov);
@@ -1643,7 +1654,7 @@ void CExhibition::SetScreenPos(WPuppet* pPuppet) {
 		m_defaultAngle.y = 0.33f;
 	}
 
-	m_angle.Reset();
+	m_angle = m_defaultAngle;
 	m_checkedDirection = m_defaultAngle.y;
 }
 
@@ -1728,7 +1739,7 @@ void CExhibition::ParseBoundingBoxScript(void) {
 					partRequired = true;
 					unsigned long tid = atoi(part + 1);
 
-					if (m_pPetFrame->m_partList.FindPart(tid)) {
+					if (m_pPetFrame->GetPartList().FindPart(tid)) {
 						partRequired = false;
 						break;
 					}
@@ -1851,7 +1862,7 @@ void CExhibition::SetPendingTexPart(char* partName, const char* texName) {
 void CExhibition::SetChatFacial(int expression, unsigned long faceType) {
 	faceType &= 0x3FFFFFF;
 	if (expression >= 0 && expression < 4 && faceType < 10) {
-		m_facialChanged = true;
+		m_changed.facialChanged = true;
 		SetPendingTexPart("face", data_a96180[faceType][expression]);
 	}
 }
@@ -1949,7 +1960,7 @@ void CExhibition::DisplayClip(const WRect& rect, float fov, float clipNear, floa
 	g_view->SetCamera(g_camera);
 	g_view->SetClip(oldNear, oldFar, false);
 	g_view->SetFOV(oldFov);
-	g_view->SetClippingArea(WRect(0.0f, 0.0f, g_view->GetWidth(), g_view->GetHeight()));
+	g_view->ResetClippingArea();
 	g_view->ResetScreenCenter();
 	g_view->UpdateCamera();
 

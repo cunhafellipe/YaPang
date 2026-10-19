@@ -47,14 +47,14 @@ void CGolfBall::Reset(WVector pos) {
 	m_groundType = 1;
 	m_holeIn = 0;
 
-	m_preDataIndex = -1;
+	m_lastEventPreDataIndex = -1;
 	m_bounceCount = 0;
 	m_shotStage = 0;
 
 	m_preDataCount = 0;
 
 	m_vectorSlideCount = 0;
-	m_lastEventPreDataIndex = -1;
+	m_preDataIndex = -1;
 	m_eventPreDataIndex[0] = -1;
 	m_eventPreDataIndex[1] = -1;
 	m_eventPreDataIndex[2] = -1;

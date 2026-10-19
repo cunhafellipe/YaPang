@@ -117,7 +117,7 @@ void FrUserListDlg::OnProc(const float dt) {
 	if (m_pInviteDelayDlg) {
 		m_inviteDelayTime -= dt;
 
-		if (m_inviteDelayTime <= 0.0f) {
+		if (m_inviteDelayTime < 0.0f) {
 			m_pInviteDelayDlg->Close(true);
 			m_pInviteDelayDlg = 0;
 		}
@@ -359,17 +359,15 @@ void FrUserListDlg::OnUserListOwnerDraw(PG_MSGARG param) {
 	if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x80) {
 		pLevel = g_pFresh->GetManager()->GetBitmap("LEVELS", MakeStr("ladder_%03d", pUser->rankValue / 100));
 	} else {
-		const char* levelName;
 		if (pUser->titleTypeId) {
 			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pUser->titleTypeId);
 			if (pSkin)
-				levelName = pSkin->m_icon;
+				pLevel = g_pFresh->GetBitmap(pSkin->m_icon);
 			else
-				levelName = MakeStr("level_%03d", pUser->level + 1);
+				pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pUser->level + 1));
 		} else {
-			levelName = MakeStr("level_%03d", pUser->level + 1);
+			pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pUser->level + 1));
 		}
-		pLevel = g_pFresh->GetBitmap(levelName);
 	}
 
 	if (pLevel) {
@@ -386,7 +384,7 @@ void FrUserListDlg::OnUserListOwnerDraw(PG_MSGARG param) {
 	if (WSingleton<CProjectG>::Instance()->HidePrivacy())
 		return;
 
-	unsigned long color = (pUser->identity & 0x14) ? 0x80FFFFFF : 0xFFFFFFFF;
+	unsigned long color = ((unsigned char)pUser->identity & 0x14) ? 0x80FFFFFF : 0xFFFFFFFF;
 
 	if (pItem->underCursor) {
 		pGDI->SetTextColor(0xFFFFFFFF, 0xFF808080);
@@ -500,7 +498,7 @@ void FrUserListDlg::OnInviteBtnUp(void) {
 		CSharedDoc::Instance()->SetInviteMode(1);
 		WSendPacket packet((enumClientPacket)0xB2);
 
-		packet.EncodeStr(std::string(it->second.nick));
+		packet.EncodeStr(it->second.nick);
 
 		packet.Encode4(it->second.id);
 

@@ -65,7 +65,7 @@ bool CheckPuttinPercent(unsigned long putts, unsigned long attempts, float requi
 // sharedtitledoc.inl:48
 bool CheckNoMannerPercent(unsigned long noManner, unsigned long games, float required) {
 	float percent = (float)noManner / (float)games;
-	if (RecalculatePercent(percent * 100.0f) <= required) {
+	if (RecalculatePercent(percent * 100.0f) < required) {
 		return true;
 	}
 	return false;

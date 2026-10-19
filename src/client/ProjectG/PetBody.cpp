@@ -85,7 +85,7 @@ void CPetBody::Init(void) {
 	m_rotMatrix.Reset();
 	m_matrix.Reset();
 
-	m_light.type = LightSet::W_LIGHT_DIRECTIONAL; m_bUseLocalLights = m_bUseLight = true;
+	m_light.type = LightSet::W_LIGHT_DIRECTIONAL; m_bUseLight = m_bUseLocalLights = true;
 
 	m_lookAngle.Reset();
 	m_lookAngleTarget.Reset();
@@ -536,128 +536,130 @@ void CPetBody::ParsePuppetScript(const char *script) {
 		s_command[cmdLen] = '\0';
 		p += cmdLen;
 
-		unsigned int command;
-		for (command = 0; command < sizeof(s_scriptCommands) / sizeof(s_scriptCommands[0]); command++) {
-			if (strcmpi(s_command, s_scriptCommands[command]) == 0) {
-				break;
-			}
-		}
-
-		switch (command) {
-		case 0: {   // *ptex(
-			char token[64];
-			char texture[64];
-
-			token[0] = '\0';
-			p = GetStrConst(p, token);
-
-			if ((len = strlen(token)) == 0 || strlen(token) >= sizeof(token)) {
-				break;
+		for (unsigned int command = 0; command < sizeof(s_scriptCommands) / sizeof(s_scriptCommands[0]); command++) {
+			if (strcmpi(s_command, s_scriptCommands[command]) != 0) {
+				continue;
 			}
 
-			if (token[0] == '@') {
-				if (m_pMotion == NULL || strcmpi(token + 1, m_pMotion->name) != 0) {
+			switch (command) {
+			case 0: {   // *ptex(
+				char token[64];
+				char texture[64];
+
+				token[0] = '\0';
+				p = GetStrConst(p, token);
+
+				if ((len = strlen(token)) == 0 || strlen(token) >= sizeof(token)) {
 					break;
 				}
 
+				if (token[0] == '@') {
+					if (m_pMotion == NULL || strcmpi(token + 1, m_pMotion->name) != 0) {
+						break;
+					}
+
+					p = GetStrConst(p, s_name);
+
+					if ((len = strlen(s_name)) == 0 || strlen(s_name) >= sizeof(s_name)) {
+						break;
+					}
+				}
+				else {
+					strcpy(s_name, token);
+				}
+
+				p = GetStrConst(p, texture);
+
+				if ((len = strlen(texture)) == 0 || strlen(texture) >= sizeof(texture)) {
+					break;
+				}
+
+				SetPendingTexPart(s_name, texture);
+				break;
+			}
+			case 1:     // *snd(
 				p = GetStrConst(p, s_name);
 
 				if ((len = strlen(s_name)) == 0 || strlen(s_name) >= sizeof(s_name)) {
 					break;
 				}
-			}
-			else {
-				strcpy(s_name, token);
-			}
 
-			p = GetStrConst(p, texture);
-
-			if ((len = strlen(texture)) == 0 || strlen(texture) >= sizeof(texture)) {
+				PlaySfx(s_name);
 				break;
-			}
-
-			SetPendingTexPart(s_name, texture);
-			break;
-		}
-		case 1:     // *snd(
-			p = GetStrConst(p, s_name);
-
-			if ((len = strlen(s_name)) == 0 || strlen(s_name) >= sizeof(s_name)) {
+			case 2:     // *fly
+				m_bFlying = true;
 				break;
-			}
-
-			PlaySfx(s_name);
-			break;
-		case 2:     // *fly
-			m_bFlying = true;
-			break;
-		case 3:     // *hide
-			m_flags.Enable(0x2000);
-			break;
-		case 4:     // *show
-			m_flags.Disable(0x2000);
-			break;
-		case 5: {   // *fx(
-			char token[64];
-			char fxName[64];
-			char boneName[64];
-
-			token[0] = '\0';
-			p = GetStrConst(p, token);
-
-			if ((len = strlen(token)) == 0 || strlen(token) >= sizeof(token)) {
+			case 3:     // *hide
+				m_flags.Enable(0x2000);
 				break;
-			}
+			case 4:     // *show
+				m_flags.Disable(0x2000);
+				break;
+			case 5: {   // *fx(
+				char token[64];
+				char fxName[64];
+				char boneName[64];
 
-			if (token[0] == '@') {
-				if (m_pMotion == NULL || strcmpi(token + 1, m_pMotion->name) != 0) {
+				token[0] = '\0';
+				p = GetStrConst(p, token);
+
+				if ((len = strlen(token)) == 0 || strlen(token) >= sizeof(token)) {
 					break;
 				}
 
-				p = GetStrConst(p, fxName);
+				if (token[0] == '@') {
+					if (m_pMotion == NULL || strcmpi(token + 1, m_pMotion->name) != 0) {
+						break;
+					}
 
-				if ((len = strlen(fxName)) == 0 || strlen(fxName) >= sizeof(fxName)) {
-					break;
-				}
-			}
-			else {
-				strcpy(fxName, token);
-			}
+					p = GetStrConst(p, fxName);
 
-			Attacher attacher;
-
-			unsigned int i;
-			for (i = 0; i < 4; i++) {
-				p = GetStrConst(p, boneName);
-
-				if ((len = strlen(boneName)) == 0 || strlen(boneName) >= sizeof(boneName)) {
-					break;
-				}
-
-				WBone *pBone = m_pPet->FindBone(boneName);
-				if (pBone) {
-					attacher.m_pMatrix[i] = &pBone->GetMatrix();
-				}
-				else {
-					w_bound_box *pBox = m_pPet->m_bbList.Find(boneName);
-					if (pBox) {
-						if (pBox->bone) {
-							attacher.m_pMatrix[i] = &pBox->bone->GetMatrix();
-						}
-						attacher.m_pOffset[i] = &pBox->info->spherePivot;
+					if ((len = strlen(fxName)) == 0 || strlen(fxName) >= sizeof(fxName)) {
+						break;
 					}
 				}
-			}
+				else {
+					strcpy(fxName, token);
+				}
 
-			if ((int)i > 0) {
-				WSingleton<CFx>::Instance()->Attach(attacher, fxName, true, NULL);
+				Attacher attacher;
+
+				unsigned int i;
+				for (i = 0; i < 4; i++) {
+					p = GetStrConst(p, boneName);
+
+					if ((len = strlen(boneName)) == 0 || strlen(boneName) >= sizeof(boneName)) {
+						break;
+					}
+
+					WBone *pBone = m_pPet->FindBone(boneName);
+					if (pBone) {
+						attacher.m_pMatrix[i] = &pBone->GetMatrix();
+					}
+					else {
+						w_bound_box *pBox = m_pPet->m_bbList.Find(boneName);
+						if (pBox) {
+							if (pBox->bone) {
+								attacher.m_pMatrix[i] = &pBox->bone->GetMatrix();
+							}
+							attacher.m_pOffset[i] = &pBox->info->spherePivot;
+						}
+					}
+				}
+
+				if ((int)i > 0) {
+					WSingleton<CFx>::Instance()->Attach(attacher, fxName, true, NULL);
+				}
+				break;
+			}
 			}
 			break;
-		}
 		}
 	}
 
-	for (ScriptHandle *handle = m_scriptHandles.Start(); handle; handle = m_scriptHandles.Next()) {
+	ScriptHandle *handle = m_scriptHandles.Start();
+
+	while (handle) {
 		const char *found = strstr(script, handle->name);
 
 		if (found) {
@@ -666,6 +668,8 @@ void CPetBody::ParsePuppetScript(const char *script) {
 
 			msg.m_pSender = NULL; msg.m_reserved = 0; msg.m_param1 = (intptr_t)found; handle->actor << msg;
 		}
+
+		handle = m_scriptHandles.Next();
 	}
 }
 

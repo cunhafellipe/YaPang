@@ -334,10 +334,10 @@ void CItemWindow::OnOpened(float delta) {
 				g_audio->PlaySfx("play_menu_close", 0, 0, 0, 0, 0.5f, 200.0f);
 			}
 		}
+	}
 
-		if (used) {
-			return;
-		}
+	if (used) {
+		return;
 	}
 
 	if (m_over >= 0 && m_over < PLAYER(GOLFDOC()->m_myPlayerIndex)->m_numItems) {
@@ -346,10 +346,12 @@ void CItemWindow::OnOpened(float delta) {
 		}
 
 		if (g_input->GetDown("\xBD\xBA\xC6\xE4\xC0\xCC\xBD\xBA\xB9\xD9", true)) {
-			if (UseItem(m_over)) {
-				return;
-			}
+			used = UseItem(m_over);
 		}
+	}
+
+	if (used) {
+		return;
 	}
 
 	if (g_input->GetDown("\xC1\xC2", true)) {

@@ -166,7 +166,7 @@ CBingoLine& CBingoLine::operator=(const CBingoLine& other) {
 }
 
 // bingoeventdlg.cpp:218
-bool CBingoLine::operator+=(const CBingoPoint& point) {
+bool CBingoLine::operator+=(PG_PORT_CONST CBingoPoint& point) {
 	m_points.push_back(point);
 	return true;
 }
@@ -531,9 +531,11 @@ void FrBingoEventDlg::DrawBoardNumber(FrGraphicInterface* pGI, const WRect& rect
 		float slantY = 0.0f;
 		for (int j = 0; j < 5; j++) {
 			sPoint& pt = m_boardMatchMap[m_board[i][j]];
-			float x = slantX + rect.x + rowX + columnX + m_completeBarPos.x;
+			float x = slantX + rect.x + rowX + columnX;
+			x += m_completeBarPos.x;
 			src.x = pt.x;
-			float y = rect.y + m_completeBarPos.y + slantY + slantRowY + rowY;
+			float y = rect.y + m_completeBarPos.y + slantY + slantRowY;
+			y += rowY;
 			src.y = pt.y;
 			m_board[i].GetBingoPoint(j).DrawPoint(pGI, m_bitmaps, src, x, y);
 
@@ -860,8 +862,12 @@ void FrBingoGiftDlg::OnOwnerDrawGiftArea(PG_MSGARG param) {
 
 		for (int i = 0; i < count; i++) {
 			const Bitmap* pBitmap = m_giftBitmaps[i];
-			pGDI->DrawTexture(pBitmap, WRect(offset + rect.x + m_startX[count - 1], rect.y, (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0);
-
+			WRect dest;
+			dest.x = offset + rect.x + m_startX[count - 1];
+			dest.y = rect.y;
+			dest.w = (float)pBitmap->Width();
+			dest.h = (float)pBitmap->Height();
+			pGDI->DrawTexture(pBitmap, dest, 0xFFFFFFFF, 0);
 			offset += 63.0f;
 		}
 	}

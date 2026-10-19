@@ -79,7 +79,7 @@ GroundItem::GroundItem(GroundItemMan *owner, unsigned long id, GIMMICK_ITEM_TYPE
 	: m_owner(owner), m_id(id), m_itemType(itemType), m_state(GIS_NONE), m_enabled(true), m_disposeTextureType(disposeTextureType), m_puppetName(puppetName), m_puppet(0), m_spatial(spatial) {
 	WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0xa3, m_gimmickContainer);
 
-	m_idleFrame = m_startFrame = m_endFrame = -1;
+	m_endFrame = m_startFrame = m_idleFrame = -1;
 }
 
 // grounditem.cpp:101
@@ -303,7 +303,8 @@ void GroundItem::Update(eGoundItemUpdateType type, bool active, bool replay, flo
 		gaQ rot(m_spatial.m_rotation);
 
 		spatial.m_scale = m_spatial.m_scale + (gaMath::Sin(t) + 1.0f) * 7.0f;
-		gaQ spin(gaV3(0.0f, 1.0f, 0.0f), t * 5.0f);
+		float angle = t * 5.0f;
+		gaQ spin(gaV3(0.0f, 1.0f, 0.0f), angle);
 		spatial.m_rotation = rot * spin;
 
 		spatial.m_position = m_spatial.m_position;
@@ -316,7 +317,8 @@ void GroundItem::Update(eGoundItemUpdateType type, bool active, bool replay, flo
 		float t = phase + syncTime;
 		spatial.m_scale = m_spatial.m_scale;
 		gaQ rot(m_spatial.m_rotation);
-		gaQ spin(gaV3(0.0f, -1.0f, 0.0f), t * 5.0f);
+		float angle = t * 5.0f;
+		gaQ spin(gaV3(0.0f, -1.0f, 0.0f), angle);
 		spatial.m_rotation = rot * spin;
 
 		float height = (gaMath::Sin(syncTime * 3.0f + phase) + 1.0f) * 10.0f;
@@ -377,7 +379,8 @@ void GroundItem::Update(eGoundItemUpdateType type, bool active, bool replay, flo
 			}
 		} else {
 			gaQ rot(m_spatial.m_rotation);
-			gaQ spin(gaV3(0.0f, 1.0f, 0.0f), syncTime * 5.0f);
+			float angle = syncTime * 5.0f;
+			gaQ spin(gaV3(0.0f, 1.0f, 0.0f), angle);
 			rot *= spin;
 			spatial.m_rotation = rot;
 

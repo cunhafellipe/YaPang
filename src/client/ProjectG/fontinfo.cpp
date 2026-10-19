@@ -87,11 +87,6 @@ char *&CGuildInfo::Buffer2(void) {
 	return m_pBuffer2;
 }
 
-// fontinfo.h:796
-void CCalipers::VisiblePowerBar(int nState) {
-	m_nPowerBarState = nState;
-}
-
 // quadtree.h:541
 const std::vector<CQuadTree::sColData> &CQuadTree::GetColList(void) {
 	return m_colList;
@@ -258,7 +253,7 @@ float CFontInfo::GetExactTextWidth(const char *text, float space, float scale) {
 
 	float width = 0;
 	while (*text) {
-		char c = *text++;
+		int c = *text++;
 		char *pFound = strchr(charSet, c);
 
 		width += m_font.m_pTitleFont->GetCharWidthA(g_view, pFound - charSet) + space * scale;
@@ -389,7 +384,7 @@ void CDistToHoleInfo::Process(float fDelta) {
 			m_nState = 3;
 		} else {
 			WVector toCup = GetHoleCupPos() - g_camera.pivot;
-			if (g_camera.za.x * toCup.x + g_camera.za.y * toCup.y + g_camera.za.z * toCup.z < 0.0f) {
+			if (g_camera.za.y * toCup.y + g_camera.za.x * toCup.x + g_camera.za.z * toCup.z < 0.0f) {
 				m_nState = 3;
 			}
 		}
@@ -453,10 +448,11 @@ void CDistToHoleInfo::Reset(void) {
 		delta = GetHoleCupPos() - GolfBall().m_pos;
 	}
 
-	m_fDistance = sqrtf(delta.x * delta.x + delta.z * delta.z) * 0.3125f;
-	if (m_fDistance <= 100.0f) {
+	delta.y = 0.0f;
+	m_fDistance = sqrtf(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z) * 0.3125f;
+	if (m_fDistance < 100.0f) {
 		sprintf(m_pBuffer, "%.1fy", m_fDistance);
-		if (m_fDistance <= 10.0f) {
+		if (!(m_fDistance > 10.0f)) {
 			m_fOffsetX = -14.0f;
 		} else {
 			m_fOffsetX = -20.0f;
@@ -470,9 +466,11 @@ void CDistToHoleInfo::Reset(void) {
 	m_fBlend = 0;
 
 	if (IsMyTurn(true) && !(IsLocalContent((localContentType_t)0x4F) && CSharedDoc::Instance()->m_playingMode == 2)) {
-		m_fixPos = WVector(m_uiX, m_uiY, m_fScale);
 		m_fAlpha = 0;
 		m_nState = 2;
+		m_fixPos.x = m_uiX;
+		m_fixPos.y = m_uiY;
+		m_fixPos.z = m_fScale;
 	} else {
 		m_nState = 0;
 		m_fAlpha = 255.0f;
@@ -581,7 +579,7 @@ CHoleCupInfo::~CHoleCupInfo() {
 // fontinfo.cpp:590
 void CHoleCupInfo::Reset(void) {
 	WVector cup = GOLFDOC()->GetHoleData().m_cupPos;
-	m_fCupHeight = (cup.y - (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ballPos.y - GolfBall().m_radius)) * 0.3125f * 0.9144f;
+	m_fCupHeight = 0.9144f * ((cup.y - (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ballPos.y - GolfBall().m_radius)) * 0.3125f);
 	if (m_pDistToHole)
 		m_pDistToHole->Reset();
 }
@@ -658,7 +656,7 @@ void CHoleCupInfo::ResetUiPosition(void) {
 // fontinfo.cpp:697
 CClubRangeInfo::CClubRangeInfo(void) {
 	Init("[font_wind.jpg", NULL);
-	m_vPos.x = m_vPos.y = m_vPos.z = 0;
+	m_vPos.Reset();
 
 	m_nFlag = 1;
 	m_pBuffer = new char[0x20];
@@ -668,12 +666,13 @@ CClubRangeInfo::CClubRangeInfo(void) {
 void CClubRangeInfo::Display(void) {
 	WVector proj = g_view->Projection(m_vPos);
 
-	if (proj.z <= 0.0f || proj.z >= 1.0f)
+	if (proj.z <= 0.0f || data_9eb5b8[20].f <= proj.z)
 		return;
 
+	const WVector &pos = m_vPos;
 	const WVector &ball = GolfBall().m_pos;
-	float dx = m_vPos.x - ball.x;
-	float dz = m_vPos.z - ball.z;
+	float dx = pos.x - ball.x;
+	float dz = pos.z - ball.z;
 
 	sprintf(m_pBuffer, "%.0fy", sqrtf(dz * dz + dx * dx) * 0.3125f);
 	Print(proj.x, proj.y - 25.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
@@ -1171,7 +1170,7 @@ void CBonusInfo::Display(void) {
 		if (pOverlay) {
 			WRect rc(g_view->GetWidth() * 0.5f + xCur + data_9eb5b8[21].f, g_view->GetHeight() * 0.5f + yCur + 25.0f, (float)pOverlay->GetWidth(), (float)pOverlay->GetHeight());
 			if ((typeId >> 26) == 2 || (typeId >> 26) == 0x1D) {
-				pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(rc.x - 11.0f, rc.y - 11.0f, rc.w, rc.h), 0, 0xFFFFFFFF, 0.0f, 0);
+				pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), rc + WPoint(-11.0f, -11.0f), 0, 0xFFFFFFFF, 0.0f, 0);
 			} else {
 				pOverlay->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), rc, 0, 0xFFFFFFFF, 0.0f, 0);
 			}
@@ -1298,7 +1297,7 @@ void CTotalDistInfo::Display(void) {
 	else
 		sprintf(m_pBuffer, "%.0fy", m_fDistance);
 
-	Print(34.0f, COption::Instance()->gGetBar_Y() + 8.0f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
+	Print(34.0f, COption::Instance()->gGetBar_Y() + data_9eb5b8[27].f, m_pBuffer, 3.0f, 0, 1.0f, NULL);
 }
 
 // fontinfo.cpp:1481
@@ -1441,10 +1440,11 @@ void CPowerInfo::Display(void) {
 
 	float dx = m_vPos.x - ball.x;
 	float dz = m_vPos.z - ball.z;
-	float fDistance = sqrtf(dz * dz + dx * dx) * 0.3125f;
+	dx *= dx;
+	float fDistance = sqrtf(dx + dz * dz) * 0.3125f;
 
 	sprintf(m_pBuffer, "%.0fy", fDistance);
-	Print(data_af23d0 + data_9eb5b8[28].f - 3.0f, COption::Instance()->gGetBar_Y() + data_9eb5b8[27].f, m_pBuffer, 1.0f, 0, 1.0f, NULL);
+	Print(data_9eb5b8[28].f + data_af23d0 - 3.0f, COption::Instance()->gGetBar_Y() + data_9eb5b8[27].f, m_pBuffer, 1.0f, 0, 1.0f, NULL);
 	sprintf(m_pBuffer, "%.0fy", fDistance * 0.5f);
 	Print(data_af23d0 * 0.5f + 143.0f, COption::Instance()->gGetBar_Y() + data_9eb5b8[27].f, m_pBuffer, 1.0f, 0, 1.0f, NULL);
 }
@@ -1683,7 +1683,7 @@ CHoleInfo::CHoleInfo(void) : m_pCourseUI(NULL), m_pHoleUI(NULL), m_pStartPosiUI(
 	m_pHoleUI->Add("Hole", WRect(0.0f, 0.0f, 64.0f, 32.0f), false);
 	m_pHoleUI->Add("Par", WRect(0.0f, 32.0f, 64.0f, 32.0f), false);
 
-	if (CSharedDoc::Instance()->m_roomType == 7) {
+	if (GetGameType() == 7) {
 		m_pHoleUI->Add("Pang", WRect(0.0f, 64.0f, 64.0f, 32.0f), false);
 		m_pHoleUI->Add("x2", WRect(0.0f, 96.0f, 64.0f, 32.0f), false);
 		m_pHoleUI->Add("x4", WRect(0.0f, 128.0f, 64.0f, 32.0f), false);
@@ -1698,7 +1698,7 @@ CHoleInfo::CHoleInfo(void) : m_pCourseUI(NULL), m_pHoleUI(NULL), m_pStartPosiUI(
 		m_pPlayerNumUI = new CSimpleUI("[nplayer.jpg");
 
 		if (CSharedDoc::Instance()->m_roomType == 0) {
-			m_pStartPosiUI->Add("\xBC\xB1\xB5\xEE", WRect(0.0f, 0.0f, 64.0f, 32.0f), false);
+			m_pStartPosiUI->Add("\xBC\xB1\xB5\xCE", WRect(0.0f, 0.0f, 64.0f, 32.0f), false);
 
 			m_pPlayerNumUI->Add("1", WRect(0.0f, 0.0f, 32.0f, 16.0f), false);
 			m_pPlayerNumUI->Add("2", WRect(32.0f, 0.0f, 32.0f, 16.0f), false);
@@ -2426,7 +2426,7 @@ void CPangInfo::ChangeTurn(void) {
 
 	if (CSharedDoc::Instance()->m_roomType == 7 && GOLFDOC()->m_approachMode) {
 		m_bonusPangs[0] = m_shownPangs[0] = m_totalCases[0].m_pang = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ghostAward;
-		m_bonusPangs[1] = m_shownPangs[1] = m_totalCases[1].m_pang = m_turnExtraPangs[GOLFDOC()->m_myPlayerIndex] + PLAYER(GOLFDOC()->m_myPlayerIndex)->m_extraPang;
+		m_bonusPangs[1] = m_shownPangs[1] = m_totalCases[1].m_pang = (int)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_extraPang + m_turnExtraPangs[GOLFDOC()->m_myPlayerIndex];
 	} else {
 		m_bonusPangs[0] = m_shownPangs[0] = m_totalCases[0].m_pang = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ghostAward;
 		m_bonusPangs[1] = m_shownPangs[1] = m_totalCases[1].m_pang = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_extraPang;
@@ -3906,20 +3906,20 @@ void CPangInfo::ProcessCases(float fDelta) {
 					switch (i) {
 					case 1: {
 						__int64 nMul = m_cases[i].m_pang - 1;
-						m_totalCases[0].m_pang = m_shownPangs[0] + float2int(nMul * fRatio * m_cases[0].m_pang);
+						m_totalCases[0].m_pang = m_shownPangs[0] + float2int(m_cases[0].m_pang * (nMul * fRatio));
+						break;
+					}
+					case 9:
+					case 10:
+					case 11: {
+						__int64 nMul = m_cases[i].m_pang - 1;
+						m_totalCases[0].m_pang = m_shownPangs[0] + float2int(m_cases[8].m_pang * (nMul * fRatio));
 						break;
 					}
 					case 8:
 						m_totalCases[0].m_pang = m_shownPangs[0] + float2int(m_cases[8].m_pang * fRatio);
 						m_totalCases[0].m_pang = (int)m_totalCases[0].m_pang < 0 ? 0 : (int)m_totalCases[0].m_pang;
 						break;
-					case 9:
-					case 10:
-					case 11: {
-						__int64 nMul = m_cases[i].m_pang - 1;
-						m_totalCases[0].m_pang = m_shownPangs[0] + float2int(nMul * fRatio * m_cases[8].m_pang);
-						break;
-					}
 					case 14: {
 						__int64 nMul = m_cases[i].m_pang - 1;
 						float fExtra = nMul * fRatio;
@@ -4118,11 +4118,18 @@ void CPangInfo::Insert(int nCase) {
 
 	if (nIndex >= 0) {
 		for (int i = 0; i < 24; i++) {
-			if (i != nCase && !(m_cases[i].m_flags & 0x101) && m_cases[i].m_nIndex >= nIndex) {
-				m_cases[i].m_flags |= 0x1000;
-				m_cases[i].m_nIndex++;
-				m_cases[i].m_fTargetY = fBarY - 108.0f - m_cases[i].m_nIndex * 20.0f;
+			if (i == nCase) {
+				continue;
 			}
+			if (m_cases[i].m_flags & 0x101) {
+				continue;
+			}
+			if (m_cases[i].m_nIndex < nIndex) {
+				continue;
+			}
+			m_cases[i].m_flags |= 0x1000;
+			m_cases[i].m_nIndex++;
+			m_cases[i].m_fTargetY = fBarY - 108.0f - m_cases[i].m_nIndex * 20.0f;
 		}
 	}
 
@@ -4132,7 +4139,7 @@ void CPangInfo::Insert(int nCase) {
 
 	if (nCase == 12 || nCase == 16 || nCase == 18) {
 		m_fPopupX = (float)floor(g_view->GetWidth() - 10.0f - 192.6f);
-		m_fPopupY = m_cases[nCase].m_fY - 13.44f;
+		m_fPopupY = m_cases[nCase].m_fY - 0.07f * 192.0f; // folds to 0x41570a3e, one ulp above 13.44f
 	}
 }
 
@@ -4366,17 +4373,13 @@ void CPangInfo::ClashCombo(void) {
 			std::vector<CQuadTree::sColData>::const_iterator it;
 			for (it = colList.begin(); it != colList.end(); ++it) {
 				if (it->m_objIndex != -1 && it->m_frame == i) {
+					m_cases[0xB].m_pang = (int)m_cases[0xB].m_pang * 2;
+
+					if (m_cases[0xB].m_pang > 1 && m_cases[0xB].m_flags == 1) {
+						Insert(0xB);
+					}
 					break;
 				}
-			}
-			if (it == colList.end()) {
-				continue;
-			}
-
-			m_cases[0xB].m_pang = (int)m_cases[0xB].m_pang * 2;
-
-			if (m_cases[0xB].m_pang > 1 && m_cases[0xB].m_flags == 1) {
-				Insert(0xB);
 			}
 		}
 	} else if (m_flags & 4) {
@@ -4426,8 +4429,7 @@ void CPangInfo::AztecBonusWater(void) {
 		return;
 	}
 
-	CSharedDoc *pDoc = CSharedDoc::Instance();
-	unsigned long ballId = pDoc->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_ballId;
+	unsigned long ballId = CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_ballId;
 	__int64 bonus = 0;
 	if (ballId == 0x14000005 || ballId == 0x14000080 || ballId == 0x14000016 || ballId == 0x1400003C || ballId == 0x1400003D) {
 		bonus = 1;
@@ -4435,7 +4437,7 @@ void CPangInfo::AztecBonusWater(void) {
 
 	CCardManager::Instance()->SetPlayerIndex(GOLFDOC()->m_myPlayerIndex);
 	bonus += CCardManager::Instance()->GetCardBounceBonusUp();
-	if (bonus <= 0) {
+	if (bonus < 1) {
 		return;
 	}
 
@@ -4637,8 +4639,8 @@ void CPangInfo::Display(void) {
 		return;
 	}
 
-	WRECT rcSrc;
 	WRECT rcDst;
+	WRECT rcSrc;
 	float fScale;
 	int i;
 	for (i = 23; i >= 0; i--) {
@@ -4740,8 +4742,11 @@ void CPangInfo::Display(void) {
 					idx = i;
 				}
 
-				float x = (data_9eb5b8[20].f - t) * m_fPopupX + t * m_uiPos[idx][0];
-				float y = (data_9eb5b8[20].f - t) * m_fPopupY + t * m_uiPos[idx][1];
+				float x;
+				float y;
+				WPoint pos = WPoint((data_9eb5b8[20].f - t) * m_fPopupX, (data_9eb5b8[20].f - t) * m_fPopupY) + WPoint(t * m_uiPos[idx][0], t * m_uiPos[idx][1]);
+				x = pos.x;
+				y = pos.y;
 				if (m_nBonusEffects > 1) {
 					y -= 10.0f;
 				}
@@ -4777,7 +4782,7 @@ void CPangInfo::Display(void) {
 					continue;
 				}
 
-				if (CSharedDoc::Instance()->m_roomType == 1 && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute == GOLFDOC()->GetPlayer(i)->m_attribute) {
+				if (CSharedDoc::Instance()->m_roomType == 1 && PLAYER(i)->m_attribute == PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute) {
 					sprintf(m_pBuffer, "%d", GetAngelBonus(PLAYER(i)));
 				} else {
 					sprintf(m_pBuffer, "%d", GetAngelBonus(GOLFDOC()->GetPlayer(i)));
@@ -4798,11 +4803,13 @@ void CPangInfo::Display(void) {
 				float x;
 				float y;
 				if (nEffects > 1) {
-					x = t * m_uiPos[idx + 4][0] + (data_9eb5b8[20].f - t) * m_fPopupX;
-					y = (data_9eb5b8[20].f - t) * m_fPopupY + t * m_uiPos[idx + 4][1];
+					WPoint pos = WPoint((data_9eb5b8[20].f - t) * m_fPopupX, (data_9eb5b8[20].f - t) * m_fPopupY) + WPoint(t * m_uiPos[idx + 4][0], t * m_uiPos[idx + 4][1]);
+					x = pos.x;
+					y = pos.y;
 				} else {
-					x = t * m_uiPos[idx][0] + (data_9eb5b8[20].f - t) * m_fPopupX;
-					y = (data_9eb5b8[20].f - t) * m_fPopupY + t * m_uiPos[idx][1];
+					WPoint pos = WPoint((data_9eb5b8[20].f - t) * m_fPopupX, (data_9eb5b8[20].f - t) * m_fPopupY) + WPoint(t * m_uiPos[idx][0], t * m_uiPos[idx][1]);
+					x = pos.x;
+					y = pos.y;
 				}
 				if (nEffects > 1) {
 					y -= 10.0f;
@@ -4844,8 +4851,11 @@ void CPangInfo::Display(void) {
 				idx = i;
 			}
 
-			float x = (data_9eb5b8[20].f - t) * m_fPopupX + t * m_uiPos[idx][0];
-			float y = (data_9eb5b8[20].f - t) * m_fPopupY + t * m_uiPos[idx][1];
+			float x;
+			float y;
+			WPoint pos = WPoint((data_9eb5b8[20].f - t) * m_fPopupX, (data_9eb5b8[20].f - t) * m_fPopupY) + WPoint(t * m_uiPos[idx][0], t * m_uiPos[idx][1]);
+			x = pos.x;
+			y = pos.y;
 			if (m_nBonusEffects > 1) {
 				y += 10.0f;
 			}
@@ -4973,12 +4983,10 @@ void CPangInfo::Record(unsigned char index, __int64 *pangs) {
 	}
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
-		TEAM(PLAYER(index)->m_attribute)->m_holeRecord[GOLFDOC()->m_currentHole - 1] = (int)PLAYER(index)->m_holeRecord[GOLFDOC()->m_currentHole - 1];
-		TEAM(PLAYER(index)->m_attribute)->m_teamValue = (int)PLAYER(index)->m_ghostAward;
+		TEAM(PLAYER(index)->m_attribute)->m_holeRecord[GOLFDOC()->m_currentHole - 1] = PLAYER(index)->m_holeRecord[GOLFDOC()->m_currentHole - 1];
+		TEAM(PLAYER(index)->m_attribute)->m_teamValue = PLAYER(index)->m_ghostAward;
 
 		if (PLAYER(index)->m_partnerIndex != 0xFF) {
-			// The original calls an out-of-line WCrypticValue<int>::operator=(const
-			// WCrypticValue<int> &) for these two copies, which encrypttypes.h lacks.
 			PLAYER(PLAYER(index)->m_partnerIndex)->m_holeRecord[GOLFDOC()->m_currentHole - 1] = PLAYER(index)->m_holeRecord[GOLFDOC()->m_currentHole - 1];
 			PLAYER(PLAYER(index)->m_partnerIndex)->m_ghostAward = PLAYER(index)->m_ghostAward;
 		}
@@ -5055,9 +5063,9 @@ void CPangInfo::Record(unsigned char index, __int64 *pangs) {
 	}
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
-		TEAM(PLAYER(index)->m_attribute)->m_teamValue2 = (int)PLAYER(index)->m_extraPang;
+		TEAM(PLAYER(index)->m_attribute)->m_teamValue2 = PLAYER(index)->m_extraPang;
 		if (PLAYER(index)->m_partnerIndex != 0xFF) {
-			PLAYER(PLAYER(index)->m_partnerIndex)->m_extraPang = (int)PLAYER(index)->m_extraPang;
+			PLAYER(PLAYER(index)->m_partnerIndex)->m_extraPang = PLAYER(index)->m_extraPang;
 		}
 	}
 }
@@ -5145,7 +5153,7 @@ CCalipers::~CCalipers() {
 
 // fontinfo.cpp:6774
 void CCalipers::SetCalipersLimit(float fLimit) {
-	m_fCursorPos = m_fDisplayPos = fLimit;
+	m_fDisplayPos = m_fCursorPos = fLimit;
 
 	switch (GOLFDOC()->GameMode()) {
 	case 8:
@@ -5391,8 +5399,8 @@ void CCalipers::KeyCheck(float fDelta) {
 
 // fontinfo.cpp:7101
 void CCalipers::Reset(void) {
-	m_fMoveDelta = 0;
 	m_bResetFlag = true;
+	m_fMoveDelta = 0;
 	m_bKeyMoving = false;
 
 	if (IsLocalContent((localContentType_t)0x4F)) {
@@ -5474,7 +5482,7 @@ void CCalipers::Process(float fDelta) {
 		float fMouseX = mouse.x;
 
 		if (CMouseCursor::Instance()->m_area == 5) {
-			float fLimit = GolfClub().GetType() == 3 ? data_9eb5b8[28].f : GolfClub().GetNarrowAccuracy() + data_9eb5b8[28].f;
+			float fLimit = GolfClub().GetType() != 3 ? GolfClub().GetNarrowAccuracy() + data_9eb5b8[28].f : data_9eb5b8[28].f;
 
 			if (mouse.x > fLimit) {
 				if (mouse.x > data_9eb5b8[26].f) {
@@ -5532,9 +5540,7 @@ void CCalipers::Process(float fDelta) {
 
 // fontinfo.cpp:7271
 void CCalipers::Display(void) {
-	WRect uv(0.0f, 0.0f, 0.5f, 1.0f);
-	WRect rc(150.0f, COption::Instance()->gGetBar_Y() + data_9eb5b8[21].f, 64.0f, 32.0f);
-	m_pCalipersOverlay->Render(g_view, uv, rc, 0, 0xFFFFFFFF, 0.0f, 0);
+	m_pCalipersOverlay->Render(g_view, WRect(0.0f, 0.0f, 0.5f, 1.0f), WRect(150.0f, COption::Instance()->gGetBar_Y() + data_9eb5b8[21].f, 64.0f, 32.0f), 0, 0xFFFFFFFF, 0.0f, 0);
 
 	if (m_nPowerBarState == 1) {
 		float fPos = 0;
@@ -5542,19 +5548,15 @@ void CCalipers::Display(void) {
 
 		if (m_pCalipersOverlay) {
 			WVector mouse = g_input->GetMousePoint();
-			float fLimit = GolfClub().GetType() == 3 ? data_9eb5b8[28].f : GolfClub().GetNarrowAccuracy() + data_9eb5b8[28].f;
+			float fLimit = GolfClub().GetType() != 3 ? GolfClub().GetNarrowAccuracy() + data_9eb5b8[28].f : data_9eb5b8[28].f;
 
 			if (mouse.x > fLimit) {
 				if (g_input->Get("CALIPERS_LEFT", true) || m_fMoveDelta - m_fDisplayPos > 0) {
-					WRect rcLeft(152.0f, COption::Instance()->gGetBar_Y() + 22.0f, 32.0f, 32.0f);
-					WRect uvArrow(0.5f, 0.0f, 0.25f, 1.0f);
-					m_pCalipersOverlay->Render(g_view, uvArrow, rcLeft, 0, 0xFFFFFFFF, 0.0f, 0);
+					m_pCalipersOverlay->Render(g_view, WRect(0.5f, 0.0f, 0.25f, 1.0f), WRect(152.0f, COption::Instance()->gGetBar_Y() + 22.0f, 32.0f, 32.0f), 0, 0xFFFFFFFF, 0.0f, 0);
 				}
 
 				if (g_input->Get("CALIPERS_RIGHT", true) || (m_fMoveDelta > 0 && m_fMoveDelta - m_fDisplayPos < 0)) {
-					WRect rcRight(174.0f, COption::Instance()->gGetBar_Y() + 22.0f, 32.0f, 32.0f);
-					WRect uvArrow(0.5f, 0.0f, 0.25f, 1.0f);
-					m_pCalipersOverlay->Render(g_view, uvArrow, rcRight, 0, 0xFFFFFFFF, 0.0f, 0);
+					m_pCalipersOverlay->Render(g_view, WRect(0.5f, 0.0f, 0.25f, 1.0f), WRect(174.0f, COption::Instance()->gGetBar_Y() + 22.0f, 32.0f, 32.0f), 0, 0xFFFFFFFF, 0.0f, 0);
 				}
 			}
 
@@ -5567,6 +5569,7 @@ void CCalipers::Display(void) {
 CHolePoseSkins::CHolePoseSkins(void) {
 	Init("[bigfont.jpg", NULL);
 
+	m_nFlag = 2;
 	m_pBuffer = new char[0x20];
 
 	m_nValue = 0;
@@ -5789,7 +5792,7 @@ void CExtraHoleInfo::Display(void) {
 				if (GOLFDOC()->GetPlayer(i)->m_state == 1) {
 					m_color = 0xFFFF0A0A;
 				} else {
-					m_color = (i != m_leader ? 0x2DFF : 0) + 0xFFFFD200;
+					m_color = i != m_leader ? 0xFFFFFFFF : 0xFFFFD200;
 				}
 
 				sPlayerData *player = GOLFDOC()->GetPlayer(i);
@@ -5798,13 +5801,13 @@ void CExtraHoleInfo::Display(void) {
 					Print(g_view->GetWidth() - 25.0f, i * 23.0f + 213.0f, "-", 3.0f, 0, 1.0f, NULL);
 				} else {
 					if (m_cupDistance[i] > 0) {
-						Print(g_view->GetWidth() - 65.0f, i * 23.0f + 213.0f, MakeStr("%d.%dy", m_cupDistance[i] / 100, m_cupDistance[i] % 100), 3.0f, 0, 1.0f, NULL);
+						Print(g_view->GetWidth() - 65.0f, i * 23.0f + 213.0f, MakeStr("%d.%dy", m_cupDistance[i] / 100, m_cupDistance[i] % 100), 0.0f, 0, 1.0f, NULL);
 					} else {
 						Print(g_view->GetWidth() - 85.0f, i * 23.0f + 213.0f, "-", 3.0f, 0, 1.0f, NULL);
 					}
 
 					if (m_shotTime[i] > 0) {
-						Print(g_view->GetWidth() - 5.0f, i * 23.0f + 213.0f, MakeStr("%d.%03d", m_shotTime[i] / 1000, m_shotTime[i] % 1000), 3.0f, 0, 1.0f, NULL);
+						Print(g_view->GetWidth() - 5.0f, i * 23.0f + 213.0f, MakeStr("%d.%03d", m_shotTime[i] / 1000, m_shotTime[i] % 1000), 0.0f, 0, 1.0f, NULL);
 					} else {
 						Print(g_view->GetWidth() - 25.0f, i * 23.0f + 213.0f, "-", 3.0f, 0, 1.0f, NULL);
 					}

@@ -412,7 +412,7 @@ public:
 	void IndexControlClick(void);
 	void IndexControlNext(void);
 	void IndexControlPrev(void);
-	void DrawStoredItemInfo(FrListBox* & pListBox, const FrListItem& item);
+	void DrawStoredItemInfo(PG_ORIG_CONST FrListBox*& pListBox, const FrListItem& item);
 	void ReqPopStoredItemInfo(const sStoredItemInfo& info);
 	void ReqPopStoredItemInfo(const FrListItem& item);    // itemstorage.cpp:2018
 	bool CheckStoredItemInfo(sStoredItemInfo& stored, const sItemInfo& info);   // itemstorage.cpp (not yet transcribed)

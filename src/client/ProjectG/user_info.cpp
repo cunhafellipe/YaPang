@@ -1021,24 +1021,24 @@ void FrUserInfoForm::OnSpecListboxOwnerDraw(PG_MSGARG param) {
 			m_pSpecialInfoWnd[i]->SetVisible(false);
 
 		// the last games' players
-		for (i = 0; i < 5; i++) {
-			if (m_matchHistory[i].uid != 0) {
-				const Bitmap *pGenderBmp = m_pGenderBmp[m_matchHistory[i].sex];
+		for (unsigned char slot = 0; slot < 5; slot++) {
+			if (m_matchHistory[slot].uid != 0) {
+				const Bitmap *pGenderBmp = m_pGenderBmp[m_matchHistory[slot].sex];
 
-				pGDI->DrawTexture(pGenderBmp, WRect(rect.x + 14.0f, i * 26 + rect.y + 45.0f, (float)pGenderBmp->Width(), (float)pGenderBmp->Height()), 0xFFFFFFFF, 0);
+				pGDI->DrawTexture(pGenderBmp, WRect(rect.x + 14.0f, slot * 26 + rect.y + 45.0f, (float)pGenderBmp->Width(), (float)pGenderBmp->Height()), 0xFFFFFFFF, 0);
 
-				m_pMatchHistoryBtn[i]->SetVisible(true);
+				m_pMatchHistoryBtn[slot]->SetVisible(true);
 
 				pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 				pGDI->SetTextStyle(1);
-				g_pFresh->GetManager()->PrintText(WPoint(rect.x + 51.0f, i * 26 + rect.y + 51.0f), 0, m_matchHistory[i].nickname, -1.0f, 0xFFFFFFFF);
-				m_pMatchHistoryEdit[i]->SetVisible(false);
+				g_pFresh->GetManager()->PrintText(WPoint(rect.x + 51.0f, slot * 26 + rect.y + 51.0f), 0, m_matchHistory[slot].nickname, -1.0f, 0xFFFFFFFF);
+				m_pMatchHistoryEdit[slot]->SetVisible(false);
 			} else {
-				m_pMatchHistoryBtn[i]->SetVisible(false);
+				m_pMatchHistoryBtn[slot]->SetVisible(false);
 
-				editRect = WRect(rect.x + 42.0f, i * 26 + rect.y + 46.0f, 124.0f, 20.0f);
-				m_pMatchHistoryEdit[i]->SetRect(editRect);
-				m_pMatchHistoryEdit[i]->SetVisible(true);
+				editRect = WRect(rect.x + 42.0f, slot * 26 + rect.y + 46.0f, 124.0f, 20.0f);
+				m_pMatchHistoryEdit[slot]->SetRect(editRect);
+				m_pMatchHistoryEdit[slot]->SetVisible(true);
 			}
 		}
 
@@ -1834,6 +1834,8 @@ void FrUserInfoForm::HidePet(bool bWait) {
 
 // user_info.cpp:2198
 void FrUserInfoForm::SetInfo(sUserInfoTime *pInfo) {
+	int i;
+
 	m_friendExtra.id2 = pInfo->m_friendExtra.id2;
 	wsprintf(m_friendExtra.data, "%s", pInfo->m_friendExtra.data);
 
@@ -1842,7 +1844,7 @@ void FrUserInfoForm::SetInfo(sUserInfoTime *pInfo) {
 	m_userInfo = pInfo->m_userInfo;
 
 	if (IsLocalContent((localContentType_t)0x28)) {
-		if (strcmpi(m_userInfo.m_name, WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname) == 0) {
+		if (strcmpi(m_userInfo.m_name, MyNick()) == 0) {
 			WSingleton<CMatchHistory>::Instance()->GetMatchHistory(m_matchHistory);
 			if (WSingleton<CMatchHistory>::Instance()->IsUpdated() == false) {
 				WSingleton<CMatchHistory>::Instance()->RequestHistory();
@@ -1861,11 +1863,11 @@ void FrUserInfoForm::SetInfo(sUserInfoTime *pInfo) {
 	}
 
 	m_specialTrophies.clear();
-	for (int i = 0; i < pInfo->m_specialTrophyCount; i++)
+	for (i = 0; i < pInfo->m_specialTrophyCount; i++)
 		m_specialTrophies.push_back(pInfo->m_pArray1[i]);
 
 	m_guildTrophies.clear();
-	for (int i = 0; i < pInfo->m_guildTrophyCount; i++)
+	for (i = 0; i < pInfo->m_guildTrophyCount; i++)
 		m_guildTrophies.push_back(pInfo->m_pArray2[i]);
 
 	m_guildPang = pInfo->m_guildPang;
@@ -1874,17 +1876,17 @@ void FrUserInfoForm::SetInfo(sUserInfoTime *pInfo) {
 	memcpy(m_classicMapStats, pInfo->m_userInfo.m_mapStatistics2, sizeof(m_classicMapStats)); memcpy(m_seasonClassicMapStats, pInfo->m_classicMapStatistics, sizeof(m_seasonClassicMapStats));
 
 	m_seasonRecord.m_statistics = pInfo->m_seasonStatistics;
-	for (int i = 0; i < 20; i++)
+	for (i = 0; i < 20; i++)
 		m_seasonRecord.m_mapStats[i] = pInfo->m_mapStatistics[i];
 
 	m_seasonRecord.m_trophy = pInfo->m_trophyStatistics;
 
 	m_seasonRecord.m_specialTrophies.clear();
-	for (int i = 0; i < pInfo->m_seasonSpecialTrophyCount; i++)
+	for (i = 0; i < pInfo->m_seasonSpecialTrophyCount; i++)
 		m_seasonRecord.m_specialTrophies.push_back(pInfo->m_pArray3[i]);
 
 	m_seasonRecord.m_guildTrophies.clear();
-	for (int i = 0; i < pInfo->m_seasonGuildTrophyCount; i++)
+	for (i = 0; i < pInfo->m_seasonGuildTrophyCount; i++)
 		m_seasonRecord.m_guildTrophies.push_back(pInfo->m_pArray4[i]);
 
 	if (m_userInfo.m_uid != 0xFFFFFFFF) {
@@ -2199,27 +2201,28 @@ void FrUserInfoForm::SetDisconnQuestionMark(bool bVisible) {
 
 // user_info.cpp:2736
 void SortMapStat(sMapStatistics *ppBest[], sMapStatistics *pStats) {
-	for (int i = 0; i < 20; i++, pStats++) {
+	for (int i = 0; i < 20; i++) {
 		if (i == 0x11)
 			continue;
 
+		sMapStatistics *pStat = &pStats[i];
 		IFF_STRUCT::sCourse *pCourse = ItemManager()->FindCourse(0x28000000
-				| ((pStats->m_course > 0x7F && pStats->m_course != 0xFD) ? pStats->m_course - 0x80 : pStats->m_course));
+				| ((pStat->m_course > 0x7F && pStat->m_course != 0xFD) ? pStat->m_course - 0x80 : pStat->m_course));
 		if (pCourse == NULL || pCourse->m_active == 0)
 			continue;
 
-		unsigned char kind = pCourse->courseFlags;
-		sMapStatistics *&pBest = ppBest[(kind & 0x0F) - 1];
+		unsigned char kind = pCourse->kind;
+		sMapStatistics *pBest = ppBest[kind - 1];
 
 		if (pBest == NULL) {
-			pBest = pStats;
-		} else if (pStats->m_bestScore != 0x7F) {
-			if (pStats->m_bestScore < pBest->m_bestScore) {
-				pBest = pStats;
-			} else if (pStats->m_bestScore == pBest->m_bestScore) {
-				__int64 value = pStats->m_bestPang;
+			ppBest[kind - 1] = pStat;
+		} else if (pStat->m_bestScore != 0x7F) {
+			if (pStat->m_bestScore < pBest->m_bestScore) {
+				ppBest[kind - 1] = pStat;
+			} else if (pStat->m_bestScore == pBest->m_bestScore) {
+				__int64 value = pStat->m_bestPang;
 				if (value != 0 && value > pBest->m_bestPang)
-					pBest = pStats;
+					ppBest[kind - 1] = pStat;
 			}
 		}
 	}
@@ -2232,6 +2235,7 @@ void FrUserInfoForm::SetContent(bool b) {
 
 	m_bOption = b;
 
+	sPangYaUserInfo *pInfo = &m_userInfo.m_pangyaInfo;
 	sPangYaUserStatistics *pStatistics = NULL;
 	sTrophyStatistics *pTrophy = NULL;
 	std::list<sSpecialTrophy> *pSpecialTrophies = NULL;
@@ -2249,9 +2253,7 @@ void FrUserInfoForm::SetContent(bool b) {
 
 	m_pIdEdit->SetLine(1, m_userInfo.m_name, 0xFF000000, false, 0);
 
-	// user_info.cpp:2821 UpdateEditSchoolAndGuild(m_seasonTab, <the
-	// sPangYaUserInfo copy at sUserInfo + 0x2>): sUserInfo has no
-	// sPangYaUserInfo view of that block yet.
+	UpdateEditSchoolAndGuild(m_seasonTab, pInfo);
 	UpdateEditExpAndMannerInfo(m_seasonTab, pStatistics);
 	UpdateEditUserLocation();
 
@@ -2337,11 +2339,11 @@ void FrUserInfoForm::SetContent(bool b) {
 	if (m_seasonTab == SEASON_CURRENT || m_seasonTab == SEASON_TOTAL) {
 		m_pRecordEdit[5]->SetLine(1, bestBuf[4], 0xFF000000, false, 0);
 		m_pRecordEdit[6]->SetLine(1, bestBuf[3], 0xFF000000, false, 0);
-
-		m_pRecordEdit[7]->SetLine(1, bestBuf[2], 0xFF000000, false, 0);
-		m_pRecordEdit[8]->SetLine(1, bestBuf[1], 0xFF000000, false, 0);
-		m_pRecordEdit[9]->SetLine(1, bestBuf[0], 0xFF000000, false, 0);
 	}
+
+	m_pRecordEdit[7]->SetLine(1, bestBuf[2], 0xFF000000, false, 0);
+	m_pRecordEdit[8]->SetLine(1, bestBuf[1], 0xFF000000, false, 0);
+	m_pRecordEdit[9]->SetLine(1, bestBuf[0], 0xFF000000, false, 0);
 
 	sprintf(buf, "%d", pStatistics->holeInOnes);
 	m_pRecordEdit[10]->SetLine(1, buf, 0xFF000000, false, 0);
@@ -2349,7 +2351,11 @@ void FrUserInfoForm::SetContent(bool b) {
 	sprintf(buf, "%d", pStatistics->albatrosses);
 	m_pRecordEdit[11]->SetLine(1, buf, 0xFF000000, false, 0);
 
-	bool bClassic = m_pRecordClassicBtn->GetStatus() == FrButton::PRESSED;
+	bool bClassic;
+	if (m_pRecordClassicBtn->GetStatus() == FrButton::PRESSED)
+		bClassic = true;
+	else
+		bClassic = false;
 	UpdateEditMapStatistics(m_seasonTab, bClassic);
 
 	int medalCount = 0;
@@ -2418,8 +2424,8 @@ void FrUserInfoForm::SetContent(bool b) {
 void FrUserInfoForm::BuildTotalStat(void) {
 	m_totalRecord.Clear();
 
-	const sPangYaUserStatistics *pUser = &m_userInfo.m_statistics;
 	const sPangYaUserStatistics *pSeason = &m_seasonRecord.m_statistics;
+	const sPangYaUserStatistics *pUser = &m_userInfo.m_statistics;
 
 	// The totals take the shown player's record (the current season) plus the
 	// other season record, and the better of the two bests.
@@ -2495,9 +2501,11 @@ void FrUserInfoForm::BuildTotalStat(void) {
 		}
 	}
 
+	const sTrophyStatistics *pSeasonTrophy = &m_seasonRecord.m_trophy;
+	const sTrophyStatistics *pUserTrophy = &m_userInfo.m_trophy;
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 13; j++)
-			m_totalRecord.m_trophy.m_medals[j][i] += m_userInfo.m_trophy.m_medals[j][i] + m_seasonRecord.m_trophy.m_medals[j][i];
+			m_totalRecord.m_trophy.m_medals[j][i] += pUserTrophy->m_medals[j][i] + pSeasonTrophy->m_medals[j][i];
 	}
 
 	m_totalRecord.m_specialTrophies.clear();
@@ -2568,90 +2576,116 @@ unsigned long FrUserInfoForm::Get30sRecordColor(int medal) {
 
 // user_info.cpp:3296
 unsigned long FrUserInfoForm::GetColor(eTabType tab, unsigned long index) {
-	const sPangYaUserStatistics *pUser = &m_userInfo.m_statistics;
-	const sPangYaUserStatistics *pMy = &WSingleton<CSharedDoc>::Instance()->m_myStatistics;
-
 	if (m_userInfo.m_uid == WSingleton<CSharedDoc>::Instance()->m_myUID
 			&& (tab != TAB_GENERAL_INFO || index != 5))
 		return 0xFF000000;
+
+	const sPangYaUserStatistics *pUser = &m_userInfo.m_statistics;
+	const sPangYaUserStatistics *pMy = &WSingleton<CSharedDoc>::Instance()->m_myStatistics;
 
 	bool bBetter = false;
 
 	switch (tab) {
 	case TAB_GENERAL_INFO:
-		if (index == 5) {
-			// the disconnect rate: redder the more games were left
-			if (pUser->gamesPlayed == 0)
-				return 0xFF000000;
+		if (index != 5)
+			break;
 
+		// the disconnect rate: redder the more games were left
+		if (pUser->gamesPlayed == 0)
+			return 0xFF000000;
+
+		{
 			unsigned char c = 0xFF - (unsigned char)((float)pUser->noMannerGames / (float)pUser->gamesPlayed * 255.0f);
 			return 0xFFFF0000 | (c << 8) | c;
 		}
-		break;
 
 	case TAB_RECORD_INFO:
 		switch (index) {
 		case 3: {
 			unsigned long userTotal = pUser->rateTotal;
-			if (userTotal == 0)
-				break;
-			unsigned long myTotal = pMy->rateTotal;
-			if (myTotal == 0) { bBetter = true; break; }
-			bBetter = (float)pUser->rateCount / (float)userTotal > (float)pMy->rateCount / (float)myTotal;
+			if (userTotal == 0) {
+				bBetter = false;
+			} else {
+				unsigned long myTotal = pMy->rateTotal;
+				if (myTotal == 0)
+					bBetter = true;
+				else
+					bBetter = (float)pUser->rateCount / (float)userTotal > (float)pMy->rateCount / (float)myTotal;
+			}
 			break;
 		}
 		case 4: {
 			unsigned long userHoles = pUser->drives - pUser->par3Drives;
-			if (userHoles == 0)
-				break;
-			unsigned long myHoles = pMy->drives - pMy->par3Drives;
-			if (myHoles == 0) { bBetter = true; break; }
-			bBetter = (float)pUser->scoreToPar / (float)userHoles < (float)pMy->scoreToPar / (float)myHoles;
+			if (userHoles == 0) {
+				bBetter = false;
+			} else {
+				unsigned long myHoles = pMy->drives - pMy->par3Drives;
+				if (myHoles == 0)
+					bBetter = true;
+				else
+					bBetter = (float)pUser->scoreToPar / (float)userHoles < (float)pMy->scoreToPar / (float)myHoles;
+			}
 			break;
 		}
 		case 5: {
-			unsigned long userShots = pUser->shots + pUser->puttAttempts;
-			if (userShots == 0)
-				break;
-			unsigned long myShots = pMy->shots + pMy->puttAttempts;
-			if (myShots == 0) { bBetter = true; break; }
-			bBetter = (float)pUser->playTime / (float)userShots < (float)pMy->playTime / (float)myShots;
+			if (pUser->shots + pUser->puttAttempts == 0) {
+				bBetter = false;
+			} else {
+				if (pMy->shots + pMy->puttAttempts == 0)
+					bBetter = true;
+				else
+					bBetter = (float)pUser->playTime / (float)(pUser->shots + pUser->puttAttempts) < (float)pMy->playTime / (float)(pMy->shots + pMy->puttAttempts);
+			}
 			break;
 		}
 		case 6: {
 			unsigned long userShots = pUser->shots;
-			if (userShots == 0)
-				break;
-			unsigned long myShots = pMy->shots;
-			if (myShots == 0) { bBetter = true; break; }
-			bBetter = (float)pUser->pangyas / (float)userShots > (float)pMy->pangyas / (float)myShots;
+			if (userShots == 0) {
+				bBetter = false;
+			} else {
+				unsigned long myShots = pMy->shots;
+				if (myShots == 0)
+					bBetter = true;
+				else
+					bBetter = (float)pUser->pangyas / (float)userShots > (float)pMy->pangyas / (float)myShots;
+			}
 			break;
 		}
 		case 7: {
 			unsigned long userHoles = pUser->drives - pUser->par3Drives;
-			if (userHoles == 0)
-				break;
-			unsigned long myHoles = pMy->drives - pMy->par3Drives;
-			if (myHoles == 0) { bBetter = true; break; }
-			bBetter = (float)pUser->fairways / (float)userHoles > (float)pMy->fairways / (float)myHoles;
+			if (userHoles == 0) {
+				bBetter = false;
+			} else {
+				unsigned long myHoles = pMy->drives - pMy->par3Drives;
+				if (myHoles == 0)
+					bBetter = true;
+				else
+					bBetter = (float)pUser->fairways / (float)userHoles > (float)pMy->fairways / (float)myHoles;
+			}
 			break;
 		}
 		case 8: {
 			unsigned long userPutts = pUser->puttAttempts;
-			if (userPutts == 0)
-				break;
-			unsigned long myPutts = pMy->puttAttempts;
-			if (myPutts == 0) { bBetter = true; break; }
-			bBetter = (float)pUser->puttsSunk / (float)userPutts > (float)pMy->puttsSunk / (float)myPutts;
+			if (userPutts == 0) {
+				bBetter = false;
+			} else {
+				unsigned long myPutts = pMy->puttAttempts;
+				if (myPutts == 0)
+					bBetter = true;
+				else
+					bBetter = (float)pUser->puttsSunk / (float)userPutts > (float)pMy->puttsSunk / (float)myPutts;
+			}
 			break;
 		}
 		case 9: {
-			unsigned long userShots = pUser->shots + pUser->puttAttempts;
-			if (userShots == 0)
-				break;
-			unsigned long myShots = pMy->shots + pMy->puttAttempts;
-			if (myShots == 0) { bBetter = true; break; }
-			bBetter = (float)pUser->obCount / (float)userShots < (float)pMy->obCount / (float)myShots;
+			if (pUser->shots + pUser->puttAttempts == 0) {
+				bBetter = false;
+			} else {
+				if (pMy->shots + pMy->puttAttempts == 0)
+					bBetter = true;
+				else
+					bBetter = (float)pUser->obCount / (float)(pUser->shots + pUser->puttAttempts) < (float)pMy->obCount / (float)(pMy->shots + pMy->puttAttempts);
+			}
 			break;
 		}
 		}
@@ -3199,7 +3233,7 @@ void CUserInfo::SetInfo(unsigned long uid, unsigned long guid, bool bRequest, bo
 	std::map<unsigned long, sUserInfoTime>::iterator it;
 	if (WSingleton<CSharedDoc>::Instance()->FindUserInfoTimeUID(uid, it)) {
 		if (!bRequest || g_CurrentTime - it->second.m_time < 60000) {
-			if (WSingleton<CSharedDoc>::Instance()->m_myUID == m_uid) {
+			if (MyUID() == m_uid) {
 				std::map<unsigned int, sCharacterInfo>::iterator itChar = WSingleton<CSharedDoc>::Instance()->m_characterMap.find(WSingleton<CSharedDoc>::Instance()->m_myCharacterId);
 				if (itChar != WSingleton<CSharedDoc>::Instance()->m_characterMap.end())
 					it->second.m_userInfo.m_characterInfo = itChar->second;
@@ -3337,14 +3371,13 @@ void FrUserInfoForm::OnBtn_RmrVisitorBtnUp(void) {
 
 	WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID = m_userInfo.m_uid;
 
-	unsigned char mode;
 	if (MyUID() == WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID) {
-		mode = 1;
+		WSingleton<CSharedDoc>::Instance()->SetRmrMode(1);
 	} else {
-		mode = 5;
+		WSingleton<CSharedDoc>::Instance()->SetRmrMode(5);
 	}
 
-	WSingleton<CSharedDoc>::Instance()->SetRmrMode(mode); CTaskManager* pTaskManager = CTaskManager::Instance(); (!pTaskManager ? 0 : pTaskManager->GetCurrentTask())->SendMsgToMainActor(MsgObject(0, 0x222, 0, 0, 0, 0, 0));
+	CTaskManager* pTaskManager = CTaskManager::Instance(); (!pTaskManager ? 0 : pTaskManager->GetCurrentTask())->SendMsgToMainActor(MsgObject(0, 0x222, 0, 0, 0, 0, 0));
 }
 
 // user_info.cpp:4357

@@ -585,13 +585,19 @@ int WSplashD3D::InitFromScreen(bool bCopy) {
 			}
 
 			if (bCopy) {
-				tagRECT src = { j * maxWidth, i * maxHeight,
-					(j + 1) * maxWidth, (i + 1) * maxHeight };
+				tagRECT src;
+				src.left = j * maxWidth;
+				src.right = (j + 1) * maxWidth;
+				src.top = i * maxHeight;
+				src.bottom = (i + 1) * maxHeight;
 
 				if (src.right > m_iBufWidth) src.right = m_iBufWidth;
 				if (src.bottom > m_iBufHeight) src.bottom = m_iBufHeight;
 
-				tagRECT dest = { 0, 0, src.right - src.left, src.bottom - src.top };
+				tagRECT dest;
+				dest.left = dest.top = 0;
+				dest.right = src.right - src.left;
+				dest.bottom = src.bottom - src.top;
 
 				IDirect3DSurface9* targSurf;
 				if (SUCCEEDED(m_pDriver->m_texList[m_hTexs[m_nSurfCount]].pTex->GetSurfaceLevel(0, &targSurf))) {
@@ -1434,11 +1440,9 @@ static float _shcoeff[28] = {
 static const char* g_error = NULL;
 
 // The "Direct3D 9 cannot be initialised" message (?g_msgD3DInitFailed@@3PBDB:
-// a const pointer to const char, 0x10043320, "Direct3D 9" followed by the
-// Korean text). Only declared: cl 13.10 folds a use of this const pointer to
-// 0 once its definition with the string is anywhere in the file, whereas the
-// original reads it from memory.
-extern const char* const g_msgD3DInitFailed;
+// a pointer to const char, 0x10043320, "Direct3D 9" followed by the Korean
+// text; cl repeats the pointee's const as the variable's storage letter).
+extern const char* g_msgD3DInitFailed;
 
 // wd3d8.cpp:2076
 WDirect3D8::WDirect3D8(char* devName, int id) {
@@ -1516,7 +1520,7 @@ WDirect3D8::~WDirect3D8() {
 	Release();
 
 	if (g_error) {
-		MessageBox(NULL, g_error, "\xba\xf1\xb5\xf0\xbf\xc0 \xc4\xab\xb5\xe5 \xbf\xa1\xb7\xaf", MB_OK);     // video card error
+		MessageBox(NULL, g_error, K2L_Compatibility("\xba\xf1\xb5\xf0\xbf\xc0 \xc4\xab\xb5\xe5 \xbf\xa1\xb7\xaf"), MB_OK);     // video card error
 		g_error = NULL;
 	}
 
@@ -2038,8 +2042,8 @@ int WDirect3D8::Init(char* modName, HWND__* hwnd, int iTnL) {
 			return 4;
 		}
 
-		m_d3dpp.BackBufferWidth = rect.right - rect.left;
 		m_d3dpp.BackBufferHeight = rect.bottom - rect.top;
+		m_d3dpp.BackBufferWidth = rect.right - rect.left;
 		m_d3dpp.BackBufferFormat = d3ddm.Format;
 		m_d3dpp.Windowed = TRUE;
 		m_d3dpp.SwapEffect = D3DSWAPEFFECT_COPY;
@@ -2328,8 +2332,8 @@ void WDirect3D8::SetDefaultState(void) {
 	memset(m_xaLights, 0, sizeof(m_xaLights));
 	memset(m_xaWLights, 0, sizeof(m_xaWLights));
 	memset(&m_xMaterial, 0, sizeof(m_xMaterial));
-	m_xMaterial.Diffuse.r = m_xMaterial.Diffuse.g = m_xMaterial.Diffuse.b = m_xMaterial.Diffuse.a = 1.0f;
-	m_xMaterial.Ambient.r = m_xMaterial.Ambient.g = m_xMaterial.Ambient.b = m_xMaterial.Ambient.a = 1.0f;
+	m_xMaterial.Diffuse.a = m_xMaterial.Diffuse.r = m_xMaterial.Diffuse.g = m_xMaterial.Diffuse.b = 1.0f;
+	m_xMaterial.Ambient.a = m_xMaterial.Ambient.r = m_xMaterial.Ambient.g = m_xMaterial.Ambient.b = 1.0f;
 	m_xdwDiffuse = 0xffffffff;
 	m_xdwTFactor = 0xffffffff;
 	m_LightEnable = false;
@@ -2510,8 +2514,8 @@ void WDirect3D8::Clear(unsigned long color, int flags, float z) {
 				if (!g_captureOption.updateWholeScreen && count) {
 					tagRECT rect;
 					rect.left = 118;
-					rect.top = m_capturedDdsd.Height - 128;
 					rect.right = 523;
+					rect.top = m_capturedDdsd.Height - 128;
 					rect.bottom = m_capturedDdsd.Height - 68;
 					fnWD3DDevice_CopyRect(m_pd3dDevice, m_pCopiedScreenSurface, &rect, pRenderTarget);
 				} else {
@@ -2840,9 +2844,7 @@ void WDirect3D8::xInstantiateTexture(int hTex) {
 
 		srcLevels = pSrcTex->GetLevelCount();
 
-		unsigned int iTopSrcLvlToLoad = m_iDDSRes;
-		if (iTopSrcLvlToLoad + 1 > srcLevels)
-			iTopSrcLvlToLoad = srcLevels - 1;
+		unsigned int iTopSrcLvlToLoad = m_iDDSRes + 1 > srcLevels ? srcLevels - 1 : m_iDDSRes;
 
 		if (m_bUseMipmap)
 			levelCount = srcLevels - iTopSrcLvlToLoad;
@@ -3009,12 +3011,12 @@ int WDirect3D8::LockVB(const void* vptr, int vnum, int vpitch, int offset) {
 	int len = (offset + vnum) * vpitch;
 
 	if (m_iVBOffset + len + paddbytes > 0x100000 || (m_iVBOffset + len + paddbytes) / vpitch >= (int)m_d3dcaps.MaxVertexIndex || (m_iVBOffset + len + paddbytes) / vpitch >= 0x10000) {
-		m_iVBOffset = 0;
 		dwLockFlags = D3DLOCK_DISCARD;
+		m_iVBOffset = 0;
 		paddbytes = 0;
 	}
 
-	if (m_pLockableVB->Lock(m_iVBOffset + paddbytes + offset * vpitch, vnum * vpitch, (void**)&pVptr, dwLockFlags) != D3D_OK) {
+	if (m_pLockableVB->Lock(m_iVBOffset + offset * vpitch + paddbytes, vnum * vpitch, (void**)&pVptr, dwLockFlags) != D3D_OK) {
 		return -1;
 	}
 
@@ -3595,11 +3597,11 @@ void WDirect3D8::_DrawIndexedPrimitive(_D3DPRIMITIVETYPE Type, unsigned int MinI
 	}
 
 	m_MergeBuffer.Type = Type;
+	m_MergeBuffer.MinIndex = MinIndex;
 	m_MergeBuffer.NumVertices = NumVertices;
 	m_MergeBuffer.StartIndex = StartIndex;
 	m_MergeBuffer.LockVertex = 0;
 	m_MergeBuffer.LockIndex = 0;
-	m_MergeBuffer.MinIndex = MinIndex;
 	m_MergeBuffer.PrimitiveCount = PrimitiveCount;
 	m_MergeBuffer.xhVb = m_xhLastVb;
 	m_MergeBuffer.xhIb = m_xhLastIb;
@@ -4369,9 +4371,10 @@ void WDirect3D8::UpdateTextureSurfaceFiltering(void* buff, int w, int h, int pit
 		for (int x = 0; x < w; x++) {
 			float v = y * scale_h;
 			float v1 = v + scale_h;
+			float fr, fg, fb;
+			fr = fg = fb = 0;
 			float u = x * scale_w;
 			float u1 = u + scale_w;
-			float fr = 0, fg = 0, fb = 0;
 			float dv, du;
 			for (float va = v; va < v1; va += dv) {
 				dv = floor(va) + 1 - va < v1 - va ? floor(va) + 1 - va : v1 - va;
@@ -5633,7 +5636,7 @@ void WDirect3D8::xSetLight(unsigned long Index, const LightSet& wLight) {
 	}
 
 	if (Index == 0)
-		m_LightDirect = m_xaLights[0].Direction;
+		m_LightDirect = m_xaLights[Index].Direction;
 
 	FlushRenderPrimitive();
 	m_pd3dDevice->SetLight(Index, &m_xaLights[Index]);

@@ -355,7 +355,7 @@ void CScreen::OnLoad(void) {
 	m_pAccuracyInfo = new CAccuracyInfo;
 	m_pPowerInfo = new CPowerInfo;
 
-	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 7) {
+	if (GetGameType() == 7) {
 
 		m_pHolePoseSkins = new CHolePoseSkins;
 		m_pExtraHoleInfo = new CExtraHoleInfo;
@@ -367,7 +367,7 @@ void CScreen::OnLoad(void) {
 
 
 
-	if (WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_gameState == 15) {
+	if (GOLFDOC()->m_gameState == 15) {
 
 
 		AddOverlay("\xb9\xf6\xc6\xb0\xc3\xa2_normal", "[left_ic_00.jpg", 0x80000000);
@@ -383,7 +383,7 @@ void CScreen::OnLoad(void) {
 		new CHelpMsg;
 	}
 	else {
-		if (WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_gameState == 5 || WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_gameState == 9) {
+		if (GOLFDOC()->m_gameState == 5 || GOLFDOC()->m_gameState == 9) {
 			AddOverlay("\xb9\xf6\xc6\xb0\xc3\xa2_normal", "[left_ic_00.jpg", 0x80000000);
 			AddOverlay("\xb9\xf6\xc6\xb0\xc3\xa2_item", "[left_ic_i.jpg", 0x80000000);
 			AddOverlay("\xb9\xf6\xc6\xb0\xc3\xa2_chat", "[left_ic_c.jpg", 0x80000000);
@@ -427,10 +427,10 @@ void CScreen::OnLoad(void) {
 	m_pFont = WSingleton<CChatMsg>::Instance()->GetMaskedFont();
 
 	for (int i = 0; i < 15; i++) {
-		m_missionMarkShown[i] = i < WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_gameState;
+		m_missionMarkShown[i] = i < GOLFDOC()->m_gameState;
 	}
 
-	if (WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_gameState < 15) {
+	if (GOLFDOC()->m_gameState < 15) {
 		if (m_pFontOverlay)
 			m_pFontOverlay->FixHoleInfo();
 	}
@@ -536,7 +536,7 @@ void CScreen::OnProcess(float elapsed) {
 			m_tutoTitleX = startX;
 			m_tutoTitleY = startY;
 			break;
-		case 1:
+		case 1: {
 			m_tutoTitleTime += elapsed;
 			if (m_tutoTitleTime > 1.0f) {
 				m_tutoTitleTime = 1.0f;
@@ -545,9 +545,11 @@ void CScreen::OnProcess(float elapsed) {
 				if (pTutorial)
 					pTutorial << MsgObject(0, 0x148, 0, 0, 0, 0, 0);
 			}
-			m_tutoTitleX = startX * (1.0f - m_tutoTitleTime) + endX * m_tutoTitleTime;
-			m_tutoTitleY = startY * (1.0f - m_tutoTitleTime) + 2.0f * m_tutoTitleTime;
+			WVector2D pos = WVector2D(startX, startY) * (1.0f - m_tutoTitleTime) + WVector2D(endX, 2.0f) * m_tutoTitleTime;
+			m_tutoTitleX = pos.x;
+			m_tutoTitleY = pos.y;
 			break;
+		}
 		}
 	}
 
@@ -568,7 +570,7 @@ void CScreen::OnProcess(float elapsed) {
 				m_missionTitleX = startX;
 				m_missionTitleY = startY;
 				break;
-			case 1:
+			case 1: {
 				m_missionTitleTime += elapsed;
 				m_missionTitleAlpha -= elapsed * 0.2f;
 				if (m_missionTitleTime > 1.0f) {
@@ -576,9 +578,11 @@ void CScreen::OnProcess(float elapsed) {
 					m_missionTitleAlpha = 1.0f;
 					m_missionTitleState = 2;
 				}
-				m_missionTitleX = startX * (1.0f - m_missionTitleTime) + endX * m_missionTitleTime;
-				m_missionTitleY = startY * (1.0f - m_missionTitleTime) + 10.0f * m_missionTitleTime;
+				WVector2D pos = WVector2D(startX, startY) * (1.0f - m_missionTitleTime) + WVector2D(endX, 10.0f) * m_missionTitleTime;
+				m_missionTitleX = pos.x;
+				m_missionTitleY = pos.y;
 				break;
+			}
 			case 2:
 				m_missionTitleAlpha = 1.0f;
 				break;
@@ -696,11 +700,10 @@ void CScreen::OnProcess(float elapsed) {
 	}
 
 	if (GolfBall().m_groundType == 2) {
-		WVector cupPos = GOLFDOC()->GetHoleData().m_cupPos;
-		float range = 0.69813168f - Abs(CalcDeltaAngle(cupPos - GolfBall().m_pos, GOLFDOC()->GetCameraData().m_matrix.za));
-		if (range < 0.0f)
-			range = 0.0f;
-		unsigned char alpha = (unsigned char)(range * 1.4323945f * 128.0f);
+		CGolfDoc* pDoc = GOLFDOC();
+		WVector cupPos = pDoc->GetHoleData().m_cupPos;
+		float range = Max(0.0f, 0.69813168f - Abs(CalcDeltaAngle(cupPos - GolfBall().m_pos, pDoc->GetCameraData().m_matrix.za)));
+		unsigned char alpha = (unsigned char)(128.0f * (range * 1.4323945f));
 
 		if (GolfClub().PowerShotType() != 0)
 			m_hitBarRangeColor = (alpha << 24) | 0xFFF600;
@@ -914,9 +917,8 @@ void CScreen::OnDisplay(void) {
 					m_pFont->Print(g_view, (g_view->GetWidth() - width) * 0.5f - 25.0f, g_view->GetHeight() - 16.0f, "\xB1\xE6\xB5\xE5 \xB4\xEB\xC0\xFC", 0, 0xFFFFFFFF, 0);
 				}
 
-				unsigned long endTime = WSingleton<CSharedDoc>::Instance()->m_gameTimeLimit + WSingleton<CSharedDoc>::Instance()->m_gameStartTime;
-				if (endTime > g_CurrentTime) {
-					unsigned long sec = (endTime - g_CurrentTime) / 1000;
+				if (WSingleton<CSharedDoc>::Instance()->m_gameTimeLimit + WSingleton<CSharedDoc>::Instance()->m_gameStartTime > g_CurrentTime) {
+					unsigned long sec = (WSingleton<CSharedDoc>::Instance()->m_gameTimeLimit + WSingleton<CSharedDoc>::Instance()->m_gameStartTime - g_CurrentTime) / 1000;
 					m_pFont->Print(g_view, g_view->GetWidth() * 0.5f + 39.0f, g_view->GetHeight() - 16.0f, MakeStr("%02d:%02d", sec / 60, sec % 60), 0, sec < 180 ? 0xFFFF0000 : 0xFFFFFFFF, 0);
 				}
 				else {
@@ -1141,7 +1143,7 @@ void CScreen::HandleMsg(const MsgObject& msg) {
 		break;
 	case 0x20C: {
 		WPolySoup::sPoint* pPoint = GOLFDOC()->m_pPolySoup->FindPoint((const char*)msg.m_param1);
-		float radius = GolfBall().m_radius; WVector ground = GetPVS().GetGroundPoint(pPoint->m_pos, false, NULL, false); ground.y += radius; GolfBall().m_pos = ground;
+		GolfBall().m_pos = GetPVS().GetGroundPoint(pPoint->m_pos, false, NULL, false) + WVector(0.0f, GolfBall().m_radius, 0.0f);
 		GolfBall().m_groundArea = GetPVS().GetMeshIndex(GolfBall().m_pos, false);
 		WVector normal = GetPVS().GetMeshNormal(GolfBall().m_groundArea);
 		m_pBase->SetNormal(normal);
@@ -1196,14 +1198,14 @@ void CScreen::HandleMsg(const MsgObject& msg) {
 		m_hitBarCount = msg.m_param2;
 		if (msg.m_param3) {
 			m_remainTimeY = COption::Instance()->gGetBar_Y();
-			float* marks = (float*)msg.m_param3;
 			float maxY, minY;
-			maxY = minY = m_hitMarks[0].y = marks[0];
+			maxY = minY = m_hitMarks[0].y = ((float*)msg.m_param3)[0];
 			int i;
 			for (i = 1; i < m_hitBarCount + 1; i++) {
-				m_hitMarks[i].y = marks[i];
-				if (m_hitMarks[i].y < minY) minY = m_hitMarks[i].y;
-				if (m_hitMarks[i].y > maxY) maxY = m_hitMarks[i].y;
+				float y = ((float*)msg.m_param3)[i];
+				m_hitMarks[i].y = y;
+				if (y < minY) minY = y;
+				if (y > maxY) maxY = y;
 			}
 			float center = (maxY - minY) * 0.5f + minY;
 			float scale = (maxY - minY) > 1.6f ? 1.6f / (maxY - minY) : 1.0f;
@@ -1800,7 +1802,9 @@ void CMiniScore::Display(void) {
 
 				unsigned char alpha = (unsigned char)(m_alpha * 0.5f);
 
-				m_pSimpleUI->SetColor((alpha << 24) | 0xFFFFFF); if (GOLFDOC()->GetTeam(team)->m_state == 1) {
+				m_pSimpleUI->SetColor((alpha << 24) | 0xFFFFFF);
+
+				if (GOLFDOC()->GetTeam(team)->m_state == 1) {
 
 					if ((unsigned char)GOLFDOC()->GetTeam(team)->m_holes[GOLFDOC()->m_currentHole - 1] > (unsigned char)(GOLFDOC()->GetHoleData().m_par + 4))
 						m_pSimpleUI->Render("GiveUp", stateX, 80.0f, 1.0f, 0x22);
@@ -1824,11 +1828,9 @@ void CMiniScore::Display(void) {
 
 			WRect uv;
 			if (i & 2) {
-				m_iconRect.x = m_posX; uv.x = 0.5f;
-
-				m_charRect.x = m_iconRect.x;
+				uv.x = 0.5f; m_iconRect.x = m_posX; m_charRect.x = m_posX;
 			} else {
-				m_iconRect.x = m_offsetY; m_charRect.x = m_offsetY + 120.0f - 46.0f; uv.x = 0.0f;
+				uv.x = 0.0f; m_iconRect.x = m_offsetY; m_charRect.x = m_offsetY + 120.0f - 46.0f;
 			}
 			m_charRect.y = m_iconRect.y + 14.0f;
 
@@ -1946,9 +1948,12 @@ void CMiniScore::Display(void) {
 
 			WRect uv;
 			if (i & 2) {
-				m_charRect.x = m_iconRect.x = m_posX; uv.x = 0.5f;
+				m_charRect.x = m_iconRect.x = m_posX;
+				uv.x = 0.5f;
 			} else {
-				m_iconRect.x = m_offsetY; m_charRect.x = m_offsetY + 120.0f - 46.0f; uv.x = 0.0f;
+				m_iconRect.x = m_offsetY;
+				m_charRect.x = m_offsetY + 120.0f - 46.0f;
+				uv.x = 0.0f;
 			}
 			m_charRect.y = m_iconRect.y + 14.0f;
 
@@ -2316,8 +2321,12 @@ void CAuxMenuUI::SetUnplayable(void) {
 
 // gui_control.cpp:3032
 void CAuxMenuUI::SetPause(void) {
-	switch (WSingleton<CSharedDoc>::Instance()->m_roomType) { case 4: case 5: case 6: case 9: case 10: return; } if (WSingleton<CSharedDoc>::Instance()->m_shotTimeLimit == 0) return;
-
+	switch (GetGameType()) {
+	case 4: case 5: case 6: case 9: case 10:
+		return;
+	}
+	if (GetShotTimeLimit() == 0)
+		return;
 
 	WSingleton<CMouseCursor>::Instance()->m_uiEnable[3] = false;
 
@@ -2799,7 +2808,7 @@ void CScreen::DrawClubInfo(void) {
 	WMatrix cam = clubSet->m_cameras[GolfClub().GetType()];
 	float fov = g_view->GetFOV();
 
-	g_view->SetFOV(g_view->GetRatio() * 85.0f * data_9ef91c);
+	g_view->SetFOV(data_9ef91c * (g_view->GetHeight() / g_view->GetWidth() * 85.0f));
 	g_view->SetClip(0.1f, 100.0f, false);
 
 	float scale;
@@ -2961,7 +2970,7 @@ void CScreen::DrawApproachInfo(void) {
 			float x = g_view->GetWidth() - 205.0f;
 
 			std::string desc(GOLFDOC()->GetApproachMissionDesc());
-			std::string lines[4] = { "" };
+			std::string lines[4] = { "\0" };
 			lines[3] = prizeText;
 
 			if (desc.length() >= 33) {
@@ -3121,7 +3130,7 @@ void CScreen::DrawHitBarInfo(void) {
 			if (WSingleton<CSharedDoc>::Instance()->m_replayState != 3)
 				GOLFDOC()->GetBar().m_prevAccuracy = 140.0f;
 			else
-				GOLFDOC()->GetBar().m_prevAccuracy = WSingleton<CSharedDoc>::Instance()->m_replayValue5BC0;
+				GOLFDOC()->GetBar().m_prevAccuracy = WSingleton<CSharedDoc>::Instance()->m_replayPrevAccuracy;
 		}
 
 		DrawOverlay("\xc0\xd4\xc3\xbc\xb9\xd9", WRect(GOLFDOC()->GetBar().m_prevAccuracy - 4.0f, m_remainTimeY - 12.0f, 8.0f, 24.0f), GOLFDOC()->GetUIAlpha(), 0);
@@ -3154,16 +3163,17 @@ void CScreen::DrawHitBarInfo(void) {
 
 		if (IsMyTurn(false) && !usable) {
 			bool impact = true;
+			// One DrawShotPowerRange/DrawLimitLine site for both branches:
+			// the original's first branch jumps into the second one's.
 			if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId != 0x18000009) {
 				if (GOLFDOC()->m_clockHold == 2 || GOLFDOC()->m_clockHold == 3) {
 					impact = false;
-					float pos = 0.0f;
-					m_pCalipers->DrawShotPowerRange(pos, false);
-					m_pCalipers->DrawLimitLine(pos, impact);
+					goto drawRange;
 				}
 			} else if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000009) {
 				m_pCalipers->Display();
 				if (GOLFDOC()->m_clockHold == 2 || GOLFDOC()->m_clockHold == 3) {
+drawRange:
 					float pos = 0.0f;
 					m_pCalipers->DrawShotPowerRange(pos, false);
 					m_pCalipers->DrawLimitLine(pos, impact);
@@ -3187,7 +3197,7 @@ void CScreen::DrawHitBarInfo(void) {
 		if (GOLFDOC()->m_clockHold == 1 && data_af34dc * 0.5f + data_9ef938 < GOLFDOC()->GetBar().m_prevAccuracy)
 			DrawOverlay("\xc5\xac\xb8\xaf\xc7\xa5\xbd\xc3", WRect(GOLFDOC()->GetBar().m_prevAccuracy - 23.0f, m_remainTimeY - 51.0f, 64.0f, 64.0f), 0xFF, 0);
 		else if (GOLFDOC()->m_clockHold == 2)
-			DrawOverlay("\xc5\xac\xb8\xaf\xc7\xa5\xbd\xc3", WRect(117.0f, m_remainTimeY - 71.0f + (m_hitBarTime > 0.0f ? m_hitBarTime : -m_hitBarTime), 64.0f, 64.0f), 0xFF, 0);
+			DrawOverlay("\xc5\xac\xb8\xaf\xc7\xa5\xbd\xc3", WRect(117.0f, m_remainTimeY - 71.0f + Abs(m_hitBarTime), 64.0f, 64.0f), 0xFF, 0);
 	}
 }
 

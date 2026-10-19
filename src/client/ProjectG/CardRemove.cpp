@@ -435,9 +435,9 @@ void FrCardRemove::OnDrawAreaOwnerDraw(PG_MSGARG param) {
 	if (m_curPartUid == 0)
 		return;
 
+	float index = 0.0f;
 	std::list<unsigned long>::iterator it = m_curPartCardList.begin(), end = m_curPartCardList.end();
 
-	float index = 0.0f;
 	for (; it != end; ++it) {
 
 		IFF_STRUCT::sCard* pCard = ItemManager()->FindCard(*it);
@@ -445,9 +445,7 @@ void FrCardRemove::OnDrawAreaOwnerDraw(PG_MSGARG param) {
 
 		if (pBitmap) {
 
-			unsigned int width = pBitmap->Width();
-			unsigned int height = pBitmap->Height();
-			pGDI->DrawTexture(pBitmap, WRect(rect.x + (410.0f - ((float)m_curPartCardList.size() * width * 0.5f + index * 5.0f) + (width + 5.0f) * index), rect.y + 215.0f, (float)pBitmap->Width(), (float)height), 0xFFFFFFFF, 0);
+			pGDI->DrawTexture(pBitmap, WRect(rect.x + (410.0f - ((float)m_curPartCardList.size() * pBitmap->Width() * 0.5f + index * 5.0f) + (pBitmap->Width() + 5.0f) * index), rect.y + 215.0f, (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0);
 			index += 1.0f;
 		}
 	}
@@ -998,9 +996,9 @@ void FrCardRemoveResult::OnDrawAreaOwnerDraw(PG_MSGARG param) {
 
 			float centerX = rect.w * 0.5f;
 
+			float index = 0.0f;
 			std::list<unsigned long>::iterator it = m_cardList.begin(), end = m_cardList.end();
 
-			float index = 0.0f;
 			for (; it != end; ++it) {
 
 				unsigned long cardTypeId = *it;

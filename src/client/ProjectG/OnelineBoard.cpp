@@ -142,15 +142,15 @@ void COneLineBoard::AddOnelineMsg(const std::string &name, const std::string &me
 	msg->text = message + "  <" + name + ">";
 	msg->width = emoticon->GetTextWidth(msg->text.c_str());
 
-	float x = 0.0f;
 	if (!m_msgList.empty()) {
 		std::list<sOnelineMsg *>::reverse_iterator it = m_msgList.rbegin();
 		sOnelineMsg *last = *it;
 
-		x = last->x + last->width + 50.0f;
+		float x = last->x + last->width + 50.0f;
+		msg->x = x > m_rect.Right() ? x : m_rect.Right();
+	} else {
+		msg->x = 0.0f > m_rect.Right() ? 0.0f : m_rect.Right();
 	}
-
-	msg->x = x > m_rect.Right() ? x : m_rect.Right();
 
 	msg->time = timeGetTime();
 

@@ -158,6 +158,7 @@ void FrLevelupItemForm::OnItemListInit(intptr_t param) {
 
 // levelupitemdlg.cpp:119
 void FrLevelupItemForm::OnItemListOwnerDraw(intptr_t param) {
+	unsigned int i = 0;
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
 	FrListItem* pItem = (FrListItem*)param;
 
@@ -226,7 +227,7 @@ void FrLevelupItemForm::OnItemListOwnerDraw(intptr_t param) {
 		const char* text = MakeStr("%d", count);
 		float x = pItem->pos.x + 90.0f;
 
-		for (unsigned int i = 0; i < strlen(text); i++) {
+		for (i = 0; i < strlen(text); i++) {
 			x -= m_pTitleFont->GetCharWidthA(g_view, text[i] - '0');
 		}
 
@@ -281,9 +282,10 @@ void FrLevelupItemForm::SetItemInfo(void) {
 		m_pItemList->AddItem(&m_rewardTypeId);
 	}
 
-	float y = m_pFrame3->GetRect().y;
+	const WRect& rc = m_pFrame3->GetRect();
+	float y = rc.y;
 
-	m_pItemExplane->MoveWindow(WPoint(m_pFrame3->GetRect().x + 50.0f, y + 15.0f));
+	m_pItemExplane->MoveWindow(WPoint(50.0f, 15.0f) + WPoint(rc.x, y));
 
 	if (ItemManager()->GetCouponKind(data_a22f74[m_level].typeId) == 1) {
 		// "Check the acquired item in the coupon box."

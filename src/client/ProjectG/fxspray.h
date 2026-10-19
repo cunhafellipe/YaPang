@@ -291,7 +291,8 @@ protected:
 	void MakeTail(float fTime, CFxParticle* pParticle, const WVector& pos);
 
 public:
-	// The spray's parameters, read from its ".spr" file (size 0x3DC).
+	// The spray's parameters, read from its ".spr" file (size 0x3D4). Its
+	// alignment gaps are not members: the implicit operator= skips them.
 	struct Param {
 		bool m_bSurvivesSequence;       // 0x0, stays in the box when its sequence goes; particles follow the spray (GetBgPos/GetBgRot)
 		bool m_bFollowSpawner;          // 0x1, Spawn: it follows the spray that spawned it
@@ -302,10 +303,8 @@ public:
 		char m_sourceName[0x104];       // 0xC, "source": the line's first argument
 		bool m_bPetLight;               // 0x110, "source ... petlight"
 		bool m_bRoundArea;              // 0x111, m_area's min is a center, max.x/max.y radii
-		PADDING(0x112, 0x114);
 		Waabb m_area;                   // 0x114, where Generate places the particles
 		bool m_bRegenAtSamePos;         // 0x12C, "regenatsamepos"
-		PADDING(0x12D, 0x130);
 		float m_fCamOffset;             // 0x130, "camoffset"
 		int m_bScaleArea;               // 0x134, Generate scales m_area by m_fAreaScaleXZ/Y
 		int m_iLifetimeMax;             // 0x138, "lifetime": the second number (m_bScaleArea holds the first)
@@ -315,7 +314,10 @@ public:
 		float m_fFriction;              // 0x148, "friction"
 		float m_fGroundFriction;        // 0x14C, "groundfriction"
 		WVector m_gravity;              // 0x150, "gravity"
-		WVector m_ground;               // 0x15C, "ground"
+		// "ground": three numbers, not a WVector (operator= copies them one by one).
+		float m_fGroundHeight;          // 0x15C, the ground's height above the spray
+		float m_fGroundBounce;          // 0x160, the bounce, in percent of the speed
+		float m_fGroundRadius;          // 0x164, the particle's radius on the ground
 		unsigned long m_srcBlend;       // 0x168, "blend": 0 normal, 0x800000 add, 0x1000000 multiply, 0x1800000 invmultiply
 		unsigned long m_dstBlend;       // 0x16C, "blend"'s second value
 		int m_lightSource;              // 0x170, SetLight: 0 white, 1 diffuse, 2 ambient, 3 ambient2
@@ -329,9 +331,7 @@ public:
 		float m_fBandanaWidth;          // 0x294, MakeTail scales the particles' strip width by it
 		bool m_bMonolith;               // 0x298, "tail ... monolith"
 		bool m_bBandanaFaceCamera;      // 0x299, MakeTail turns the strip to the box's camera
-		UNKNOWN(0x29A, 0x29C);
-		WVector m_initialMinVel;        // 0x29C, InitialMinVel
-		WVector m_initialMaxVel;        // 0x2A8, InitialMaxVel
+		sInit_WVector m_initialVel;     // 0x29C, InitialMinVel (.min) / InitialMaxVel (.max)
 		float m_fWindScaleA;            // 0x2B4, SetWind keeps the wind only when one is non-zero
 		float m_fWindScaleB;            // 0x2B8
 		WVector m_wind;                 // 0x2BC, SetWind
@@ -358,8 +358,6 @@ public:
 		std::list<sSpawn> m_spawns;     // 0x3B8
 		std::list<sSound> m_sounds;     // 0x3C4
 		bool m_bSphereKind2;            // 0x3D0, "issphere 2"
-		UNKNOWN(0x3D1, 0x3D8);
-		float m_fSphereAngle;           // 0x3D8, "issphere 2": InitParticle's next angle (degrees) on the ring; zeroed by Reset
 	};
 
 protected:
@@ -393,6 +391,8 @@ protected:
 	WMatrix m_matrix;               // 0x1160, GetBgRot, GetBgPos's m_pos rotation
 	WMatrix m_baseMatrix;           // 0x1190, identity after Reset
 	Param m_param;                  // 0x11C0
+	UNKNOWN(0x1594, 0x1598);
+	float m_fSphereAngle;           // 0x1598, "issphere 2": InitParticle's next angle (degrees) on the ring; zeroed by Reset
 };
 CHECK_SIZE(CFxSpray::sVel, 0x10);
 CHECK_FIELD(CFxSpray::sVel, t1, 0x8);
@@ -427,7 +427,7 @@ CHECK_FIELD(CFxSpray::sSpawn, m_intervalCount, 0x110);
 CHECK_SIZE(CFxSpray::sSound, 0x108);
 CHECK_SIZE(CFxSpray::sInit_WVector, 0x18);
 CHECK_FIELD(CFxSpray::sInit_WVector, max, 0xC);
-CHECK_SIZE(CFxSpray::Param, 0x3DC);
+CHECK_SIZE(CFxSpray::Param, 0x3D4);
 CHECK_FIELD(CFxSpray::Param, m_bSurvivesSequence, 0x0);
 CHECK_FIELD(CFxSpray::Param, m_bFollowSpawner, 0x1);
 CHECK_FIELD(CFxSpray::Param, m_bTransformPos, 0x3);
@@ -445,8 +445,7 @@ CHECK_FIELD(CFxSpray::Param, m_bBandanaFaceCamera, 0x299);
 CHECK_FIELD(CFxSpray::Param, m_lightSource, 0x170);
 CHECK_FIELD(CFxSpray::Param, m_lightColor, 0x174);
 CHECK_FIELD(CFxSpray::Param, m_hTexture, 0x290);
-CHECK_FIELD(CFxSpray::Param, m_initialMinVel, 0x29C);
-CHECK_FIELD(CFxSpray::Param, m_initialMaxVel, 0x2A8);
+CHECK_FIELD(CFxSpray::Param, m_initialVel, 0x29C);
 CHECK_FIELD(CFxSpray::Param, m_fWindScaleA, 0x2B4);
 CHECK_FIELD(CFxSpray::Param, m_fWindScaleB, 0x2B8);
 CHECK_FIELD(CFxSpray::Param, m_wind, 0x2BC);
@@ -471,7 +470,9 @@ CHECK_FIELD(CFxSpray::Param, m_bubbles, 0x3AC);
 CHECK_FIELD(CFxSpray::Param, m_spawns, 0x3B8);
 CHECK_FIELD(CFxSpray::Param, m_sounds, 0x3C4);
 CHECK_FIELD(CFxSpray::Param, m_bSphereKind2, 0x3D0);
-CHECK_FIELD(CFxSpray::Param, m_fSphereAngle, 0x3D8);
+CHECK_FIELD(CFxSpray::Param, m_fGroundHeight, 0x15C);
+CHECK_FIELD(CFxSpray::Param, m_fGroundRadius, 0x164);
+CHECK_FIELD(CFxSpray::Param, m_srcBlend, 0x168);
 CHECK_SIZE(CFxSpray, 0x159C);
 BEGIN_LAYOUT_CHECK(CFxSpray)
 	CHECK_FIELD(CFxSpray, m_bAlive, 0x4);
@@ -498,6 +499,7 @@ BEGIN_LAYOUT_CHECK(CFxSpray)
 	CHECK_FIELD(CFxSpray, m_fTime, 0x1110);
 	CHECK_FIELD(CFxSpray, m_baseMatrix, 0x1190);
 	CHECK_FIELD(CFxSpray, m_param, 0x11C0);
+	CHECK_FIELD(CFxSpray, m_fSphereAngle, 0x1598);
 END_LAYOUT_CHECK
 
 #include "fxspray.inl"

@@ -23,16 +23,17 @@ CSoundManager::~CSoundManager(void) {
 
 // soundmanager.cpp:36
 void CSoundManager::Init(void) {
-	m_volume = 1.0f;
-	m_bgmVolume = 1.0f;
-	m_fadeVolume = 1.0f;
-	m_fadeOutTime = 1.0f;
 	m_pMSS = NULL;
 	m_bActive = true;
 	m_idleCheckTime = 0;
+
+	m_volume = 1.0f;
+	m_bgmVolume = 1.0f;
 	m_hBGM = 0;
 	m_hFadeBGM = 0;
+	m_fadeVolume = 1.0f;
 	m_fadeElapsed = 0;
+	m_fadeOutTime = 1.0f;
 	m_farDistance = 160.0f;
 	m_nearDistance = 128.0f;
 	m_maxDistance = 960.0f;
@@ -66,9 +67,6 @@ void CSoundManager::Activate(bool active) {
 
 // soundmanager.cpp:85
 void CSoundManager::Process(float fDelta, WView* pView) {
-	float dist = 0;
-
-
 	if (!m_pMSS) {
 		return;
 	}
@@ -78,6 +76,7 @@ void CSoundManager::Process(float fDelta, WView* pView) {
 
 	float maxDistSq = m_maxDistance * m_maxDistance;
 	float range = m_farDistance - m_nearDistance;
+	float dist = 0;
 
 
 
@@ -128,27 +127,26 @@ void CSoundManager::Process(float fDelta, WView* pView) {
 				}
 				WVector pos = pSfx->m_pos * pView->invcamera;
 				m_pMSS->SetPosition(pSfx->m_hSound, pos.x, pos.y, pos.z);
+			}
+
+
+
+			if (!pSfx->m_state) {
+
+				WVector diff;
+				diff = pView->camera.pivot - pSfx->m_pos;
+				float distSq = diff.x * diff.x + diff.z * diff.z;
+
+
+				if ((distSq < maxDistSq && dist < m_farDistance) || pSfx->IsSet(1)) {
 
 
 
 
-				if (!pSfx->m_state) {
-
-					WVector diff;
-					diff = pView->camera.pivot - pSfx->m_pos;
-					float distSq = diff.x * diff.x + diff.z * diff.z;
 
 
-					if ((distSq < maxDistSq && dist < m_farDistance) || pSfx->IsSet(1)) {
-
-
-
-
-
-
-						m_pMSS->Play(pSfx->m_hSound, pSfx->m_flags & 1, true);
-						pSfx->m_state = 1;
-					}
+					m_pMSS->Play(pSfx->m_hSound, pSfx->IsSet(1), true);
+					pSfx->m_state = 1;
 				}
 			}
 		}
@@ -244,7 +242,7 @@ _SFX_INFO* CSoundManager::LoadSfx(const char* name, const WVector* pPos, unsigne
 	if (!pSfx) {
 
 
-		char path[0x100];
+		char path[MAX_PATH];
 		sprintf(path, "sound/%s.wav", name);
 		int hSound = GetSoundFx(path, b3D);
 		if (!hSound) {

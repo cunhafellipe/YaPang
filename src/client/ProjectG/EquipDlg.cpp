@@ -1,4 +1,5 @@
 // Original: d:\build\custom\temp\code\client\projectg\equipdlg.cpp
+#define EQUIPDLG_GLOBALGAMEDEFINE_DECL_ONLY
 #include "EquipDlg.h"
 #include "ObjectFactory.h"
 #include "SharedDoc.h"

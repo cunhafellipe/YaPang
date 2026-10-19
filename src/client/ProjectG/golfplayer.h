@@ -73,12 +73,16 @@ public:
 		sPetInfo(void);     // golfplayer.h:139
 		~sPetInfo(void);    // golfplayer.h:146
 
+		// One bit of m_petFlags, by position (the shift-then-test the original
+		// shows comes from a position argument, the way std::bitset::test does it).
+		bool TestFlag(unsigned int bit) const { return (m_petFlags & (1u << bit)) != 0; }
+
 		float m_motionTime;     // 0x00, the current time within the motion (SetMotion)
 		w_motion_data *m_pMotion;   // 0x04, the motion SetMotion found
 		WMatrix m_worldMatrix;  // 0x08, the pet's placement, starts as identity; composed by OnDisplay
 		bool m_unk38;           // 0x38
 		char m_nextMotion[0x23];    // 0x39, the motion to switch to once the current one ends (OnProcess)
-		unsigned int m_unk5C;   // 0x5C
+		unsigned int m_petFlags;    // 0x5C, the pet's reaction state: set and cleared by HandleMsg/SetMotion, tested by OnDisplay/ScoreEvent
 		int m_unk60;            // 0x60
 		float m_shotTimes[16];  // 0x64, per motion of data_00a804a8[6..21]: seconds from the motion's start to its "*shot" frame (CheckShotScript)
 		sTexturePart *m_pTexPart;   // 0xA4, the pet's pending texture part (SetPendingTexPart)
@@ -199,7 +203,7 @@ CHECK_SIZE(CGolfPlayer::sPetInfo, 0xB4);
 CHECK_FIELD(CGolfPlayer::sPetInfo, m_worldMatrix, 0x08);
 CHECK_FIELD(CGolfPlayer::sPetInfo, m_unk38, 0x38);
 CHECK_FIELD(CGolfPlayer::sPetInfo, m_nextMotion, 0x39);
-CHECK_FIELD(CGolfPlayer::sPetInfo, m_unk5C, 0x5C);
+CHECK_FIELD(CGolfPlayer::sPetInfo, m_petFlags, 0x5C);
 CHECK_FIELD(CGolfPlayer::sPetInfo, m_shotTimes, 0x64);
 CHECK_FIELD(CGolfPlayer::sPetInfo, m_scale, 0xAC);
 CHECK_FIELD(CGolfPlayer::sPetInfo, m_unkB0, 0xB0);

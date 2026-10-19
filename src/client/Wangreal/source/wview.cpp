@@ -901,12 +901,12 @@ void WView::UpdateProjectionTransform_Perspective(void) {
 	m_xViewState.xmProj.yy = fh;
 	m_xViewState.xmProj.zz = clip_scale_z;
 	m_xViewState.xmProj.zm = -clip_near_scale;
-	m_xViewState.xmProj.wz = 1.0f;
-	m_xViewState.xmProj.wm = 0.0f;
 	m_xViewState.xmProj.xz = (left + right) / (left - right)
 		+ ((m_center_x - halfw) / halfw - (clipr + clipl)) / (clipr - clipl);
 	m_xViewState.xmProj.yz = (top + bottom) / (bottom - top)
 		- ((m_center_y - halfh) / halfh - (clipb + clipt)) / (clipb - clipt);
+	m_xViewState.xmProj.wz = 1.0f;
+	m_xViewState.xmProj.wm = 0.0f;
 	m_xNeedToUpdateProjTransfToVideo = true;
 }
 
