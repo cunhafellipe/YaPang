@@ -65,6 +65,23 @@
 #define PG_ORIG_CONST const
 #endif
 
+// Frees a vector's storage and leaves it empty and usable. The original does
+// it by calling the destructor (`v.~vector();`) and going on using the vector:
+// cl 13.10's destructor (_Tidy) frees the buffer and nulls the pointers. Other
+// libraries (libc++, libstdc++) free the buffer and leave the pointers
+// dangling, so the next push_back writes into freed memory; every compiler but
+// the original's swaps with an empty vector instead. Never write `.~vector()`
+// in src/: scripts/check_container_dtors.ts rejects it.
+#if defined(_MSC_VER) && _MSC_VER == 1310
+#define PG_VECTOR_FREE_STORAGE(v) (v).~vector()
+#else
+template <class Vector>
+inline void PgVectorFreeStorage(Vector& v) {
+	Vector().swap(v);
+}
+#define PG_VECTOR_FREE_STORAGE(v) PgVectorFreeStorage(v)
+#endif
+
 // cl 13.10 (Visual C++ .NET 2003) has no static_assert, so the layout checks
 // use the negative-array-size idiom. A failing check reads
 // "error C2118: negative subscript" on the line of the check.

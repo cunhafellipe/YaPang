@@ -656,7 +656,7 @@ void DoSortItem(std::vector<sWarpItem*>& items, eSetItemButton button, int sortT
 		std::for_each(items.begin(), items.end(), Delete_Object());
 		// Frees the buffer and leaves the vector empty (the inlined _Tidy:
 		// delete, then the three pointers zeroed, no temporary).
-		items.~vector();
+		PG_VECTOR_FREE_STORAGE(items);
 
 		switch (sortType) {
 		case 0:

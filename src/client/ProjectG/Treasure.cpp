@@ -77,7 +77,7 @@ CTHunter::~CTHunter() {
 			*it = 0;
 		}
 	}
-	m_TMapList.~vector();
+	PG_VECTOR_FREE_STORAGE(m_TMapList);
 }
 
 // treasure.cpp:93
@@ -183,7 +183,7 @@ unsigned long CTHunter::GetTreasurePoint() const {
 
 // treasure.cpp:197
 void CTHunter::ResetTGift() {
-	m_GiftList.~vector();
+	PG_VECTOR_FREE_STORAGE(m_GiftList);
 }
 
 // treasure.cpp:202
@@ -234,7 +234,7 @@ void CTHunter::DecideTMark() {
 void CTHunter::ReceiveAllGift(std::vector<sTreasureGift>& gifts) {
 	int count = m_GiftList.size();
 	if (count != 0) {
-		m_GiftList.~vector();
+		PG_VECTOR_FREE_STORAGE(m_GiftList);
 	}
 
 	m_GiftList.swap(gifts);
@@ -325,7 +325,7 @@ void CTHunter::UpdateItemList(std::string name) {
 void CTHunter::ReceiveRepository(std::vector<sTreasureHunt>& repository) {
 	int count = m_Repository.size();
 	if (count != 0) {
-		m_Repository.~vector();
+		PG_VECTOR_FREE_STORAGE(m_Repository);
 	}
 
 	m_Repository.swap(repository);
@@ -367,7 +367,7 @@ void CTHunter::ReAdjustRepository(void) {
 
 
 	unsigned int size = merged.size();
-	m_Repository.~vector();
+	PG_VECTOR_FREE_STORAGE(m_Repository);
 
 
 
