@@ -374,11 +374,11 @@ void CGolfTask::DrawLoadingInfo(Fresh *pFresh) {
 		return;
 	}
 
-	int offset;
 	float y = g_view->GetHeight() - 100.0f;
+	int line = 0;
 
 	std::list<sSlotInfo>::iterator it;
-	for (it = CSharedDoc::Instance()->m_roomPlayerList.begin(), offset = 0; it != CSharedDoc::Instance()->m_roomPlayerList.end(); ++it) {
+	for (it = CSharedDoc::Instance()->m_roomPlayerList.begin(); it !=CSharedDoc::Instance()->m_roomPlayerList.end(); ++it) {
 		sSlotInfo &player = *it;
 		if (player.m_uid == CSharedDoc::Instance()->GetPangyaUserInfo().guid) {
 			continue;
@@ -396,8 +396,8 @@ void CGolfTask::DrawLoadingInfo(Fresh *pFresh) {
 			text = MakeStr("%s\xb4\xd4\xc0\xba \xc7\xf6\xc0\xe7 %d%% \xb7\xce\xb5\xf9 \xc1\xdf \xc0\xd4\xb4\xcf\xb4\xd9.", player.m_nickname, progress * 10);
 		}
 
-		pFresh->GetManager()->PrintText(WPoint(20.0f, y + offset), 0, text, -1.0f, 0xFFFFFFFF);
-		offset += 20;
+		pFresh->GetManager()->PrintText(WPoint(20.0f, y + line * 20), 0, text, -1.0f, 0xFFFFFFFF);
+		line++;
 	}
 }
 

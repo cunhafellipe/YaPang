@@ -618,15 +618,17 @@ void FrScoreDlg::OnGolferListOwnerDraw(intptr_t param) {
 
 
 
-	if (m_pMassIcon && pItem->pData && (((sRivalData*)pItem->pData)->m_identity & 0x80)) {
+	sRivalData* pRival = (sRivalData*)pItem->pData;
+	if (m_pMassIcon && pRival && (pRival->m_identity & 0x80)) {
 
 
-		rc.x = pItem->pos.x + 26.0f;
+		WRect rcIcon;
+		rcIcon.x = pItem->pos.x + 26.0f;
 
-		rc.y = pItem->pos.y + 13.0f;
-		rc.w = (float)m_pMassIcon->Width();
-		rc.h = (float)m_pMassIcon->Height();
-		pGDI->DrawTexture(m_pMassIcon, rc, 0xFFFFFFFF, 0);
+		rcIcon.y = pItem->pos.y + 13.0f;
+		rcIcon.w = (float)m_pMassIcon->Width();
+		rcIcon.h = (float)m_pMassIcon->Height();
+		pGDI->DrawTexture(m_pMassIcon, rcIcon, 0xFFFFFFFF, 0);
 	}
 }
 

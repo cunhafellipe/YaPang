@@ -1729,8 +1729,9 @@ void FrUccDrawDlg::BuildPatternList(int first, bool b) {
 		end = start + count;
 
 		if (end > 24) {
-			start = start - end + 24;
+			start -= end;
 			end = 24;
+			start += end;
 		}
 	} else {
 		start = 0;

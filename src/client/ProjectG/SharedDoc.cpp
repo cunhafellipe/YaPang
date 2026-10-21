@@ -3095,6 +3095,10 @@ extern "C" {
 static float data_af1958;
 }
 
+// The power bar's position when the pin is out of range, and its origin.
+static const float s_powerBarOutOfRange = 500.0f;
+static const float s_powerBarOrigin = 140.0f;
+
 // shareddoc.cpp:5040, the power bar's position for the distance from the
 // local player's ball to the pin: 500 when the pin is out of the club's range.
 float CalcPowerBarPosition(void) {
@@ -3106,7 +3110,7 @@ float CalcPowerBarPosition(void) {
 	float range = GolfClub().GetRange(0) * 3.2f;
 
 	if (diff.Magnitude() > range) {
-		return 500.0f;
+		return s_powerBarOutOfRange;
 	}
 
 	char text[32] = "";
@@ -3124,7 +3128,8 @@ float CalcPowerBarPosition(void) {
 
 	float value = (float)atof(text);
 	value *= 3.2f;
-	return value / range * data_af1958 + 140.0f;
+	value /= range;
+	return value * data_af1958 + s_powerBarOrigin;
 }
 
 // shareddoc.cpp:5076

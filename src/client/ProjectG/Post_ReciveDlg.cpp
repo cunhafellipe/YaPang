@@ -1151,7 +1151,7 @@ void CPost_ReciveDlg::OnIndexAreaOwnerDraw(void) {
 			pGI->SetTextStyle(0);
 		}
 
-		pGI->Print(WPoint(rc.x + m_pIndexRects[i].x + 15.0f, rc.y + m_pIndexRects[i].y), 1, "%d", m_indexPage * 5 + i + 1);
+		pGI->Print(WPoint(15.0f + (rc.x + m_pIndexRects[i].x), rc.y + m_pIndexRects[i].y), 1, "%d", m_indexPage * 5 + i + 1);
 
 		if (i != 0) {
 			pGI->SetTextColor(0xFFAAAAAA, 0xFFFFFFFF);

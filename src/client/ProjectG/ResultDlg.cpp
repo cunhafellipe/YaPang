@@ -879,7 +879,7 @@ void FrResultTeamDlg::OnStageOwnerDraw(void) {
 
 	float x = m_rect.x, y = m_rect.y;
 
-	g_view->DrawLine2D(WPoint(x, y + 91.0f), WPoint(x + m_rect.w - 10.0f, y + 91.0f), 0xFF000000, 0xFF000000, 0);
+	g_view->DrawLine2D(WPoint(x, y + 91.0f), WPoint(x + m_rect.Size().w - 10.0f, y + 91.0f), 0xFF000000, 0xFF000000, 0);
 
 	if (WSingleton<CSharedDoc>::Instance()->m_roomType == 6) {
 

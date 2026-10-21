@@ -486,14 +486,13 @@ void CPetBody::ScriptProcess(const w_motion_data *motion, float prevTime, float 
 	int start = Ceil(prevTime, 0.03f);
 	int end = time == (float)floor(time) ? (int)time - 1 : (int)floor(time);
 
-	if (start > end)
-		return;
+	if (start <= end) {
+		int first, last;
+		if (m_pPet->CheckFrameData(start, end, first, last)) {
 
-	int first, last;
-	if (m_pPet->CheckFrameData(start, end, first, last)) {
-
-		for (int i = first; i <= last; i++)
-			ParsePuppetScript(m_pPet->GetFrameData(i));
+			for (int i = first; i <= last; i++)
+				ParsePuppetScript(m_pPet->GetFrameData(i));
+		}
 	}
 }
 

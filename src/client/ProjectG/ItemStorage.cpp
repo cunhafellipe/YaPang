@@ -1748,7 +1748,7 @@ bool CItemStorage::CheckStoredItemInfo(sStoredItemInfo& stored, const sItemInfo&
 	strcpy(stored.item.uccCopierNick, info.m_reserved5E);   // sItemInfo 0x5E holds the UCC copier's nick
 	strcpy(stored.item.uccIdx, info.m_uccKey);
 
-	switch (stored.GetTypeID() >> 26) {
+	switch (stored.item.typeId >> 26) {
 	case 28:
 		if (info.m_count > 1) {
 			ret = false;
@@ -2231,12 +2231,12 @@ bool CItemStorage::CheckDrag(void) {
 	bool ret = false;
 
 	if (g_input->GetButton(LEFT_BUTTON) == 3) {
+		ret = true;
+
 		const WPoint& pt = g_pFresh->GetManager()->GetMousePos();
 
 		m_dragDrop.pos.x = pt.x;
 		m_dragDrop.pos.y = pt.y;
-
-		ret = true;
 	}
 
 	return ret;

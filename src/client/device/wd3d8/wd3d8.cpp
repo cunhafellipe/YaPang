@@ -4273,13 +4273,13 @@ unsigned char* WDirect3D8::GetPixelPtr(tagBITMAPINFO* bi, unsigned char* data, i
 void WDirect3D8::UpdateTextureSurfaceNormal(void* buff, int pitch, pix_info* pix, tagBITMAPINFO* bi, void* data) {
 	// Fills the surface with a placeholder pattern: white columns, one in
 	// three half transparent, the others fully transparent.
-	int width = bi->bmiHeader.biWidth;
+	int w = bi->bmiHeader.biWidth;
 	int height = bi->bmiHeader.biHeight;
 
 	for (int y = 0; y < height; y++) {
 		unsigned char* ptr = (unsigned char*)buff + pitch * y;
 
-		for (int i = 0; i < width; i++) {
+		for (int i = 0; i < w; i++) {
 			unsigned long code;
 			int column = (unsigned int)i % 3;
 			if (column < 1)
@@ -5879,13 +5879,13 @@ void* WDirect3D8::SnapShotCustomRenderState(void) {
 	if (m_CustomRenderStateSnapShotList.empty()) {
 		m_CustomRenderStateSnapShotList.push_back(m_CustomRenderState);
 	} else {
-		const WRenderState& last = m_CustomRenderStateSnapShotList.back();
+		WRenderState& last = *m_CustomRenderStateSnapShotList.rbegin();
 
 		if (m_CustomRenderState != last)
 			m_CustomRenderStateSnapShotList.push_back(m_CustomRenderState);
 	}
 
-	return &m_CustomRenderStateSnapShotList.back();
+	return &(*m_CustomRenderStateSnapShotList.rbegin());
 }
 
 // wd3d8.cpp:10070

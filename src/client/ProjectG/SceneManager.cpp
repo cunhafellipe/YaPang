@@ -923,15 +923,16 @@ unsigned char CSceneManager::OverlapCamera(WView* pView, const SceneElement& ele
 		return 0xFF;
 	}
 
+	const WVector& eye = pView->GetCamera().pivot;
 	Waabb box = elem.m_pPuppet->GetBoundBox();
 	float dist = 0.0f;
 
 	for (int i = 0; i < 3; i++) {
 		float d;
-		if (pView->camera.pivot.p[i] < box.min.p[i]) {
-			d = pView->camera.pivot.p[i] - box.min.p[i];
-		} else if (pView->camera.pivot.p[i] > box.max.p[i]) {
-			d = pView->camera.pivot.p[i] - box.max.p[i];
+		if (eye.p[i] < box.min.p[i]) {
+			d = eye.p[i] - box.min.p[i];
+		} else if (eye.p[i] > box.max.p[i]) {
+			d = eye.p[i] - box.max.p[i];
 		} else {
 			continue;
 		}

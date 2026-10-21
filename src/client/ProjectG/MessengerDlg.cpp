@@ -1774,6 +1774,7 @@ void CMessengerInfo::Toggle(void) {
 		FrWnd* pLastChat = NULL;
 
 		if (m_focusOrder.size() > 0) {
+			std::list<sChatSlot>::iterator it;
 			std::list<unsigned long>::iterator itFocus;
 			for (itFocus = m_focusOrder.begin(); itFocus != m_focusOrder.end(); ++itFocus) {
 				unsigned long uid = *itFocus;
@@ -1795,7 +1796,6 @@ void CMessengerInfo::Toggle(void) {
 						}
 					}
 				} else {
-					std::list<sChatSlot>::iterator it;
 					for (it = chatList.begin(); it != chatList.end(); ++it) {
 						sChatSlot& slot = *it;
 						if (!slot.bReceived && slot.pChatDlg == NULL && slot.uid == uid) {
@@ -1879,6 +1879,7 @@ void CMessengerInfo::SaveCurrentFocus(void) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 
 	std::list<FrWnd*>::iterator it;
+	std::list<sChatSlot>::iterator itSlot;
 	for (it = pManager->GetTopWndList().begin(); it != pManager->GetTopWndList().end(); ++it) {
 		FrWnd* pWnd = *it;
 
@@ -1889,7 +1890,6 @@ void CMessengerInfo::SaveCurrentFocus(void) {
 			if (strcmp(name.c_str(), "messenger") == 0) {
 				m_focusOrder.push_back((unsigned long)-1);
 			} else if (strcmp(name.c_str(), "messenger_chat") == 0) {
-				std::list<sChatSlot>::iterator itSlot;
 				for (itSlot = chatList.begin(); itSlot != chatList.end(); ++itSlot) {
 					if (itSlot->pChatDlg == pWnd)
 						m_focusOrder.push_back(itSlot->uid);

@@ -2517,7 +2517,7 @@ void CShopMain::OnItemSlotOwnerDraw(PG_MSGARG param) {
 
 	const Bitmap *slot = m_itemSlotNormal;
 	if (slot) {
-		graphic->DrawTexture(slot, WRect(listItem->pos.x, listItem->pos.y, (float)slot->Width(), (float)slot->Height()), 0xFFFFFFFF, 0);
+		graphic->DrawTexture(slot, WRect(listItem->pos.x, listItem->pos.y, (float)m_itemSlotNormal->Width(), (float)m_itemSlotNormal->Height()), 0xFFFFFFFF, 0);
 	}
 
 	sItemInfo *itemInfo = (sItemInfo *)listItem->pData;
