@@ -1662,7 +1662,7 @@ void CItemStorage::ClearStoredItemInfo(void) {
 
 	// The original releases the buffer in place through the destructor (VC7.1's
 	// _Tidy leaves an empty, reusable vector); no temporary, no EH frame.
-	m_storedItemInfo.~vector();
+	PG_VECTOR_FREE_STORAGE(m_storedItemInfo);
 }
 
 // itemstorage.cpp:1814

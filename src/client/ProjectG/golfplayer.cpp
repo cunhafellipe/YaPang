@@ -1925,7 +1925,7 @@ void CGolfPlayer::SetMotion(const char *name, float time, int player) {
 		}
 	}
 
-	m_animFx[player].~vector();
+	PG_VECTOR_FREE_STORAGE(m_animFx[player]);
 }
 
 // golfplayer.cpp:2808

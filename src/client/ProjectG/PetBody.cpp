@@ -108,7 +108,7 @@ CPetBody::~CPetBody(void) {
 		m_pPet = NULL;
 	}
 
-	m_localLights.~vector();
+	PG_VECTOR_FREE_STORAGE(m_localLights);
 }
 
 // petbody.cpp:101
