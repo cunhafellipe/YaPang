@@ -252,7 +252,7 @@ std::string ShotPreview::TwSubOption(const tweaker_param& param) {
 // shotpreview.cpp:214
 ShotPreview::~ShotPreview(void) {
 	std::for_each(m_pangCoins.begin(), m_pangCoins.end(), Delete_Object());
-	m_pangCoins.~vector();
+	PG_VECTOR_FREE_STORAGE(m_pangCoins);
 
 	if (m_pFont) { delete m_pFont; m_pFont = 0; }
 	if (m_pBall) { delete m_pBall; m_pBall = 0; }
@@ -273,12 +273,12 @@ bool ShotPreview::IsSkipState(void) {
 
 // shotpreview.cpp:238
 void ShotPreview::OnInit(void) {
-	m_path.~vector();
+	PG_VECTOR_FREE_STORAGE(m_path);
 }
 
 // shotpreview.cpp:243
 void ShotPreview::OnLoad(void) {
-	m_predictButtons.~vector();
+	PG_VECTOR_FREE_STORAGE(m_predictButtons);
 
 	FrButton* buttons[4] = { 0, };
 	SendMsg(this, "GolfRule", 0x24A, (intptr_t)"predict_normal", (intptr_t)&buttons[0], 0, 0);

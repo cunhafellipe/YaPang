@@ -1445,7 +1445,7 @@ void CSharedDoc::BuildTikiReportList(void) {
 		return;
 	}
 
-	WSingleton<CSharedDoc>::Instance()->m_gameResultList.~vector();
+	PG_VECTOR_FREE_STORAGE(WSingleton<CSharedDoc>::Instance()->m_gameResultList);
 	WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit = 30;
 
 	for (std::vector<sCaddieReportData>::iterator it = m_tikiReportList.begin(); it != m_tikiReportList.end(); ++it) {
