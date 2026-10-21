@@ -558,15 +558,13 @@ CQuadTree::~CQuadTree() {
 
 // quadtree.cpp:907
 void CQuadTree::Reserve(short count) {
-	typedef std::vector<CAniObj *> AniObjList;
-
 	for (unsigned int i = 0; i < m_aniObjs.size(); i++) {
 		if (m_aniObjs[i]) {
 			delete m_aniObjs[i];
 			m_aniObjs[i] = 0;
 		}
 	}
-	m_aniObjs.~AniObjList();
+	PG_VECTOR_FREE_STORAGE(m_aniObjs);
 
 	if (count > 0) {
 		m_aniObjs.reserve(count);
