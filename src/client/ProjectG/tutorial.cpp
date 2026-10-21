@@ -1031,7 +1031,9 @@ void CTutorial::ChanceOverlay(void) {
 
 // tutorial.cpp:1564
 void CTutorial::PriviewOverlay(void) {
-	PushMacro((eMacroType)0x13, MakeStr("%d %.1f %.1f", 0x17, (g_view->GetWidth() - 128.0f) * 0.5f, g_view->GetHeight() * 0.25f), 0, 1);
+	float y = g_view->GetHeight() * 0.25f;
+	float x = (g_view->GetWidth() - 128.0f) * 0.5f;
+	PushMacro((eMacroType)0x13, MakeStr("%d %.1f %.1f", 0x17, x, y), 0, 1);
 	PushMacro((eMacroType)0x10, MakeStr("%d %.1f %.1f %.1f", 0x17, 128.0, 64.0, 0.0), 0, 1);
 	PushMacro(MACRO_WAIT, 0, 2000, 1);
 	PushMacro((eMacroType)0x12, MakeStr("%d", 0x17), 500, 1);

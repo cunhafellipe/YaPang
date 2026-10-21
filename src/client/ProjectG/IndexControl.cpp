@@ -73,7 +73,8 @@ bool CIndexControl::BuildPage(unsigned long page) {
 			m_curIndexCount = m_totalCount % m_countPerPage;
 		}
 
-		if (m_curIndexCount > 0) {
+		if (m_curIndexCount <= 0) {
+		} else {
 			if (m_indexRects) {
 				delete[] m_indexRects;
 				m_indexRects = NULL;

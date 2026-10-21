@@ -785,16 +785,15 @@ void CGhostMain::OnDownUserEquip(void) {
 
 	if (pItem->idx == 5) {
 		FrEquipDlg *dlg = CreateForm<FrEquipDlg>(g_pFresh->GetManager(), this, "equip", 0);
-		if (dlg == 0)
-			return;
-
-		dlg->Init(WSingleton<CSharedDoc>::Instance()->m_equipItem, true);
-		WRect rect = dlg->GetRect();
-		rect.x = g_view->GetWidth() - rect.w - 17.0f;
-		rect.y = (g_view->GetHeight() - rect.h) * 0.5f;
-		dlg->SetRect(rect);
-		dlg->EnableDrag(false);
-		dlg->Open((FRESH_RESULT_CALLBACK)&CGhostMain::CallBackEquipItemResult, 3);
+		if (dlg) {
+			dlg->Init(WSingleton<CSharedDoc>::Instance()->m_equipItem, true);
+			WRect rect = dlg->GetRect();
+			rect.x = g_view->GetWidth() - rect.w - 17.0f;
+			rect.y = (g_view->GetHeight() - rect.h) * 0.5f;
+			dlg->SetRect(rect);
+			dlg->EnableDrag(false);
+			dlg->Open((FRESH_RESULT_CALLBACK)&CGhostMain::CallBackEquipItemResult, 3);
+		}
 		return;
 	}
 	{
@@ -1133,9 +1132,7 @@ void CGhostMain::OnDrawAreaUserStat(void) {
 	gdi->SetTextColor(0xFFFFFFFF, 0xFF000000);
 	gdi->SetTextStyle(2);
 
-	float x = (float)bitmap->Width() + rect.x;
-
-	g_pFresh->GetManager()->PrintText(WPoint(x + 35.0f, rect.y + 5.0f), 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_name, -1.0f, 0xFFFFFFFF);
+	g_pFresh->GetManager()->PrintText(WPoint((float)bitmap->Width() + rect.x + 35.0f, rect.y + 5.0f), 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_name, -1.0f, 0xFFFFFFFF);
 	gdi->SetTextStyle(0);
 	gdi->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 }
@@ -1171,9 +1168,7 @@ void CGhostMain::OnDrawAreaGhostStat(void) {
 	gdi->SetTextColor(0xFFFFFFFF, 0xFF000000);
 	gdi->SetTextStyle(2);
 
-	float x = (float)bitmap->Width() + rect.x;
-
-	g_pFresh->GetManager()->PrintText(WPoint(x + 235.0f, rect.y + 5.0f), 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[1].m_name, -1.0f, 0xFFFFFFFF);
+	g_pFresh->GetManager()->PrintText(WPoint((float)bitmap->Width() + rect.x + 235.0f, rect.y + 5.0f), 0, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[1].m_name, -1.0f, 0xFFFFFFFF);
 	gdi->SetTextStyle(0);
 	gdi->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 }

@@ -1041,27 +1041,26 @@ void CRealMyRoomData::SetRotate(float angle) {
 		return;
 
 	for (cModel *pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
-		if (pModel->m_pModelData == NULL || stricmp(pModel->m_pModelData->m_name, m_pSelectModel->m_pModelData->m_name) != 0)
-			continue;
+		if (pModel && pModel->m_pModelData && stricmp(pModel->m_pModelData->m_name, m_pSelectModel->m_pModelData->m_name) == 0) {
+			Wobb obb; obb = pModel->m_pModelData->m_obb;
+			WMatrix mat; mat = pModel->m_pModelData->m_matrix;
 
-		Wobb obb; obb = pModel->m_pModelData->m_obb;
-		WMatrix mat; mat = pModel->m_pModelData->m_matrix;
-
-		pModel->SetRotate(angle * 0.03f);
-		pModel->OBBToAABB();
-
-		WVector pos; pos = ChangeModelPosition(7, pModel, pModel->m_pModelData);
-		WPolySoup::sModel *pData = pModel->m_pModelData;
-		if (!WisEqual(pos, pData->m_basePos, 1e-5f)) {
-			pData->m_obb = obb;
-			pModel->m_pModelData->m_matrix = mat;
+			pModel->SetRotate(angle * 0.03f);
 			pModel->OBBToAABB();
-			return;
-		}
 
-		pModel->Apply_ChangeModelData();
-		m_pSelectModel = pModel;
-		return;
+			WVector pos; pos = ChangeModelPosition(7, pModel, pModel->m_pModelData);
+			WPolySoup::sModel *pData = pModel->m_pModelData;
+			if (!WisEqual(pos, pData->m_basePos, 1e-5f)) {
+				pData->m_obb = obb;
+				pModel->m_pModelData->m_matrix = mat;
+				pModel->OBBToAABB();
+				return;
+			}
+
+			pModel->Apply_ChangeModelData();
+			m_pSelectModel = pModel;
+			break;
+		}
 	}
 }
 
@@ -1392,10 +1391,6 @@ void CRealMyRoomData::MoveModelPosition(unsigned char mode) {
 // mode: along the floor (2), along the wall it hangs on (3), sliding along
 // the walls (5), or pushed out of the other furniture (7).
 WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup::sModel *pData) {
-	trace_s trace;
-	WVector move;
-	WVector dir;
-	WVector newPos;
 	WVector result = WVector::ZERO;
 
 	Waabb roomAABB;
@@ -1403,6 +1398,10 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 
 	switch (mode) {
 	case 2: {
+		WVector dir;
+		WVector move;
+		WVector newPos;
+		trace_s trace;
 		move = m_targetPos - pModel->m_pModelData->m_basePos;
 
 		move.z = move.y; move.y = 0.0f;
@@ -1432,6 +1431,10 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 		break;
 	}
 	case 3: {
+		WVector dir;
+		WVector move;
+		WVector newPos;
+		trace_s trace;
 		move = m_targetPos - pModel->m_pModelData->m_basePos;
 
 		move.y = 0.0f;
@@ -1467,6 +1470,8 @@ WVector CRealMyRoomData::ChangeModelPosition(int mode, cModel *pModel, WPolySoup
 		result = SlideWallPosition(pModel, pData);
 		break;
 	case 7: {
+		trace_s trace;
+		WVector move;
 		GetPVS().TraceOBB_Object(pModel->m_pModelData->m_basePos, pModel->m_pModelData->m_basePos, pModel->m_pModelData->m_aabb, &trace, pData, true);
 
 		move = trace.m_endPos - pModel->m_pModelData->m_basePos;

@@ -1405,22 +1405,21 @@ void CFamilyMain::OnDrawEquipListBox(FrListItem* pItem) {
 		bar = g_pFresh->GetBitmap("bar_no");
 	}
 
-	if (bar == 0)
-		return;
+	if (bar) {
+		WRect rect(pItem->pos.x + 5.0f, pItem->pos.y + 5.0f, bar->Width() + 0.5f, bar->Height() + 0.5f);
+		if (pItem->idx != 5) {
+			pGDI->DrawTexture(bar, rect, 0xFFFFFFFF, 0);
+		} else {
+			const Bitmap* button = g_pFresh->GetBitmap("gameroom_equip_item_bn");
+			if (button)
+				pGDI->DrawTexture(button, rect, 0xFFFFFFFF, 0);
+		}
 
-	WRect rect(pItem->pos.x + 5.0f, pItem->pos.y + 5.0f, bar->Width() + 0.5f, bar->Height() + 0.5f);
-	if (pItem->idx != 5) {
-		pGDI->DrawTexture(bar, rect, 0xFFFFFFFF, 0);
-	} else {
-		const Bitmap* button = g_pFresh->GetBitmap("gameroom_equip_item_bn");
-		if (button)
-			pGDI->DrawTexture(button, rect, 0xFFFFFFFF, 0);
-	}
-
-	if (rect.IsInRect(WPoint(g_input->GetMousePoint().x, g_input->GetMousePoint().y))) {
-		const Bitmap* frame = g_pFresh->GetBitmap("select_frame");
-		if (frame)
-			pGDI->DrawTexture(frame, WRect(rect.x - 3.0f, rect.y - 3.0f, rect.w + 6.0f, rect.h + 6.0f), 0xFFFFFFFF, 0);
+		if (rect.IsInRect(WPoint(g_input->GetMousePoint().x, g_input->GetMousePoint().y))) {
+			const Bitmap* frame = g_pFresh->GetBitmap("select_frame");
+			if (frame)
+				pGDI->DrawTexture(frame, WRect(rect.x - 3.0f, rect.y - 3.0f, rect.w + 6.0f, rect.h + 6.0f), 0xFFFFFFFF, 0);
+		}
 	}
 }
 

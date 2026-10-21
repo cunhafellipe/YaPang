@@ -4322,20 +4322,21 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 
 // golfrule.cpp:6132
 void CGolfRule::DispatchMatchItems(void) {
-	unsigned char interval = WSingleton<CSharedDoc>::Instance()->m_holes / 9;
+	unsigned char interval = GetHoles() / 9;
 	unsigned char holeIndex = GetHoleIndex(GOLFDOC()->m_currentHole);
 	if (interval == 0)
 		interval = 1;
 
 	if (holeIndex > 0
 		&& holeIndex % interval == 0
-		&& WSingleton<CSharedDoc>::Instance()->m_roomType == 3) {
-		unsigned long itemId = 0;
+		&& GetGameType() == 3) {
 		unsigned long sum = 0;
+		unsigned long itemId = 0;
+		unsigned int i = 0;
 		// The ladder round: the hole's position divided by the rounds' interval.
 		unsigned char round = holeIndex / interval;
 		unsigned long rnd = WSingleton<CSharedDoc>::Instance()->m_holeRandom[round] % 100;
-		for (unsigned int i = 0; i < 6; i++) {
+		for (; i < 6; i++) {
 			sum += g_ladderItem[i].rate;
 			if (sum > rnd) {
 				itemId = g_ladderItem[i].itemIndex | 0x18000000;
@@ -8241,6 +8242,8 @@ void CGolfRule::CommandBox(void) {
 						return;
 
 					command = 0x10;
+					GOLFDOC()->m_commandArrows.push_back(command);
+					return;
 				}
 			} else {
 				m_commandTime = timeGetTime();
@@ -9324,7 +9327,8 @@ void CGolfRule::DoToDefaultCamera(float elapsed) {
 // Announces the turn change: in match play, a shot that can win the hole or
 // the match; otherwise a birdie or eagle chance, the approach range, or the
 // waiting sign when it is not the player's turn. Returns whether the
-// player's caddie is set for the turn.
+// player's caddie is set for the turn (in match play only for a winning or
+// match shot).
 bool CGolfRule::SetTurnChangeEvent(void) {
 	sDetermineWhetherToEnableFiledItem determineFieldItem;
 	CGolfBall &ball = GolfBall();
@@ -9339,29 +9343,24 @@ bool CGolfRule::SetTurnChangeEvent(void) {
 			int team = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute;
 			bool winningShot = false;
 			bool matchShot = false;
-			sTeamData *myTeam = GOLFDOC()->GetTeam(team);
-			int diff = myTeam->m_resetCount - GOLFDOC()->GetTeam(1 - team)->m_resetCount;
-			if (GOLFDOC()->GetTeam(1 - team)->m_state == 1) {
-				if (GOLFDOC()->GetTeam(team)->m_holes[GOLFDOC()->m_currentHole - 1] < GOLFDOC()->GetTeam(1 - team)->m_holes[GOLFDOC()->m_currentHole - 1]) {
+			int diff = TEAM(team)->m_resetCount - TEAM(1 - team)->m_resetCount;
+			if (TEAM(1 - team)->m_state == 1) {
+				if (TEAM(team)->m_holes[GOLFDOC()->m_currentHole - 1] < TEAM(1 - team)->m_holes[GOLFDOC()->m_currentHole - 1])
 					winningShot = true;
-					if (diff + 1 > CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
-						matchShot = true;
-				} else {
-					if (diff > CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
-						matchShot = true;
-				}
 			} else {
-				if (!(GOLFDOC()->GetTeam(team)->m_holes[GOLFDOC()->m_currentHole - 1] > GOLFDOC()->GetTeam(1 - team)->m_holes[GOLFDOC()->m_currentHole - 1])) {
+				if (TEAM(team)->m_holes[GOLFDOC()->m_currentHole - 1] <= TEAM(1 - team)->m_holes[GOLFDOC()->m_currentHole - 1])
 					winningShot = true;
-					if (diff + 1 > CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
-						matchShot = true;
-				} else {
-					if (diff > CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
-						matchShot = true;
-				}
 			}
 
-			if (CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_caddieInfo.id != 0)
+			if (winningShot) {
+				if (diff + 1 > GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole))
+					matchShot = true;
+			} else {
+				if (diff > GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole))
+					matchShot = true;
+			}
+
+			if ((winningShot || matchShot) && CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_caddieInfo.id != 0)
 				result = true;
 
 			if (IsMyTurn(true)) {
@@ -9376,30 +9375,26 @@ bool CGolfRule::SetTurnChangeEvent(void) {
 		}
 	} else if (CSharedDoc::Instance()->m_roomType == 3) {
 		if (ball.m_groundType == 2) {
-			bool matchShot = false;
 			bool winningShot = false;
+			bool matchShot = false;
 			int diff = PLAYER(GOLFDOC()->m_myPlayerIndex)->m_ghostResult - PLAYER(1 - GOLFDOC()->m_myPlayerIndex)->m_ghostResult;
 			if (PLAYER(1 - GOLFDOC()->m_myPlayerIndex)->m_state == 1) {
-				if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] < PLAYER(1 - GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1]) {
+				if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] < PLAYER(1 - GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1])
 					winningShot = true;
-					if (diff + 1 > CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
-						matchShot = true;
-				} else {
-					if (diff > CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
-						matchShot = true;
-				}
 			} else {
-				if (!(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] > PLAYER(1 - GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1])) {
+				if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] <= PLAYER(1 - GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1])
 					winningShot = true;
-					if (diff + 1 > CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
-						matchShot = true;
-				} else {
-					if (diff > CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole))
-						matchShot = true;
-				}
 			}
 
-			if (CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_caddieInfo.id != 0)
+			if (winningShot) {
+				if (diff + 1 > GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole))
+					matchShot = true;
+			} else {
+				if (diff > GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole))
+					matchShot = true;
+			}
+
+			if ((winningShot || matchShot) && CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_caddieInfo.id != 0)
 				result = true;
 
 			if (IsMyTurn(true)) {

@@ -3378,15 +3378,13 @@ bool WPolySoup::GetIntersection(WVector *out, WVector *a, WVector *b, WVector *c
 	float dx = WAbsBySign(d->x - c->x);
 	float dz = WAbsBySign(d->z - c->z);
 
-	float side;
 	if (dx > dz) {
-		side = (out->x - c->x) * (d->x - out->x);
+		if ((out->x - c->x) * (d->x - out->x) > 0.0f)
+			return true;
 	} else {
-		side = (out->z - c->z) * (d->z - out->z);
+		if ((out->z - c->z) * (d->z - out->z) > 0.0f)
+			return true;
 	}
-
-	if (side > 0.0f)
-		return true;
 	return false;
 }
 

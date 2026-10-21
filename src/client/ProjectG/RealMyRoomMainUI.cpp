@@ -4190,7 +4190,7 @@ void CRealMyRoomMain::OnGiftPageLBDown(void) {
 
 		for (unsigned int i = 0; i < m_giftPageShownCount; i++) {
 			const WRect& rc = m_areaRects[i + 1];
-			if (mouse.x >= rc.x && rc.x + rc.w >= mouse.x && mouse.y >= rc.y && rc.h + rc.y >= mouse.y) {
+			if (mouse.x >= rc.x && rc.x + rc.w >= mouse.x && mouse.y >= rc.y && rc.y + rc.Size().h >= mouse.y) {
 				if (m_giftPageCurrent != i + 1) {
 					page = m_giftPageGroup * 5 + (m_giftPageCurrent = i + 1);
 				}

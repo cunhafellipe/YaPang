@@ -134,7 +134,7 @@ void FrGuideBookDlg::OnContentOwnerDraw(PG_MSGARG param) {
 		src.w = 1.0f;
 		src.h = 1.0f;
 		WRect dst = m_pContent->GetRect();
-		dst.x += (int)((dst.w - m_pPage->GetWidth() + 1.0f) * 0.5f);
+		dst.x += (int)((1.0f + (dst.w - m_pPage->GetWidth())) * 0.5f);
 		dst.y += (int)((dst.h - m_pPage->GetHeight() + 1.0f) * 0.5f);
 		dst.w = (float)m_pPage->GetWidth();
 		dst.h = (float)m_pPage->GetHeight();

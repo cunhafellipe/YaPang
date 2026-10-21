@@ -1066,7 +1066,7 @@ void CDuck::Process(float dt) {
 		float angle = Between(dt * m_turnRate * -0.7f, CalcDeltaAngle(m_pMatrices[i - 1].pivot - m_pMatrices[i].pivot, m_pMatrices[i].za * -1.0f), dt * m_turnRate * 0.7f);
 
 		WMatrix &matrix = m_pMatrices[i];
-		matrix = RotMat(angle, 1) * matrix;
+		matrix = RotMat(angle, 1) * m_pMatrices[i];
 		m_pMatrices[i].pivot += m_pMatrices[i].za * -1.0f * m_unk74 * dt;
 	}
 }
@@ -1812,7 +1812,7 @@ void ntPenguin_Duck::Process(float dt) {
 					float angle = Between(dt * m_turnRate * -0.7f, CalcDeltaAngle(m_pMatrices[i - 1].pivot - m_pMatrices[i].pivot, m_pMatrices[i].za * -1.0f), dt * m_turnRate * 0.7f);
 
 					WMatrix &matrix = m_pMatrices[i];
-					matrix = RotMat(angle, 1) * matrix;
+					matrix = RotMat(angle, 1) * m_pMatrices[i];
 					m_pMatrices[i].pivot += m_pMatrices[i].za * -1.0f * m_unk74 * dt;
 					m_pMatrices[i].pivot = GetPVS().GetGroundPoint(m_pMatrices[i].pivot, true, 0, false);
 				}

@@ -1537,12 +1537,13 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 // opened it (turned by m_matrix first when m_bTransformPos), unless another
 // spray's particle spawned it.
 WVector CFxSpray::GetBgPos(void) {
-	if (m_pSpawner == 0) {
-		if (m_pParent) {
-			if (m_param.m_bTransformPos)
-				return m_pos * m_matrix + m_pParent->Pos();
-			return m_pos + m_pParent->Pos();
-		}
+	if (m_pSpawner)
+		return m_pos;
+
+	if (m_pParent) {
+		if (m_param.m_bTransformPos)
+			return m_pos * m_matrix + m_pParent->Pos();
+		return m_pos + m_pParent->Pos();
 	}
 	return m_pos;
 }

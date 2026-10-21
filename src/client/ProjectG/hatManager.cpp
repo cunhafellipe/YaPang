@@ -656,32 +656,33 @@ void ChatManager::FilteringHack(const char *text, bool encode) {
 	if (text == 0)
 		return;
 
-	char hackChar[4] = { ';', '"', '\'', '-' };
-	char hackCode[4] = { 0x11, 0x12, 0x13, 0x14 };
-	char unused[8];	// never used: the original has its /GS cookie (likely a dropped buffer)
+	char hack[2][4] = {
+		{ ';', '"', '\'', '-' },
+		{ 0x11, 0x12, 0x13, 0x14 }
+	};
 	char *str = (char *)text;
 	int len = strlen(str);
 
 	for (int i = 0; i < len; i++) {
 		if (encode) {
 			for (int k = 0; k < 4; k++) {
-				if (str[i] == hackChar[k]) {
+				if (str[i] == hack[0][k]) {
 					if (k == 3) {
 						if (i < len - 1) {
 							if (str[i + 1] == '-') {
-								str[i] = hackCode[k];
-								str[i + 1] = hackCode[k];
+								str[i] = hack[1][k];
+								str[i + 1] = hack[1][k];
 							}
 						}
 					} else {
-						str[i] = hackCode[k];
+						str[i] = hack[1][k];
 					}
 				}
 			}
 		} else {
 			for (int k = 0; k < 4; k++) {
-				if (str[i] == hackCode[k])
-					str[i] = hackChar[k];
+				if (str[i] == hack[1][k])
+					str[i] = hack[0][k];
 			}
 		}
 	}

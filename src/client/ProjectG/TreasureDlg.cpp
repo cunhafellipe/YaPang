@@ -804,7 +804,8 @@ void FrTreasureCourse::ReInitCloud(int cloudIdx) {
 		cloud.alpha = 255;
 	}
 
-	m_clouds[cloudIdx] = cloud;
+	sCloud& dst = m_clouds[cloudIdx];
+	dst = cloud;
 }
 
 // treasuredlg.cpp:888

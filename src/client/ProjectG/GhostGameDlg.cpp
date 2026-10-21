@@ -600,7 +600,8 @@ void FrGhostGameMapDlg::OnProc(float dt) {
 		if (it->m_flag12 && !it->m_flag10 && it->m_lockOffset < 200.0f && (it->m_lockOffset += dt * 400.0f) > 200.0f) it->m_lockOffset = 200.0f;
 	}
 
-	m_imgTags[m_selectId].Animate(dt);
+	sImgTag* tag = &m_imgTags[m_selectId];
+	tag->Animate(dt);
 
 	if (m_selecTextAlpha < 255.0f) {
 		m_selecTextAlpha += dt * 127.5f;
@@ -736,18 +737,18 @@ void FrGhostGameMapDlg::OnInitAreaSelecText(intptr_t param) {
 // ghostgamedlg.cpp:629
 void FrGhostGameMapDlg::OnDrawSelecText(void) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
-	if (pGDI) {
+	if (!pGDI)
+		return;
 
-		// The tip image is drawn at its own size over the "choice_text" area.
-		const Bitmap* pBitmap = g_pFresh->GetBitmap("ghost_map_select_tip");
-		if (pBitmap) {
+	// The tip image is drawn at its own size over the "choice_text" area.
+	const Bitmap* pBitmap = g_pFresh->GetBitmap("ghost_map_select_tip");
+	if (!pBitmap)
+		return;
 
-			WRect rect = m_pSelecTextArea->GetRect();
-			rect.w = (float)pBitmap->Width();
-			rect.h = (float)pBitmap->Height();
-			pGDI->DrawTexture(pBitmap, rect, ((unsigned char)m_selecTextAlpha << 24) | 0xffffff, 0);
-		}
-	}
+	WRect rect = m_pSelecTextArea->GetRect();
+	rect.w = (float)pBitmap->Width();
+	rect.h = (float)pBitmap->Height();
+	pGDI->DrawTexture(pBitmap, rect, ((unsigned char)m_selecTextAlpha << 24) | 0xffffff, 0);
 }
 
 // ghostgamedlg.cpp:646
