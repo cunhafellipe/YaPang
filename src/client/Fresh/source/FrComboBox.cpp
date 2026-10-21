@@ -510,8 +510,7 @@ void FrComboCtlEx::SelectItem(int index) {
 // frcombobox.cpp:594
 void FrComboCtlEx::ClearAllListItem(void) {
 	m_pListBox->ClearItem();
-	typedef std::vector<const Bitmap*> TEX_ITEM_LIST;
-	m_TexItemList.~TEX_ITEM_LIST();
+	PG_VECTOR_FREE_STORAGE(m_TexItemList);
 }
 
 // frcombobox.cpp:600
