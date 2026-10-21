@@ -1426,11 +1426,11 @@ void FrServerDlg::OnConnectMessageInit(intptr_t param) {
 		if (!m_pProgressBar) {
 
 			const WRect& r = m_pConnectMessage->GetRect();
-			WRect rect(r.x, r.y, r.w, r.h);
-			WRect barRect(rect.x, r.y - 25, 180, 30);
-
-
-
+			float y = r.y;
+			float w = r.w;
+			float h = r.h;
+			WRect rect(r.x, y, w, h);
+			WRect barRect(rect.x, y - 25, 180, 30);
 			m_pProgressBar = new cProgressBar;
 			m_pProgressBar->Initialize(barRect, 3, 3);
 			m_pProgressBar->SetImg("gauge_left_frm", "gauge_middle_frm", "gauge_right_frm", "gauge_bar_frm");

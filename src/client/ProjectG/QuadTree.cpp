@@ -5681,7 +5681,6 @@ void CQuadTree::OBBToAABB(Wobb obb, Waabb &aabb, WVector &center) {
 	WVector ext1 = obb.extend[1];
 	WVector ext2 = obb.extend[2];
 
-	box.max.y = 0.0f;
 	WVector ny = ext1 * -1.0f;
 	WVector nz = ext2 * -1.0f;
 	WVector nx = ext0 * -1.0f;
@@ -5695,6 +5694,7 @@ void CQuadTree::OBBToAABB(Wobb obb, Waabb &aabb, WVector &center) {
 	corner[6] = WVector(c.x + (ext0.x + (ny.x + ext2.x)), c.y + (ext0.y + (ny.y + ext2.y)), c.z + (ext0.z + (ny.z + ext2.z)));
 	corner[7] = WVector(c.x + (ext0.x + (ext1.x + ext2.x)), c.y + (ext0.y + (ext1.y + ext2.y)), c.z + (ext0.z + (ext1.z + ext2.z)));
 
+	box.max.y = 0.0f;
 	WVector *pCorner = corner;
 	for (int count = 8; count != 0; count--, pCorner++) {
 		if (!(box.max.x > pCorner->x)) box.max.x = pCorner->x;

@@ -534,7 +534,8 @@ void FrBingoEventDlg::DrawBoardNumber(FrGraphicInterface* pGI, const WRect& rect
 			float x = slantX + rect.x + rowX + columnX;
 			x += m_completeBarPos.x;
 			src.x = pt.x;
-			float y = rect.y + m_completeBarPos.y + slantY + slantRowY;
+			float y = rect.y;
+			y += m_completeBarPos.y + slantY + slantRowY;
 			y += rowY;
 			src.y = pt.y;
 			m_board[i].GetBingoPoint(j).DrawPoint(pGI, m_bitmaps, src, x, y);
@@ -861,16 +862,15 @@ void FrBingoGiftDlg::OnOwnerDrawGiftArea(PG_MSGARG param) {
 		int count = m_gifts.size();
 
 		for (int i = 0; i < count; i++) {
-			const Bitmap* pBitmap = m_giftBitmaps[i];
 			WRect dest;
 			dest.y = rect.y;
 			dest.x = offset + rect.x;
 			dest.x += m_startX[count - 1];
-			unsigned int width = pBitmap->Width();
-			unsigned int height = pBitmap->Height();
+			unsigned int width = m_giftBitmaps[i]->Width();
+			unsigned int height = m_giftBitmaps[i]->Height();
 			dest.w = (float)width;
 			dest.h = (float)height;
-			pGDI->DrawTexture(pBitmap, dest, 0xFFFFFFFF, 0);
+			pGDI->DrawTexture(m_giftBitmaps[i], dest, 0xFFFFFFFF, 0);
 			offset += 63.0f;
 		}
 	}

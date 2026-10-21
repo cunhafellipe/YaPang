@@ -2872,10 +2872,12 @@ bool CTaskMain::OnNoticeDlgResult(int result, FrForm *) {
 		unsigned long typeId = m_noticeDlg->GetTypeId();
 		switch (typeId >> 26) {
 		case 1:
-		case 9:
 			WSingleton<CSharedDoc>::Instance()->m_lobbyMessage = "CHARSHOP";
 			break;
 		case 2:
+			WSingleton<CSharedDoc>::Instance()->m_lobbyMessage = "CHARSHOP";
+			break;
+		case 9:
 			WSingleton<CSharedDoc>::Instance()->m_lobbyMessage = "CHARSHOP";
 			break;
 		case 4:
@@ -3188,8 +3190,7 @@ void CTaskMain::OnOverBar_SpecialCardUp(void) {
 			WPoint balloonPos;
 			balloonPos.x = m_barButton[10]->GetRect().x - 86.0f;
 			balloonPos.y = m_messengerBubbleEdit->GetRect().y;
-			MsgObject msg(NULL, 0xA8, (intptr_t)"\xbb\xe7\xbf\xeb\xc1\xdf\xc0\xce\x20\xc8\xbf\xb0\xfa\xb0\xa1\x20\xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9\x2e", 1, (intptr_t)&balloonPos, 0, 0);
-			AfxGetTask()->PassMsgToMainActor(msg);
+			AfxGetTask()->PassMsgToMainActor(MsgObject(NULL, 0xA8, (intptr_t)"\xbb\xe7\xbf\xeb\xc1\xdf\xc0\xce\x20\xc8\xbf\xb0\xfa\xb0\xa1\x20\xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9\x2e", 1, (intptr_t)&balloonPos, 0, 0));
 		}
 	}
 

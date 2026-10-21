@@ -585,12 +585,12 @@ void CTutorialMain::SetCompleteStates(void) {
 				break;
 
 			case 1:
-				if (doc->m_tutorialData[0] != 0xFF) {
+				if (doc->m_tutorialData[0] == 0xFF) {
+					if (doc->m_tutorialData[1] & data_9f7be8[i].m_mask)
+						m_Tutorials[i].m_status = 1;
+				} else {
 					m_Tutorials[i].m_status = 2;
-					break;
 				}
-				if (doc->m_tutorialData[1] & data_9f7be8[i].m_mask)
-					m_Tutorials[i].m_status = 1;
 				break;
 
 			case 2:
@@ -599,6 +599,7 @@ void CTutorialMain::SetCompleteStates(void) {
 						m_Tutorials[i].m_status = 1;
 				} else {
 					m_Tutorials[i].m_status = 2;
+					continue;
 				}
 				break;
 			}

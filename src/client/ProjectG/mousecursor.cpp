@@ -296,7 +296,8 @@ bool CMouseCursor::ChildWindowCallback(FrWnd* pWnd, void* pParam) {
 
 		WRect rect;
 		rect = pWnd->GetRect();
-		if (Instance()->m_pointer.x >= rect.x && rect.x + rect.w >= Instance()->m_pointer.x && Instance()->m_pointer.y >= rect.y && rect.y + rect.h >= Instance()->m_pointer.y) {
+		WPoint pt = rect.TopLeft();
+		if (Instance()->m_pointer.x >= pt.x && pt.x + rect.w >= Instance()->m_pointer.x && Instance()->m_pointer.y >= pt.y && pt.y + rect.h >= Instance()->m_pointer.y) {
 			pWnd->GetWindowName(name);
 
 			// Over the chat view, only its scroll bar counts.
@@ -306,7 +307,8 @@ bool CMouseCursor::ChildWindowCallback(FrWnd* pWnd, void* pParam) {
 				FrWnd* pScroll = pWnd->FindChild("scrollbar");
 				if (pScroll) {
 					rect = pScroll->GetRect();
-					if (Instance()->m_pointer.x >= rect.x && rect.x + rect.w >= Instance()->m_pointer.x && Instance()->m_pointer.y >= rect.y && rect.y + rect.h >= Instance()->m_pointer.y)
+					WPoint scrollPt = rect.TopLeft();
+					if (Instance()->m_pointer.x >= scrollPt.x && scrollPt.x + rect.w >= Instance()->m_pointer.x && Instance()->m_pointer.y >= scrollPt.y && scrollPt.y + rect.h >= Instance()->m_pointer.y)
 						hit = true;
 				}
 			}
@@ -338,7 +340,8 @@ int CMouseCursor::ChatCheck(void) {
 
 		if (wnd->IsVisible()) {
 			WRect rect = wnd->GetRect();
-			if (m_pointer.x >= rect.x && m_pointer.x <= rect.x + rect.w && m_pointer.y >= rect.y && m_pointer.y <= rect.y + rect.h) {
+			WPoint pt = rect.TopLeft();
+			if (m_pointer.x >= pt.x && m_pointer.x <= pt.x + rect.w && m_pointer.y >= pt.y && m_pointer.y <= pt.y + rect.h) {
 				m_area = 0x40;
 				return 1;
 			}

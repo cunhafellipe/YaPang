@@ -482,86 +482,86 @@ void FrCardBoxDlg::OnAreaBgInit(intptr_t param) {
 // cardboxdlg.cpp:458
 void FrCardBoxDlg::OnAreaBgOwnerDraw(void) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
-	if (!m_pExhibition)
-		return;
+	if (m_pExhibition) {
 
 
 
-	if (m_state == 0)
-		SetPackVisibleInBox();
+		if (m_state == 0)
+			SetPackVisibleInBox();
 
 
-	Display2DBg();
+		Display2DBg();
 
 
-	m_pExhibition->DisplayClip(m_rcBg, 55.0f, 0.0f, 0.0f);
+		m_pExhibition->DisplayClip(m_rcBg, 55.0f, 0.0f, 0.0f);
 
 
-	if (m_state == 6) {
+		if (m_state == 6) {
 
-		std::list<sCards>::iterator it = std::find_if(WSingleton<CSharedDoc>::Instance()->m_myCardList.begin(), WSingleton<CSharedDoc>::Instance()->m_myCardList.end(), _FindByUid(m_packId));
-		if (it == WSingleton<CSharedDoc>::Instance()->m_myCardList.end()) {
-
-
-			const Bitmap* pEmpty = g_pFresh->GetBitmap("text_cardpack_empty");
-			if (!pEmpty)
-				return;
+			std::list<sCards>::iterator it = std::find_if(WSingleton<CSharedDoc>::Instance()->m_myCardList.begin(), WSingleton<CSharedDoc>::Instance()->m_myCardList.end(), _FindByUid(m_packId));
+			if (it == WSingleton<CSharedDoc>::Instance()->m_myCardList.end()) {
 
 
-
-			WRect rc(m_rcBg.x + (m_rcBg.w - (float)pEmpty->Width()) * 0.5f, m_rcBg.y + m_rcBg.h * 0.9f, (float)pEmpty->Width(), (float)pEmpty->Height());
-			pGDI->DrawTexture(pEmpty, rc, 0xFFFFFFFF, 0);
-		} else {
+				const Bitmap* pEmpty = g_pFresh->GetBitmap("text_cardpack_empty");
+				if (pEmpty) {
 
 
 
-
-			const Bitmap* pNext = g_pFresh->GetBitmap("text_cardpack_open_next");
-			IFF_STRUCT::sCard* pCard = ItemManager()->FindCard(m_unknown13c);
-			if (!pCard)
-				return;
-			const Bitmap* pIcon = g_pFresh->GetBitmap(pCard->m_icon);
-
-			if (!pIcon || !pNext)
-				return;
-
-			WRect rc(m_rcBg);
-			rc.x += 80.0f;
-			rc.y += rc.h - (float)pIcon->Height() - 4.0f;
-			rc.w = (float)pIcon->Width();
-			rc.h = (float)pIcon->Height();
-
-
-			pGDI->DrawTexture(pIcon, rc, 0xFFFFFFFF, 0);
-
-			rc.x += 50.0f;
-			rc.y += (float)pIcon->Height() * 0.6f;
-
-
-
-
-
-
-			float width;
-			std::list<sCards>::iterator cit = std::find_if(WSingleton<CSharedDoc>::Instance()->m_myCardList.begin(), WSingleton<CSharedDoc>::Instance()->m_myCardList.end(), _FindByUid(m_packId));
-			if (cit != WSingleton<CSharedDoc>::Instance()->m_myCardList.end()) {
-				width = m_pFont->Print(rc.x, rc.y, MakeStr("x %02d", (int)cit->m_count > 99 ? 99 : cit->m_count));
+					WRect rc(m_rcBg.x + (m_rcBg.w - (float)pEmpty->Width()) * 0.5f, m_rcBg.y + m_rcBg.h * 0.9f, (float)pEmpty->Width(), (float)pEmpty->Height());
+					pGDI->DrawTexture(pEmpty, rc, 0xFFFFFFFF, 0);
+				}
 			} else {
 
-				width = m_pFont->Print(rc.x, rc.y, MakeStr("x %02d", -1));
+
+
+
+				const Bitmap* pNext = g_pFresh->GetBitmap("text_cardpack_open_next");
+				IFF_STRUCT::sCard* pCard = ItemManager()->FindCard(m_unknown13c);
+				if (pCard) {
+					const Bitmap* pIcon = g_pFresh->GetBitmap(pCard->m_icon);
+
+					if (pIcon && pNext) {
+
+						WRect rc(m_rcBg);
+						rc.x += 80.0f;
+						rc.y += rc.h - (float)pIcon->Height() - 4.0f;
+						rc.w = (float)pIcon->Width();
+						rc.h = (float)pIcon->Height();
+
+
+						pGDI->DrawTexture(pIcon, rc, 0xFFFFFFFF, 0);
+
+						rc.x += 50.0f;
+						rc.y += (float)pIcon->Height() * 0.6f;
+
+
+
+
+
+
+						float width;
+						std::list<sCards>::iterator cit = std::find_if(WSingleton<CSharedDoc>::Instance()->m_myCardList.begin(), WSingleton<CSharedDoc>::Instance()->m_myCardList.end(), _FindByUid(m_packId));
+						if (cit != WSingleton<CSharedDoc>::Instance()->m_myCardList.end()) {
+							width = m_pFont->Print(rc.x, rc.y, MakeStr("x %02d", (int)cit->m_count > 99 ? 99 : cit->m_count));
+						} else {
+
+							width = m_pFont->Print(rc.x, rc.y, MakeStr("x %02d", -1));
+						}
+
+
+
+
+						rc.x += width;
+
+						rc.x += 10.0f; rc.y -= 4.0f; rc.w = (float)pNext->Width();
+						rc.h = (float)pNext->Height();
+
+
+
+						pGDI->DrawTexture(pNext, rc, 0xFFFFFFFF, 0);
+					}
+				}
 			}
-
-
-
-
-			rc.x += width;
-
-			rc.x += 10.0f; rc.y -= 4.0f; rc.w = (float)pNext->Width();
-			rc.h = (float)pNext->Height();
-
-
-
-			pGDI->DrawTexture(pNext, rc, 0xFFFFFFFF, 0);
 		}
 	}
 }

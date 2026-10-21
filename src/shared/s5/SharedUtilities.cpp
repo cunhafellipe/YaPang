@@ -165,9 +165,8 @@ ePwdErrorCode VerifyStringContents_Limit(const std::string &text) {
 
 	if (start < 6) {
 		memset(pattern, 0, sizeof(pattern));
-		int j;
-		for (k = 0, j = start; k < 8 && j < 10; ++k, ++j) {
-			pattern[k] = digits[j];
+		for (int digit = start, pos = 0; pos < 8 && digit < 10; ++pos, ++digit) {
+			pattern[pos] = digits[digit];
 		}
 
 		bool ascending = true;

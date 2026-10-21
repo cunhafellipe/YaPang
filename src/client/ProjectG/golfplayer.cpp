@@ -1985,16 +1985,14 @@ void CGolfPlayer::ScriptProcess(w_motion_data *data, float from, float to, int p
 		if (start == (int)floor(data->s * 30.0f + 0.5f)) {
 			start++;
 		}
-
-		if (start > end) {
-			return;
-		}
 	}
 
-	int first, last;
-	if (m_pPetFrames[player].GetCurAniPet()->CheckFrameData(start, end, first, last)) {
-		for (int i = first; i <= last; i++) {
-			ParsePuppetScript(m_pPetFrames[player].GetCurAniPet()->GetFrameData(i), player, skip);
+	if (start <= end) {
+		int first, last;
+		if (m_pPetFrames[player].GetCurAniPet()->CheckFrameData(start, end, first, last)) {
+			for (int i = first; i <= last; i++) {
+				ParsePuppetScript(m_pPetFrames[player].GetCurAniPet()->GetFrameData(i), player, skip);
+			}
 		}
 	}
 }
@@ -2935,7 +2933,7 @@ void CGolfPlayer::PowerShotInput(void) {
 	if (IsMyTurn(false) && !WSingleton<CQuitWindow>::Instance()->IsActive() && CItemWindow::IsClosed()) {
 		if (m_powerShotKeyState == 0) {
 			if (g_input->GetUp("LALT") || g_input->GetUp("RALT")) {
-				if (m_powerShotOn == true) {
+				if (m_powerShotOn) {
 					Cancel_PowerShot();
 					m_powerShotOn = false;
 				} else if (IsLocalContent((localContentType_t)0x31) && PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000027) {

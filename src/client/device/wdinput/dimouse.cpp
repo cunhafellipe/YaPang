@@ -198,9 +198,10 @@ void DirectInputMouse::Update(unsigned long timeStamp) {
 
 	if (m_moveMode) {
 		GetCursorPos(&curPt);
-		curPt.x -= m_clientX;
-		curPt.y -= m_clientY;
-		MoveWindow(m_myHwnd, curPt.x, curPt.y, m_clientWidth, m_clientHeight, TRUE);
+		POINT movePt = curPt;
+		movePt.x -= m_clientX;
+		movePt.y -= m_clientY;
+		MoveWindow(m_myHwnd, movePt.x, movePt.y, m_clientWidth, m_clientHeight, TRUE);
 	}
 }
 

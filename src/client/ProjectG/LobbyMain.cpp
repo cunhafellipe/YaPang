@@ -13325,14 +13325,10 @@ void CLobbyMain::OnCreatePetOwnerDraw(void) {
 	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
 	int guid = MyGuid(false);
 	std::map<unsigned long, sRoomSlot>::iterator it = doc->m_roomSlotMap.find(guid);
-	if (it == doc->m_roomSlotMap.end()) {
-		return;
-	}
-
-	sRoomSlot& slot = doc->m_roomSlotMap[guid];
-
-	if (slot.m_pPet) {
-		WSingleton<CSharedDoc>::Instance()->m_roomSlotMap[MyGuid(false)].m_pPet->Display(0.0f, 0.0f);
+	if (it != doc->m_roomSlotMap.end()) {
+		if (doc->m_roomSlotMap[guid].m_pPet) {
+			WSingleton<CSharedDoc>::Instance()->m_roomSlotMap[MyGuid(false)].m_pPet->Display(0.0f, 0.0f);
+		}
 	}
 }
 

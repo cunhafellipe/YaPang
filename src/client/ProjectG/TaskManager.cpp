@@ -10479,11 +10479,7 @@ int CTask::_RemoveWareHouseItem(unsigned long typeId, IActor *pActor, int count)
 			}
 		}
 	} else {
-		for (it = CSharedDoc::Instance()->m_itemInfoList.begin(); it != CSharedDoc::Instance()->m_itemInfoList.end(); ++it) {
-			if (it->m_typeId == typeId) {
-				break;
-			}
-		}
+		it = std::find(CSharedDoc::Instance()->m_itemInfoList.begin(), CSharedDoc::Instance()->m_itemInfoList.end(), typeId);
 	}
 
 	if (it == CSharedDoc::Instance()->m_itemInfoList.end()) {

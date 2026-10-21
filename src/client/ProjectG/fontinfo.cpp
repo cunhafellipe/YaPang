@@ -439,17 +439,14 @@ void CDistToHoleInfo::Fix(void) {
 // fontinfo.cpp:419
 void CDistToHoleInfo::Reset(void) {
 	sPlayerData *pPlayer = PLAYER(GOLFDOC()->m_myPlayerIndex);
-	WVector cup = GetHoleCupPos();
-	WVector delta;
-	delta.x = cup.x - pPlayer->m_ballPos.x;
-	delta.z = cup.z - pPlayer->m_ballPos.z;
+	WVector delta = GetHoleCupPos() - pPlayer->m_ballPos;
 
 	if (IsLocalContent((localContentType_t)0x4F) && CSharedDoc::Instance()->m_playingMode == 2) {
 		delta = GetHoleCupPos() - GolfBall().m_pos;
 	}
 
 	delta.y = 0.0f;
-	m_fDistance = sqrtf(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z) * 0.3125f;
+	m_fDistance = delta.Magnitude() * 0.3125f;
 	if (m_fDistance < 100.0f) {
 		sprintf(m_pBuffer, "%.1fy", m_fDistance);
 		if (!(m_fDistance > 10.0f)) {
@@ -465,15 +462,15 @@ void CDistToHoleInfo::Reset(void) {
 	m_fTime = 0;
 	m_fBlend = 0;
 
-	if (IsMyTurn(true) && !(IsLocalContent((localContentType_t)0x4F) && CSharedDoc::Instance()->m_playingMode == 2)) {
+	if (!IsMyTurn(true) || (IsLocalContent((localContentType_t)0x4F) && CSharedDoc::Instance()->m_playingMode == 2)) {
+		m_nState = 0;
+		m_fAlpha = 255.0f;
+	} else {
 		m_fAlpha = 0;
 		m_nState = 2;
 		m_fixPos.x = m_uiX;
 		m_fixPos.y = m_uiY;
 		m_fixPos.z = m_fScale;
-	} else {
-		m_nState = 0;
-		m_fAlpha = 255.0f;
 	}
 }
 
