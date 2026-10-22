@@ -638,6 +638,8 @@ eGMToolResult CGMToolkit::CommandCommand(int count) {
 
 // gmtoolkit.cpp:835
 eGMToolResult CGMToolkit::CommandVisible(eGMToolkitStatus status) {
+	eGMToolResult result = GM_RESULT_SUCCEEDED;
+
 	if (m_argumentCount > 1) {
 		if (strcmp(m_arguments[1], "on") == 0) {
 			SetStatus(GM_STATUS_VISIBLE, GM_STATUS_ON);
@@ -649,13 +651,13 @@ eGMToolResult CGMToolkit::CommandVisible(eGMToolkitStatus status) {
 			SendStatus(GM_COMMAND_VISIBLE);
 			Display(MakeStr("\xbb\xf3\xc5\xc2\xc7\xc3\xb7\xa1\xb1\xd7 \xba\xaf\xb0\xe6, %s", "visible off."), 0xC6FF85);
 		} else {
-			return GM_RESULT_BAD_ARGUMENT;
+			result = GM_RESULT_BAD_ARGUMENT;
 		}
 	} else {
-		return GM_RESULT_BAD_ARGUMENT;
+		result = GM_RESULT_BAD_ARGUMENT;
 	}
 
-	return GM_RESULT_SUCCEEDED;
+	return result;
 }
 
 // gmtoolkit.cpp:868

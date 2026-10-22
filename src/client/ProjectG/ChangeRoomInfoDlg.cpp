@@ -721,7 +721,7 @@ void FrChangeRoomInfoDlg::OnHoleTypeOwnerDraw(PG_MSGARG param) {
 	width += w;
 	WRect rc3(width, rect.y, w = (float)m_pHoleTypeImg[4]->Width(), height);
 	width += w;
-	WRect rc4(width, rect.y, m_pHoleTypeImg[6]->Width(), height);
+	WRect rc4(width, rect.y, w = (float)m_pHoleTypeImg[6]->Width(), height);
 
 	if (m_gameType == 10) {
 		DrawHoleTypeButton(pDevice, (eHoleType)0, rc1, false);

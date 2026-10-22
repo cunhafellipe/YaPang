@@ -823,10 +823,10 @@ void ntAvatar::Process(float elapsed) {
 
 	m_prevState = m_state; ProcessMotion(elapsed);
 
+	WVector delta; int hit;
 	if (m_followName[0] != '\0') {
 		ntAvatar *pTarget = WSingleton<ntAvatarManager>::Instance()->FindAvatarByNickName(m_followName);
 		if (pTarget) {
-			WVector delta;
 			delta = pTarget->m_position - m_position;
 			float dist = delta.Magnitude();
 			if (dist > 64.0f) {
@@ -856,10 +856,9 @@ void ntAvatar::Process(float elapsed) {
 		WVector velocity;
 		velocity = dir * 16.5f * speed * elapsed;
 
-		WVector toTarget;
-		toTarget = WVector(m_targetPosition.x - m_position.x, 0.0f, m_targetPosition.z - m_position.z);
-		if (velocity.Magnitude() > toTarget.Magnitude()) {
-			velocity = toTarget;
+		delta = WVector(m_targetPosition.x - m_position.x, 0.0f, m_targetPosition.z - m_position.z);
+		if (velocity.Magnitude() > delta.Magnitude()) {
+			velocity = delta;
 		}
 
 		WVector newPos;
@@ -875,7 +874,6 @@ void ntAvatar::Process(float elapsed) {
 		move.y = 0.0f;
 
 		if (move.Magnitude() > 0.01f) {
-			int hit;
 			GetPVS().GetGroundPoint(newPos, true, &hit, true);
 			if (hit >= 0) {
 				m_position = newPos;
@@ -954,10 +952,9 @@ void ntAvatar::Process(float elapsed) {
 
 	m_position = GetPVS().GetGroundPoint(m_position, false, NULL, false);
 
-	WVector toCamera;
-	toCamera = g_view->camera.pivot - m_position;
+	delta = g_view->camera.pivot - m_position;
 
-	float cameraDist = sqrtf(toCamera.x * toCamera.x + toCamera.z * toCamera.z);
+	float cameraDist = sqrtf(delta.x * delta.x + delta.z * delta.z);
 	if (cameraDist > 192.0f) {
 		m_time = 0.0f;
 	}

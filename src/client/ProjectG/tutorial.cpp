@@ -1536,9 +1536,9 @@ void CTutorial::PushMacroClub(void) {
 
 	PushMacro((eMacroType)14, "3 ok", 0, 1); PushMacro((eMacroType)9, "204", -1, 1);
 
-	float x = g_view->GetWidth() * 0.5f - 32.0f;
+	float width = g_view->GetWidth();
 
-	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 0, x, g_view->GetHeight() * 0.48333332f - 32.0f), 0, 1);
+	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 0, width * 0.5f - 32.0f, g_view->GetHeight() * 0.48333332f - 32.0f), 0, 1);
 	PushMacro((eMacroType)16, MakeStr("%d %.1f %.1f %.1f", 0, 64.0, 64.0, 1.0), 0, 1);
 	PushMacro(MACRO_WAIT, 0, 1500, 1);
 	PushMacro((eMacroType)15, 0, -1, 1);
@@ -1548,7 +1548,7 @@ void CTutorial::PushMacroClub(void) {
 
 	PushMacro((eMacroType)14, "2 ok", 0, 1); PushMacro((eMacroType)9, "206", -1, 1);
 
-	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 0xA, m_tipRect.w + m_tipRect.x - 128.0f, m_tipRect.y + m_tipRect.h + 20.0f), 0, 1);
+	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 0xA, m_tipRect.x + m_tipRect.w - 128.0f, m_tipRect.y + m_tipRect.h + 20.0f), 0, 1);
 	PushMacro((eMacroType)16, MakeStr("%d %.1f %.1f %.1f", 0xA, 128.0, 88.0, 0.5), 0, 1);
 
 	PushMacro((eMacroType)1, "PAGE_DOWN", 200, 5);
@@ -1567,7 +1567,7 @@ void CTutorial::PushMacroClub(void) {
 
 	PushMacro((eMacroType)14, "7 ok", 0, 1); PushMacro((eMacroType)9, "208", -1, 1);
 
-	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 9, m_tipRect.w + m_tipRect.x + 20.0f, m_tipRect.y + m_tipRect.h - 88.0f), 0, 1);
+	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 9, m_tipRect.x + m_tipRect.w + 20.0f, m_tipRect.y + m_tipRect.h - 88.0f), 0, 1);
 	PushMacro((eMacroType)16, MakeStr("%d %.1f %.1f %.1f", 9, 128.0, 88.0, 0.5), 0, 1);
 	PushMacro((eMacroType)15, 0, -1, 1);
 
@@ -1575,7 +1575,7 @@ void CTutorial::PushMacroClub(void) {
 
 	PushMacro((eMacroType)14, "7 ok", 0, 1); PushMacro((eMacroType)9, "209", -1, 1);
 
-	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 1, m_tipRect.w + m_tipRect.x - 128.0f, m_tipRect.y + m_tipRect.h + 20.0f), 0, 1);
+	PushMacro((eMacroType)19, MakeStr("%d %.1f %.1f", 1, m_tipRect.x + m_tipRect.w - 128.0f, m_tipRect.y + m_tipRect.h + 20.0f), 0, 1);
 	PushMacro((eMacroType)16, MakeStr("%d %.1f %.1f %.1f", 1, 128.0, 88.0, 0.5), 200, 1);
 
 	PushMacro(MACRO_WAIT, 0, 1500, 1);

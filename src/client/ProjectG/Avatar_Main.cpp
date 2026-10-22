@@ -1488,8 +1488,8 @@ void ntAvatarChatMain::HandleMsg(const MsgObject &msg) {
 	case 0x24E: {
 		// avatar_main.cpp:2063: a special prize item effect from the server (0x49 kind 6).
 		eSPAVILITYTYPE type = (eSPAVILITYTYPE)msg.m_param2;
-		float value = (float)msg.m_param3;
 		int guid = msg.m_param1;
+		float value = (float)msg.m_param3;
 		ntAvatar *pAvatar = ntAvatarManager::Instance()->FindAvatarByGuid(guid);
 		if (pAvatar == 0) {
 			break;

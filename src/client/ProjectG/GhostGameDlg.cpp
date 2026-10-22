@@ -1042,7 +1042,7 @@ bool FrGhostAward::cPangFx::IsAlive(void) {
 void FrGhostAward::cPangFx::Create(const WRect& rect) {
 	m_pBitmap = g_pFresh->GetBitmap(MakeStr("ghost_pang_0%d", rand() % 5 + 1));
 
-	float offset = (float)(rand() % (int)(rect.w - (float)m_pBitmap->Width() * 2.5f));
+	float offset = (float)(rand() % (int)(-(m_pBitmap->Width() * 2.5f) + rect.w));
 
 	m_rect = WRect((float)m_pBitmap->Width() * 0.8f + rect.x + offset, (float)(rand() % 5 - 5) + rect.y, m_pBitmap->Width(), m_pBitmap->Height());
 

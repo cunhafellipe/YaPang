@@ -3176,22 +3176,21 @@ void CRealMyRoomMain::OnItemDescBgOwnerDraw2(PG_MSGARG param) {
 	float textH = (float)(lineNum + 1) * lineHeight;
 	float editW = m_pItemDescEdit2->GetRect().w;
 	float totalH = textH + nameH;
-	float left = m_itemDescEdit2InitPos.x - m_pItemDescBg2->GetRect().w;
-	float top = 488.0f - totalH;
-	m_pItemNameEdit->SetRect(WRect(left + 10.0f, top + 15.0f, editW, nameH));
-	m_pItemDescEdit2->SetRect(WRect(left + 10.0f, top + 45.0f, editW, textH));
+	WPoint pos(m_itemDescEdit2InitPos.x - m_pItemDescBg2->GetRect().w, 488.0f - totalH);
+	m_pItemNameEdit->SetRect(WRect(pos.x + 10.0f, pos.y + 15.0f, editW, nameH));
+	m_pItemDescEdit2->SetRect(WRect(pos.x + 10.0f, pos.y + 45.0f, editW, textH));
 
 	float frameW = editW + 10.0f;
 
-	pGI->DrawTexture(m_pItemDescFrame[0], WRect(left, top, w[0], h[0]), 0xFFFFFFFF, 0);
-	pGI->DrawTexture(m_pItemDescFrame[1], WRect(w[0] + left, top, frameW - (w[2] + w[0]), h[1]), 0xFFFFFFFF, 0);
-	pGI->DrawTexture(m_pItemDescFrame[2], WRect(frameW - w[2] + left, top, w[2], h[2]), 0xFFFFFFFF, 0);
-	pGI->DrawTexture(m_pItemDescFrame[3], WRect(left, h[1] + top, w[3], totalH - (h[6] + h[0])), 0xFFFFFFFF, 0);
-	pGI->DrawTexture(m_pItemDescFrame[4], WRect(w[3] + left, h[1] + top, frameW - (w[5] + w[3]), totalH - (h[7] + h[1])), 0xFFFFFFFF, 0);
-	pGI->DrawTexture(m_pItemDescFrame[5], WRect(frameW - w[5] + left, h[2] + top, w[5], totalH - (h[8] + h[2])), 0xFFFFFFFF, 0);
-	pGI->DrawTexture(m_pItemDescFrame[6], WRect(left, totalH - h[6] + top, w[6], h[6]), 0xFFFFFFFF, 0);
-	pGI->DrawTexture(m_pItemDescFrame[7], WRect(w[6] + left, totalH - h[7] + top, frameW - (w[8] + w[6]), h[7]), 0xFFFFFFFF, 0);
-	pGI->DrawTexture(m_pItemDescFrame[8], WRect(frameW - w[8] + left, totalH - h[8] + top, w[8], h[8]), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[0], WRect(pos.x, pos.y, w[0], h[0]), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[1], WRect(w[0] + pos.x, pos.y, frameW - (w[2] + w[0]), h[1]), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[2], WRect(frameW - w[2] + pos.x, pos.y, w[2], h[2]), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[3], WRect(pos.x, h[1] + pos.y, w[3], totalH - (h[6] + h[0])), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[4], WRect(w[3] + pos.x, h[1] + pos.y, frameW - (w[5] + w[3]), totalH - (h[7] + h[1])), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[5], WRect(frameW - w[5] + pos.x, h[2] + pos.y, w[5], totalH - (h[8] + h[2])), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[6], WRect(pos.x, totalH - h[6] + pos.y, w[6], h[6]), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[7], WRect(w[6] + pos.x, totalH - h[7] + pos.y, frameW - (w[8] + w[6]), h[7]), 0xFFFFFFFF, 0);
+	pGI->DrawTexture(m_pItemDescFrame[8], WRect(frameW - w[8] + pos.x, totalH - h[8] + pos.y, w[8], h[8]), 0xFFFFFFFF, 0);
 }
 
 // realmyroommainui.cpp:4058
@@ -4900,8 +4899,7 @@ void CRealMyRoomMain::DrawStatus(FrGraphicInterface* pGI, FrListItem* pItem, sho
 	float y = 4.0f;
 
 	for (int i = 0; i < 5; i++) {
-		const Bitmap* pPoint = m_pStatPointBitmap[i][0];
-		const Bitmap* pSlotPoint = m_pStatPointBitmap[i][1];
+		const Bitmap* pPoint[2] = { m_pStatPointBitmap[i][0], m_pStatPointBitmap[i][1] };
 
 		int count = status[i];
 		int slotCount = slotStatus[i];
@@ -4909,12 +4907,12 @@ void CRealMyRoomMain::DrawStatus(FrGraphicInterface* pGI, FrListItem* pItem, sho
 		if (slotCount != 0 || count != 0) {
 			float x = 86.0f;
 			for (int j = 0; j < count; j++) {
-				pGI->DrawTexture(pPoint, WRect(x + pItem->pos.x, y + pItem->pos.y, 5.0, 6.0), 0xFFFFFFFF, 0);
+				pGI->DrawTexture(pPoint[0], WRect(x + pItem->pos.x, y + pItem->pos.y, 5.0, 6.0), 0xFFFFFFFF, 0);
 				x -= 6.0f;
 			}
 
 			for (int j = 0; j < slotCount; j++) {
-				pGI->DrawTexture(pSlotPoint, WRect(x + pItem->pos.x, y + pItem->pos.y, 5.0, 6.0), 0xFFFFFFFF, 0);
+				pGI->DrawTexture(pPoint[1], WRect(x + pItem->pos.x, y + pItem->pos.y, 5.0, 6.0), 0xFFFFFFFF, 0);
 				x -= 6.0f;
 			}
 
@@ -9447,11 +9445,7 @@ bool CRealMyRoomMain::OnFortuneOpenDlgResult(int result, FrForm* pForm) {
 	std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end();
 
 	if (m_pGiftOpenDlg) {
-		unsigned long typeId = m_pGiftOpenDlg->GetTypeId();
-		std::list<sItemInfo>::iterator end = it;
-		for (it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != end; ++it) {
-			if (it->m_typeId == typeId) break;
-		}
+		it = std::find(WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(), WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(), m_pGiftOpenDlg->GetTypeId());
 	}
 
 	m_pGiftOpenDlg = NULL;
@@ -12035,18 +12029,17 @@ void CRealMyRoomMain::OnFurnitureListOwnerDraw(PG_MSGARG param) {
 	if (pItem->pData == NULL) {
 		pBg = m_pFurnitureEmptyBg;
 	} else {
-		unsigned long color;
 		if (pItem->selected) {
-			color = 0xFFFF0000;
+			pBg = m_pFurnitureItemBg;
+			pGI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
 		} else if (pItem->underCursor) {
 			offset = 3.0f;
-			color = 0xFF000000;
+			pBg = m_pFurnitureItemBg;
+			pGI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 		} else {
-			color = 0xFF000000;
+			pBg = m_pFurnitureItemBg;
+			pGI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 		}
-
-		pBg = m_pFurnitureItemBg;
-		pGI->SetTextColor(color, 0xFFFFFFFF);
 	}
 
 	pGI->SetTextStyle(0);

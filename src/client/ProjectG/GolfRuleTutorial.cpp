@@ -102,11 +102,13 @@ void CGolfRuleTutorial::SetEquipCharCaddieInfoForTutorial(void) {
 		memcpy(&WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_statShots, &WSingleton<CSharedDoc>::Instance()->m_myStatShots, sizeof(sPangYaUserStatistics));
 		WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_skinTypeId = WSingleton<CSharedDoc>::Instance()->m_equipSkin[5];
 
-		CSharedDoc *pDoc = WSingleton<CSharedDoc>::Instance();
-		sCharacterInfo *pChar = &pDoc->m_roomPlayers[0].m_characterInfo;
-		unsigned long typeId = 0x4000000 + (pDoc->m_roomPlayers[0].m_eventFlags.gender % 2 ? 1 : 0);
-		pChar->typeId = typeId;
-		ItemManager()->GetDefCombo(typeId, pChar->partTypeIds);
+		sCharacterInfo *pChar = &WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_characterInfo;
+		if (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_eventFlags.gender % 2 == 0) {
+			pChar->typeId = 0x4000000;
+		} else {
+			pChar->typeId = 0x4000001;
+		}
+		ItemManager()->GetDefCombo(pChar->typeId, pChar->partTypeIds);
 		WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_clubSet.typeId = 0x10000000;
 		WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_ballId = 0x14000000;
 		WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_caddieInfo.level = 2;

@@ -70,7 +70,7 @@ void CGolfRuleApproach::SetPlayer(void) {
 			WVector cup = GOLFDOC()->GetHoleData().m_cupPos; WVector diff; diff = cup - data.m_ballPos;
 
 			data.m_uniteGuildIndex = 0;
-			float dist = sqrtf(diff.x * diff.x + diff.z * diff.z) * 10.0f; data.m_approachDistanceCopy = (int)floor(dist * 0.3125f);
+			float dist = sqrtf(diff.x * diff.x + diff.z * diff.z) * 10.0f; data.m_approachDistanceCopy = (int)floor((double)(dist * 0.3125f));
 			data.m_approachDistance = 0xFFFFFFFF;
 			data.m_approachPoint = -1;
 			data.m_identity = (*it).m_identity;

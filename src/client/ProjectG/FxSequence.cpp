@@ -344,12 +344,13 @@ bool CFxSequence::ParseLine(const char* line, bool& bDone) {
 // fxsequence.cpp:438
 void CFxSequence::SetLineTime(void) {
 	for (std::list<sLine>::iterator it = m_lines.begin(); it != m_lines.end(); ++it) {
-		if (it->m_time == -1 || it->m_time == -2) {
+		sLine& line = *it;
+		if (line.m_time == -1 || line.m_time == -2) {
 			continue;
 		}
 
-		if (it->m_maxTime != it->m_minTime) {
-			it->m_time = rand() % (it->m_maxTime - it->m_minTime) + it->m_minTime;
+		if (line.m_maxTime != line.m_minTime) {
+			line.m_time = rand() % (line.m_maxTime - line.m_minTime) + line.m_minTime;
 		}
 
 		std::list<sLine>::iterator pos = it, prev = it;
@@ -362,8 +363,8 @@ void CFxSequence::SetLineTime(void) {
 		}
 
 		for (std::list<sLine>::iterator ins = pos; ins != it; ++ins) {
-			if (ins->m_time > it->m_time) {
-				m_lines.insert(ins, *it);
+			if (ins->m_time > line.m_time) {
+				m_lines.insert(ins, line);
 				it = m_lines.erase(it);
 				--it;
 				break;

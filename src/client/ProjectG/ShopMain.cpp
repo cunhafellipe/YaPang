@@ -1359,28 +1359,25 @@ void CShopMain::DrawStatus(FrGraphicInterface *graphic, FrListItem *listItem, sh
 	float posY = 4.0f;
 
 	for (int i = 0; i < 5; i++) {
-
-		const Bitmap *statusDot = m_dotBitmaps[i][0];
-		const Bitmap *slotDot = m_dotBitmaps[i][1];
+		const Bitmap *dots[2] = { m_dotBitmaps[i][0], m_dotBitmaps[i][1] };
 
 		int statusCount = status[i];
 		int slotCount = slotStatus[i];
 
-		if (slotCount == 0 && statusCount == 0)
-			continue;
+		if (slotCount != 0 || statusCount != 0) {
+			float posX = 86.0f;
+			for (int j = 0; j < statusCount; j++) {
+				graphic->DrawTexture(dots[0], WRect(posX + x + listItem->pos.x, posY + listItem->pos.y + x, 5.0f, 6.0f), 0xFFFFFFFF, 0);
+				posX -= 6.0f;
+			}
 
-		float posX = 86.0f;
-		for (; statusCount > 0; statusCount--) {
-			graphic->DrawTexture(statusDot, WRect(posX + x + listItem->pos.x, posY + listItem->pos.y + x, 5.0f, 6.0f), 0xFFFFFFFF, 0);
-			posX -= 6.0f;
+			for (int j = 0; j < slotCount; j++) {
+				graphic->DrawTexture(dots[1], WRect(posX + x + listItem->pos.x, posY + listItem->pos.y + x, 5.0f, 6.0f), 0xFFFFFFFF, 0);
+				posX -= 6.0f;
+			}
+
+			posY += 6.0f;
 		}
-
-		for (; slotCount > 0; slotCount--) {
-			graphic->DrawTexture(slotDot, WRect(posX + x + listItem->pos.x, posY + listItem->pos.y + x, 5.0f, 6.0f), 0xFFFFFFFF, 0);
-			posX -= 6.0f;
-		}
-
-		posY += 6.0f;
 	}
 }
 
@@ -6426,13 +6423,15 @@ void CShopMain::BuildVisibleCaddieList(void) {
 		if (up != m_upgradeCaddies.end()) {
 			std::map<unsigned int, sCaddieInfo>::iterator owned = WSingleton<CSharedDoc>::Instance()->m_caddieMap.begin();
 			if (caddie.m_typeId == baseTypeId) {
+				bool ownsBase = false;
 				for (; owned != WSingleton<CSharedDoc>::Instance()->m_caddieMap.end(); ++owned) {
 
 					if (owned->second.typeId == baseTypeId) {
+						ownsBase = true;
 						break;
 					}
 				}
-				if (owned == WSingleton<CSharedDoc>::Instance()->m_caddieMap.end()) {
+				if (!ownsBase) {
 					continue;
 				}
 			}

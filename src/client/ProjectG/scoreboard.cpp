@@ -2400,43 +2400,50 @@ void FrAwardForm::OnUserListOwnerDraw(PG_MSGARG param) {
 		IFF_STRUCT::sMascot* pMascot = ItemManager()->FindMascot(WSingleton<CSharedDoc>::Instance()->m_roomPlayers[idx].m_mascot.typeId);
 		if (pMascot) {
 			if (strcmpi(pMascot->m_name, "\xc7\xcf\xbe\xe7\xc1\xa6\xb8\xae") == 0) {
-				const Bitmap* pIcon = m_pMascotBonus01;
-				if (pIcon)
-					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
+				if (m_pMascotBonus01) {
+					WRect rc(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus01->Width(), (float)m_pMascotBonus01->Height());
+					pGDI->DrawTexture(m_pMascotBonus01, rc, 0xFFFFFFFF, 0);
+				}
 				bIcon = true;
 			} else if (strcmpi(pMascot->m_name, "\xb1\xee\xb8\xc1\xc1\xa6\xb8\xae") == 0) {
-				const Bitmap* pIcon = m_pMascotBonus02;
-				if (pIcon)
-					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
+				if (m_pMascotBonus02) {
+					WRect rc(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus02->Width(), (float)m_pMascotBonus02->Height());
+					pGDI->DrawTexture(m_pMascotBonus02, rc, 0xFFFFFFFF, 0);
+				}
 				bIcon = true;
 			} else if (pMascot->m_typeId == 0x40000009) {
-				const Bitmap* pIcon = m_pMascotBonus09;
-				if (pIcon)
-					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
+				if (m_pMascotBonus09) {
+					WRect rc(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus09->Width(), (float)m_pMascotBonus09->Height());
+					pGDI->DrawTexture(m_pMascotBonus09, rc, 0xFFFFFFFF, 0);
+				}
 				bIcon = true;
 			} else if (pMascot->m_typeId == 0x4000000A) {
-				const Bitmap* pIcon = m_pMascotBonus10;
-				if (pIcon)
-					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
+				if (m_pMascotBonus10) {
+					WRect rc(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus10->Width(), (float)m_pMascotBonus10->Height());
+					pGDI->DrawTexture(m_pMascotBonus10, rc, 0xFFFFFFFF, 0);
+				}
 				bIcon = true;
 			} else if (pMascot->m_typeId == 0x4000000B) {
-				const Bitmap* pIcon = m_pMascotBonus11;
-				if (pIcon)
-					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
+				if (m_pMascotBonus11) {
+					WRect rc(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus11->Width(), (float)m_pMascotBonus11->Height());
+					pGDI->DrawTexture(m_pMascotBonus11, rc, 0xFFFFFFFF, 0);
+				}
 				bIcon = true;
 			} else if (pMascot->m_typeId == 0x4000000C) {
-				const Bitmap* pIcon = m_pMascotBonus12;
-				if (pIcon)
-					pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
+				if (m_pMascotBonus12) {
+					WRect rc(pItem->pos.x + 458.0f, yOff + pItem->pos.y + 1.0f, (float)m_pMascotBonus12->Width(), (float)m_pMascotBonus12->Height());
+					pGDI->DrawTexture(m_pMascotBonus12, rc, 0xFFFFFFFF, 0);
+				}
 				bIcon = true;
 			}
 		}
 	}
 
 	if (!bIcon) {
-		const Bitmap* pIcon = m_pZeroVsIcon;
-		if (pIcon)
-			pGDI->DrawTexture(pIcon, WRect(pItem->pos.x + 442.0f, yOff + pItem->pos.y + 10.0f, (float)pIcon->Width(), (float)pIcon->Height()), 0xFFFFFFFF, 0);
+		if (m_pZeroVsIcon) {
+			WRect rc(pItem->pos.x + 442.0f, yOff + pItem->pos.y + 10.0f, (float)m_pZeroVsIcon->Width(), (float)m_pZeroVsIcon->Height());
+			pGDI->DrawTexture(m_pZeroVsIcon, rc, 0xFFFFFFFF, 0);
+		}
 	}
 }
 

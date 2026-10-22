@@ -1846,7 +1846,7 @@ void CMessengerInfo::Toggle(void) {
 						m_pMessengerDlg->Adjust(m_rcMessengerDlg);
 
 					m_pMessengerDlg->SetFixed(true);
-					m_pMessengerDlg->Open((FRESH_RESULT_CALLBACK)&CMessengerInfo::OnMessengerDlgResult, m_rcMessengerDlg.TopLeft(), 0xC);
+					m_pMessengerDlg->Open((FRESH_RESULT_CALLBACK)&CMessengerInfo::OnMessengerDlgResult, WPoint(m_rcMessengerDlg.x, m_rcMessengerDlg.y), 0xC);
 					m_pMessengerDlg->SetTopmost(true);
 					m_pMessengerDlg->SetFadeout(bVisible);
 					m_pMessengerDlg->GetClientRect(m_rcMessengerDlg);
