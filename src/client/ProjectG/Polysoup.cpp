@@ -2400,7 +2400,13 @@ struct SmDdsHeader {
 	unsigned long m_mipMapCount;          // 0x18
 	unsigned long m_alphaBitDepth;        // 0x1C
 	unsigned long m_reserved;             // 0x20
+#if PG_ABI32
 	void *m_pSurface;                     // 0x24
+#else
+	// 64-bit: the file's 4 bytes (always 0 here), not a pointer, or every
+	// field after it moves and the DDS reader finds no DXT1 (no shadow map).
+	unsigned int m_pSurface;              // 0x24
+#endif
 	unsigned long m_colorKeys[4][2];      // 0x28, four DDCOLORKEY
 	unsigned long m_formatSize;           // 0x48, the pixel format's size
 	unsigned long m_formatFlags;          // 0x4C

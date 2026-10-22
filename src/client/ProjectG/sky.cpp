@@ -21,6 +21,13 @@
 // The port's runtime switch (the dev console's "clouds"; port/compat).
 #include "pg_switches.h"
 #endif
+#ifdef PG_CONTACT_SHADOWS
+// The port's volumetric clouds (renderer/metal/pg_mtl_contact.h): while on
+// (the dev console's "vclouds"), each billboard cloud is drawn as a volume.
+extern "C" bool PgVCloudsOn(void);
+extern "C" void PgVCloudsAdd(int index, float x, float y, float z, float size, float alpha, unsigned color);
+extern "C" void PgVCloudsView(const float view[16]);
+#endif
 
 float Random(float min, float max, int seed);  // commonutil.cpp
 
@@ -857,6 +864,24 @@ void CSky::RenderBillboardCloud(WView* view) {
 	vl[2] = &verts[3];
 	vl[3] = &verts[2];
 	vl[4] = 0;   // DrawPolygonFan walks the list to its NULL
+
+#ifdef PG_CONTACT_SHADOWS
+	// The port's volumetric clouds: each cloud is sent, in its place, with its
+	// size, fade and colour, instead of drawn as a billboard.
+	if (PgVCloudsOn()) {
+		unsigned long color = ModifyColor(m_skyColor, GOLFDOC()->m_fogBrightness);
+		// The camera they are traced from: this one (not the water's mirror).
+		if (!view->GetReflective())
+			PgVCloudsView(reinterpret_cast<const float*>(&view->xGetViewState().xmView));
+		for (int i = 0; i < m_cloudCount; i++) {
+			if (m_clouds[i].m_active) {
+				const WVector& p = m_clouds[i].m_pos;
+				PgVCloudsAdd(i, p.x, p.y, p.z, m_clouds[i].m_size, m_clouds[i].m_alpha / 255.0f, (unsigned)color);
+			}
+		}
+		return;
+	}
+#endif
 
 	for (int i = 0; i < m_cloudCount; i++) {
 		if (m_clouds[i].m_active) {

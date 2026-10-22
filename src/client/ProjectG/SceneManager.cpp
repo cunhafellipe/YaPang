@@ -124,13 +124,25 @@ protected:
 CHECK_SIZE(WTextureView::TextureParam, 0x4C);
 CHECK_SIZE(WTextureView, 0x1B94);
 
+#if !PG_ABI32
+// wtextureview.cpp: WTextureView::GetTexture(0) of a texture view, read with
+// the real class's layout (this file's stand-in has the 32-bit one).
+int PgTextureViewFirstTexture(const void* view);
+#endif
+
 class WTextureImposterView : public WTextureView {
 public:
 	WTextureImposterView(WPuppet* target);
 	virtual ~WTextureImposterView(void);
 	bool NeedToUpdate(const WMatrix& camera);
 	// First dword of m_r2tParam (0x1b68), the render-target texture handle.
+#if PG_ABI32
 	unsigned long GetFirstTexture(void) const { return *(const unsigned long*)((const char*)this + 0x1b68); }
+#else
+	// 64-bit: 0x1b68 is the 32-bit ABI's offset, so the handle is read
+	// through the real class (wtextureview.h, WTextureView::GetTexture).
+	unsigned long GetFirstTexture(void) const { return (unsigned long)PgTextureViewFirstTexture(this); }
+#endif
 
 private:
 	const WPuppet* m_target;               // 0x1b94

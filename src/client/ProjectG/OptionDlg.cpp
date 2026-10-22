@@ -29,6 +29,9 @@
 #include "binstr.h"
 #include <string.h>
 #include <algorithm>
+#ifdef PG_EFFECTS_TAB
+#include "pg_effects_tab.h"   // the port's Effects tab
+#endif
 
 // The gateway actor's name (each unit has its own copy).
 static const char* s_gatewayActorName = "Gateway";
@@ -1620,10 +1623,18 @@ bool FrOptionDlg::OnInit(void) {
 	SetMacroColtrols();
 
 	eTabType curTab = ms_eCurTab;
+#ifdef PG_EFFECTS_TAB
+	bool bEffectsTab = PgEffectsTab::Init(this, curTab);
+#endif
 
 	ms_eCurTab = (eTabType)4;
 	SetTab(curTab);
 	m_pTabs[ms_eCurTab]->m_pTabBtn->SetStatus(FrButton::PRESSED);
+#ifdef PG_EFFECTS_TAB
+	if (bEffectsTab) {
+		PgEffectsTab::Select(this);
+	}
+#endif
 
 	return FrForm::OnInit();
 }
@@ -1642,6 +1653,9 @@ bool FrOptionDlg::OnLButtonDown(const WPoint& pt) {
 
 // optiondlg.cpp:1838
 void FrOptionDlg::OnProc(const float deltaTime) {
+#ifdef PG_EFFECTS_TAB
+	PgEffectsTab::Proc(this);
+#endif
 	if (g_input->GetDown("TAB", true) && !g_input->Get("LALT", true) && !g_input->Get("RALT", true)) {
 		switch (ms_eCurTab) {
 		case TAB_GAME:
@@ -1654,8 +1668,18 @@ void FrOptionDlg::OnProc(const float deltaTime) {
 			SetTab(TAB_MACRO);
 			break;
 		case TAB_MACRO:
+#ifdef PG_EFFECTS_TAB
+			if (PgEffectsTab::Next(this)) {
+				break;
+			}
+#endif
 			SetTab(TAB_GAME);
 			break;
+#ifdef PG_EFFECTS_TAB
+		case 4:   // the Effects tab
+			SetTab(TAB_GAME);
+			break;
+#endif
 		}
 	}
 
@@ -1958,6 +1982,9 @@ void FrOptionDlg::SetTab(eTabType type) {
 
 	ms_eCurTab = type;
 	g_audio->PlaySfx("ui_button_ok_click", 0, 0, 0, 0, 0.5f, 200.0f);
+#ifdef PG_EFFECTS_TAB
+	PgEffectsTab::Hide(this);
+#endif
 
 	for (int i = 0; i < 4; i++) {
 		m_pTabs[i]->SetSelected(i == type);
@@ -2007,6 +2034,9 @@ void FrOptionDlg::OnOK(void) {
 	m_bChanged1 = true;
 	m_bChanged2 = true;
 
+#ifdef PG_EFFECTS_TAB
+	PgEffectsTab::Apply(this);
+#endif
 	CloseDlg();
 }
 
@@ -2151,6 +2181,12 @@ const char* FrOptionDlg::MakeHint(eTabType type, int index) const {
 
 // optiondlg.cpp:2532
 void FrOptionDlg::ProcessHoverMessage(FrWnd* pWnd) {
+#ifdef PG_EFFECTS_TAB
+	// The Effects tab (ms_eCurTab 4) has no hints.
+	if (ms_eCurTab >= 4) {
+		return;
+	}
+#endif
 	if (!m_pHintEdit || !m_pTabs[ms_eCurTab]->m_bSelected) {
 		return;
 	}
