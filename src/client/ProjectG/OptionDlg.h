@@ -333,6 +333,12 @@ protected:
 	void OnHoverOn(PG_MSGARG param);
 	void OnHoverOff(PG_MSGARG param);
 
+#ifdef PG_EFFECTS_TAB
+	// The port's Effects tab (ProjectG/pg_effects_tab.h): its hooks in this
+	// unit reach the tabs and the edited options.
+	friend struct PgEffectsTab;
+#endif
+
 	bool m_bApplyScrSize;               // 0x110
 	sOption m_option;                   // 0x114, edited copy of COption's block
 	bool m_bChanged1;                   // 0x42c

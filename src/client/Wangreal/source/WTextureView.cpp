@@ -176,3 +176,12 @@ bool WTextureImposterView::NeedToUpdate(const WMatrix& cam) {
 
 	return true;
 }
+
+#if !PG_ABI32
+// The port's 64-bit build: SceneManager.cpp's stand-in for this class reads
+// the impostor's render-target texture at the 32-bit offset, which does not
+// hold here; it asks this unit, which has the real layout.
+int PgTextureViewFirstTexture(const void* view) {
+	return static_cast<const WTextureView*>(view)->GetTexture(0);
+}
+#endif
