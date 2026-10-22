@@ -70,12 +70,8 @@ void CStatBar::Render(const WPoint& pos) {
 	for (int i = 0; i < 5; i++) {
 		float index = (float)i;
 
-		WRect rect;
-		rect.x = pos.x;
-		rect.y = (m_barHeight + m_barGap) * index + pos.y;
-		rect.h = m_barHeight;
-		rect.w = m_bars[i].m_curPos / m_bars[i].m_rangeLimit * 100.0f;
-		pGDI->DrawTexture(m_bars[i].m_pBitmap, rect, 0xFFFFFFFF, 0);
+		float w = m_bars[i].m_curPos / m_bars[i].m_rangeLimit * 100.0f;
+		pGDI->DrawTexture(m_bars[i].m_pBitmap, WRect(pos.x, (m_barHeight + m_barGap) * index + pos.y, w, m_barHeight), 0xFFFFFFFF, 0);
 
 		pGDI->SetTextStyle(0);
 		pGDI->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);

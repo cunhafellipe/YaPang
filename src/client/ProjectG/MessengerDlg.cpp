@@ -1287,30 +1287,30 @@ void FrMessengerDlg::OnMessenger_GuildNoticeBtnInit(PG_MSGARG param) {
 
 // messengerdlg.cpp:2210
 void FrMessengerDlg::OnMessenger_GuildNoticeLBtnDown(void) {
-	if (CMessengerInfo::Instance()->m_pGuildNoticeDlg != NULL)
-		return;
+	if (CMessengerInfo::Instance()->m_pGuildNoticeDlg == NULL) {
+		const WRect& rc = GetRect();
+		WPoint pt;
+		pt.x = rc.x + 60.0f;
+		pt.y = rc.y + 60.0f;
 
-	WPoint pt;
-	pt.x = m_rect.x + 60.0f;
-	pt.y = m_rect.y + 60.0f;
+		CMessengerInfo::Instance()->m_pGuildNews = new NewsReader;
 
-	CMessengerInfo::Instance()->m_pGuildNews = new NewsReader;
+		if (NetResourceManager::Instance()->IsRSSDownLoadComplete()) {
+			// the guild news the RSS download saved
+			CMessengerInfo::Instance()->m_pGuildNews->Load("guildnews.xml", 5);
+		}
 
-	if (NetResourceManager::Instance()->IsRSSDownLoadComplete()) {
-		// the guild news the RSS download saved
-		CMessengerInfo::Instance()->m_pGuildNews->Load("guildnews.xml", 5);
+		CMessengerInfo::Instance()->m_pGuildNoticeDlg = CreateForm<FrGuildNoticeDlg>(g_pFresh->GetManager(), this, "guild_notice", NULL);
+		CMessengerInfo::Instance()->m_pGuildNoticeDlg->DataBind(CMessengerInfo::Instance()->m_pGuildNews, 0);
+		CMessengerInfo::Instance()->m_pGuildNoticeDlg->SetFixed(true);
+		CMessengerInfo::Instance()->m_pGuildNoticeDlg->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnGuildNoticeDlgResult, pt, 1);
+		CMessengerInfo::Instance()->m_pGuildNoticeDlg->SetTopmost(true);
+		CMessengerInfo::Instance()->m_pGuildNoticeDlg->FindNextTopFocus(false);
+
+		WRect rect = CMessengerInfo::Instance()->m_pGuildNoticeDlg->GetRect();
+		CMessengerInfo::Instance()->m_pGuildNoticeDlg->Adjust(rect);
+		CMessengerInfo::Instance()->m_pGuildNoticeDlg->MoveWindow(WPoint(rect.x, rect.y));
 	}
-
-	CMessengerInfo::Instance()->m_pGuildNoticeDlg = CreateForm<FrGuildNoticeDlg>(g_pFresh->GetManager(), this, "guild_notice", NULL);
-	CMessengerInfo::Instance()->m_pGuildNoticeDlg->DataBind(CMessengerInfo::Instance()->m_pGuildNews, 0);
-	CMessengerInfo::Instance()->m_pGuildNoticeDlg->SetFixed(true);
-	CMessengerInfo::Instance()->m_pGuildNoticeDlg->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnGuildNoticeDlgResult, pt, 1);
-	CMessengerInfo::Instance()->m_pGuildNoticeDlg->SetTopmost(true);
-	CMessengerInfo::Instance()->m_pGuildNoticeDlg->FindNextTopFocus(false);
-
-	WRect rect = CMessengerInfo::Instance()->m_pGuildNoticeDlg->GetRect();
-	CMessengerInfo::Instance()->m_pGuildNoticeDlg->Adjust(rect);
-	CMessengerInfo::Instance()->m_pGuildNoticeDlg->MoveWindow(WPoint(rect.x, rect.y));
 }
 
 // messengerdlg.cpp:2253

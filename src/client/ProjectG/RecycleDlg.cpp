@@ -1887,6 +1887,8 @@ bool RandRecycleItem(unsigned long tid) {
 
 // recycledlg.cpp:2255
 void FrRecycleDlg::OpenInformation(unsigned long typeId) {
+	bool bRand = false;
+
 	if (FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("information")))
 		return;
 
@@ -1914,8 +1916,6 @@ void FrRecycleDlg::OpenInformation(unsigned long typeId) {
 	if (!pForm)
 		return;
 
-	bool bRand = false;
-
 	if (RandRecycleItem(pItem->m_typeId)) {
 		bRand = true;
 	}
@@ -1923,15 +1923,11 @@ void FrRecycleDlg::OpenInformation(unsigned long typeId) {
 	FrArea* pPortrait = DYNAMIC_CAST(FrArea, pForm->FindChildByName("portrait"));
 
 	if (pPortrait) {
-		const char* img;
-
 		if (!bRand) {
-			img = pItem->m_icon;
+			pPortrait->SetBgImg(pItem->m_icon);
 		} else {
-			img = "hide";
+			pPortrait->SetBgImg("hide");
 		}
-
-		pPortrait->SetBgImg(img);
 	}
 
 	FrEdit* pName = DYNAMIC_CAST(FrEdit, pForm->FindChildByName("name"));

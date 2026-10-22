@@ -1894,12 +1894,11 @@ void CCameraWork::Chase_and_FollowCamera(float elapsed, float time) {
 	float speed = GolfBall().m_velocity.Magnitude();
 	WVector pos, dir;
 	bool found = false;
-	int i;
-	for (i = m_preDataFrame; i >= Max(2, m_preDataFrame - 37); i--) {
+	for (int i = m_preDataFrame; i >= Max(2, m_preDataFrame - 37); i--) {
 		WVector prevDir = GolfBall().PreData(i - 1)->m_pos - GolfBall().PreData(i - 2)->m_pos;
 		WVector curDir = GolfBall().PreData(i)->m_pos - GolfBall().PreData(i - 1)->m_pos;
-		prevDir.y = 0.0f;
 		curDir.y = 0.0f;
+		prevDir.y = 0.0f;
 		prevDir.Normalize();
 		curDir.Normalize();
 
@@ -1940,8 +1939,8 @@ void CCameraWork::Chase_and_FollowCamera(float elapsed, float time) {
 	target = pos + dir * distance;
 	WVector toSource = m_sourceCamera - m_destCamera;
 	WVector toTarget = target - m_destCamera;
-	if (toTarget.Magnitude() > toSource.Magnitude()) {
-		float length = toSource.Magnitude();
+	float length = toSource.Magnitude();
+	if (toTarget.Magnitude() > length) {
 		WVector flat = toSource;
 		flat.y = 0.0f;
 		flat.Normalize();

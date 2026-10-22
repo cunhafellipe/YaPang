@@ -283,8 +283,10 @@ void FrResultDlg::OnProc(const float dt) {
 
 	if (step > Abs(m_expGain)) {
 		m_bExpDone = true;
-		m_exp += ((m_expGain > 0) * 2 - 1) * Abs(m_expGain);
+		int amount = Abs(m_expGain);
+		int sign = (m_expGain > 0) * 2 - 1;
 		m_expGain = 0;
+		m_exp += sign * amount;
 	} else {
 		int delta = ((m_expGain > 0) * 2 - 1) * step;
 		m_exp += delta;
@@ -2111,7 +2113,8 @@ void FrUniteResultDlg::OnAwardAreaOwnerDraw(PG_MSGARG param) {
 			const Bitmap* pTrophy = g_pFresh->GetBitmap(pMatch->m_trophyIcon[WSingleton<CSharedDoc>::Instance()->m_value456C - 1]);
 
 			if (pTrophy) {
-				WRect rect(GetRect().x + (505.0f - (float)(pTrophy->Width() / 2)), GetRect().y + (381.0f - (float)(pTrophy->Height() / 2)), (float)pTrophy->Width(), (float)pTrophy->Height());
+				float left = GetRect().x;
+				WRect rect(left + (505.0f - (float)(pTrophy->Width() / 2)), GetRect().TopLeft().y + (381.0f - (float)(pTrophy->Height() / 2)), (float)pTrophy->Width(), (float)pTrophy->Height());
 
 				gdi->DrawTexture(pTrophy, rect, 0xFFFFFFFF, 0);
 
@@ -2123,39 +2126,39 @@ void FrUniteResultDlg::OnAwardAreaOwnerDraw(PG_MSGARG param) {
 
 	for (int i = 0; i <= 5; i++) {
 		if (m_bTikiReport) {
-			if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[i].m_uid != myData.m_id)
-				continue;
+			if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[i].m_uid == myData.m_id) {
+				WRect rect(x, (381.0f - (float)(m_pPrizeBitmaps[i]->Height() / 2)) + rc.y,(float)m_pPrizeBitmaps[i]->Width(), (float)m_pPrizeBitmaps[i]->Height());
 
-			WRect rect(x, (381.0f - (float)(m_pPrizeBitmaps[i]->Height() / 2)) + rc.y, (float)m_pPrizeBitmaps[i]->Width(), (float)m_pPrizeBitmaps[i]->Height());
+				gdi->DrawTexture(m_pPrizeBitmaps[i], rect, 0xFFFFFFFF, 0);
 
-			gdi->DrawTexture(m_pPrizeBitmaps[i], rect, 0xFFFFFFFF, 0);
+				x += (float)m_pPrizeBitmaps[i]->Width();
 
-			x += (float)m_pPrizeBitmaps[i]->Width();
+				if (!m_bKeepTooltip[1])
+					m_bKeepTooltip[1] = SetTooltip(rect, i);
 
-			if (!m_bKeepTooltip[1])
-				m_bKeepTooltip[1] = SetTooltip(rect, i);
+				drawn = true;
+			}
 		} else {
-			if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[i].m_uid != MyGuid(false))
-				continue;
+			if (WSingleton<CSharedDoc>::Instance()->m_awardPlayers[i].m_uid == MyGuid(false)) {
+				WRect rect(x, (381.0f - (float)(m_pPrizeBitmaps[i]->Height() / 2)) + rc.y,(float)m_pPrizeBitmaps[i]->Width(), (float)m_pPrizeBitmaps[i]->Height());
 
-			WRect rect(x, (381.0f - (float)(m_pPrizeBitmaps[i]->Height() / 2)) + rc.y, (float)m_pPrizeBitmaps[i]->Width(), (float)m_pPrizeBitmaps[i]->Height());
+				gdi->DrawTexture(m_pPrizeBitmaps[i], rect, 0xFFFFFFFF, 0);
 
-			gdi->DrawTexture(m_pPrizeBitmaps[i], rect, 0xFFFFFFFF, 0);
+				x += (float)m_pPrizeBitmaps[i]->Width();
 
-			x += (float)m_pPrizeBitmaps[i]->Width();
+				if (!m_bKeepTooltip[1])
+					m_bKeepTooltip[1] = SetTooltip(rect, i);
 
-			if (!m_bKeepTooltip[1])
-				m_bKeepTooltip[1] = SetTooltip(rect, i);
+				drawn = true;
+			}
 		}
-
-		drawn = true;
 	}
 
 	if (!drawn) {
 		const Bitmap* pZero = g_pFresh->GetBitmap("icon_zero_vs");
 
 		if (pZero) {
-			WRect rect(GetRect().x + 522.0f, GetRect().y + (381.0f - (float)(pZero->Height() / 2)), (float)pZero->Width(), (float)pZero->Height());
+			WRect rect(GetRect().x + 522.0f, GetRect().TopLeft().y + (381.0f - (float)(pZero->Height() / 2)), (float)pZero->Width(), (float)pZero->Height());
 
 			gdi->DrawTexture(pZero, rect, 0xFFFFFFFF, 0);
 		}

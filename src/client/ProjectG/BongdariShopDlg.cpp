@@ -1641,7 +1641,7 @@ void FrBongdariShopDlg::ShuffleRandomDataItemSilhouette(void) {
 
 // bongdarishopdlg.cpp:2294
 void FrBongdariShopDlg::SetRandomDataItemSilhouette(void) {
-	int cookieCount = 0, rareCount = 0;
+	int rareCount = 0, cookieCount = 0;
 	int n = 0;
 
 	for (int i = 0; i < 5; i++) {
@@ -1701,22 +1701,8 @@ void FrBongdariShopDlg::SetRandomDataItemSilhouette(void) {
 	}
 
 	if (total > 0) {
-		for (total -= cookieCount; total > 0; total--) {
-			unsigned long typeId;
-			bool bRetry;
-			do {
-				typeId = g_arrdwRandSelectCookieItem[rand() % 100];
-				bRetry = false;
-				for (int k = 0; k < 9; k++) {
-					if (m_silhouettes[k].m_slotParam == 0)
-						break;
-					if (m_silhouettes[k].m_slotParam == typeId) {
-						bRetry = true;
-						break;
-					}
-				}
-			} while (bRetry);
-
+		for (int j = 0; j < total - cookieCount; j++) {
+			unsigned long typeId = SelectDifferentTypeId(1);
 			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(typeId);
 			m_silhouettes[n].m_slot = -1;
 			if (pItem)
@@ -1826,7 +1812,10 @@ void FrBongdariShopDlg::AddListTotalItem(sBonusBall* pBall) {
 
 // bongdarishopdlg.cpp:2575
 void FrBongdariShopDlg::UpdateListMyItem(sBonusBall* pBall) {
-	if (!pBall || pBall->m_index < 0) {
+	if (!pBall) {
+		return;
+	}
+	if (pBall->m_index < 0) {
 		return;
 	}
 
@@ -1904,19 +1893,21 @@ void FrBongdariShopDlg::UpdateListMyItem(sBonusBall* pBall) {
 		} else {
 			sItemInfo item;
 
-			short count[5] = { 1 };
-			if (pBall->m_bUnitCount == 0) {
+			unsigned char unitKind = pBall->m_bUnitCount;
+			short count[5] = { 0 };
+			count[0] = 1;
+			if (unitKind == 0) {
 				count[0] = (short)pBall->m_count;
-			} else if (pBall->m_bUnitCount == 1 || pBall->m_bUnitCount == 2) {
+			} else if (unitKind == 1 || unitKind == 2) {
 				count[0] = pBall->m_unitCount;
 				count[4] = pBall->m_unitCount;
 			}
 
-			item.m_serial = pBall->m_serial;
 			item.m_stateBits.flag0 = 0;
+			item.m_serial = pBall->m_serial;
 			item.m_typeId = pBall->m_typeId;
-			memcpy(item.m_clubStatLevel, count, sizeof(count));
 			item.m_reserved16 = 0;
+			memcpy(item.m_clubStatLevel, count, sizeof(count));
 			item.m_stateBits.flag0 = 0;
 			item.m_stateBits.expired = 0;
 			item.m_stateBits.kind = pBall->m_bUnitCount;

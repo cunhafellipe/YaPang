@@ -2772,8 +2772,9 @@ void CRealMyRoomMain::DrawAztecList(FrGraphicInterface* pGI, unsigned long typeI
 		int line = 1;
 		int rows = count / 4 + (count % 4 != 0 ? 1 : 0);
 
-		WPoint pos(18.0f, 407.0f - rows * 50.0f + (rows - 1) * 5.0f);
-		float top = pos.y - 12.0f;
+		float x = 18.0f;
+		float y = 407.0f - rows * 50.0f + (rows - 1) * 5.0f;
+		float top = y - 12.0f;
 		float midH = rows * 50.0f + 15.0f;
 		pGI->DrawTexture(m_pListBgBitmap[0], WRect(6.0f, top, 223.0f, 12.0f), 0xFFFFFFFF, 0);
 		pGI->DrawTexture(m_pListBgBitmap[1], WRect(6.0f, top + 12.0f, 223.0f, midH), 0xFFFFFFFF, 0);
@@ -2787,13 +2788,13 @@ void CRealMyRoomMain::DrawAztecList(FrGraphicInterface* pGI, unsigned long typeI
 			}
 
 			index++;
-			WRect iconRect(pos.x, pos.y, 46.0f, 50.0f);
+			WRect iconRect(x, y, 46.0f, 50.0f);
 			pGI->DrawTexture(pIcon, iconRect, 0xFFFFFFFF, 0);
 			if (index % 4 != 0) {
-				pos.x += 51.0f;
+				x += 51.0f;
 			} else {
-				pos.y += 55.0f;
-				pos.x = 18.0f;
+				y += 55.0f;
+				x = 18.0f;
 				line++;
 			}
 
@@ -2817,8 +2818,8 @@ void CRealMyRoomMain::DrawAztecList(FrGraphicInterface* pGI, unsigned long typeI
 
 		if (rows == line && 4 - index % 4 != 0) {
 			for (int i = 0; i < 4 - index % 4; i++) {
-				pGI->DrawTexture(m_pListEmptyBitmap, WRect(pos.x, pos.y, 46.0f, 50.0f), 0xFFFFFFFF, 0);
-				pos.x += 51.0f;
+				pGI->DrawTexture(m_pListEmptyBitmap, WRect(x, y, 46.0f, 50.0f), 0xFFFFFFFF, 0);
+				x += 51.0f;
 			}
 		}
 	}
@@ -2843,8 +2844,9 @@ void CRealMyRoomMain::DrawClubList(FrGraphicInterface* pGI, unsigned long typeId
 		int line = 1;
 		int rows = count / 4 + (count % 4 != 0 ? 1 : 0);
 
-		WPoint pos(18.0f, 407.0f - rows * 50.0f + (rows - 1) * 5.0f);
-		float top = pos.y - 12.0f;
+		float x = 18.0f;
+		float y = 407.0f - rows * 50.0f + (rows - 1) * 5.0f;
+		float top = y - 12.0f;
 		float midH = rows * 50.0f + 15.0f;
 		pGI->DrawTexture(m_pListBgBitmap[0], WRect(6.0f, top, 223.0f, 12.0f), 0xFFFFFFFF, 0);
 		pGI->DrawTexture(m_pListBgBitmap[1], WRect(6.0f, top + 12.0f, 223.0f, midH), 0xFFFFFFFF, 0);
@@ -2858,13 +2860,13 @@ void CRealMyRoomMain::DrawClubList(FrGraphicInterface* pGI, unsigned long typeId
 			}
 
 			index++;
-			WRect iconRect(pos.x, pos.y, 46.0f, 50.0f);
+			WRect iconRect(x, y, 46.0f, 50.0f);
 			pGI->DrawTexture(pIcon, iconRect, 0xFFFFFFFF, 0);
 			if (index % 4 != 0) {
-				pos.x += 51.0f;
+				x += 51.0f;
 			} else {
-				pos.y += 55.0f;
-				pos.x = 18.0f;
+				y += 55.0f;
+				x = 18.0f;
 				line++;
 			}
 
@@ -2888,8 +2890,8 @@ void CRealMyRoomMain::DrawClubList(FrGraphicInterface* pGI, unsigned long typeId
 
 		if (rows == line && 4 - index % 4 != 0) {
 			for (int i = 0; i < 4 - index % 4; i++) {
-				pGI->DrawTexture(m_pListEmptyBitmap, WRect(pos.x, pos.y, 46.0f, 50.0f), 0xFFFFFFFF, 0);
-				pos.x += 51.0f;
+				pGI->DrawTexture(m_pListEmptyBitmap, WRect(x, y, 46.0f, 50.0f), 0xFFFFFFFF, 0);
+				x += 51.0f;
 			}
 		}
 	}
@@ -3050,18 +3052,17 @@ void CRealMyRoomMain::DrawSkinSlot(void) {
 	const Bitmap* pLevelBmp = m_pSkinLevelBitmap[(WSingleton<CSharedDoc>::Instance()->m_userInfo.eventFlags >> 1) & 1];
 	pGI->DrawTexture(pLevelBmp, WRect(121.0f, 406.0f, (float)pLevelBmp->Width(), (float)pLevelBmp->Height()), 0xFFFFFFFF, 0);
 
-	const char* levelName;
+	const Bitmap* pBmp;
 	if (m_displaySkin[5] != 0) {
 		IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(m_displaySkin[5]);
 		if (pSkin != NULL) {
-			levelName = pSkin->m_icon;
+			pBmp = g_pFresh->GetBitmap(pSkin->m_icon);
 		} else {
-			levelName = MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_myLevel + 1);
+			pBmp = g_pFresh->GetBitmap(MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_myLevel + 1));
 		}
 	} else {
-		levelName = MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_myLevel + 1);
+		pBmp = g_pFresh->GetBitmap(MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_myLevel + 1));
 	}
-	const Bitmap* pBmp = g_pFresh->GetBitmap(levelName);
 
 	if (pBmp != NULL) {
 		pGI->DrawTexture(pBmp, WRect(206.0f - (float)(int)((float)pBmp->Width() * 0.5f), 386.0f - (float)(int)((float)pBmp->Height() * 0.5f), (float)pBmp->Width(), (float)pBmp->Height()), 0xFFFFFFFF, 0);

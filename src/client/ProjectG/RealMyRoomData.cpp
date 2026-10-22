@@ -1562,7 +1562,7 @@ void CRealMyRoomData::SetModelPosition(void) {
 	WVector newPos;
 
 	for (cModel *pModel = m_modelList.Start(); pModel; pModel = m_modelList.Next()) {
-		if (m_pSelectModel && strcmp(pModel->m_pModelData->m_name, m_pSelectModel->m_pModelData->m_name) == 0) {
+		if (pModel && m_pSelectModel && strcmp(pModel->m_pModelData->m_name, m_pSelectModel->m_pModelData->m_name) == 0) {
 			memcpy(pData, pModel->m_pModelData, sizeof(WPolySoup::sModel));
 
 			IFF_STRUCT::sFurniture *pFurniture = ItemManager()->FindFurniture(pModel->m_pFurniture->m_typeId);

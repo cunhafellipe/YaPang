@@ -1170,8 +1170,9 @@ WMatrix CFxSpray::Rotate(float fTime, float fScale) {
 	mat.Reset();
 	std::list<sNozzleRot>::iterator end = m_param.m_axisRots.end();
 	for (std::list<sNozzleRot>::iterator it = m_param.m_axisRots.begin(); it != end; ++it) {
-		if (fTime >= (float)it->t0 && (float)it->t1 >= fTime) {
-			float angle = (fTime - it->t0) > 0.0f ? (fTime - it->t0) * (it->a1 - it->a0) / (it->t1 - it->t0) + it->a0 : it->a0;
+		const sNozzleRot& rot = *it;
+		if (fTime >= (float)rot.t0 && (float)rot.t1 >= fTime) {
+			float angle = (fTime - rot.t0) > 0.0f ? (fTime - rot.t0) * (rot.a1 - rot.a0) / (rot.t1 - rot.t0) + rot.a0 : rot.a0;
 			mat = RotMat(it->axis, angle * fScale);
 		}
 	}
@@ -1185,8 +1186,9 @@ WMatrix CFxSpray::RotateNozzle(float fTime, float fScale) {
 	mat.Reset();
 	std::list<sNozzleRot>::iterator end = m_param.m_nozzleRots.end();
 	for (std::list<sNozzleRot>::iterator it = m_param.m_nozzleRots.begin(); it != end; ++it) {
-		if (fTime >= (float)it->t0 && (float)it->t1 >= fTime) {
-			float angle = (fTime - it->t0) > 0.0f ? (fTime - it->t0) * (it->a1 - it->a0) / (it->t1 - it->t0) + it->a0 : it->a0;
+		const sNozzleRot& rot = *it;
+		if (fTime >= (float)rot.t0 && (float)rot.t1 >= fTime) {
+			float angle = (fTime - rot.t0) > 0.0f ? (fTime - rot.t0) * (rot.a1 - rot.a0) / (rot.t1 - rot.t0) + rot.a0 : rot.a0;
 			mat = RotMat(it->axis, angle * fScale);
 		}
 	}

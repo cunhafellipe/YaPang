@@ -328,8 +328,13 @@ void ShotPreview::OnProcess(float delta) {
 		std::for_each(m_pangCoins.begin(), m_pangCoins.end(), std::bind2nd(std::mem_fun(&PangCoin::SetVisible), ((GetOptionFlag() >> 4) & 1) != 0));
 	}
 
-	std::for_each(m_predictButtons.begin(), m_predictButtons.end(),
-		std::bind2nd(std::mem_fun(&FrWnd::SetVisible), GetOptionFlag()));
+	if (GetOptionFlag() == 0) {
+		std::for_each(m_predictButtons.begin(), m_predictButtons.end(),
+			std::bind2nd(std::mem_fun(&FrWnd::SetVisible), false));
+	} else {
+		std::for_each(m_predictButtons.begin(), m_predictButtons.end(),
+			std::bind2nd(std::mem_fun(&FrWnd::SetVisible), true));
+	}
 
 	if (m_updateElapsed > 0.5f) {
 
@@ -433,28 +438,27 @@ void ShotPreview::DrawIndicator(const WVector& pos, unsigned long color, float s
 		return;
 	}
 
-	vl[0] = &vtx[0];
 	vtx[0].x = screen.x - size * 0.5f;
 	vtx[0].z = screen.z;
+	vl[0] = &vtx[0];
+	vtx[1].x = screen.x - size * 0.5f;
+	vtx[1].z = vtx[0].z;
+	vl[1] = &vtx[1];
+	vtx[1].y = screen.y - size;
+	vtx[2].x = size * 0.5f + screen.x;
+	vtx[2].z = vtx[1].z;
+	vl[2] = &vtx[2];
+	vtx[2].y = screen.y - size;
+	vtx[3].x = size * 0.5f + screen.x;
+	vtx[3].z = vtx[2].z;
+	vl[3] = &vtx[3];
 	vtx[0].y = screen.y;
 	vtx[0].rhw = 1.0f;
 	vtx[0].diffuse = color;
-	vl[1] = &vtx[1];
-	vtx[1].x = screen.x - size * 0.5f;
-	vtx[1].z = screen.z;
-	vtx[1].y = screen.y - size;
 	vtx[1].rhw = 1.0f;
 	vtx[1].diffuse = color;
-	vl[2] = &vtx[2];
-	vtx[2].x = size * 0.5f + screen.x;
-	vtx[2].z = screen.z;
-	vtx[2].y = screen.y - size;
 	vtx[2].rhw = 1.0f;
 	vtx[2].diffuse = color;
-	vl[3] = &vtx[3];
-	vtx[3].x = size * 0.5f + screen.x;
-	vtx[3].z = screen.z;
-	vtx[3].y = screen.y;
 	vtx[3].rhw = 1.0f;
 	vtx[3].diffuse = color;
 
@@ -466,6 +470,7 @@ void ShotPreview::DrawIndicator(const WVector& pos, unsigned long color, float s
 	vtx[2].tv = 0.0f;
 	vtx[3].tu = 1.0f;
 	vtx[3].tv = 1.0f;
+	vtx[3].y = vtx[0].y;
 
 	if (g_view->GetWidth() - 0.5f < vtx[0].x || vtx[3].x < 0.5f || vtx[0].y < 0.5f || g_view->GetHeight() - 0.5f < vtx[1].y) {
 		return;

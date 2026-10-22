@@ -548,7 +548,7 @@ void FrCheckoutDlg::SetPrice(int num) {
 		} else if (m_pMoneyLeft) {
 			__int64 total = m_num * m_unitPang;
 			__int64 discount = m_pangDiscount;
-			if (discount > total) {
+			if (m_pangDiscount > total) {
 				discount = total;
 			}
 
@@ -578,7 +578,7 @@ void FrCheckoutDlg::SetPrice(int num) {
 			m_bEnoughCookie = false;
 		} else if (m_pMoneyLeft_Cookie) {
 			__int64 discount = m_cookieDiscount;
-			if (discount > m_unitCookie) {
+			if (m_cookieDiscount > m_unitCookie) {
 				discount = m_unitCookie;
 			}
 
@@ -1150,19 +1150,20 @@ void FrCheckoutDlg::OnCartInit(intptr_t param) {
 void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 	FrListItem* pItem = (FrListItem*)param;
 	if (pItem) {
-		FrGraphicInterface* pGDI = m_pCart->WndManager()->GetGDI();
+		FrWndManager* pMgr = m_pCart->WndManager();
+		FrGraphicInterface* pGDI = pMgr->GetGDI();
 		if (pGDI) {
 			CartItem* pCartItem = (CartItem*)pItem->pData;
 
 			const Bitmap* pBmp;
 			if ((pCartItem->m_pItem->m_typeId >> 26) == 14) {
-				pBmp = m_pCart->WndManager()->GetBitmap("SKINS", pCartItem->m_pItem->m_icon);
+				pBmp = pMgr->GetBitmap("SKINS", pCartItem->m_pItem->m_icon);
 			}
 			else if ((pCartItem->m_pItem->m_typeId >> 26) == 15) {
-				pBmp = m_pCart->WndManager()->GetBitmap("HAIRS", pCartItem->m_pItem->m_icon);
+				pBmp = pMgr->GetBitmap("HAIRS", pCartItem->m_pItem->m_icon);
 			}
 			else {
-				pBmp = m_pCart->WndManager()->GetBitmap("ITEMS", pCartItem->m_pItem->m_icon);
+				pBmp = pMgr->GetBitmap("ITEMS", pCartItem->m_pItem->m_icon);
 
 				if (pBmp == 0)
 					pBmp = m_pCart->WndManager()->GetBitmap("ITEMS_FASHION", pCartItem->m_pItem->m_icon);
@@ -1312,7 +1313,11 @@ void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 			if (pLevel) {
 				// "level:"
 				float levelX = pGDI->GetTextExtend("\xb7\xb9    \xba\xa7:") + pItem->pos.x;
-				WRect rc(levelX + 102.0f, lineY + pItem->pos.y - 3.0f, (float)pLevel->Width(), (float)pLevel->Height());
+				WRect rc;
+				rc.x = levelX + 102.0f;
+				rc.y = lineY + pItem->pos.y - 3.0f;
+				rc.w = (float)pLevel->Width();
+				rc.h = (float)pLevel->Height();
 				pGDI->DrawTexture(pLevel, rc, 0xFFFFFFFF, 0);
 
 				pGDI->Print(WPoint(pItem->pos.x + 90.0f, lineY + pItem->pos.y), 0, "\xb7\xb9    \xba\xa7:");
@@ -1325,14 +1330,14 @@ void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 
 				if ((!bOrLower && (pCartItem->m_pItem->m_level & 0x7F) > WSingleton<CSharedDoc>::Instance()->m_myLevel)
 					|| (bOrLower && (pCartItem->m_pItem->m_level & 0x7F) < WSingleton<CSharedDoc>::Instance()->m_myLevel)) {
-					pGDI->Print(WPoint(rc.w + rc.x + 5.0f, lineY + pItem->pos.y), 0, text);
+					pGDI->Print(WPoint(rc.x + rc.w + 5.0f, lineY + pItem->pos.y), 0, text);
 
 					pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
 					// "(cannot buy)"
 					pGDI->Print(WPoint(pGDI->GetTextExtend(text) + rc.w + rc.x + 10.0f, lineY + pItem->pos.y), 0, "(\xb1\xb8\xc0\xd4\xba\xd2\xb0\xa1)");
 				}
 				else {
-					pGDI->Print(WPoint(rc.w + rc.x + 5.0f, lineY + pItem->pos.y), 0, text);
+					pGDI->Print(WPoint(rc.x + rc.w + 5.0f, lineY + pItem->pos.y), 0, text);
 				}
 			}
 

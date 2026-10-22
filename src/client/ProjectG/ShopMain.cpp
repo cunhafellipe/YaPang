@@ -766,17 +766,16 @@ void CShopMain::DrawSkinSlot(void) {
 	const Bitmap *sexIcon = m_iconSex[(WSingleton<CSharedDoc>::Instance()->m_userInfo.eventFlags >> 1) & 1];
 	pGDI->DrawTexture(sexIcon, WRect(121.0f, 406.0f, (float)sexIcon->Width(), (float)sexIcon->Height()), 0xFFFFFFFF, 0);
 
-	const char *levelName;
+	const Bitmap *levelBmp;
 	if (m_equipSkin[5]) {
 		IFF_STRUCT::sSkin *skin = ItemManager()->FindSkin(m_equipSkin[5]);
 		if (skin)
-			levelName = skin->m_icon;
+			levelBmp = g_pFresh->GetBitmap(skin->m_icon);
 		else
-			levelName = MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_myLevel + 1);
+			levelBmp = g_pFresh->GetBitmap(MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_myLevel + 1));
 	} else {
-		levelName = MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_myLevel + 1);
+		levelBmp = g_pFresh->GetBitmap(MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_myLevel + 1));
 	}
-	const Bitmap *levelBmp = g_pFresh->GetBitmap(levelName);
 
 	if (levelBmp)
 		pGDI->DrawTexture(levelBmp, WRect(206.0f - (int)((float)levelBmp->Width() * 0.5f), 386.0f - (int)((float)levelBmp->Height() * 0.5f), (float)levelBmp->Width(), (float)levelBmp->Height()), 0xFFFFFFFF, 0);
@@ -1661,7 +1660,8 @@ void CShopMain::OnItemListOwnerDraw(PG_MSGARG param) {
 			graphic->DrawTexture(m_miniBtns[1].over, m_miniBtns[1].rect + listItem->pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
 			CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x16);
 		} else {
-			graphic->DrawTexture(m_miniBtns[1].normal, WRect(m_miniBtns[1].rect + listItem->pos), 0xFFFFFFFF, 0);
+			WRect rc = m_miniBtns[1].rect + listItem->pos;
+			graphic->DrawTexture(m_miniBtns[1].normal, WRect(rc.x, rc.y, rc.w, rc.h), 0xFFFFFFFF, 0);
 		}
 	}
 
@@ -1730,12 +1730,11 @@ void CShopMain::OnItemListBtnDown(void) {
 
 				m_itemListBox->SelectItem(listItem, true);
 
-				unsigned long kind = item->m_typeId >> 26;
-				if (kind == 15 && !HaveCharacter(m_standPetTypeId)) {
+				if ((item->m_typeId >> 26) == 15 && !HaveCharacter(m_standPetTypeId)) {
 					this << MsgObject(0, 0x23, (intptr_t)"\xC7\xD8\xB4\xE7 \xC4\xB3\xB8\xAF\xC5\xCD\xB8\xA6 \xB0\xA1\xC1\xF6\xB0\xED \xC0\xD6\xC1\xF6 \xBE\xCA\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
 					return;
 				}
-				if (kind == 1 && HaveCharacter(m_standPetTypeId)) {
+				if ((item->m_typeId >> 26) == 1 && HaveCharacter(m_standPetTypeId)) {
 					this << MsgObject(0, 0x23, (intptr_t)"\xC7\xD8\xB4\xE7 \xC4\xB3\xB8\xAF\xC5\xCD\xB8\xA6 \xC0\xCC\xB9\xCC \xB0\xA1\xC1\xF6\xB0\xED \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
 					return;
 				}
@@ -6193,16 +6192,17 @@ void CShopMain::DrawMascotList(FrGraphicInterface *graphic, unsigned long typeId
 		int cols = count > 16 ? 4 : count > 4 ? 3 : (count > 1) + 1;
 		int rows = count / cols + (count % cols != 0);
 
-		float x = 18.0f;
 		float width = cols * 46.0f + (cols - 1) + 10.0f;
 		float height = rows * 50.0f + (rows - 1);
 		float y = 419.0f - height;
+		float top = y - 5.0f;
+		float x = 18.0f;
 
-		graphic->DrawTexture(m_selectUp, WRect(13.0f, y - 5.0f, width, height + 10.0f), 0xFFFFFFFF, 0);
+		graphic->DrawTexture(m_selectUp, WRect(13.0f, top, width, height + 10.0f), 0xFFFFFFFF, 0);
 
 		WRect selectedRect(0.0f, 0.0f, 0.0f, 0.0f);
 		WRect hoverRect(0.0f, 0.0f, 0.0f, 0.0f);
-		graphic->DrawTexture(m_selectUp, WRect(13.0f, y - 5.0f, width, height + 25.0f), 0xFFFFFFFF, 0);
+		graphic->DrawTexture(m_selectUp, WRect(13.0f, top, width, height + 25.0f), 0xFFFFFFFF, 0);
 
 		typedef std::map<unsigned int, IFF_STRUCT::sMascot> MascotMap;
 		for (MascotMap::const_iterator it = ItemManager()->m_mascotMap.begin(); it != ItemManager()->m_mascotMap.end(); ++it) {
@@ -6229,8 +6229,8 @@ void CShopMain::DrawMascotList(FrGraphicInterface *graphic, unsigned long typeId
 					if (drawn % cols) {
 						x += 47.0f;
 					} else {
-						x = 18.0f;
 						y += 51.0f;
+						x = 18.0f;
 					}
 
 					if (m_mascotTypeId == mascotTypeId)
