@@ -595,6 +595,8 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 		int rightButton = g_input->GetButton(RIGHT_BUTTON);
 		int middleButton = g_input->GetButton(MIDDLE_BUTTON);
 		WVector mouseDelta;
+		WVector target;
+		int groundIndex;
 		mouseDelta = g_input->GetMouseDelta();
 
 		WVector mouse = g_input->GetMousePoint();
@@ -658,15 +660,14 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 							}
 						}
 					} else {
-						WVector target = WVector(GetPVS().GetRayIntersection(rayFrom, rayDir));
+						WVector groundTarget = WVector(GetPVS().GetRayIntersection(rayFrom, rayDir));
 
 						if (!ntAvatarManager::Instance()->m_pMyAvatar->IsHoldState()) {
-							int groundIndex;
-							target = GetPVS().GetGroundPoint(target, true, &groundIndex, true);
+							groundTarget = GetPVS().GetGroundPoint(groundTarget, true, &groundIndex, true);
 
 							if (groundIndex >= 0) {
 								s_moving = true;
-								ntAvatarManager::Instance()->m_pMyAvatar->SetTargetPosition(target);
+								ntAvatarManager::Instance()->m_pMyAvatar->SetTargetPosition(groundTarget);
 								ntAvatarManager::Instance()->m_pMyAvatar->SetAction(0);
 								ntAvatarManager::Instance()->m_pMyAvatar->Follow(0);
 							}
@@ -732,7 +733,6 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 				// Both buttons held walk forward.
 				if (g_input->GetButton(LEFT_BUTTON) && g_input->GetButton(RIGHT_BUTTON)) {
 					if (!m_topViewMode && !CChatMsg::Instance()->IsOpenning()) {
-						WVector target;
 						target = ntAvatarManager::Instance()->m_pMyAvatar->m_position;
 						target += s_keyMoveDir * 4.1f;
 
@@ -798,7 +798,7 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 				control = false;
 			}
 
-			WVector target = ntAvatarManager::Instance()->m_pMyAvatar->m_position;
+			target = ntAvatarManager::Instance()->m_pMyAvatar->m_position;
 
 			// The direction keys are named "up", "down", "left", "right" in CP949.
 			if (!m_topViewMode && !CChatMsg::Instance()->IsOpenning()) {
@@ -817,7 +817,6 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 						target += s_cameraFront * 4.1f;
 					}
 
-					int groundIndex;
 					target = GetPVS().GetGroundPoint(target, true, &groundIndex, true);
 					if (groundIndex < 0) {
 						target = ntAvatarManager::Instance()->m_pMyAvatar->m_position;

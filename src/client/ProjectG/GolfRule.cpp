@@ -1771,7 +1771,7 @@ void CGolfRule::OnReload(void) {
 		COption::Instance()->dSetNumPlayers(1);
 		GOLFDOC()->MakePlayer(1);
 
-		if (ShotDataLoad(CSharedDoc::Instance()->m_fileName) == true) {
+		if (ShotDataLoad(CSharedDoc::Instance()->GetFileName()) == true) {
 			if (CSharedDoc::Instance()->m_replayPlayType == 1) {
 				PLAYER(0)->m_extraPang = 0;
 				PLAYER(0)->m_ghostAward = 0;
@@ -3013,9 +3013,10 @@ void CGolfRule::DoScoreBoard(float elapsed) {
 	}
 
 	if (OnlinePlay()) {
-		if (CSharedDoc::Instance()->m_gameOver || GOLFDOC()->IsNetGameEnd()) {
+		CSharedDoc* doc = CSharedDoc::Instance();
+		if (doc->m_gameOver || doc->m_pGolfDoc->IsNetGameEnd()) {
 			if (IsMassGame()) {
-				if (!GOLFDOC()->GetStatUpdated()) {
+				if (!doc->m_pGolfDoc->GetStatUpdated()) {
 					UpdateShotResultStat();
 				}
 
@@ -6183,9 +6184,10 @@ char *__stdcall MakeRandomMotionName(const char *name) {
 //   Letters: hole in one, albatross, eagle, birdie, par, bogey, double bogey,
 //   triple bogey, "+N", give up.
 void CGolfRule::SetHoleInPose(bool noPose) {
-	char letter[0x20];
-	char caddieMotion[0x20];
-	char playerMotion[0x20];
+	char names[3][0x20];
+	char (&playerMotion)[0x20] = names[0];
+	char (&caddieMotion)[0x20] = names[1];
+	char (&letter)[0x20] = names[2];
 
 	if (!noPose) {
 		const WVector &cup = m_point258;
@@ -6203,8 +6205,8 @@ void CGolfRule::SetHoleInPose(bool noPose) {
 		SendMsg(this, "Caddie", 0x2719, (intptr_t)&pos, 0, 0, 0);
 	}
 
-	int toPar = (CSharedDoc::Instance()->m_roomType != 1 ? (unsigned char)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1]
-		: (unsigned char)TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1]) - GOLFDOC()->GetHoleData().m_par;
+	int toPar = CSharedDoc::Instance()->m_roomType != 1 ? (unsigned char)PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1] - GOLFDOC()->GetHoleData().m_par
+		: (unsigned char)TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] - GOLFDOC()->GetHoleData().m_par;
 
 	int score = CSharedDoc::Instance()->m_roomType == 1 ? TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] : PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1];
 
@@ -6319,8 +6321,8 @@ void CGolfRule::SetHoleInPose(bool noPose) {
 		SendMsg(this, "Caddie", 0x2716, (intptr_t)caddieMotion, 0, 0, 0);
 
 		char cameraName[0x40] = { 0 };
-		const char *poseCamera = NULL;
 		bool itemCamera = false;
+		const char *poseCamera = NULL;
 
 		SendMsg(this, "Player", 0x2715, (intptr_t)&poseCamera, 0, 0, 0);
 		if (strstr(poseCamera, "_item"))
@@ -6344,7 +6346,8 @@ void CGolfRule::SetHoleInPose(bool noPose) {
 		if (m_gameOverDelay < 0.0f) {
 			WVector eye, at;
 			eye = WVector(cup.x, cup.y + 6.4f, cup.z - 32.0f);
-			at = WVector(cup.x, cup.y + 6.4f, cup.z);
+			const WVector &target = m_point258;
+			at = WVector(target.x, target.y + 6.4f, target.z);
 			g_camera = MakeCameraMatrix(eye, at);
 			m_gameOverDelay = 3.5f;
 		}
@@ -6393,15 +6396,16 @@ bool CGolfRule::SetHoleInPose_Match(void) {
 		playing[0] = PLAYER(0)->m_state == 1;
 		playing[1] = PLAYER(1)->m_state == 1;
 
-		char motion[0x20];
-		char caddieMotion[0x20];
-		char letter[0x20];
+		char names[3][0x20];
+		char (&motion)[0x20] = names[0];
+		char (&caddieMotion)[0x20] = names[1];
+		char (&letter)[0x20] = names[2];
 		int result;
 		bool lose = true;
 
 		if (playing[0] && playing[1]) {
 			if (PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] <= PLAYER(1 - MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1]) {
-				result = PLAYER(1 - MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] != PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1];
+				result = !(PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] == PLAYER(1 - MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1]);
 				lose = false;
 			}
 		} else if (playing[MyIndex()]) {
@@ -6411,10 +6415,9 @@ bool CGolfRule::SetHoleInPose_Match(void) {
 
 		if (lose) {
 			strcpy(motion, "\xBA\xB8\xB1\xE2\xBD\xC7\xB0\xDD\xBD\xC7\xB8\xC1\xC6\xF7\xC1\xEE");
+			result = -1;
 			strcpy(caddieMotion, "\xBD\xC7\xB0\xDD");
 			strcpy(letter, "lose");
-
-			result = -1;
 		} else {
 			if (PLAYER(MyIndex())->m_holes[GOLFDOC()->m_currentHole - 1] == (unsigned char)1) {
 				strcpy(motion, "\xBE\xCB\xB9\xD9\xC8\xA6\xC0\xCE\xBD\xC2\xB8\xAE\xC6\xF7\xC1\xEE");
@@ -6457,7 +6460,8 @@ bool CGolfRule::SetHoleInPose_Match(void) {
 		if (m_gameOverDelay < 0.0f) {
 			WVector eye, at;
 			eye = WVector(cup.x, cup.y + 6.4f, cup.z - 32.0f);
-			at = WVector(cup.x, cup.y + 6.4f, cup.z);
+			const WVector &target = m_point258;
+			at = WVector(target.x, target.y + 6.4f, target.z);
 			g_camera = MakeCameraMatrix(eye, at);
 			m_gameOverDelay = 3.5f;
 		}
@@ -6529,7 +6533,7 @@ bool CGolfRule::SetHoleInPose_Team(void) {
 
 	if (playing[0] && playing[1]) {
 		if (TEAM(myTeam)->m_holes[GOLFDOC()->m_currentHole - 1] <= TEAM(1 - myTeam)->m_holes[GOLFDOC()->m_currentHole - 1]) {
-			result = TEAM(1 - myTeam)->m_holes[GOLFDOC()->m_currentHole - 1] != TEAM(myTeam)->m_holes[GOLFDOC()->m_currentHole - 1];
+			result = !(TEAM(myTeam)->m_holes[GOLFDOC()->m_currentHole - 1] == TEAM(1 - myTeam)->m_holes[GOLFDOC()->m_currentHole - 1]);
 			lose = false;
 		}
 	} else if (playing[myTeam]) {
@@ -6593,7 +6597,8 @@ bool CGolfRule::SetHoleInPose_Team(void) {
 	if (m_gameOverDelay < 0.0f) {
 		WVector eye, at;
 		eye = WVector(cup.x, cup.y + 6.4f, cup.z - 32.0f);
-		at = WVector(cup.x, cup.y + 6.4f, cup.z);
+		const WVector &target = m_point258;
+		at = WVector(target.x, target.y + 6.4f, target.z);
 		g_camera = MakeCameraMatrix(eye, at);
 		m_gameOverDelay = 3.5f;
 	}
@@ -6702,9 +6707,10 @@ void CGolfRule::CalcSkinsHolePang(void) {
 bool CGolfRule::SetHoleInPose_Skins(void) {
 	if (CSharedDoc::Instance()->m_roomType == 7)
 	{
-		char playerMotion[0x20];
-		char caddieMotion[0x20];
-		char cameraName[0x20];
+		char names[3][0x20];
+		char (&playerMotion)[0x20] = names[0];
+		char (&caddieMotion)[0x20] = names[1];
+		char (&cameraName)[0x20] = names[2];
 
 		unsigned long winnerUid = GOLFDOC()->m_selectedIndexA;
 
@@ -6779,7 +6785,8 @@ bool CGolfRule::SetHoleInPose_Skins(void) {
 		if (m_gameOverDelay < 0.0f) {
 			WVector eye, at;
 			eye = WVector(cup.x, cup.y + 6.4f, cup.z - 32.0f);
-			at = WVector(cup.x, cup.y + 6.4f, cup.z);
+			const WVector &target = m_point258;
+			at = WVector(target.x, target.y + 6.4f, target.z);
 			g_camera = MakeCameraMatrix(eye, at);
 			m_gameOverDelay = 3.5f;
 		}
@@ -10323,14 +10330,12 @@ int CGolfRule::ShotDataSave(const char *fileName, bool anonymous) {
 		mkdir("save");
 
 		int index = 0;
-		while (true) {
+		do {
 			if (index >= 100)
 				return -1;
 
 			sprintf(m_saveFileName, "save/pangya_%03d.sav", index++);
-			if (_access(m_saveFileName, 0) == -1)
-				break;
-		}
+		} while (_access(m_saveFileName, 0) != -1);
 	} else {
 		strcpy(m_saveFileName, fileName);
 	}
@@ -11025,8 +11030,11 @@ void CGolfRule::AddExtPrize(void) {
 					strcpy(sprayName, name);
 
 				CFxSpray *spray = CFx::Instance()->OpenSpray(sprayName);
-				if (spray)
-					spray->Pos() = GolfBall().m_pos;
+				if (spray) {
+					WVector pos = GolfBall().m_pos;
+					WVector *dst = &spray->Pos();
+					memcpy(dst, &pos, sizeof(WVector));
+				}
 			}
 
 			SendMsg(this, "Caddie", 0x1DE, 0x23, 0, 0, 0);

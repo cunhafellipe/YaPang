@@ -1286,9 +1286,13 @@ void FrMakeRoomDlg::OnHoleTypeOwnerDraw(PG_MSGARG param) {
 	float height = (float)m_pHoleTypeImg[0]->Height();
 
 	WRect front(rect.x, rect.y, width, height);
-	WRect back(front.x + front.w, rect.y, m_pHoleTypeImg[2]->Width(), height);
-	WRect random(back.x + back.w, rect.y, m_pHoleTypeImg[4]->Width(), height);
-	WRect shuffle(random.x + random.w, rect.y, m_pHoleTypeImg[6]->Width(), height);
+	float w;
+	width += rect.x;
+	WRect back(width, rect.y, w = (float)m_pHoleTypeImg[2]->Width(), height);
+	width += w;
+	WRect random(width, rect.y, w = (float)m_pHoleTypeImg[4]->Width(), height);
+	width += w;
+	WRect shuffle(width, rect.y, m_pHoleTypeImg[6]->Width(), height);
 
 	if (m_gameType == 10) {
 		DrawHoleTypeButton(pDevice, (eHoleType)0, front, false);

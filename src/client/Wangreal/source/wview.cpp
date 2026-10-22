@@ -894,7 +894,7 @@ void WView::UpdateProjectionTransform_Perspective(void) {
 	float clipr = (m_clipArea.x + m_clipArea.w - halfw) / GetWidth();
 	float clipt = (m_clipArea.y - halfh) / GetHeight();
 	float clipb = (m_clipArea.y + m_clipArea.h - halfh) / GetHeight();
-	float fw = (proj_scale / (float)tan(FOV * 0.5f)) * (GetWidth() / m_clipArea.w);
+	float fw = proj_scale / tan(FOV * 0.5f) * (GetWidth() / m_clipArea.w);
 	float fh = fw / GetRatio() * (GetHeight() / m_clipArea.h) / (GetWidth() / m_clipArea.w);
 
 	m_xViewState.xmProj.xx = fw;

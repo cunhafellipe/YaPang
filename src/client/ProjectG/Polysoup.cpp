@@ -2439,13 +2439,13 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 	desc.m_size = sizeof(desc);
 	desc.m_flags = 0x80000;               // DDSD_LINEARSIZE
 	desc.m_height = height;
-	desc.m_width = width;
 	desc.m_linearSize = height * width / 2;
 	desc.m_mipMapCount = 1;
 	desc.m_formatSize = 0x20;
 	desc.m_formatFlags = 4;               // DDPF_FOURCC
 	desc.m_fourCC = 0x31545844;           // "DXT1"
 	desc.m_caps = 0x1000;                 // DDSCAPS_TEXTURE
+	desc.m_width = width;
 
 	int size = desc.m_linearSize + 0x80;
 	unsigned char *pBuf = new unsigned char[size];
@@ -2492,10 +2492,9 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 
 			if (vtx < 0x8000) {
 				w_mesh *pSrc = ppMeshes[pFrags[i].m_meshIndex];
-				unsigned short *pIdx = &pSrc->indexList[pFrags[i].m_triIndex * 3];
-				unsigned short i0 = pIdx[0];
-				unsigned short i1 = pIdx[1];
-				unsigned short i2 = pIdx[2];
+				unsigned short i0 = pSrc->indexList[pFrags[i].m_triIndex * 3];
+				unsigned short i1 = pSrc->indexList[pFrags[i].m_triIndex * 3 + 1];
+				int i2 = pSrc->indexList[pFrags[i].m_triIndex * 3 + 2];
 				float u, v;
 				GetBarycentricProjected(pSrc->vecList[i0], pSrc->vecList[i1], pSrc->vecList[i2], pVtx[vtx], u, v);
 				unsigned long color = ((unsigned char)InterpolateTriangle((float)(pSrc->vtxColorList[i0] >> 24), (float)(pSrc->vtxColorList[i1] >> 24), (float)(pSrc->vtxColorList[i2] >> 24), u, v) << 24) | 0xFFFFFF;

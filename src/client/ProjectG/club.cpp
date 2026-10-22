@@ -375,7 +375,7 @@ void CClub::AddClub(char *name, float range, float lie, float power, float curve
 	if (club) {
 
 		club->m_range = range;
-		club->m_lie = lie * data_9eb1f0;
+		club->m_lie = (float)(lie * data_9eb1f0);
 
 		club->m_type = type;
 		club->m_power = power;
@@ -392,7 +392,7 @@ void CClub::AddClub(char *name, float range, float lie, float power, float curve
 
 		club->m_pointFactor = 1.0f;
 		club->m_range = range;
-		club->m_lie = lie * data_9eb1f0;
+		club->m_lie = (float)(lie * data_9eb1f0);
 		club->m_type = type;
 		club->m_power = power;
 		club->m_curve = curve;
@@ -537,11 +537,12 @@ void CClub::SelectBestClub(const WVector &target) {
 		dir.Normalize();
 
 		bool blocked = false;
+		float f;
 		if (CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_level < 6
 			&& GetDifficulty() < 3) {
 			float range = GetRange("1W") * 3.2f;
 
-			for (float f = 0.8f; f < 1.01f; f += 0.1f) {
+			for (f = 0.8f; f < 1.01f; f += 0.1f) {
 				if (GetPVS().GetGroundType(dir * (range * f) + GolfBall().m_pos, true, NULL) == 10
 					|| GOLFDOC()->m_pPolySoup->IsOutOfBound(dir * (range * f) + GolfBall().m_pos)) {
 					blocked = true;
@@ -569,7 +570,7 @@ void CClub::SelectBestClub(const WVector &target) {
 			if (blocked) {
 				float reach = range * 3.2f;
 
-				for (float f = 0.8f; f < 1.01f; f += 0.1f) {
+				for (f = 0.8f; f < 1.01f; f += 0.1f) {
 					if (GOLFDOC()->m_pPolySoup->IsOutOfBound(dir * (reach * f) + GolfBall().m_pos)) {
 						score -= 1000.0f;
 					} else {

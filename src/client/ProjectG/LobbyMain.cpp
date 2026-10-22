@@ -6243,7 +6243,7 @@ bool CLobbyMain::OnVoteDlgResult(int ret, FrForm*) {
 // The invitation dialog closed: on accept, join the inviter's room when it is
 // on this server and channel, otherwise follow the friend to its server.
 bool CLobbyMain::OnInviteDlgResult(int result, FrForm* pForm) {
-	if (m_matchingDlg == 0)
+	if (!m_matchingDlg)
 		return false;
 
 	bool inviteContent = IsLocalContent((localContentType_t)0x54);
@@ -6251,8 +6251,7 @@ bool CLobbyMain::OnInviteDlgResult(int result, FrForm* pForm) {
 		if (inviteContent) {
 			if (m_matchingDlg->m_svrGUID == WSingleton<CSharedDoc>::Instance()->m_gameServerUID
 				&& m_matchingDlg->m_channelIdx == WSingleton<CSharedDoc>::Instance()->m_currentChannel.id) {
-				unsigned short roomIdx = m_matchingDlg->m_roomIdx;
-				std::list<sRoomInfo>::iterator it = std::find(WSingleton<CSharedDoc>::Instance()->m_roomList.begin(), WSingleton<CSharedDoc>::Instance()->m_roomList.end(), roomIdx);
+				std::list<sRoomInfo>::iterator it = std::find(WSingleton<CSharedDoc>::Instance()->m_roomList.begin(), WSingleton<CSharedDoc>::Instance()->m_roomList.end(), m_matchingDlg->GetRoomIdx());
 				if (it == WSingleton<CSharedDoc>::Instance()->m_roomList.end()) {
 					// CP949: "The room you were invited to no longer exists"
 					this << MsgObject(this, 0x23, (intptr_t)"\xC3\xCA\xB4\xEB\xB9\xDE\xC0\xBA \xB9\xE6\xC0\xCC \xC1\xF6\xB1\xDD \xC1\xB8\xC0\xE7\xC7\xCF\xC1\xF6 \xBE\xCA\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
@@ -6264,15 +6263,15 @@ bool CLobbyMain::OnInviteDlgResult(int result, FrForm* pForm) {
 					EnableRoomEnterControls(false);
 
 					WSendPacket packet((enumClientPacket)9);
-					packet.Encode2(m_matchingDlg->m_roomIdx);
-					packet.EncodeStr(std::string(""));
+					packet.Encode2(m_matchingDlg->GetRoomIdx());
+					packet.EncodeStr("");
 					packet.Send(SEND_TO_DEFAULT);
 
 					this << MsgObject(0, 0x16, 0, 0, 0, 0, 0);
 					this << MsgObject(0, 1, 0, 0, 0, 0, 0);
 				}
 			} else {
-				sFriend* pFriend = BuddyMGR->GetBuddy(m_matchingDlg->m_fromUID);
+				sFriend* pFriend = BuddyMGR->GetBuddy(m_matchingDlg->GetFromUID());
 				if (pFriend) {
 					if (g_pFresh->IsCurrentLayout("RealMyRoom"))
 						AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xDF, 0, 0, 0, 0, 0);
@@ -6283,15 +6282,15 @@ bool CLobbyMain::OnInviteDlgResult(int result, FrForm* pForm) {
 					WSendPacket packet((enumClientPacket)0x43);
 					packet.Send(SEND_TO_DEFAULT);
 
-					WSingleton<CSharedDoc>::Instance()->m_goWithFriendUID = pFriend->uid;
-					WSingleton<CSharedDoc>::Instance()->m_nowGoWithMode = 2;
+					WSingleton<CSharedDoc>::Instance()->SetGoWithModeStart(pFriend->uid);
+					WSingleton<CSharedDoc>::Instance()->SetGoWithMode(2);
 				}
 			}
 		}
 	} else if (inviteContent) {
 		if (m_matchingDlg->m_svrGUID == WSingleton<CSharedDoc>::Instance()->m_gameServerUID
 			&& m_matchingDlg->m_channelIdx == WSingleton<CSharedDoc>::Instance()->m_currentChannel.id) {
-			WSingleton<CSharedDoc>::Instance()->m_inviteMode = 0;
+			WSingleton<CSharedDoc>::Instance()->SetInviteMode(0);
 		}
 	}
 
@@ -9564,24 +9563,21 @@ void CLobbyMain::OnRoomList_UserListOwnerDraw(PG_MSGARG param) {
 	if (pUser->roomNumber != 0xFFFF)
 		pGDI->DrawTexture(m_roomImage, WRect(rc.x, rc.y + 3.0f, (float)m_roomImage->Width(), (float)m_roomImage->Height()), 0xFFFFFFFF, 0);
 
-	const char* levelName;
+	const Bitmap* pLevel;
 	if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x80) {
-		levelName = MakeStr("ladder_%03d", pUser->rankValue / 100);
+		pLevel = g_pFresh->GetBitmap(MakeStr("ladder_%03d", pUser->rankValue / 100));
 	} else if (pUser->titleTypeId) {
 		IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pUser->titleTypeId);
 		if (pSkin)
-			levelName = pSkin->m_icon;
+			pLevel = g_pFresh->GetBitmap(pSkin->m_icon);
 		else
-			levelName = MakeStr("level_%03d", pUser->level + 1);
+			pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pUser->level + 1));
 	} else {
-		levelName = MakeStr("level_%03d", pUser->level + 1);
+		pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pUser->level + 1));
 	}
 
-	const Bitmap* pLevel = g_pFresh->GetBitmap(levelName);
-	if (pLevel) {
-		float y = pItem->pos.y + 11.0f - float2int(pLevel->Height() * 0.5f);
-		pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 66.0f - float2int(pLevel->Width() * 0.5f), y, (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
-	}
+	if (pLevel)
+		pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 66.0f - float2int(pLevel->Width() * 0.5f), pItem->pos.y + 11.0f - float2int(pLevel->Height() * 0.5f), (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
 
 	if (pUser->guildUID && !(pUser->identity & 0x14)) {
 		const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pUser->guildMark);
@@ -10610,10 +10606,8 @@ void CLobbyMain::OnGameRoom_RoomUserOwnerDraw(PG_MSGARG param) {
 			pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pSlot->m_level + 1));
 		}
 
-		if (pLevel) {
-			float x = pItem->pos.x + 90.0f - float2int(pLevel->Width() * 0.5f);
-			pGDI->DrawTexture(pLevel, WRect(x, pItem->pos.y + 68.0f, (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
-		}
+		if (pLevel)
+			pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 90.0f - float2int(pLevel->Width() * 0.5f), pItem->pos.y + 68.0f, (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
 
 		if (pSlot->m_guildUID && pSlot->m_flags151.flag) {
 			const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pSlot->m_emblemName);
@@ -10716,20 +10710,19 @@ void CLobbyMain::OnGameRoom_RoomUserOwnerDraw(PG_MSGARG param) {
 		if (pGender)
 			pGDI->DrawTexture(pGender, WRect(pItem->pos.x + 2.0f, pItem->pos.y + 98.0f, (float)pGender->Width(), (float)pGender->Height()), 0xFFFFFFFF, 0);
 
-		const char* levelName;
+		const Bitmap* pLevel;
 		if (CSharedDoc::Instance()->m_currentChannel.flags & 0x80) {
-			levelName = MakeStr("ladder_%03d", pSlot->m_ladderGrade);
+			pLevel = g_pFresh->GetBitmap(MakeStr("ladder_%03d", pSlot->m_ladderGrade));
 		} else if (pSlot->m_titleTypeId) {
 			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pSlot->m_titleTypeId);
 			if (pSkin)
-				levelName = pSkin->m_icon;
+				pLevel = g_pFresh->GetBitmap(pSkin->m_icon);
 			else
-				levelName = MakeStr("level_%03d", pSlot->m_level + 1);
+				pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pSlot->m_level + 1));
 		} else {
-			levelName = MakeStr("level_%03d", pSlot->m_level + 1);
+			pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pSlot->m_level + 1));
 		}
 
-		const Bitmap* pLevel = g_pFresh->GetBitmap(levelName);
 		if (pLevel)
 			pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 60.0f, pItem->pos.y + 68.0f, (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
 
@@ -12565,20 +12558,19 @@ void CLobbyMain::OnGameRoomExt_RoomUserOwnerDraw(PG_MSGARG param) {
 	if (m_roomUserMarkImage[1] && (pSlot->m_attribute & 4))
 		pGDI->DrawTexture(m_roomUserMarkImage[1], WRect(pItem->pos.x + 34.0f, pItem->pos.y + 2.0f, (float)m_roomUserMarkImage[1]->Width(), (float)m_roomUserMarkImage[1]->Height()), 0xFFFFFFFF, 0);
 
-	const char* levelName;
+	const Bitmap* pLevel;
 	if (CSharedDoc::Instance()->m_currentChannel.flags & 0x80) {
-		levelName = MakeStr("ladder_%03d", pSlot->m_ladderGrade);
+		pLevel = g_pFresh->GetBitmap(MakeStr("ladder_%03d", pSlot->m_ladderGrade));
 	} else if (pSlot->m_titleTypeId) {
 		IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pSlot->m_titleTypeId);
 		if (pSkin)
-			levelName = pSkin->m_icon;
+			pLevel = g_pFresh->GetBitmap(pSkin->m_icon);
 		else
-			levelName = MakeStr("level_%03d", pSlot->m_level + 1);
+			pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pSlot->m_level + 1));
 	} else {
-		levelName = MakeStr("level_%03d", pSlot->m_level + 1);
+		pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pSlot->m_level + 1));
 	}
 
-	const Bitmap* pLevel = g_pFresh->GetBitmap(levelName);
 	if (pLevel) {
 		pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 80.0f - float2int(pLevel->Width() * 0.5f), pItem->pos.y + 13.0f - float2int(pLevel->Height() * 0.5f), (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
 	}

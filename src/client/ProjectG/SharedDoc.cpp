@@ -1926,16 +1926,19 @@ bool CSharedDoc::AddWhisperPartner(FrComboBox *pComboBox, const char *name) {
 	}
 
 	bool fromName = false;
+	const char *partner;
 	if (name != 0) {
 		fromName = true;
+		partner = name;
 	} else {
-		if (strlen(pComboBox->GetLine(1, false)) == 0 || strcmp(pComboBox->GetLine(1, false), WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname) == 0) {
+		if (strlen(pComboBox->GetLine(1, false)) == 0 || strcmp(MyNick(), pComboBox->GetLine(1, false)) == 0) {
 			return false;
 		}
 
-		name = pComboBox->GetLine(1, false);
+		partner = pComboBox->GetLine(1, false);
 	}
 
+	name = partner;
 	if (name == 0) {
 		return false;
 	}

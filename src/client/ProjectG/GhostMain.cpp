@@ -1073,9 +1073,8 @@ void CGhostMain::OnProcTip(float dt) {
 	if (!m_showUserStat)
 		return;
 
-	float y = m_tipImage->GetPos().y;
 	if (!m_tipHiding) {
-		if (y < 30.0f)
+		if (m_tipImage->GetPos().y < 30.0f)
 			m_tipImage->AddPos(WPoint(0.0f, dt * 240.0f));
 
 		if (m_tipAlpha < 240.0f) {
@@ -1092,7 +1091,7 @@ void CGhostMain::OnProcTip(float dt) {
 			}
 		}
 	} else {
-		if (y > -120.0f)
+		if (m_tipImage->GetPos().y > -120.0f)
 			m_tipImage->AddPos(WPoint(0.0f, dt * -240.0f));
 
 		if (m_tipAlpha > 0.0f) {

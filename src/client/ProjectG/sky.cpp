@@ -252,8 +252,8 @@ void CSky::LoadSky(const char* name, float param) {
 		if (layer <= 1) {
 			// cylinder: three bands of (divs + 32) vertices
 			numVerts = (divs[layer] + 32) * 3;
-			bandBytes = (divs[layer] + 32) * stride;
 			numIdxs = divs[layer] * 4 + 130;
+			bandBytes = (divs[layer] + 32) * stride;
 			radius = 500.0f;
 			if (layer) {
 				radius = 400.0f;
@@ -270,7 +270,7 @@ void CSky::LoadSky(const char* name, float param) {
 		} else {
 			// up or down plane: one quad
 			m_batch[layer].xiFlag1 |= 0x400;
-			numVerts = numIdxs = 4;
+			numIdxs = numVerts = 4;
 			bandBytes = stride * 2;
 			ys[0] = (layer == 2 ? 1.0f : -1.0f) * 196.349548f;
 
@@ -283,13 +283,10 @@ void CSky::LoadSky(const char* name, float param) {
 		int vb = video->xCreateVertexBuffer(numVerts, fvf, usage);
 		int ib = video->xCreateIndexBuffer(numIdxs, usage);
 
-		unsigned long color = ModifyColor(m_skyColor, GOLFDOC()->m_fogBrightness);
-		if (layer) {
-			color |= 0xFF000000;
-		}
 		unsigned long colors[3];
-		colors[0] = color;
-		colors[1] = colors[2] = colors[0] | 0xFF000000;
+		unsigned long color = ModifyColor(m_skyColor, GOLFDOC()->m_fogBrightness);
+		colors[0] = layer ? color | 0xFF000000 : color;
+		colors[1] = colors[0] | 0xFF000000; colors[2] = colors[0] | 0xFF000000;
 
 		unsigned char* vtx = video->xLockVertexBuffer(vb, 0, 0);
 		float x, z, u;

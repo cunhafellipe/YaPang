@@ -125,7 +125,8 @@ float CAutoTarget::GetDistance(const WVector &a, const WVector &b) {
 // otherwise the last point of the list whose segment crosses the club's
 // range circle around the ball, towards the cup.
 WVector CAutoTarget::GetPoint(const char *clubName) {
-	float range = GolfClub().GetRange(clubName) * 3.2f;
+	float range = GolfClub().GetRange(clubName);
+	range *= 3.2f;
 
 	if (clubName != 0) {
 		if (GolfClub().GetApproachMode() < 4 || InArea(GolfBall().m_pos, WVector(GOLFDOC()->GetHoleData().m_cupPos), range) < 96.0f)

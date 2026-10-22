@@ -1150,16 +1150,18 @@ void FrScratchDlg::UpdateListMyItem(sBonusBall* pItem) {
 	} else {
 		sItemInfo item;
 
-		short count[5] = { 1 };
-		if (pItem->m_bUnitCount == 0) {
+		unsigned char unitKind = pItem->m_bUnitCount;
+		short count[5] = { 0 };
+		count[0] = 1;
+		if (unitKind == 0) {
 			count[0] = (short)pItem->m_count;
-		} else if (pItem->m_bUnitCount == 1 || pItem->m_bUnitCount == 2) {
+		} else if (unitKind == 1 || unitKind == 2) {
 			count[0] = pItem->m_unitCount;
 			count[4] = pItem->m_unitCount;
 		}
 
-		item.m_serial = pItem->m_serial;
 		item.m_stateBits.flag0 = 0;
+		item.m_serial = pItem->m_serial;
 		item.m_typeId = pItem->m_typeId;
 		item.m_reserved16 = 0;
 		memcpy(item.m_clubStatLevel, count, sizeof(count));
