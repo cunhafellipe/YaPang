@@ -383,13 +383,13 @@ void CPost_ReciveDlg::OnPostListInit(intptr_t param) {
 
 // post_recivedlg.cpp:389
 void CPost_ReciveDlg::OnPostListOwnerDraw(intptr_t param) {
-	int i = 0;
 	FrListItem* pItem = (FrListItem*)param;
 	if (!pItem)
 		return;
 
 	const Bitmap* pBase;
 	FrGraphicInterface* pGI = g_pFresh->GetManager()->GetGDI();
+	int i = 0;
 	if (!pItem->pData) {
 		pBase = m_pItemBaseEmptyImg;
 	} else if (pItem->selected) {
@@ -682,7 +682,8 @@ void CPost_ReciveDlg::OnPostListBtnDown(void) {
 	if (pBrief == 0)
 		return;
 
-	if ((m_miniBtns[1].m_rect + pItem->pos).IsInRect(g_pFresh->GetManager()->GetMousePos())) {
+	const WPoint& mousePos = g_pFresh->GetManager()->GetMousePos();
+	if ((m_miniBtns[1].m_rect + pItem->pos).IsInRect(mousePos)) {
 		if (pBrief->m_hasItem > 0) {
 			IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(pBrief->m_item.typeId);
 			if (pCommon) {

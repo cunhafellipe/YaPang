@@ -2181,12 +2181,8 @@ void CTaskMain::OnOverBar_CharSelOwnerDraw(PG_MSGARG) {
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
@@ -2194,24 +2190,16 @@ void CTaskMain::OnOverBar_CharSelOwnerDraw(PG_MSGARG) {
 	bitmap = g_pFresh->GetBitmap("select_bar_02");
 	if (bitmap) {
 		w = (count - 1) * 3.0f + count * 24.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.h = (float)bitmap->Height();
-		rc.w = w;
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	y += 7.0f;
@@ -2280,12 +2268,8 @@ void CTaskMain::OnOverBar_CaddieSelOwnerDraw(PG_MSGARG) {
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
@@ -2293,24 +2277,16 @@ void CTaskMain::OnOverBar_CaddieSelOwnerDraw(PG_MSGARG) {
 	bitmap = g_pFresh->GetBitmap("select_bar_02");
 	if (bitmap) {
 		w = (count - 1) * 3.0f + count * 24.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.h = (float)bitmap->Height();
-		rc.w = w;
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	y += 7.0f;
@@ -2400,12 +2376,8 @@ void CTaskMain::OnOverBar_ClubSelOwnerDraw(PG_MSGARG) {
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
@@ -2413,24 +2385,16 @@ void CTaskMain::OnOverBar_ClubSelOwnerDraw(PG_MSGARG) {
 	bitmap = g_pFresh->GetBitmap("select_bar_02");
 	if (bitmap) {
 		w = (count - 1) * 3.0f + count * 24.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.h = (float)bitmap->Height();
-		rc.w = w;
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	y += 7.0f;
@@ -2506,12 +2470,8 @@ void CTaskMain::OnOverBar_AztecSelOwnerDraw(PG_MSGARG) {
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
@@ -2519,24 +2479,16 @@ void CTaskMain::OnOverBar_AztecSelOwnerDraw(PG_MSGARG) {
 	bitmap = g_pFresh->GetBitmap("select_bar_02");
 	if (bitmap) {
 		w = (count - 1) * 3.0f + count * 24.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.h = (float)bitmap->Height();
-		rc.w = w;
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	y += 7.0f;
@@ -2605,12 +2557,8 @@ void CTaskMain::OnOverBar_MascotSelOwnerDraw(PG_MSGARG) {
 	const Bitmap *bitmap = g_pFresh->GetBitmap("select_bar_01");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
@@ -2618,24 +2566,16 @@ void CTaskMain::OnOverBar_MascotSelOwnerDraw(PG_MSGARG) {
 	bitmap = g_pFresh->GetBitmap("select_bar_02");
 	if (bitmap) {
 		w = (count - 1) * 3.0f + count * 24.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.h = (float)bitmap->Height();
-		rc.w = w;
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	x += w;
 	bitmap = g_pFresh->GetBitmap("select_bar_03");
 	if (bitmap) {
 		w = 8.0f;
-		WRect rc;
-		rc.x = x;
-		rc.y = y;
-		rc.w = w;
-		rc.h = (float)bitmap->Height();
-		gdi->DrawTexture(bitmap, rc, 0xFFFFFFFF, 0);
+		float h = (float)bitmap->Height();
+		gdi->DrawTexture(bitmap, WRect(x, y, w, h), 0xFFFFFFFF, 0);
 	}
 
 	y += 7.0f;
@@ -3039,8 +2979,7 @@ void CTaskMain::OnOverBar_OptionUp(void) {
 // taskmain.cpp:3495
 void CTaskMain::OnOverBar_MyInfoUp(void) {
 	CloseAllDialogs();
-	WSingleton<CUserInfo>::Instance()->SetInfo(WSingleton<CSharedDoc>::Instance()->m_myUID,
-		WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid, true, true, false, false,
+	WSingleton<CUserInfo>::Instance()->SetInfo(MyUID(), MyGuid(false), true, true, false, false,
 		MyNick());
 
 	OnBarHoverOff(0);

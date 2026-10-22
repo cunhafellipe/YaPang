@@ -357,16 +357,16 @@ void ShotReview::HandleMsg(const MsgObject &msg) {
 
 		if (!points.empty()) {
 			const CGolfBall::sExpected *pFirst = points.front();
+			const CGolfBall::sExpected *pLast = points.back();
 			WVector start = pFirst->m_pos;
-			WVector end = points.back()->m_pos;
+			WVector end = pLast->m_pos;
 			float height = end.y - start.y;
 
 			float prevHeight = start.y;
-			// end becomes the horizontal offset from start.
-			end.x -= start.x;
-			end.y = 0.0f;
-			end.z -= start.z;
-			float distance = end.Magnitude();
+			// Horizontal offset from the first point to the last.
+			WVector diff = end - start;
+			diff.y = 0.0f;
+			float distance = diff.Magnitude();
 			if (WisZero(distance, 1e-5f)) {
 				distance = 1.0f;
 			}

@@ -219,10 +219,12 @@ sItemInfo* GetMyItemInfo(unsigned long serial) {
 // ucclibrary.cpp:221
 sItemInfo* GetMyItemInfo(unsigned long typeId, const char* uccKey, unsigned short uccDrawCount) {
 #define FIND_MY_UCC_ITEM(items) \
-	for (std::list<sItemInfo>::iterator it##items = WSingleton<CSharedDoc>::Instance()->items.begin(); it##items != WSingleton<CSharedDoc>::Instance()->items.end(); ++it##items) { \
-		if (strlen((*it##items).m_uccKey) != 0 && (*it##items).m_uccSeq != 0 && (*it##items).m_typeId == typeId && strcmp((*it##items).m_uccKey, uccKey) == 0 && (uccDrawCount == 0 || (*it##items).m_uccSeq == uccDrawCount)) return &(*it##items); \
+	for (pList = &WSingleton<CSharedDoc>::Instance()->items, it = pList->begin(); it != pList->end(); ++it) { \
+		if (strlen((*it).m_uccKey) != 0 && (*it).m_uccSeq != 0 && (*it).m_typeId == typeId && strcmp((*it).m_uccKey, uccKey) == 0 && (uccDrawCount == 0 || (*it).m_uccSeq == uccDrawCount)) return &(*it); \
 	}
 
+	std::list<sItemInfo>* pList;
+	std::list<sItemInfo>::iterator it;
 	FIND_MY_UCC_ITEM(m_myItemList)
 	FIND_MY_UCC_ITEM(m_myAuxItemList)
 	FIND_MY_UCC_ITEM(m_myPartsList)

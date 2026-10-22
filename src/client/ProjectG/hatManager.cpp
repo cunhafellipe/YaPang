@@ -993,7 +993,7 @@ int ChatManager::CheckChatCommand(const char *text, int type) {
 			switch (i) {
 			case 0: {
 				int identity = 0;
-				char name[0x18];
+				char name[22];
 
 				int count = sscanf(args, "%s %d %s", command, &identity, name);
 

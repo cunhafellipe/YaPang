@@ -320,9 +320,10 @@ void FrItemInfoDlg::SetItemInfo(sTradeItem* pItem) {
 		if (it != pDoc->m_itemInfoList.end()) {
 			sItemInfo::sItemStateBits bits = it->m_stateBits;
 			int days = it->m_remainHours / 24, hours = it->m_remainHours % 24;
+			unsigned int kind = bits.kind;
 			bool expired = bits.expired;
 
-			switch (bits.kind) {
+			switch (kind) {
 			case 1:
 				// "Period: %d days %d hours"
 				m_pName->AddText(MakeStr("\xbb\xe7\xbf\xeb\xb1\xe2\xb0\xa3: %d\xc0\xcf %d\xbd\xc3\xb0\xa3", days, hours), false, true);

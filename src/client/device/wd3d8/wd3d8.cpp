@@ -1329,10 +1329,8 @@ void WDirect3D8::WRenderState::End(WDirect3D8& wd3d) {
 	}
 
 	for (FxParamMatList::iterator itr = m_fxParamMatList.begin(); itr != m_fxParamMatList.end(); ++itr) {
-		if (effect.param[itr->m_Type].handle) {
-			if (itr->m_OldValue != itr->m_Value)
-				wd3d.GetFxParamPool().SetMatrix(effect.pEffect, itr->m_Type, effect.param[itr->m_Type].handle, effect.param[itr->m_Type].isShared, itr->m_OldValue);
-		}
+		if (effect.param[itr->m_Type].handle && itr->m_OldValue != itr->m_Value)
+			wd3d.GetFxParamPool().SetMatrix(effect.pEffect, itr->m_Type, effect.param[itr->m_Type].handle, effect.param[itr->m_Type].isShared, itr->m_OldValue);
 	}
 
 	for (FxParamTexList::iterator itr = m_fxParamTexList.begin(); itr != m_fxParamTexList.end(); ++itr) {
@@ -4336,7 +4334,7 @@ void WDirect3D8::UpdateTextureSurfaceSampling(void* buff, int width, int height,
 		unsigned char* ptr = (unsigned char*)buff + pitch * j;
 		int srcY = bi->bmiHeader.biHeight != height ? bi->bmiHeader.biHeight * j / height * bpl : j * bpl;
 
-		for (int i = 0; i < width; i++) {
+		for (int i = 0; i < width; i++, ptr += pix->cpp) {
 			int srcX = bi->bmiHeader.biWidth != width ? bi->bmiHeader.biWidth * i / width * cps : i * cps;
 			unsigned char* src = (unsigned char*)data + srcY + srcX;
 			unsigned long code;
@@ -4353,7 +4351,7 @@ void WDirect3D8::UpdateTextureSurfaceSampling(void* buff, int width, int height,
 				code = pix->Pack(src[3], src[2], src[1], src[0]);
 			}
 
-			memcpy(ptr, &code, pix->cpp); ptr += pix->cpp;
+			memcpy(ptr, &code, pix->cpp);
 		}
 	}
 }
@@ -4368,12 +4366,12 @@ void WDirect3D8::UpdateTextureSurfaceFiltering(void* buff, int w, int h, int pit
 	float scale_h = (float)bi->bmiHeader.biHeight / h; float extent = scale_h * scale_w; for (int y = 0; y < h; y++) {
 		unsigned char* ptr = (unsigned char*)buff + pitch * y;
 
-		for (int x = 0; x < w; x++) {
+		for (int x = 0; x < w; x++, ptr += pix->cpp) {
 			float v = y * scale_h;
 			float v1 = v + scale_h;
 			float fr, fg, fb;
-			fr = fg = fb = 0;
 			float u = x * scale_w;
+			fr = fg = fb = 0;
 			float u1 = u + scale_w;
 			float dv, du;
 			for (float va = v; va < v1; va += dv) {
@@ -4391,7 +4389,7 @@ void WDirect3D8::UpdateTextureSurfaceFiltering(void* buff, int w, int h, int pit
 				}
 			}
 			int code = pix->Pack((unsigned char)(fr / extent), (unsigned char)(fg / extent), (unsigned char)(fb / extent));
-			memcpy(ptr, &code, pix->cpp); ptr += pix->cpp;
+			memcpy(ptr, &code, pix->cpp);
 		}
 	}
 }

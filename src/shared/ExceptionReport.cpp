@@ -503,9 +503,9 @@ void CExceptionReport::DumpRegisters(const CONTEXT *pContext) const {
 void CExceptionReport::PrintStack(unsigned long dwFrom, unsigned long dwTo) const {
 	char szBuffer[92] = { 0 };
 
-	unsigned long dwStack = dwFrom & ~0x1F;
-	if (dwStack < g_dwStack)
-		dwStack = g_dwStack;
+	dwFrom &= ~0x1F;
+	if (dwFrom < g_dwStack)
+		dwFrom = g_dwStack;
 
 	if (dwTo > g_dwStackBottom)
 		dwTo = g_dwStackBottom;
@@ -515,22 +515,22 @@ void CExceptionReport::PrintStack(unsigned long dwFrom, unsigned long dwTo) cons
 	__try {
 		char *p = szBuffer;
 
-		while (dwStack < dwTo) {
-			if ((dwStack & 0x1F) == 0)
-				p += wsprintfA(p, "%08x:", dwStack);
+		while (dwFrom < dwTo) {
+			if ((dwFrom & 0x1F) == 0)
+				p += wsprintfA(p, "%08x:", dwFrom);
 
-			p += wsprintfA(p, " %08x", *(const unsigned long *)dwStack);
+			p += wsprintfA(p, " %08x", *(const unsigned long *)dwFrom);
 
-			dwStack += 4;
-			if ((dwStack & 0x1F) == 0) {
+			dwFrom += 4;
+			if ((dwFrom & 0x1F) == 0) {
 				LogPrintf("%s\r\n", szBuffer);
 				szBuffer[0] = '\0';
 				p = szBuffer;
 			}
 		}
 	} __except (EXCEPTION_EXECUTE_HANDLER) {
-		LogPrintf("*** Exception encountered during stack dump\r\n", dwStack);
-		g_dwStackBottom = dwStack;
+		LogPrintf("*** Exception encountered during stack dump\r\n", dwFrom);
+		g_dwStackBottom = dwFrom;
 	}
 }
 

@@ -1396,10 +1396,9 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 			memset(&best, 0, sizeof(best));
 			bool found = false;
 			int minUsers = 2000;
-			sGameServerInfo& current = doc->m_curServer;
 			for (std::list<sGameServerInfo>::iterator it = doc->m_gameServerList.begin(); it != doc->m_gameServerList.end(); ++it) {
 				sGameServerInfo info = *it;
-				if (current.id != info.id) {
+				if (doc->m_curServer.id != info.id) {
 					minUsers = info.m_curUsers;
 					best = info;
 					found = true;
@@ -1413,7 +1412,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 						}
 					}
 				}
-				if (found == true && info.m_curUsers < minUsers && current.id != info.id) {
+				if (found == true && info.m_curUsers < minUsers && doc->m_curServer.id != info.id) {
 					minUsers = info.m_curUsers;
 					best = info;
 				}
@@ -1422,7 +1421,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 			if (found == false) {
 				socket->Close();
 				CSharedDoc::Instance()->m_list4B64.clear();
-				SetMoveLoginServer(CSharedDoc::Instance()->m_userInfo.id, CSharedDoc::Instance()->m_loginServerAddress.c_str());
+				SetMoveLoginServer(MyId(),CSharedDoc::Instance()->m_loginServerAddress.c_str());
 				CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"LOGIN", 0, 0, 0);
 				break;
 			}
@@ -1554,7 +1553,10 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 	case WM_ACTIVATEAPP:
 		if (!IsWindowed()) {
 			SetWindowLong(g_hwnd, GWL_STYLE, GetWindowLong(g_hwnd, GWL_STYLE) & ~WS_SYSMENU);
-			if (wParam) ShowWindow(g_hwnd, SW_RESTORE); else ShowWindow(g_hwnd, SW_MINIMIZE);
+			int showCmd = SW_MINIMIZE;
+			if (wParam)
+				showCmd = SW_RESTORE;
+			ShowWindow(g_hwnd, showCmd);
 			return 1;
 		}
 		if (g_miles)
@@ -1570,7 +1572,9 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 		// Alt+F4 during a round only quits where the content allows it.
 		if (wParam == VK_F4) {
 			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
-				if (!IsLocalContent((localContentType_t)0x4F) || CSharedDoc::Instance()->m_playingMode == 1)
+				if (!IsLocalContent((localContentType_t)0x4F))
+					return 1;
+				if (CSharedDoc::Instance()->m_playingMode == 1)
 					return 1;
 			}
 		}

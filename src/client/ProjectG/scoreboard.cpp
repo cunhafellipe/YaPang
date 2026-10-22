@@ -1717,10 +1717,12 @@ void CRankExData::DrawStageArea(void) {
 	g_view->UpdateCamera();
 
 	const Bitmap* pTitle;
-	IFF_STRUCT::sSkin* pSkin;
-	if (WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_leader)].m_titleTypeId
-		&& (pSkin = ItemManager()->FindSkin(WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_leader)].m_titleTypeId)) != 0) {
-		pTitle = g_pFresh->GetManager()->GetBitmap("TITLES", pSkin->m_icon);
+	if (WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_leader)].m_titleTypeId) {
+		IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_leader)].m_titleTypeId);
+		if (pSkin)
+			pTitle = g_pFresh->GetManager()->GetBitmap("TITLES", pSkin->m_icon);
+		else
+			pTitle = g_pFresh->GetManager()->GetBitmap("LEVELS", MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_leader)].m_level + 1));
 	} else {
 		pTitle = g_pFresh->GetManager()->GetBitmap("LEVELS", MakeStr("level_%03d", WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(m_leader)].m_level + 1));
 	}
@@ -1733,14 +1735,15 @@ void CRankExData::DrawStageArea(void) {
 			const char* pName = pInfo->m_nickname;
 			float textWidth = pGDI->GetTextExtend(pName);
 
-			float titleWidth = (float)pTitle->Width();
-			float titleHeight = (float)pTitle->Height();
+			WRect rc;
+			rc.w = (float)pTitle->Width();
+			rc.h = (float)pTitle->Height();
 
-			float x = (float)float2int(screen.x + center.x - (titleWidth + g_view->GetWidth() + textWidth + 5.0f) * 0.5f);
-			float y = (float)float2int(screen.y - 52.0f + center.y - g_view->GetHeight() * 0.5f);
-			pGDI->DrawTexture(pTitle, WRect(x, y + 8.0f - (float)float2int(titleHeight * 0.5f), titleWidth, titleHeight), 0xFFFFFFFF, 0);
+			rc.x = (float)float2int(screen.x + center.x - (rc.w + g_view->GetWidth() + textWidth + 5.0f) * 0.5f);
+			rc.y = (float)float2int(screen.y - 52.0f + center.y - g_view->GetHeight() * 0.5f);
+			pGDI->DrawTexture(pTitle, WRect(rc.x, rc.y + 8.0f - (float)float2int(rc.h * 0.5f), rc.w, rc.h), 0xFFFFFFFF, 0);
 
-			WPoint pt(x + titleWidth + 5.0f, y + 2.0f);
+			WPoint pt(rc.x + rc.w + 5.0f, rc.y + 2.0f);
 			pGDI->SetTextColor(0xFFFFFFFF, 0xFF000000);
 			pGDI->SetTextStyle(2);
 
@@ -5858,12 +5861,15 @@ void CScore::OnProcess(float dt) {
 					if (WSingleton<CSharedDoc>::Instance()->m_roomType == 10) {
 						m_rankPos.x = g_view->GetWidth() - m_pRankForm->GetRect().w;
 						m_pRankForm->MoveWindow(m_rankPos);
-						break;
+					} else {
+						// scoreboard.cpp:7722
+						m_rankPos.x = Min(m_rankPos.x + dt * 600.0f, g_view->GetWidth());
+						m_pRankForm->MoveWindow(m_rankPos);
 					}
-					// fall through
+					break;
+
 				case 0x100:
 				case 0x40000:
-					// scoreboard.cpp:7722
 					m_rankPos.x = Min(m_rankPos.x + dt * 600.0f, g_view->GetWidth());
 					m_pRankForm->MoveWindow(m_rankPos);
 					break;
@@ -5963,7 +5969,7 @@ void CScore::OnProcess(float dt) {
 			if (GOLFDOC()->GameMode() & ~0x401) {
 				m_bOpen = 1;
 				m_pGuildScoreForm->SetVisible(true);
-				m_pGuildScoreForm->SetGuildPlayer(WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guid);
+				m_pGuildScoreForm->SetGuildPlayer(MyGuid(false));
 
 				// scoreboard.cpp:7904
 				m_pGuildScoreForm->SetVisibleCloseBtn(false);
@@ -5980,17 +5986,15 @@ void CScore::OnProcess(float dt) {
 	if (m_bOpen == 2) {
 		if (m_fadeTime < 1.0f) {
 			m_fadeTime += dt;
-			if (!(1.0f > m_fadeTime)) {
-				m_fadeTime = 1.0f;
-			}
+			m_fadeTime = 1.0f > m_fadeTime ? m_fadeTime : 1.0f;
 			unsigned char alpha = (unsigned char)(int)(m_fadeTime * 255.0f);
-			g_pFresh->GetManager()->GetDesktop()->SetBgColor((alpha << 24) | 0xFFFFFF);
+			g_pFresh->GetDesktop()->SetBgColor((alpha << 24) | 0xFFFFFF);
 		}
 	} else if (m_bOpen == 3) {
 		if (m_fadeTime > 0.0f) {
 			m_fadeTime -= dt;
 			unsigned char alpha = (unsigned char)float2int(Max(0.0f, m_fadeTime) * 255.0f);
-			g_pFresh->GetManager()->GetDesktop()->SetBgColor((alpha << 24) | 0xFFFFFF);
+			g_pFresh->GetDesktop()->SetBgColor((alpha << 24) | 0xFFFFFF);
 
 			// scoreboard.cpp:7961
 			if (m_fadeTime < 0.0f) {

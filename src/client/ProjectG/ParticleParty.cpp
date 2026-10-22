@@ -262,7 +262,7 @@ void CLightColumn::Display(void) {
 		return;
 	}
 
-	WVector vHole = GetHoleCupPos();
+	const WVector& vHole = GetHoleCupPos();
 	WVector vToCamera(g_camera.pivot.x - vHole.x, 0.0f, g_camera.pivot.z - vHole.z);
 
 	WVector vSide = WCrossProduct(vToCamera, WVector::UNIT_POS_Y);
@@ -293,12 +293,12 @@ void CLightColumn::Display(void) {
 	WVector vBase[2] = { GetHoleCupPos(), GetHoleCupPos() - vBack };
 	WVector vWidth[2] = { vSide * (m_fDistance * 0.5f), vSide * (m_fDistance * 0.25f) };
 	float fTexV[2] = { 0.0f, m_fFrame };
+	float fTexScale[2] = { 2.0f, 400.0f };
+	int nSegments[3] = { 10, 1, 1 };
 	float fStart[3] = { 0.0f, 50.0f, m_fHeight * 0.6f };
 	float fLength[3] = { 50.0f, m_fHeight * 0.6f - 50.0f, m_fHeight * 0.4f };
 	unsigned char byAlpha[2] = { m_byTargetAlpha, m_byAlpha };
 	unsigned long nTex[2] = { (m_hEffectTex[nIndex] & 0x7FF) | 0x20400000, (m_hScreenTex & 0x7FF) | 0x20C00000 };
-	float fTexScale[2] = { 2.0f, 400.0f };
-	int nSegments[3] = { 10, 1, 1 };
 
 	m_buffers[0].m_fU = 0.0f;
 	m_buffers[1].m_fU = 0.0f;

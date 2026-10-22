@@ -193,8 +193,8 @@ void CHelpMsg::Process(float elapsed) {
 
 	m_itemText[0] = 0;
 	text[0] = 0;
-	int area = CMouseCursor::Instance()->GetArea();
 	int index = 29;
+	int area = CMouseCursor::Instance()->GetArea();
 	switch (area) {
 	case 6:
 		index = 6;
@@ -251,7 +251,8 @@ void CHelpMsg::Process(float elapsed) {
 		height *= 0.9144f;
 
 		diff.y = 0.0f;
-		float dist = diff.Magnitude() * 0.3125f;
+		float dist = diff.Magnitude();
+		dist *= 0.3125f;
 		float absHeight = Abs(height);
 		if (absHeight < 0.1f) {
 			// "(height:0.0m, "

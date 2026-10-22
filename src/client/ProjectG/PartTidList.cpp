@@ -162,16 +162,17 @@ bool CPartTidList::SetTids(unsigned long tidChar, unsigned char hairClr, unsigne
 bool CPartTidList::SetTid(unsigned long tid, unsigned long id, const char *texture, unsigned short slot) {
 	unsigned char part = (unsigned char)((tid >> 13) & 0x1F);
 	bool skipSet = false;
+	IFF_STRUCT::sPart *pPart;
 
 	if (m_partTids[part] == tid && (id == 0 || m_partIds[part] == id)) {
 		int i;
 		for (i = 0; i < m_numTotalParts; i++) {
 			if ((m_partTids[i] & 0x600) == 0x200) {
 				unsigned long baseTid = m_partTids[i] & ~0x200;
-				IFF_STRUCT::sPart *pBase = ItemManager()->FindPart(baseTid);
+				pPart = ItemManager()->FindPart(baseTid);
 
-				if (pBase != NULL) {
-					if (pBase->hideMask & (1 << part)) {
+				if (pPart != NULL) {
+					if (pPart->hideMask & (1 << part)) {
 						tid = baseTid;
 						break;
 					}
@@ -186,7 +187,7 @@ bool CPartTidList::SetTid(unsigned long tid, unsigned long id, const char *textu
 		}
 	}
 
-	IFF_STRUCT::sPart *pPart = ItemManager()->FindPart(tid);
+	pPart = ItemManager()->FindPart(tid);
 
 	if (pPart == NULL) {
 		return false;

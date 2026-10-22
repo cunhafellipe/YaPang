@@ -190,10 +190,10 @@ void FrOfflineTradeFinishEditDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 		}
 	} else {
 		__int64 hours = 0;
+		FILETIME slotTime;
+		FILETIME serverTime;
 
 		if (pSlot->sold == 0) {
-			FILETIME slotTime;
-			FILETIME serverTime;
 			SystemTimeToFileTime(&pSlot->expireTime, &slotTime);
 			SystemTimeToFileTime(&CSharedDoc::Instance()->GetServerTime(), &serverTime);
 
@@ -696,7 +696,7 @@ void COfflineTradeDlg::OnMaketListOwnerDraw(PG_MSGARG param) {
 			pGDI->DrawTexture(m_moveBtnOver.pBitmap, m_moveBtnOver.rect + pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
 			CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x16);
 		} else {
-			pGDI->DrawTexture(m_moveBtnNormal.pBitmap, WRect(WPoint(pos.x + m_moveBtnNormal.rect.x, pos.y + m_moveBtnNormal.rect.y), m_moveBtnNormal.rect.w, m_moveBtnNormal.rect.h), 0xFFFFFFFF, 0);
+			pGDI->DrawTexture(m_moveBtnNormal.pBitmap, m_moveBtnNormal.rect + pItem->pos + WPoint(0.0f, 0.0f), 0xFFFFFFFF, 0);
 		}
 	}
 
@@ -2168,10 +2168,10 @@ void COfflineShopDlg::OnTradeItemListOwnerDraw(PG_MSGARG param) {
 		}
 	} else {
 		__int64 hours = 0;
+		FILETIME slotTime;
+		FILETIME serverTime;
 
 		if (pSlot->sold == 0) {
-			FILETIME slotTime;
-			FILETIME serverTime;
 			SystemTimeToFileTime(&pSlot->expireTime, &slotTime);
 			SystemTimeToFileTime(&CSharedDoc::Instance()->GetServerTime(), &serverTime);
 

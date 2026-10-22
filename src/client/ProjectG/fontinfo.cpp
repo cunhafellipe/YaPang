@@ -3828,11 +3828,13 @@ void CPangInfo::ProcessCases(float fDelta) {
 						m_shownPangs[0] += (m_cases[i].m_pang - 1) * m_cases[0].m_pang;
 						m_totalCases[0].m_pang = m_shownPangs[0];
 						break;
-					case 8:
+					case 8: {
 						m_shownPangs[0] += m_cases[8].m_pang;
-						m_shownPangs[0] = (int)m_shownPangs[0] < 0 ? 0 : (int)m_shownPangs[0];
-						m_totalCases[0].m_pang = (int)m_shownPangs[0];
+						int nPang = (int)m_shownPangs[0] < 0 ? 0 : (int)m_shownPangs[0];
+						m_shownPangs[0] = nPang;
+						m_totalCases[0].m_pang = nPang;
 						break;
+					}
 					case 9:
 					case 10:
 					case 11:
@@ -4937,6 +4939,7 @@ void CPangInfo::Display_TotalGimmickNum(void) {
 
 	float fRowY = nRows * 20.0f;
 
+	WRECT rect;
 	for (int i = 2; i < 4; i++) {
 		float fScale;
 		if (m_totalCases[i].m_flags == 2) {
@@ -4949,7 +4952,6 @@ void CPangInfo::Display_TotalGimmickNum(void) {
 			fScale = 0.6f;
 		}
 
-		WRECT rect;
 		unsigned long color = (m_totalCases[i].m_byAlpha << 24) | 0xFFFFFF;
 		m_color = color;
 		rect.w = fScale * 256.0f;
@@ -5363,8 +5365,9 @@ void CCalipers::KeyCheck(float fDelta) {
 			}
 		} else if (bRight) {
 			if (!m_bKeyMoving) {
-				data_af23d4 = 3.0f * ((GolfClub().GetNarrowAccuracy() + 360.0f) / 4.0f) + GolfClub().GetNarrowAccuracy() + data_9eb5b8[28].f;
+				data_af23d4 = 3.0f * ((GolfClub().GetNarrowAccuracy() + 360.0f) / 4.0f) + GolfClub().GetNarrowAccuracy();
 				m_bKeyMoving = true;
+				data_af23d4 += data_9eb5b8[28].f;
 			}
 		} else {
 			data_a7f8c0 = 1.0f;

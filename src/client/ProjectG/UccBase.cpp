@@ -336,8 +336,8 @@ void CUccBase::Draw(int x, int y, Bitmap* pBrush, bool bRefresh) {
 
 	int right = left + pBrush->Width(), bottom = top + pBrush->Height();
 
-	int startX = left < 0 ? 0 : left;
-	int startY = top < 0 ? 0 : top;
+	int startX = Max(left, 0);
+	int startY = Max(top, 0);
 
 	sRGBA color;
 	sRGBA brushPixel;
@@ -613,12 +613,14 @@ void CUccBase::MakeZoomedArea(int x, int y) {
 	}
 
 	IPoint offset((int)m_pTexture32->Width() / 2, (int)m_pTexture32->Height() / 2);
-	IPoint pos(x, y);
+	IPoint pos;
 	if (x == -1 && y == -1) {
 		pos.x = (int)(m_zoomArea.x + m_zoomArea.w * 0.5f);
 		pos.y = (int)(m_zoomArea.y + m_zoomArea.h * 0.5f);
 	}
 	else {
+		pos.x = x;
+		pos.y = y;
 		if (m_zoomRate * pos.x < 128) {
 			pos.x = 256 / (m_zoomRate * 2);
 		}
