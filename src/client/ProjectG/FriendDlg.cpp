@@ -115,67 +115,73 @@ void FrFriendDlg::OnFriendListInit(intptr_t param) {
 // frienddlg.cpp:110
 void FrFriendDlg::OnFriendListOwnerDraw(intptr_t param) {
 	FrListItem* pItem = (FrListItem*)param;
-	if (pItem) {
-		sFriend* pFriend = (sFriend*)pItem->pData;
-		if (pFriend) {
-			FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
-			if (pGDI) {
-				const Bitmap* pIcon = m_pSexIcon[pFriend->flags & 1];
-				WRect rect(pItem->pos.x - 8.0f, pItem->pos.y, m_pSexIcon[0]->Width(), pIcon->Height());
+	if (!pItem) {
+		return;
+	}
 
-				if (pFriend->uid == m_uid) {
-					pGDI->Box(WRect(rect.x, rect.y, m_pFriendList->GetItemWidth() + 8.0f, (float)m_pFriendList->GetItemHeight()), 0x999B9DFF, 0, 0.0f);
-				}
+	sFriend* pFriend = (sFriend*)pItem->pData;
+	if (!pFriend) {
+		return;
+	}
 
-				pGDI->DrawTexture(pIcon, rect, (((pFriend->flags & 4) && (pFriend->flags & 2)) ? 0xFF : 0x50) << 24 | 0xFFFFFF, 0);
+	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
+	if (!pGDI) {
+		return;
+	}
 
-				if (pItem->underCursor) {
-					pGDI->SetTextColor(0xFFFFFFFF, 0xFF808080);
-					pGDI->SetTextStyle(2);
+	const Bitmap* pIcon = m_pSexIcon[pFriend->flags & 1];
+	WRect rect(pItem->pos.x - 8.0f, pItem->pos.y, m_pSexIcon[0]->Width(), pIcon->Height());
 
-				} else {
-					pGDI->SetTextColor(0xFF4C4C4C, 0xFFFFFFFF);
-					pGDI->SetTextStyle(0);
-				}
+	if (pFriend->uid == m_uid) {
+		pGDI->Box(WRect(rect.x, rect.y, m_pFriendList->GetItemWidth() + 8.0f, (float)m_pFriendList->GetItemHeight()), 0x999B9DFF, 0, 0.0f);
+	}
 
-				char szNick[22] = { 0 };
-				int nickShown = 0;
-				if (strcmp(pFriend->group, "Friend") == 0) {
-					if (!pItem->underCursor) {
-						pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
-						pGDI->SetTextStyle(0);
-					}
+	pGDI->DrawTexture(pIcon, rect, (((pFriend->flags & 4) && (pFriend->flags & 2)) ? 0xFF : 0x50) << 24 | 0xFFFFFF, 0);
 
-					if (strlen(pFriend->nick) > 18) {
-						mbscut(szNick, pFriend->nick, 18);
-						strcat(szNick, "..");
-						g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 12.0f, pItem->pos.y + 7.0f), 0, szNick, -1.0f, 0xFFFFFFFF);
-					} else {
-						g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 12.0f, pItem->pos.y + 7.0f), 0, pFriend->nick, -1.0f, 0xFFFFFFFF);
-					}
+	if (pItem->underCursor) {
+		pGDI->SetTextColor(0xFFFFFFFF, 0xFF808080);
+		pGDI->SetTextStyle(2);
 
-					nickShown = 1;
+	} else {
+		pGDI->SetTextColor(0xFF4C4C4C, 0xFFFFFFFF);
+		pGDI->SetTextStyle(0);
+	}
 
-				} else {
-					g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 12.0f, pItem->pos.y + 7.0f), 0, pFriend->group, -1.0f, 0xFFFFFFFF);
-				}
+	char szNick[22] = { 0 };
+	int nickShown = 0;
+	if (strcmp(pFriend->group, "Friend") == 0) {
+		if (!pItem->underCursor) {
+			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
+			pGDI->SetTextStyle(0);
+		}
 
-				if (!pItem->underCursor) {
-					pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
-					pGDI->SetTextStyle(0);
-				}
+		if (strlen(pFriend->nick) > 18) {
+			mbscut(szNick, pFriend->nick, 18);
+			strcat(szNick, "..");
+			g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 12.0f, pItem->pos.y + 7.0f), 0, szNick, -1.0f, 0xFFFFFFFF);
+		} else {
+			g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 12.0f, pItem->pos.y + 7.0f), 0, pFriend->nick, -1.0f, 0xFFFFFFFF);
+		}
 
-				if (!nickShown) {
-					if (strlen(pFriend->nick) > 9) {
-						mbscut(szNick, pFriend->nick, 9);
-						strcat(szNick, "..");
-						g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 82.0f, pItem->pos.y + 7.0f), 0, szNick, -1.0f, 0xFFFFFFFF);
+		nickShown = 1;
 
-					} else {
-						g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 82.0f, pItem->pos.y + 7.0f), 0, pFriend->nick, -1.0f, 0xFFFFFFFF);
-					}
-				}
-			}
+	} else {
+		g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 12.0f, pItem->pos.y + 7.0f), 0, pFriend->group, -1.0f, 0xFFFFFFFF);
+	}
+
+	if (!pItem->underCursor) {
+		pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
+		pGDI->SetTextStyle(0);
+	}
+
+	if (!nickShown) {
+		if (strlen(pFriend->nick) > 9) {
+			mbscut(szNick, pFriend->nick, 9);
+			strcat(szNick, "..");
+			g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 82.0f, pItem->pos.y + 7.0f), 0, szNick, -1.0f, 0xFFFFFFFF);
+
+		} else {
+			g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 82.0f, pItem->pos.y + 7.0f), 0, pFriend->nick, -1.0f, 0xFFFFFFFF);
 		}
 	}
 }

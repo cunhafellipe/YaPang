@@ -667,7 +667,7 @@ bool FrCheckoutDlg::OnConfirmResult(int ret, FrForm*) {
 			if ((item.m_pItem->m_typeId & 0xFC000000) == 0x18000000) {
 				WSendPacket packet((enumClientPacket)0x1D);
 
-				ItemManager()->FindItem(item.m_pItem->m_typeId);
+				IFF_STRUCT::sItem* pItem = ItemManager()->FindItem(item.m_pItem->m_typeId);
 
 				if (m_dayNames[item.m_days].hasPrice) {
 					count = m_dayNames[item.m_days].quantity;
@@ -784,10 +784,14 @@ bool FrCheckoutDlg::OnConfirmResult(int ret, FrForm*) {
 
 		m_flag1dc = true;
 
-		MsgObject msg(0, 0xC0, 0, 0, 0, 0, 0);
-		(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Shop") << msg;
-		MsgObject msg2(0, 1, 0, 0, 0, 0, 0);
-		(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Shop") << msg2;
+		{
+			MsgObject msg(0, 0xC0, 0, 0, 0, 0, 0);
+			(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Shop") << msg;
+		}
+		{
+			MsgObject msg(0, 1, 0, 0, 0, 0, 0);
+			(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Shop") << msg;
+		}
 		Close(FrOK, true);
 	}
 
@@ -1203,17 +1207,17 @@ void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 			pGDI->SetTextStyle(0);
 
 			// "price:", the unit "cookie" or "pang"
-			int labelWidth;
+			int textWidth;
 			char unit[8];
 			if (m_dayNameCount > 0) {
 				BOOL bCookie = m_bCheckoutFlag ? FALSE : m_dayNames[pCartItem->m_days].isCash != false;
 				if (bCookie) {
-					labelWidth = float2int(pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   "));
+					textWidth = float2int(pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   "));
 					const char* text = "\xc4\xed\xc5\xb0";
 					strcpy(unit, text);
 				}
 				else {
-					labelWidth = float2int(pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   "));
+					textWidth = float2int(pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   "));
 					const char* text = "\xc6\xce";
 					strcpy(unit, text);
 				}
@@ -1221,12 +1225,12 @@ void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 			else {
 				BOOL bCookie = m_bCheckoutFlag ? FALSE : pCartItem->m_pItem->m_flags0 & 1;
 				if (bCookie) {
-					labelWidth = float2int(pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   "));
+					textWidth = float2int(pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   "));
 					const char* text = "\xc4\xed\xc5\xb0";
 					strcpy(unit, text);
 				}
 				else {
-					labelWidth = float2int(pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   "));
+					textWidth = float2int(pGDI->Print(WPoint(pItem->pos.x + 90.0f, pItem->pos.y + 34.0f), 0, "\xb0\xa1    \xb0\xdd:   "));
 					const char* text = "\xc6\xce";
 					strcpy(unit, text);
 				}
@@ -1236,28 +1240,28 @@ void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 				if (S5::ISCutinItem(pCartItem->m_pItem->m_typeId)) {
 					IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pCartItem->m_pItem->m_typeId);
 					// sSkin lacks the IFF common price member at 0x5C (classdefine.h).
-					pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", ((IFF_ITEM_COMMON*)pSkin)->m_price, unit);
+					pGDI->Print(WPoint(textWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", ((IFF_ITEM_COMMON*)pSkin)->m_price, unit);
 				}
 				else {
 					unsigned long typeId = pCartItem->m_pItem->m_typeId;
 
 					if ((typeId & 0x3C00000) == 0x1800000) {
 						IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(typeId);
-						pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", ((IFF_ITEM_COMMON*)pSkin)->m_price, unit);
+						pGDI->Print(WPoint(textWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", ((IFF_ITEM_COMMON*)pSkin)->m_price, unit);
 					}
 					else {
 						IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(typeId);
-						pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", pSkin->m_periodPrices[pCartItem->m_days], unit);
+						pGDI->Print(WPoint(textWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", pSkin->m_periodPrices[pCartItem->m_days], unit);
 					}
 				}
 			}
 			else if ((pCartItem->m_pItem->m_typeId >> 26) == 8) {
 				IFF_STRUCT::sCadItem* pCad = ItemManager()->FindCadItem(pCartItem->m_pItem->m_typeId);
-				pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", pCad->m_levels[pCartItem->m_days], unit);
+				pGDI->Print(WPoint(textWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", pCad->m_levels[pCartItem->m_days], unit);
 			}
 			else if ((pCartItem->m_pItem->m_typeId >> 26) == 16) {
 				IFF_STRUCT::sMascot* pMascot = ItemManager()->FindMascot(pCartItem->m_pItem->m_typeId);
-				pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", pMascot->m_periodPrices[pCartItem->m_days], unit);
+				pGDI->Print(WPoint(textWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", pMascot->m_periodPrices[pCartItem->m_days], unit);
 			}
 			else if (m_dayNameCount > 0) {
 				__int64 price = 0;
@@ -1266,20 +1270,20 @@ void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 				else if (m_dayNames[pCartItem->m_days].altPeriodUnit)
 					price = m_dayNames[pCartItem->m_days].altPrice;
 
-				pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%I64d%s", price, unit);
+				pGDI->Print(WPoint(textWidth + 90.0f, 34.0f) + pItem->pos, 0, "%I64d%s", price, unit);
 			}
 			else if (m_bCheckoutFlag) {
 				int rentalPrice = S5::RENTALPARTS::GetRentalPrice(pCartItem->m_pItem->m_typeId);
 
-				pGDI->Print(WPoint(labelWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", rentalPrice, unit);
+				pGDI->Print(WPoint(textWidth + 90.0f, 34.0f) + pItem->pos, 0, "%d%s", rentalPrice, unit);
 			}
 			else {
-				float priceX = (float)labelWidth;
+				float priceX = (float)textWidth;
 				float textX = priceX + 90.0f;
-				int priceWidth = float2int(pGDI->Print(WPoint(textX, 34.0f) + pItem->pos, 0, "%d%s", pCartItem->m_pItem->m_price, unit));
+				textWidth = float2int(pGDI->Print(WPoint(textX, 34.0f) + pItem->pos, 0, "%d%s", pCartItem->m_pItem->m_price, unit));
 
 				if (pCartItem->m_pItem->m_discountPrice > 0 && pCartItem->m_pItem->m_discountPrice < pCartItem->m_pItem->m_price) {
-					priceX += priceWidth;
+					priceX += textWidth;
 					g_view->DrawLine2D(WPoint(textX - 2.0f, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f) + pItem->pos,
 						WPoint(priceX + 92.0f, float2int(pGDI->GetFontHeight() * 0.5f) + 34.0f) + pItem->pos, 0xFF000000, 0xFF000000, 0);
 
@@ -1328,8 +1332,8 @@ void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 				if (bOrLower)
 					text = "\xc0\xcc\xc7\xcf";
 
-				if ((!bOrLower && (pCartItem->m_pItem->m_level & 0x7F) > WSingleton<CSharedDoc>::Instance()->m_myLevel)
-					|| (bOrLower && (pCartItem->m_pItem->m_level & 0x7F) < WSingleton<CSharedDoc>::Instance()->m_myLevel)) {
+				if ((!(pCartItem->m_pItem->m_level >> 7) && (pCartItem->m_pItem->m_level & 0x7F) > WSingleton<CSharedDoc>::Instance()->m_myLevel)
+					|| ((pCartItem->m_pItem->m_level >> 7) && (pCartItem->m_pItem->m_level & 0x7F) < WSingleton<CSharedDoc>::Instance()->m_myLevel)) {
 					pGDI->Print(WPoint(rc.x + rc.w + 5.0f, lineY + pItem->pos.y), 0, text);
 
 					pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);

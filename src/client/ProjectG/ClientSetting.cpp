@@ -1381,9 +1381,9 @@ void COption::CheckPendingChanges(void) {
 			CBrowser::Instance()->ResetCount();
 
 		if (m_changeFlag) {
+			int oldBpp = m_option.m_screenBpp;
 			int oldWidth = m_option.m_screenWidth;
 			int oldHeight = m_option.m_screenHeight;
-			int oldBpp = m_option.m_screenBpp;
 
 			m_option.m_fillScreen = m_newOption.m_fillScreen;
 			m_option.m_wideMode = m_newOption.m_wideMode;

@@ -546,8 +546,9 @@ void InitPakedFile() {
 		WList<char*> paks(16, 16);
 		WIN32_FIND_DATA fd;
 		HANDLE hFind = FindFirstFile("projectg*.pak", &fd);
+		char* name;
 		while (hFind != INVALID_HANDLE_VALUE) {
-			char* name = new char[strlen(fd.cFileName) + 1];
+			name = new char[strlen(fd.cFileName) + 1];
 			strcpy(name, fd.cFileName);
 			paks += name;
 			if (!FindNextFile(hFind, &fd)) {
@@ -558,7 +559,7 @@ void InitPakedFile() {
 
 		char* first;
 		while ((first = paks.Start()) != NULL) {
-			for (char* name = first; name != NULL; name = paks.Next()) {
+			for (name = first; name != NULL; name = paks.Next()) {
 				if (strcmp(name, first) < 0) {
 					first = name;
 				}

@@ -598,25 +598,21 @@ bool WPolySoup::LoadMapCheckData(unsigned char hole) {
 			pFile->Seek(recordSize, 1);
 		}
 
-		Waabb box;
+		sArea area;
 		int j = 0;
 		for (; j < header[7]; j++) {
-			struct {
-				unsigned char m_type;
-				char m_name[0x40];
-			} area;
 			WVector v;
 
 			pFile->Read(&area.m_type, 1);
 			pFile->Read(area.m_name, 0x40);
 			pFile->Read(&v, 0xC);
-			box.min = v;
+			area.m_aabb.min = v;
 			pFile->Read(&v, 0xC);
-			box.max = v;
+			area.m_aabb.max = v;
 
 			if (strstr(area.m_name, "*extra")) {
 				if (GOLFDOC()->m_currentHole == hole) {
-					m_extraBox = box;
+					m_extraBox = area.m_aabb;
 				}
 				break;
 			}
@@ -627,8 +623,8 @@ bool WPolySoup::LoadMapCheckData(unsigned char hole) {
 				MessageBoxA(0, MakeStr("%d\xC8\xA6\xBF\xA1 \xBE\xEE\xC7\xC1\xB7\xCE\xC4\xA1 \xBF\xB5\xBF\xAA\xC0\xCC \xBC\xB3\xC1\xA4\xB5\xC7\xBE\xEE \xC0\xD6\xC1\xF6 \xBE\xCA\xBD\xC0\xB4\xCF\xB4\xD9", hole), "Warning", 0);
 			}
 		} else {
-			GOLFDOC()->m_holeData[hole - 1].m_teePos.x = (float)(WSingleton<CSharedDoc>::Instance()->m_holeRandom[0] & 0x7F) * (box.max.x - box.min.x) / 128.0f + box.min.x;
-			GOLFDOC()->m_holeData[hole - 1].m_teePos.z = (float)(WSingleton<CSharedDoc>::Instance()->m_holeRandom[1] & 0x7F) * (box.max.z - box.min.z) / 128.0f + box.min.z;
+			GOLFDOC()->m_holeData[hole - 1].m_teePos.x = (float)(WSingleton<CSharedDoc>::Instance()->m_holeRandom[0] & 0x7F) * (area.m_aabb.max.x - area.m_aabb.min.x) / 128.0f + area.m_aabb.min.x;
+			GOLFDOC()->m_holeData[hole - 1].m_teePos.z = (float)(WSingleton<CSharedDoc>::Instance()->m_holeRandom[1] & 0x7F) * (area.m_aabb.max.z - area.m_aabb.min.z) / 128.0f + area.m_aabb.min.z;
 		}
 	}
 

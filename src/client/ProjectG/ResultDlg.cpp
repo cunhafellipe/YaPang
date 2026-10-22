@@ -2158,7 +2158,8 @@ void FrUniteResultDlg::OnAwardAreaOwnerDraw(PG_MSGARG param) {
 		const Bitmap* pZero = g_pFresh->GetBitmap("icon_zero_vs");
 
 		if (pZero) {
-			WRect rect(GetRect().x + 522.0f, GetRect().TopLeft().y + (381.0f - (float)(pZero->Height() / 2)), (float)pZero->Width(), (float)pZero->Height());
+			WPoint pt = GetRect().TopLeft();
+			WRect rect(pt.x + 522.0f, pt.y + (381.0f - (float)(pZero->Height() / 2)), (float)pZero->Width(), (float)pZero->Height());
 
 			gdi->DrawTexture(pZero, rect, 0xFFFFFFFF, 0);
 		}
