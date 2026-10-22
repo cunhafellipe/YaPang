@@ -750,7 +750,8 @@ bool CFxSpray::Process(float fDelta) {
 	m_outputPos.Reset();
 	bool bQuake = false;
 	std::list<sQuake>::iterator quake = m_param.m_quakes.begin();
-	WVector ampSum(0.0f, 0.0f, 0.0f);
+	WVector ampSum;
+	ampSum.Reset();
 	for (; quake != m_param.m_quakes.end(); ++quake) {
 		// m_keys[0]: the direction and t0, m_keys[1]: the amplitude at t0 and
 		// t1, m_keys[2]: the amplitude at t1 and the shake interval,
@@ -1057,7 +1058,8 @@ bool CFxSpray::Process(float fDelta) {
 		// the particle's m_points).
 		if (m_param.m_bubbles.size() != 0) {
 			std::list<WVector>::iterator phase = particle->m_points.begin();
-			WVector wobble(0.0f, 0.0f, 0.0f);
+			WVector wobble;
+			wobble.Reset();
 
 			for (std::list<sBubble>::iterator bubble = m_param.m_bubbles.begin(); bubble != m_param.m_bubbles.end(); ++bubble) {
 				if (phase == particle->m_points.end()) {
@@ -1086,12 +1088,13 @@ bool CFxSpray::Process(float fDelta) {
 		// they have a volume.
 		if (m_param.m_sounds.size() != 0) {
 			for (std::list<sSound>::iterator sound = m_param.m_sounds.begin(); sound != m_param.m_sounds.end(); ++sound) {
-				if (sound->m_fVolume < 0.0f) {
-					g_audio->PlaySfx(sound->m_name, 0, 0, 0, 0, 0.5f, 200.0f);
+				const sSound& s = *sound;
+				if (s.m_fVolume < 0.0f) {
+					g_audio->PlaySfx(s.m_name, 0, 0, 0, 0, 0.5f, 200.0f);
 				}
 				else {
 					WVector rel = particle->m_basePos - m_box.m_pCamera->pivot;
-					g_audio->PlaySfx(sound->m_name, &rel, 5, 0, 0, 0.0f, sound->m_fVolume);
+					g_audio->PlaySfx(s.m_name, &rel, 5, 0, 0, 0.0f, s.m_fVolume);
 				}
 			}
 			m_param.m_sounds.clear();
@@ -1247,11 +1250,11 @@ void CFxSpray::RevoluteGrand(float fTime, float fScale) {
 			}
 
 			for (std::list<sRevol>::iterator v = m_param.m_revols.begin(); v != m_param.m_revols.end(); ++v) {
-				sRevol& revol = *v;
-				revol.axis += revol.center;
-				revol.axis = (revol.axis - it->center) * rot + it->center;
-				revol.center = (revol.center - it->center) * rot + it->center;
-				revol.axis -= revol.center;
+				WVector& center = v->center;
+				v->axis += center;
+				v->axis = (v->axis - it->center) * rot + it->center;
+				center = (center - it->center) * rot + it->center;
+				v->axis -= center;
 			}
 		}
 	}

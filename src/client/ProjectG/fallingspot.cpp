@@ -669,19 +669,15 @@ void CSpot::Display(void) {
 			pos.y = m_vertices[0].sy;
 			WVector2D mid = m_groundPower * WVector2D(m_vertices[0].sx, m_vertices[0].sy) + (1.0f - m_groundPower) * WVector2D(m_vertices[1].sx, m_vertices[1].sy);
 			float angle = atan2f(m_vertices[0].sy - m_vertices[1].sy, m_vertices[0].sx - m_vertices[1].sx) + 1.5707964f;
-			float dx = m_vertices[0].sx - x1;
-			float dy = pos.y - y1;
-			float len = sqrtf(dy * dy + dx * dx);
+			float len = (WVector2D(m_vertices[0].sx, pos.y) - WVector2D(x1, y1)).Magnitude();
 			m_pOverlayc4->RenderWithAxis(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(mid.x - m_unknown84 * 0.5f, mid.y, m_unknown84, len * m_groundPower), mid.x, mid.y, angle, 0, m_indicatorColor, 0);
 			m_pOverlayc4->RenderWithAxis(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(m_vertices[0].sx - m_unknown84 * 0.5f, m_vertices[0].sy, m_unknown84, len * (1.0f - m_groundPower)), m_vertices[0].sx, m_vertices[0].sy, angle, 0, 0xa0000000, 0);
 		}
 
-		WRect dst(0.0f, 0.0f, 1.0f, 1.0f);
-		WRect src(m_vertices[0].sx - m_unknown88 * 0.5f, m_vertices[0].sy - m_unknown88 * 0.5f, m_unknown88, m_unknown88);
 		if (m_unknown78 == -1) {
-			m_pOverlayc0->Render(g_view, dst, src, 0, m_indicatorColor, 0.0f, 0);
+			m_pOverlayc0->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(m_vertices[0].sx - m_unknown88 * 0.5f, m_vertices[0].sy - m_unknown88 * 0.5f, m_unknown88, m_unknown88), 0, m_indicatorColor, 0.0f, 0);
 		} else {
-			m_pOverlaybc->Render(g_view, dst, src, 0, m_indicatorColor, 0.0f, 0);
+			m_pOverlaybc->Render(g_view, WRect(0.0f, 0.0f, 1.0f, 1.0f), WRect(m_vertices[0].sx - m_unknown88 * 0.5f, m_vertices[0].sy - m_unknown88 * 0.5f, m_unknown88, m_unknown88), 0, m_indicatorColor, 0.0f, 0);
 			DrawHoleIndicator();
 			DrawRange();
 		}

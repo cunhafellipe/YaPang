@@ -4430,8 +4430,8 @@ void CPangInfo::AztecBonusWater(void) {
 		return;
 	}
 
-	unsigned long ballId = CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_ballId;
 	__int64 bonus = 0;
+	unsigned long ballId = CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_ballId;
 	if (ballId == 0x14000005 || ballId == 0x14000080 || ballId == 0x14000016 || ballId == 0x1400003C || ballId == 0x1400003D) {
 		bonus = 1;
 	}

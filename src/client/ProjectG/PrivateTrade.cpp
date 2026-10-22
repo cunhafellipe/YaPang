@@ -119,14 +119,14 @@ void CPrivateTradeImpl::Display(void) {
 void CPrivateTradeImpl::OnOpenTradeWnd(void) {
 	CloseWnd();
 
-	ntAvatar* pAvatar = WSingleton<ntAvatarManager>::Instance()->FindAvatarByGuid(m_traderGuid);
+	ntAvatar* pAvatar = WSingleton<ntAvatarManager>::Instance()->FindAvatarByGuid(GetTraderGuid());
 	if (pAvatar) {
 		SetState((_ePrivateTradeState)3);
 
 		if (m_tradeForm == NULL) {
 			unsigned long typeId = pAvatar->GetCharacterInfo().typeId;
 			m_tradeForm = CreateForm<FrPrivateTrade>(g_pFresh->GetManager(), this, "FrPrivateTrade", NULL);
-			m_tradeForm->SetCompanion(m_traderNick, m_traderGuid, typeId);
+			m_tradeForm->SetCompanion(m_traderNick, GetTraderGuid(), typeId);
 			m_tradeForm->Open((FRESH_RESULT_CALLBACK)&CPrivateTradeImpl::OnResultTrade, 1);
 		}
 	} else {

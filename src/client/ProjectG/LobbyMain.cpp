@@ -6246,9 +6246,8 @@ bool CLobbyMain::OnInviteDlgResult(int result, FrForm* pForm) {
 	if (!m_matchingDlg)
 		return false;
 
-	bool inviteContent = IsLocalContent((localContentType_t)0x54);
 	if (result == 1) {
-		if (inviteContent) {
+		if (IsLocalContent((localContentType_t)0x54)) {
 			if (m_matchingDlg->m_svrGUID == WSingleton<CSharedDoc>::Instance()->m_gameServerUID
 				&& m_matchingDlg->m_channelIdx == WSingleton<CSharedDoc>::Instance()->m_currentChannel.id) {
 				std::list<sRoomInfo>::iterator it = std::find(WSingleton<CSharedDoc>::Instance()->m_roomList.begin(), WSingleton<CSharedDoc>::Instance()->m_roomList.end(), m_matchingDlg->GetRoomIdx());
@@ -6287,7 +6286,7 @@ bool CLobbyMain::OnInviteDlgResult(int result, FrForm* pForm) {
 				}
 			}
 		}
-	} else if (inviteContent) {
+	} else if (IsLocalContent((localContentType_t)0x54)) {
 		if (m_matchingDlg->m_svrGUID == WSingleton<CSharedDoc>::Instance()->m_gameServerUID
 			&& m_matchingDlg->m_channelIdx == WSingleton<CSharedDoc>::Instance()->m_currentChannel.id) {
 			WSingleton<CSharedDoc>::Instance()->SetInviteMode(0);
@@ -9641,30 +9640,32 @@ void CLobbyMain::OnRoomList_UserSortGenderOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
-	if (pGDI) {
-		FrViewer* pViewer = m_userSortGenderViewer;
+	if (!pGDI) {
+		return;
+	}
 
-		if (pViewer) {
-			int state = 0;
+	FrViewer* pViewer = m_userSortGenderViewer;
+	if (!pViewer) {
+		return;
+	}
 
-			if (m_userSortDescending[0]) {
-				state = 2;
-			} else {
-				WRect rect = pViewer->GetRect();
+	int state = 0;
 
-				if (rect.IsInRect(pManager->GetMousePos())) {
-					state = 1;
-				}
-			}
+	if (m_userSortDescending[0]) {
+		state = 2;
+	} else {
+		WRect rect = pViewer->GetRect();
 
-			WRect rect = pViewer->GetRect();
-			pGDI->DrawTexture(m_userSortGenderBmp[state], rect, 0xFFFFFFFF, 0);
-
-			if (m_userSort == 0) {
-				WRect arrow(rect.x + rect.w, rect.y + 5.0f, 12.0f, 12.0f);
-				pGDI->DrawTexture(m_userSortArrowBmp[m_userSortPending == 0], arrow, 0xFFFFFFFF, 0);
-			}
+		if (rect.IsInRect(pManager->GetMousePos())) {
+			state = 1;
 		}
+	}
+
+	WRect rect = pViewer->GetRect();
+	pGDI->DrawTexture(m_userSortGenderBmp[state], rect, 0xFFFFFFFF, 0);
+
+	if (m_userSort == 0) {
+		pGDI->DrawTexture(m_userSortArrowBmp[m_userSortPending == 0], WRect(rect.x + rect.w, rect.y + 5.0f, 12.0f, 12.0f), 0xFFFFFFFF, 0);
 	}
 }
 
@@ -9709,30 +9710,32 @@ void CLobbyMain::OnRoomList_UserSortLevelOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
-	if (pGDI) {
-		FrViewer* pViewer = m_userSortLevelViewer;
+	if (!pGDI) {
+		return;
+	}
 
-		if (pViewer) {
-			int state = 0;
+	FrViewer* pViewer = m_userSortLevelViewer;
+	if (!pViewer) {
+		return;
+	}
 
-			if (m_userSortDescending[1]) {
-				state = 2;
-			} else {
-				WRect rect = pViewer->GetRect();
+	int state = 0;
 
-				if (rect.IsInRect(pManager->GetMousePos())) {
-					state = 1;
-				}
-			}
+	if (m_userSortDescending[1]) {
+		state = 2;
+	} else {
+		WRect rect = pViewer->GetRect();
 
-			WRect rect = pViewer->GetRect();
-			pGDI->DrawTexture(m_userSortLevelBmp[state], rect, 0xFFFFFFFF, 0);
-
-			if (m_userSort == 1) {
-				WRect arrow(rect.x + rect.w, rect.y + 5.0f, 12.0f, 12.0f);
-				pGDI->DrawTexture(m_userSortArrowBmp[m_userSortPending == 0], arrow, 0xFFFFFFFF, 0);
-			}
+		if (rect.IsInRect(pManager->GetMousePos())) {
+			state = 1;
 		}
+	}
+
+	WRect rect = pViewer->GetRect();
+	pGDI->DrawTexture(m_userSortLevelBmp[state], rect, 0xFFFFFFFF, 0);
+
+	if (m_userSort == 1) {
+		pGDI->DrawTexture(m_userSortArrowBmp[m_userSortPending == 0], WRect(rect.x + rect.w, rect.y + 5.0f, 12.0f, 12.0f), 0xFFFFFFFF, 0);
 	}
 }
 
@@ -9777,30 +9780,32 @@ void CLobbyMain::OnRoomList_UserSortGuildOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
-	if (pGDI) {
-		FrViewer* pViewer = m_userSortGuildViewer;
+	if (!pGDI) {
+		return;
+	}
 
-		if (pViewer) {
-			int state = 0;
+	FrViewer* pViewer = m_userSortGuildViewer;
+	if (!pViewer) {
+		return;
+	}
 
-			if (m_userSortDescending[2]) {
-				state = 2;
-			} else {
-				WRect rect = pViewer->GetRect();
+	int state = 0;
 
-				if (rect.IsInRect(pManager->GetMousePos())) {
-					state = 1;
-				}
-			}
+	if (m_userSortDescending[2]) {
+		state = 2;
+	} else {
+		WRect rect = pViewer->GetRect();
 
-			WRect rect = pViewer->GetRect();
-			pGDI->DrawTexture(m_userSortGuildBmp[state], rect, 0xFFFFFFFF, 0);
-
-			if (m_userSort == 2) {
-				WRect arrow(rect.x + rect.w, rect.y + 5.0f, 12.0f, 12.0f);
-				pGDI->DrawTexture(m_userSortArrowBmp[m_userSortPending == 0], arrow, 0xFFFFFFFF, 0);
-			}
+		if (rect.IsInRect(pManager->GetMousePos())) {
+			state = 1;
 		}
+	}
+
+	WRect rect = pViewer->GetRect();
+	pGDI->DrawTexture(m_userSortGuildBmp[state], rect, 0xFFFFFFFF, 0);
+
+	if (m_userSort == 2) {
+		pGDI->DrawTexture(m_userSortArrowBmp[m_userSortPending == 0], WRect(rect.x + rect.w, rect.y + 5.0f, 12.0f, 12.0f), 0xFFFFFFFF, 0);
 	}
 }
 
@@ -9845,30 +9850,32 @@ void CLobbyMain::OnRoomList_UserSortNickOwnerDraw(PG_MSGARG) {
 	FrWndManager* pManager = g_pFresh->GetManager();
 	FrGraphicInterface* pGDI = pManager->GetGDI();
 
-	if (pGDI) {
-		FrViewer* pViewer = m_userSortNickViewer;
+	if (!pGDI) {
+		return;
+	}
 
-		if (pViewer) {
-			int state = 0;
+	FrViewer* pViewer = m_userSortNickViewer;
+	if (!pViewer) {
+		return;
+	}
 
-			if (m_userSortDescending[3]) {
-				state = 2;
-			} else {
-				WRect rect = pViewer->GetRect();
+	int state = 0;
 
-				if (rect.IsInRect(pManager->GetMousePos())) {
-					state = 1;
-				}
-			}
+	if (m_userSortDescending[3]) {
+		state = 2;
+	} else {
+		WRect rect = pViewer->GetRect();
 
-			WRect rect = pViewer->GetRect();
-			pGDI->DrawTexture(m_userSortNickBmp[state], rect, 0xFFFFFFFF, 0);
-
-			if (m_userSort == 3) {
-				WRect arrow(rect.x + rect.w, rect.y + 5.0f, 12.0f, 12.0f);
-				pGDI->DrawTexture(m_userSortArrowBmp[m_userSortPending == 0], arrow, 0xFFFFFFFF, 0);
-			}
+		if (rect.IsInRect(pManager->GetMousePos())) {
+			state = 1;
 		}
+	}
+
+	WRect rect = pViewer->GetRect();
+	pGDI->DrawTexture(m_userSortNickBmp[state], rect, 0xFFFFFFFF, 0);
+
+	if (m_userSort == 3) {
+		pGDI->DrawTexture(m_userSortArrowBmp[m_userSortPending == 0], WRect(rect.x + rect.w, rect.y + 5.0f, 12.0f, 12.0f), 0xFFFFFFFF, 0);
 	}
 }
 

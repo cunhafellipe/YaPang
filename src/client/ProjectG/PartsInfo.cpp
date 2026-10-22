@@ -187,17 +187,17 @@ bool CPartList::SetPart(unsigned long tid, unsigned long id) {
 
 	if (!unequip) {
 		unsigned long subTid = ((m_tidChar << 5 | slot) << 13) | 0x8000600;
-		IFF_STRUCT::sPart *pSub = ItemManager()->FindPart(subTid);
-		if (pSub != 0 && (usedMask & pSub->hideMask) == 0) {
+		pIff = ItemManager()->FindPart(subTid);
+		if (pIff != 0 && (usedMask & pIff->hideMask) == 0) {
 			int j;
 			for (j = 0; j < m_numDefaultParts; j++) {
-				if (pSub->hideMask & (1 << j)) {
+				if (pIff->hideMask & (1 << j)) {
 					break;
 				}
 			}
 			if (m_parts[j].m_tid == 0) {
 				m_parts[j].m_tid = subTid;
-				m_parts[j].m_pIff = pSub;
+				m_parts[j].m_pIff = pIff;
 				if (IsLocalContent((localContentType_t)0x5F)) {
 					m_parts[j].m_id = 0;
 				}

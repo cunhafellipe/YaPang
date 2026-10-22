@@ -861,10 +861,10 @@ bool ShotPreview::Predict(std::vector<WVector>& path, std::vector<WVector>& boun
 					ball.m_velocity.y = -8.0f - (344.0f - (GolfClub().GetPower() * rateSqrt < 344.0f ? GolfClub().GetPower() * rateSqrt : 344.0f)) * 0.19196428f;
 					break;
 				case 1:
-					ball.m_velocity.y = -10.3f - (306.0f - (GolfClub().GetPower() * rateSqrt < 306.0f ? GolfClub().GetPower() * rateSqrt : 306.0f)) * 0.1952381f;
+					ball.m_velocity.y = -10.299999f - (306.0f - (GolfClub().GetPower() * rateSqrt < 306.0f ? GolfClub().GetPower() * rateSqrt : 306.0f)) * 0.1952381f;
 					break;
 				case 2:
-					ball.m_velocity.y = -10.8f - (273.0f - (GolfClub().GetPower() * rateSqrt < 273.0f ? GolfClub().GetPower() * rateSqrt : 273.0f)) * 0.202f;
+					ball.m_velocity.y = -10.799999f - (273.0f - (GolfClub().GetPower() * rateSqrt < 273.0f ? GolfClub().GetPower() * rateSqrt : 273.0f)) * 0.202f;
 					break;
 				}
 

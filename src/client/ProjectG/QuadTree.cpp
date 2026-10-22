@@ -1795,8 +1795,10 @@ float CQuadTree::GetGroundSlope(int index) const {
 	if (index < 0)
 		return 0.0f;
 
-	WVector normal = m_pBaseModel->m_pTriangles[index].m_plane.normal;
-	if (m_pBaseModel->m_pTriangles[index].m_doubleSided && normal.y < 0.0f)
+	const WPolySoup::sTriangle &tri = m_pBaseModel->m_pTriangles[index];
+	const WVector &n = tri.m_plane.normal;
+	WVector normal = n;
+	if (tri.m_doubleSided && normal.y < 0.0f)
 		normal.y = -normal.y;
 
 	float angle = (float)acos(normal.y < -1.0f ? -1.0f : (normal.y > 1.0f ? 1.0f : normal.y));
@@ -4317,7 +4319,7 @@ static sDecalFragments *FindDecalFragments(const WVector *box, const WVector &no
 }
 
 // quadtree.cpp:5947
-static void SaveDecalFragments(int numVertices, const WVector *box, const WVector &normal, const WVector *vertices, int numIndices, const unsigned short *indices) {
+static void SaveDecalFragments(const WVector &normal, const WVector *box, int numVertices, const WVector *vertices, int numIndices, const unsigned short *indices) {
 	sDecalFragments *pFrag = &data_00af80b8[data_00af80b4++];
 	if (data_00af80b4 == 32)
 		data_00af80b4 = 0;
@@ -4381,10 +4383,8 @@ void CQuadTree::DecalFragments(const WVector *box, const WVector &normal, WVecto
 	b = WVector(t.z * n.y - n.z * t.y, n.z * t.x - t.z * n.x, t.y * n.x - n.y * t.x);
 	b.Normalize();
 
-	WVector side0 = box[1] - box[0];
-	halfT = (float)sqrt(side0.x * side0.x + side0.y * side0.y + side0.z * side0.z) * 0.5f;
-	WVector side1 = box[2] - box[1];
-	halfB = (float)sqrt(side1.x * side1.x + side1.y * side1.y + side1.z * side1.z) * 0.5f;
+	halfT = WVectorLen(box[1] - box[0]) * 0.5f;
+	halfB = WVectorLen(box[2] - box[1]) * 0.5f;
 	depth = halfT > halfB ? halfT : halfB;
 
 	// the six sides of the box around the center, normals pointing out
@@ -4457,7 +4457,7 @@ void CQuadTree::DecalFragments(const WVector *box, const WVector &normal, WVecto
 		}
 	}
 
-	SaveDecalFragments(m_decalNumVertices, box, normal, pVertices, numIndices, pIndices);
+	SaveDecalFragments(normal, box, m_decalNumVertices, pVertices, numIndices, pIndices);
 
 	*pNumVertices = m_decalNumVertices;
 	*pNumIndices = numIndices;
@@ -4914,25 +4914,23 @@ WVector CQuadTree::GetRayIntersectionObj(WVector from, WVector dir) {
 
 				// One face of the box, as the triangles (v0, v1, v2) and (v1, v2, v3).
 				WVector tri[3];
-				WVector zx = axisZ * -1.0f - axisX * 1.0f;
+				float scale = 1.0f;
+				WVector zx = axisZ * -1.0f - axisX * scale;
 				tri[0] = axisY + zx + center;
 				tri[1] = axisY * -1.0f + zx + center;
 				WVector xz = axisZ * -1.0f + axisX;
-				tri[2] = xz + axisY * -1.0f + center;
+				WVector v2 = xz + axisY * -1.0f + center;
+				tri[2] = v2;
 				WVector v3 = xz + axisY + center;
 
-				float d = intersection::IntersectRayTriangle(from, step, tri);
-				if (d <= t)
-					t = d;
+				t = Min(intersection::IntersectRayTriangle(from, step, tri), t);
 				if (t < 1.0f)
 					hit = true;
 
 				tri[0] = tri[1];
-				tri[1] = tri[2];
+				tri[1] = v2;
 				tri[2] = v3;
-				d = intersection::IntersectRayTriangle(from, step, tri);
-				if (d <= t)
-					t = d;
+				t = Min(intersection::IntersectRayTriangle(from, step, tri), t);
 				if (t < 1.0f)
 					goto found;
 
@@ -4955,9 +4953,7 @@ found:
 
 		t = 1.0f;
 		for (int j = 0; j < faceNum; j++) {
-			float d = intersection::IntersectRayTriangle(from, step, pModel->m_pTriangles[j].m_vertex);
-			if (d <= t)
-				t = d;
+			t = Min(intersection::IntersectRayTriangle(from, step, pModel->m_pTriangles[j].m_vertex), t);
 			if (t < 1.0f)
 				break;
 		}
@@ -5336,10 +5332,10 @@ void CQuadTree::TraceOBB_Avatar_genPosition(const WVector &start, const WVector 
 				Wobb obb;
 				WMatrix &mat = pBox->bone->GetMatrix(); obb.extend[0] = mat.xa; obb.extend[1] = mat.ya; obb.extend[2] = mat.za;
 				WVector half = (pBox->info->aabb.max - pBox->info->aabb.min) * 0.5f;
-				obb.extend[0] *= half.x; obb.extend[1] *= half.y; obb.extend[2] *= half.z; obb.center = pBox->info->spherePivot * mat;
+				obb.extend[0] *= half.x; obb.extend[1] *= half.y; obb.extend[2] *= half.z; const WVector &v = pBox->info->spherePivot; obb.center = WVector(v.x * mat.xx + v.y * mat.xy + v.z * mat.xz + mat.xm, v.x * mat.yx + v.y * mat.yy + v.z * mat.yz + mat.ym, v.x * mat.zx + v.y * mat.zy + v.z * mat.zz + mat.zm);
 
 				delta.y = 0.0f;
-				Wobb moved = obb;
+				Wobb moved; moved.center = obb.center; moved.extend[0] = obb.extend[0]; moved.extend[1] = obb.extend[1]; moved.extend[2] = obb.extend[2];
 				moved.center = WVector(delta.x + moved.center.x, moved.center.y, delta.z + moved.center.z);
 
 				if (TestIntersectionOBB(avatarObb, moved)) {

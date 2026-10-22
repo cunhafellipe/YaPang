@@ -73,8 +73,8 @@ void CNPC::OnInit(void) {
 			SetNPC(area->m_aabb, area->m_name);
 	}
 
-	for (std::vector<CNodeContainer>::iterator it = GOLFDOC()->m_pPolySoup->m_boundAreas.begin(); it != GOLFDOC()->m_pPolySoup->m_boundAreas.end(); ++it) {
-		if (it->GetType() == (CNodeContainer::eType)0xC)
+	for (std::vector<CNodeContainer>::const_iterator it = GOLFDOC()->m_pPolySoup->m_boundAreas.begin(); it != GOLFDOC()->m_pPolySoup->m_boundAreas.end(); ++it) {
+		if (it->GetType() == 12)
 			SetNPC(it->GetList(), it->GetName().c_str());
 	}
 }

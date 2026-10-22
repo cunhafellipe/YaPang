@@ -632,8 +632,7 @@ struct sDetermineWhetherToEnableFiledItem {
 		if (count > 0) {
 			unsigned char score = GetGameType() == 1 ? TEAM(PLAYER(GOLFDOC()->m_myPlayerIndex)->m_attribute)->m_holes[GOLFDOC()->m_currentHole - 1] : PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1];
 
-			int diff = score - GOLFDOC()->GetHoleData().m_par;
-			int enable = 1;
+			int enable = 1, diff = score - GOLFDOC()->GetHoleData().m_par;
 			if (diff >= 0) {
 				enable = 0;
 
@@ -7823,19 +7822,17 @@ void CGolfRule::DoDebugCamera(float elapsed) {
 	}
 
 	WVector delta;
-	WVector dir;
 	delta = g_input->GetMouseDelta();
 
 	if (!WisEqual(delta, WVector::ZERO, 1e-5f)) {
-		WVector move = g_camera.xa * delta.x - g_camera.ya * delta.y;
-		m_previewCenter += move * 0.01f; m_previewCenter = (m_previewCenter - m_debugCameraEye).Normalize() + m_debugCameraEye;
+		m_previewCenter += (g_camera.xa * delta.x - g_camera.ya * delta.y) * 0.01f; m_previewCenter = (m_previewCenter - m_debugCameraEye).Normalize() + m_debugCameraEye;
 	}
 
-	elapsed = WisZero(elapsed, g_EPSILON)
+	float dt = WisZero(elapsed, g_EPSILON)
 		? 0.03f
 		: elapsed;
 
-	float speed = elapsed * 300.0f;
+	float speed = dt * 300.0f;
 
 	float scale;
 	if (g_input->Get("LALT", true))
@@ -7865,20 +7862,20 @@ void CGolfRule::DoDebugCamera(float elapsed) {
 		s_riseSpeed = 0.0f;
 
 	if (m_msgValue430 > 0.0f) {
-		if (s_forwardSpeed < -m_msgValue430) s_forwardSpeed = -m_msgValue430; else if (s_forwardSpeed > m_msgValue430) s_forwardSpeed = m_msgValue430;
-		if (s_strafeSpeed < -m_msgValue430) s_strafeSpeed = -m_msgValue430; else if (s_strafeSpeed > m_msgValue430) s_strafeSpeed = m_msgValue430;
-		if (s_riseSpeed < -m_msgValue430) s_riseSpeed = -m_msgValue430; else if (s_riseSpeed > m_msgValue430) s_riseSpeed = m_msgValue430;
+		s_forwardSpeed = Between(-m_msgValue430, s_forwardSpeed, m_msgValue430);
+		s_strafeSpeed = Between(-m_msgValue430, s_strafeSpeed, m_msgValue430);
+		s_riseSpeed = Between(-m_msgValue430, s_riseSpeed, m_msgValue430);
 	}
 
 	if (g_input->Get("ROTATE_CW", true)) {
 		if (g_input->GetDown("ROTATE_CW", true) && !g_input->GetDown("ROTATE_CCW", true))
 			m_orbitCenter = m_msgValue434 * WVector(g_camera.za.x, 0.0f, g_camera.za.z).Normalize() + g_camera.pivot;
 
-		m_debugCameraEye = (g_camera.pivot - m_orbitCenter) * RotMat(-(m_msgValue430 / m_msgValue434 * elapsed), 1) + m_orbitCenter;
+		m_debugCameraEye = (g_camera.pivot - m_orbitCenter) * RotMat(-(m_msgValue430 / m_msgValue434 * dt), 1) + m_orbitCenter;
 
+		WVector dir;
 		dir = m_orbitCenter - m_debugCameraEye;
-		float upSq = g_camera.za.y * g_camera.za.y;
-		dir.y = m_msgValue434 / (float)sqrt(1.0f - upSq) * g_camera.za.y;
+		dir.y = m_msgValue434 / (float)sqrt(1.0f - g_camera.za.y * g_camera.za.y) * g_camera.za.y;
 		m_previewCenter = m_debugCameraEye + dir.Normalize();
 	}
 
@@ -7886,27 +7883,27 @@ void CGolfRule::DoDebugCamera(float elapsed) {
 		if (g_input->GetDown("ROTATE_CCW", true) && !g_input->GetDown("ROTATE_CW", true))
 			m_orbitCenter = m_msgValue434 * WVector(g_camera.za.x, 0.0f, g_camera.za.z).Normalize() + g_camera.pivot;
 
-		m_debugCameraEye = (g_camera.pivot - m_orbitCenter) * RotMat(m_msgValue430 / m_msgValue434 * elapsed, 1) + m_orbitCenter;
+		m_debugCameraEye = (g_camera.pivot - m_orbitCenter) * RotMat(m_msgValue430 / m_msgValue434 * dt, 1) + m_orbitCenter;
 
+		WVector dir;
 		dir = m_orbitCenter - m_debugCameraEye;
-		float upSq = g_camera.za.y * g_camera.za.y;
-		dir.y = m_msgValue434 / (float)sqrt(1.0f - upSq) * g_camera.za.y;
+		dir.y = m_msgValue434 / (float)sqrt(1.0f - g_camera.za.y * g_camera.za.y) * g_camera.za.y;
 		m_previewCenter = m_debugCameraEye + dir.Normalize();
 	}
 
 	if (!WisZero(s_forwardSpeed, g_EPSILON)) {
-		m_debugCameraEye += g_camera.za * s_forwardSpeed * elapsed;
-		m_previewCenter += g_camera.za * s_forwardSpeed * elapsed;
+		m_debugCameraEye += g_camera.za * s_forwardSpeed * dt;
+		m_previewCenter += g_camera.za * s_forwardSpeed * dt;
 	}
 
 	if (!WisZero(s_strafeSpeed, g_EPSILON)) {
-		m_debugCameraEye += g_camera.xa * s_strafeSpeed * elapsed;
-		m_previewCenter += g_camera.xa * s_strafeSpeed * elapsed;
+		m_debugCameraEye += g_camera.xa * s_strafeSpeed * dt;
+		m_previewCenter += g_camera.xa * s_strafeSpeed * dt;
 	}
 
 	if (!WisZero(s_riseSpeed, g_EPSILON)) {
-		m_debugCameraEye.y += s_riseSpeed * elapsed;
-		m_previewCenter.y += s_riseSpeed * elapsed;
+		m_debugCameraEye.y += s_riseSpeed * dt;
+		m_previewCenter.y += s_riseSpeed * dt;
 	}
 
 	g_camera = MakeCameraMatrix(m_debugCameraEye, m_previewCenter);
@@ -8093,7 +8090,8 @@ void CGolfRule::DoPowerGauge(float elapsed) {
 			// The tutorial's fake space bar: the bar reached its target.
 			IActor *tutorial = GetActor("Tutorial");
 			if (tutorial) {
-				tutorial << MsgObject(0, 0x20F, 2, (intptr_t)&m_fakeShotTargets[GOLFDOC()->m_clockHold - 1], GOLFDOC()->m_clockHold, 0, 0);
+				unsigned char stage = GOLFDOC()->m_clockHold - 1;
+				tutorial << MsgObject(0, 0x20F, 2, (intptr_t)&m_fakeShotTargets[stage], GOLFDOC()->m_clockHold, 0, 0);
 
 				tutorial << MsgObject(0, 0x148, 0, 0, 0, 0, 0);
 

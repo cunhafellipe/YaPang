@@ -1393,7 +1393,8 @@ void FrTradeBuyDlg::OnOkBnUp(void) {
 			return;
 		}
 
-		// std::accumulate in the original (<numeric> is missing from externs/).
+		// std::accumulate(pList->begin(), pList->end(), (__int64)0, SumForTradeItemList)
+		// in the original (<numeric> is missing from externs/vs-2003).
 		__int64 total = 0;
 		for (std::list<sTradeItem>::iterator sumIt = pList->begin(); sumIt != pList->end(); ++sumIt) total = SumForTradeItemList(total, *sumIt);
 
@@ -1417,54 +1418,53 @@ void FrTradeBuyDlg::OnOkBnUp(void) {
 			}
 		}
 	} else {
-		if (m_pBuyItem == 0 || m_pNumber == 0) {
-			SetTradeResultCode(0, 125, 0);
-			OnFreshCancel();
-			return;
-		}
+		if (m_pBuyItem != 0 && m_pNumber != 0) {
+			m_buyOrder = *m_pBuyItem;
 
-		m_buyOrder = *m_pBuyItem;
-
-		std::list<sTradeItem>* pList = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
-		std::list<sTradeItem>::iterator it;
-		for (it = pList->begin(); it != pList->end(); ++it) {
-			if (it->index == m_buyOrder.index) {
-				break;
+			std::list<sTradeItem>* pList = WSingleton<CSharedDoc>::Instance()->GetListTradeItem();
+			std::list<sTradeItem>::iterator it;
+			for (it = pList->begin(); it != pList->end(); ++it) {
+				if (it->index == m_buyOrder.index) {
+					break;
+				}
 			}
-		}
 
-		if (it == pList->end()) {
-			SetTradeResultCode(0x0D, 225, 0);
-			OnFreshCancel();
-			return;
-		}
+			if (it == pList->end()) {
+				SetTradeResultCode(0x0D, 225, 0);
+				OnFreshCancel();
+				return;
+			}
 
-		m_buyOrder.count = atoi(m_pNumber->GetLine(1, false));
+			m_buyOrder.count = atoi(m_pNumber->GetLine(1, false));
 
-		if ((int)m_buyOrder.count >= (int)m_pBuyItem->count) {
-			m_buyOrder.count = m_pBuyItem->count;
-		}
+			if ((int)m_buyOrder.count >= (int)m_pBuyItem->count) {
+				m_buyOrder.count = m_pBuyItem->count;
+			}
 
-		if ((int)m_buyOrder.count <= 1) {
-			m_buyOrder.count = 1;
-		}
+			if ((int)m_buyOrder.count <= 1) {
+				m_buyOrder.count = 1;
+			}
 
-		if (m_buyOrder.price * (int)m_buyOrder.count > WSingleton<CSharedDoc>::Instance()->m_myPang) {
-			SetTradeResultCode(0x15, 225, 0);
+			if (m_buyOrder.price * (int)m_buyOrder.count > WSingleton<CSharedDoc>::Instance()->m_myPang) {
+				SetTradeResultCode(0x15, 225, 0);
+				bEnoughPang = false;
+			}
+
+			if (!WSingleton<CSharedDoc>::Instance()->ConfirmInsertItem(m_buyOrder.typeId, m_buyOrder.count)) {
+				FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
+				WRect rect = pForm->GetRect();
+				pForm->SetRect(WRect(rect.x, rect.y, rect.w, rect.h));
+				pForm->SetTimeLimit(12.0f);
+				// "You already own 20,000 of this item: you cannot buy or move it."
+				pForm->SetMessage("\xc7\xf6\xc0\xe7 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xc7 \xba\xb8\xc0\xaf\xb0\xb3\xbc\xf6\xb0\xa1 20,000\xb0\xb3\xc0\xcc\xb9\xc7\xb7\xce "
+					"\xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xb1\xb8\xc0\xd4 \xb6\xc7\xb4\xc2 \xbf\xc5\xb1\xe6 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", false);
+				pForm->Open((FRESH_RESULT_CALLBACK)0, 0);
+				OnFreshCancel();
+				return;
+			}
+		} else {
+			SetTradeResultCode(0, 125, 0);
 			bEnoughPang = false;
-		}
-
-		if (!WSingleton<CSharedDoc>::Instance()->ConfirmInsertItem(m_buyOrder.typeId, m_buyOrder.count)) {
-			FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
-			WRect rect = pForm->GetRect();
-			pForm->SetRect(WRect(rect.x, rect.y, rect.w, rect.h));
-			pForm->SetTimeLimit(12.0f);
-			// "You already own 20,000 of this item: you cannot buy or move it."
-			pForm->SetMessage("\xc7\xf6\xc0\xe7 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xc7 \xba\xb8\xc0\xaf\xb0\xb3\xbc\xf6\xb0\xa1 20,000\xb0\xb3\xc0\xcc\xb9\xc7\xb7\xce "
-				"\xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xb1\xb8\xc0\xd4 \xb6\xc7\xb4\xc2 \xbf\xc5\xb1\xe6 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", false);
-			pForm->Open((FRESH_RESULT_CALLBACK)0, 0);
-			OnFreshCancel();
-			return;
 		}
 	}
 

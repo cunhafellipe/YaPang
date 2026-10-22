@@ -3974,11 +3974,10 @@ bool CItemManager::GetEnumRandomBoxItem(unsigned long typeId, std::vector<std::p
 		return false;
 	}
 
-	std::map<unsigned long, _private::sRandomBoxItem>::iterator it = box->m_items.begin();
-	std::map<unsigned long, _private::sRandomBoxItem>::iterator end = box->m_items.end();
+	std::map<unsigned long, _private::sRandomBoxItem>::const_iterator it = box->m_items.begin();
+	std::map<unsigned long, _private::sRandomBoxItem>::const_iterator end = box->m_items.end();
 	for (; it != end; ++it) {
-		std::pair<unsigned long, IFF_STRUCT::sRandomBox> item(it->first, it->second.m_box);
-		items.push_back(item);
+		items.push_back(std::make_pair(it->first, it->second.m_box));
 	}
 
 	return true;

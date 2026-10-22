@@ -183,7 +183,7 @@ int GetCardsAttachedToPart(std::vector<sSCardAvilityPeriodInfo*>& cards, unsigne
 	while (it != cardList.end()) {
 		sSCardAvilityPeriodInfo& card = *it;
 		if (typeId == card.partsTypeId && id == card.partsId) {
-			cards.push_back(&card);
+			cards.push_back(&*it);
 		}
 
 		++it;
