@@ -75,6 +75,12 @@ FrWndManager::FrWndManager(FrElementDoc* pDoc)
 	m_pFocusedEdit = 0;
 	m_caretPos = WPoint(0.0f, 0.0f);
 	m_hidePrivacy = false;
+#ifdef JP_PAKS
+	// JP ctor 0xbe4cd0 ends with these three zeroed.
+	m_inputSuspended = false;
+	m_keyInputDisabled = false;
+	m_modalFormCount = 0;
+#endif
 }
 
 // frwndmanager.cpp:81
@@ -198,6 +204,11 @@ void FrWndManager::ResetTopFocus(void) {
 
 // frwndmanager.cpp:232
 void FrWndManager::CheckSystemStatus(void) {
+#ifdef JP_PAKS
+	if (m_inputSuspended) {  // JP 0xbe3529
+		return;
+	}
+#endif
 	m_istate.wheelDelta = g_input->GetMouseDelta().z;
 	m_istate.mouse = 0;
 	m_istate.mousePos = WPoint(g_input->GetMousePoint().x, g_input->GetMousePoint().y);
@@ -244,6 +255,9 @@ void FrWndManager::Process(const float deltaTime) {
 
 	CheckSystemStatus();
 	FrWnd* pOldKeyFocused = m_istate.keyFocused;
+#ifdef JP_PAKS
+	if (!m_keyInputDisabled)  // JP 0xbe5be3
+#endif
 	ProcessHotKey();
 
 	m_istate.wheelFocused = 0;
@@ -279,10 +293,17 @@ void FrWndManager::Process(const float deltaTime) {
 		}
 	}
 
+#ifdef JP_PAKS
+	if (!m_keyInputDisabled)  // JP 0xbe5d1d
+#endif
 	ProcessKey(pOldKeyFocused);
 	m_pDesktop->OnProcess(deltaTime, m_istate, true, bFocus);
 
+#ifdef JP_PAKS
+	if (!m_inputSuspended && m_cursorIndex != cursor) {  // JP 0xbe5d4b
+#else
 	if (m_cursorIndex != cursor) {
+#endif
 		m_pCursor->SetCursor((FrCursor::eCursor)m_cursorIndex);
 	}
 }
@@ -437,14 +458,14 @@ FrWnd* FrWndManager::DoCreate(FrGuiItem& item, FrWndManager* pManager, FrWnd* pP
 	case 6:  /* GI_COMBOCTLEX */     pWnd = DoCreateItem<FrComboCtlEx>(m); break;
 	case 20: /* GI_MACROITEM */      pWnd = 0; DoCreateMaroItem(m); break;
 	}
-
 	if (pWnd) {
+#ifdef JP_PAKS
+		pWnd->SetGuiType(item.m_type); // JP 0xbe3677: [wnd+0xc8] = item.m_type before FRCMD_INIT
+#endif
 		pWnd->SendCmdToOwnerTarget(FRCMD_INIT, (intptr_t)pWnd, 0);
 	}
-
 	return pWnd;
 }
-
 // frwndmanager.cpp:736
 FrElementDoc* FrWndManager::GetDocument(void) const {
 	return m_pDoc;
@@ -506,6 +527,44 @@ FrWnd* FrWndManager::GetModalForm(void) {
 
 	return 0;
 }
+
+#ifdef JP_PAKS
+// JP 0xbe4650 (no KR counterpart): GetModalForm's test, counted over the
+// whole child list.
+int FrWndManager::UpdateModalFormCount(void) {
+	m_modalFormCount = 0;
+	std::list<FrWnd*>::reverse_iterator it = m_pDesktop->m_childList.rbegin();
+	for (; it != m_pDesktop->m_childList.rend(); ++it) {
+		FrForm* pForm = DYNAMIC_CAST(FrForm, *it);
+		if (pForm && !pForm->GetFlag(0x4)
+			&& (!pForm->m_nFlags.GetFlag(0x100) || !pForm->m_nFlags.GetFlag(0x40))
+			&& !pForm->m_nFlags.GetFlag(0x20) && *it != m_pDesktop) {
+			++m_modalFormCount;
+		}
+	}
+
+	return m_modalFormCount;
+}
+
+// JP 0xbe47e0 (no KR counterpart): GetModalForm's walk without the form's
+// own 0x4 test, returning the first form whose window rect (JP +0x34) holds
+// the point (WRect::IsInRect, JP 0x47cb60). JP offsets: m_pDesktop +0x8, its
+// child list +0x28, FrWnd::m_nFlags +0x1c.
+FrWnd* FrWndManager::GetFormFromPoint(float x, float y) {
+	std::list<FrWnd*>::reverse_iterator it = m_pDesktop->m_childList.rbegin();
+	for (; it != m_pDesktop->m_childList.rend(); ++it) {
+		FrForm* pForm = DYNAMIC_CAST(FrForm, *it);
+		if (pForm
+			&& (!pForm->m_nFlags.GetFlag(0x100) || !pForm->m_nFlags.GetFlag(0x40))
+			&& !pForm->m_nFlags.GetFlag(0x20) && *it != m_pDesktop
+			&& pForm->m_rect.IsInRect(WPoint(x, y))) {
+			return *it;
+		}
+	}
+
+	return 0;
+}
+#endif
 
 // frwndmanager.cpp:814
 FrWnd* FrWndManager::HandOverViewFocus(void) {

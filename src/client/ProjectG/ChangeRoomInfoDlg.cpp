@@ -17,6 +17,24 @@
 #include "commonutil.h"
 #include "TaskManager.h"
 #include "Packet.h"
+#ifdef JP_PAKS
+#include "frgroupbox.h"
+#include "frstatic.h"
+#include "TitleFontEx.h"
+
+// Port glue (src/jp). 0x633580 (JpLobbyGlue.cpp): the room's
+// starting hole; 0x5227d0 and the FrHoleSelector members (JpHoleSelector.cpp),
+// which a KR source reaches through free functions only.
+unsigned char Jp_GameState_115f8(void);
+FrForm* CreateHoleSelector(FrWndManager* manager, FrCmdTarget* owner, const char* name, FrWnd* parent);
+void JpHoleSelector_SetCourse(FrForm* selector, unsigned char course, unsigned char hole);
+bool JpHoleSelector_GetHole(FrForm* form, unsigned char* hole);
+
+// JP 0xf03070 / 0xf03074: map_ctrl's place in the form (OnMapCtrlInit),
+// read back by 0xacc040.
+static float s_mapCtrlOffsetX = 0.0f;
+static float s_mapCtrlOffsetY = 0.0f;
+#endif
 
 #include <algorithm>
 #include <string.h>
@@ -133,6 +151,34 @@ sFRESH_ENTRY FrChangeRoomInfoDlg::_MsgEntries[] = {
 
 	// changeroominfodlg.cpp:76
 	{ "ok", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrChangeRoomInfoDlg::OnOkBtnUp },
+#ifdef JP_PAKS
+	// The JP message map's single room entries (JP 0xe37620-0xe37700).
+	{ "cover", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnSingleCtrlInit },
+	{ "single_ctrl", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnSingleCtrlInit },
+	{ "single_ctrl.repeat", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnRepeatInit },
+	{ "single_ctrl.repeat.fix_hole", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnFixHoleInit },
+	{ "single_ctrl.repeat.fix_hole", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrChangeRoomInfoDlg::OnFixHoleUp },
+	{ "single_ctrl.repeat.fix_hole", FRCMD_OWNERDRAW, FrFuncVV, (FRESH_PMSG)&FrChangeRoomInfoDlg::OnFixHoleOwnerDraw },
+	{ "single_ctrl.repeat.fix_holecup_pos", FRCMD_INIT, FrFuncVI,
+		(FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnFixHolecupPosInit },
+	{ "single_ctrl.repeat.fix_holecup_pos", FRCMD_LBUTTONUP, FrFuncVV,
+		(FRESH_PMSG)&FrChangeRoomInfoDlg::OnFixHolecupPosUp },
+	// The JP-only map and artifact controls (JP 0xe373d0, 0xe373f0, 0xe37730-0xe37890). The KR
+	// controls the JP layout moved into "map_ctrl" (mapprev, mapnext, course, holetype) reach their
+	// KR entries through FrCmdTarget::OnFreshMsg's JP retry without the group name.
+	{ "map_ctrl", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnMapCtrlInit },
+	{ "map_ctrl.text_map", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnTextMapInit },
+	{ "artifact_ctrl", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnArtifactCtrlInit },
+	{ "artifact_ctrl.arti_frame", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnArtiFrameInit },
+	{ "artifact_ctrl.arti_icon", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnArtiIconInit },
+	{ "artifact_ctrl.arti_ban", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnArtiBanInit },
+	{ "artifact_ctrl.arti_name", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnArtiNameInit },
+	{ "artifact_ctrl.arti_desc", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnArtiDescInit },
+	{ "artifact_ctrl.arti_prev", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnArtiPrevInit },
+	{ "artifact_ctrl.arti_next", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnArtiNextInit },
+	{ "classictype_btn", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrChangeRoomInfoDlg::OnClassicTypeInit },
+	{ "classictype_btn", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrChangeRoomInfoDlg::OnClassicTypeUp },
+#endif
 
 	// changeroominfodlg.cpp:78
 	{ 0, FRCMD_NONE, FrFuncNone, (FRESH_PMSG)0 }
@@ -200,6 +246,32 @@ FrChangeRoomInfoDlg::FrChangeRoomInfoDlg(void) {
 	}
 
 	m_btnDelay = 0.7f;
+#ifdef JP_PAKS
+	// The JP constructor (0xacad40) clears the controls (+0x110..+0x17c),
+	// +0x1f0, +0x2d0 and +0x1d9.
+	m_pSingleCtrl = 0;
+	m_pRepeat = 0;
+	m_pFixHole = 0;
+	m_pFixHolecupPos = 0;
+	m_holecupPosFixed = false;
+	m_isSingleRoom = false;
+	m_pSingleFont = 0;
+	m_pMapCtrl = 0;
+	m_pTextMap = 0;
+	m_pArtifactCtrl = 0;
+	m_pArtiFrame = 0;
+	m_pArtiIcon = 0;
+	m_pArtiBan = 0;
+	m_pArtiName = 0;
+	m_pArtiDesc = 0;
+	m_pArtiPrev = 0;
+	m_pArtiNext = 0;
+	m_pClassicType = 0;
+	// JP +0x1d8 is 0x633580's room hole; +0x1d4 comes from the JP room record's
+	// +0xc9 dword (CSharedDoc +0x109bd), which the port does not hold: 0.
+	m_fixedHole = Jp_GameState_115f8();
+	SetRoomOptions(0);
+#endif
 }
 
 // changeroominfodlg.cpp:149
@@ -1043,3 +1115,252 @@ bool FrChangeRoomInfoDlg::IsBtnEnable(void) {
 
 	return false;
 }
+
+#ifdef JP_PAKS
+// JP 0xac9190: the room options (bit 0: the classic type, shown pressed).
+void FrChangeRoomInfoDlg::SetRoomOptions(unsigned long options) {
+	m_roomOptions = options;
+	if (m_pClassicType)
+		m_pClassicType->SetStatus((FrButton::eButMode)((options & 1) * 2));
+}
+
+// JP 0xac9220: the fix_holecup_pos button's image follows the toggle.
+void FrChangeRoomInfoDlg::UpdateFixHolecupPosImg(void) {
+	if (!m_pFixHolecupPos)
+		return;
+
+	if (m_holecupPosFixed) {
+		m_pFixHolecupPos->SetButtonImg("single_font_on", FrButton::NORMAL);
+		m_pFixHolecupPos->SetButtonImg("single_font_on", FrButton::OVER);
+		m_pFixHolecupPos->SetButtonImg("single_font_on", FrButton::PRESSED);
+		return;
+	}
+	m_pFixHolecupPos->SetButtonImg("single_font_off", FrButton::NORMAL);
+	m_pFixHolecupPos->SetButtonImg("single_font_off", FrButton::OVER);
+	m_pFixHolecupPos->SetButtonImg("single_font_off", FrButton::PRESSED);
+}
+
+// JP 0xaca280 (both "cover" and "single_ctrl"): hidden until SetSingleRoom.
+void FrChangeRoomInfoDlg::OnSingleCtrlInit(intptr_t param) {
+	m_pSingleCtrl = DYNAMIC_CAST(FrGroupBox, param);
+	if (m_pSingleCtrl) {
+		m_pSingleCtrl->Enable(false);
+		m_pSingleCtrl->SetVisible(false);
+	}
+}
+
+// JP 0xaca310
+void FrChangeRoomInfoDlg::OnRepeatInit(intptr_t param) {
+	m_pRepeat = DYNAMIC_CAST(FrGroupBox, param);
+	if (m_pRepeat) {
+		m_pRepeat->Enable(false);
+		m_pRepeat->SetVisible(false);
+	}
+}
+
+// JP 0xaca3a0
+void FrChangeRoomInfoDlg::OnFixHoleInit(intptr_t param) {
+	m_pFixHole = DYNAMIC_CAST(FrButton, param);
+	if (m_pFixHole) {
+		m_pFixHole->Enable(false);
+		m_pFixHole->SetVisible(false);
+	}
+}
+
+// JP 0xaca430: the starting hole (up to 18) on the fix_hole button, centred,
+// with the room font: "%d" below 10, else "!%d" (the font's '!' glyph; JP
+// table 0xe37904) with the units digit.
+void FrChangeRoomInfoDlg::OnFixHoleOwnerDraw(void) {
+	if (m_pFixHole == 0 || m_fixedHole > 18 || m_pSingleFont == 0)
+		return;
+
+	const char* format = m_fixedHole < 10 ? "%d" : "!%d";
+	const char* text = MakeStr(format, m_fixedHole % 10);
+	const WRect& rect = m_pFixHole->GetRect();
+	m_pSingleFont->Print(rect.x + rect.w * 0.5f, rect.y + 4.0f, text, TITLEFONT_ALIGN_CENTER, 0.0f, 1.0f);
+}
+
+// JP 0xaca4d0
+void FrChangeRoomInfoDlg::OnFixHolecupPosInit(intptr_t param) {
+	m_pFixHolecupPos = DYNAMIC_CAST(FrButton, param);
+	if (m_pFixHolecupPos) {
+		m_pFixHolecupPos->Enable(false);
+		m_pFixHolecupPos->SetVisible(false);
+	}
+}
+
+// JP 0xaca560
+void FrChangeRoomInfoDlg::OnFixHolecupPosUp(void) {
+	if (!m_pFixHolecupPos)
+		return;
+
+	m_holecupPosFixed = !m_holecupPosFixed;
+	UpdateFixHolecupPosImg();
+}
+
+// JP 0xaca580: also keeps map_ctrl's place in the form.
+void FrChangeRoomInfoDlg::OnMapCtrlInit(intptr_t param) {
+	m_pMapCtrl = DYNAMIC_CAST(FrGroupBox, param);
+	if (m_pMapCtrl) {
+		const WRect& rect = GetRect();
+		const WRect& mapRect = m_pMapCtrl->GetRect();
+		s_mapCtrlOffsetX = mapRect.x - rect.x;
+		s_mapCtrlOffsetY = mapRect.y - rect.y;
+	}
+}
+
+// JP 0xaca630
+void FrChangeRoomInfoDlg::OnTextMapInit(intptr_t param) {
+	m_pTextMap = DYNAMIC_CAST(FrArea, param);
+}
+
+// JP 0xaca6a0
+void FrChangeRoomInfoDlg::OnArtifactCtrlInit(intptr_t param) {
+	m_pArtifactCtrl = DYNAMIC_CAST(FrGroupBox, param);
+}
+
+// JP 0xaca710
+void FrChangeRoomInfoDlg::OnArtiFrameInit(intptr_t param) {
+	m_pArtiFrame = DYNAMIC_CAST(FrArea, param);
+}
+
+// JP 0xaca780
+void FrChangeRoomInfoDlg::OnArtiIconInit(intptr_t param) {
+	m_pArtiIcon = DYNAMIC_CAST(FrArea, param);
+}
+
+// JP 0xaca7f0
+void FrChangeRoomInfoDlg::OnArtiBanInit(intptr_t param) {
+	m_pArtiBan = DYNAMIC_CAST(FrArea, param);
+}
+
+// JP 0xaca860
+void FrChangeRoomInfoDlg::OnArtiNameInit(intptr_t param) {
+	m_pArtiName = DYNAMIC_CAST(FrStatic, param);
+}
+
+// JP 0xaca8d0
+void FrChangeRoomInfoDlg::OnArtiDescInit(intptr_t param) {
+	m_pArtiDesc = DYNAMIC_CAST(FrStatic, param);
+}
+
+// JP 0xaca940
+void FrChangeRoomInfoDlg::OnArtiPrevInit(intptr_t param) {
+	m_pArtiPrev = DYNAMIC_CAST(FrButton, param);
+	if (m_pArtiPrev) {
+		m_pArtiPrev->SetPushDelay(0.0f);
+		m_pArtiPrev->UseDblClick(false);
+	}
+}
+
+// JP 0xaca9d0
+void FrChangeRoomInfoDlg::OnArtiNextInit(intptr_t param) {
+	m_pArtiNext = DYNAMIC_CAST(FrButton, param);
+	if (m_pArtiNext) {
+		m_pArtiNext->SetPushDelay(0.0f);
+		m_pArtiNext->UseDblClick(false);
+	}
+}
+
+// JP 0xacaa60: in the JP room modes 0xc, 0xe and 0x13 (the port's
+// m_roomMode holds the JP value) the button moves to the hole row.
+void FrChangeRoomInfoDlg::OnClassicTypeInit(intptr_t param) {
+	m_pClassicType = DYNAMIC_CAST(FrButton, param);
+	if (m_pClassicType) {
+		unsigned char mode = m_roomInfo.m_roomMode;
+		if (mode == 0xc || mode == 0xe || mode == 0x13) {
+			WRect rect = m_pClassicType->GetRect();
+			rect.y = m_pHole->GetRect().y;
+			m_pClassicType->SetRect(rect);
+		}
+		m_pClassicType->SetStatus((FrButton::eButMode)((m_roomOptions & 1) * 2));
+	}
+}
+
+// JP 0xacab40: the button's pressed state is the classic type bit.
+void FrChangeRoomInfoDlg::OnClassicTypeUp(void) {
+	if (!m_pClassicType)
+		return;
+
+	if (m_pClassicType->GetStatus() == FrButton::PRESSED) {
+		SetRoomOptions(m_roomOptions | 1);
+		return;
+	}
+	SetRoomOptions(m_roomOptions & ~1UL);
+}
+
+// JP 0xacab70: the single room (mode 0x13) shows its own controls and hides
+// the title, password, game type and player count; with the hole mode 4 also
+// the repeat box (fix_hole, fix_holecup_pos) instead of the hole type.
+void FrChangeRoomInfoDlg::SetSingleRoom(bool holeMode4, bool holecupFixed, WTitleFontEx* pFont) {
+	if (m_pSingleCtrl) {
+		m_pSingleCtrl->Enable(true);
+		m_pSingleCtrl->SetVisible(true);
+	}
+	if (m_pTitle) {
+		m_pTitle->Enable(false);
+		m_pTitle->SetVisible(false);
+	}
+	if (m_pPassword) {
+		m_pPassword->Enable(false);
+		m_pPassword->SetVisible(false);
+	}
+	if (m_pGameType) {
+		m_pGameType->Enable(false);
+		m_pGameType->SetVisible(false);
+	}
+	if (m_pUserLimit) {
+		m_pUserLimit->Enable(false);
+		m_pUserLimit->SetVisible(false);
+	}
+	m_isSingleRoom = true;
+	if (!holeMode4)
+		return;
+
+	m_pSingleFont = pFont;
+	if (m_pRepeat) {
+		m_pRepeat->Enable(true);
+		m_pRepeat->SetVisible(true);
+	}
+	if (m_pFixHole) {
+		m_pFixHole->Enable(true);
+		m_pFixHole->SetVisible(true);
+	}
+	if (m_pFixHolecupPos) {
+		m_pFixHolecupPos->Enable(true);
+		m_pFixHolecupPos->SetVisible(true);
+		m_holecupPosFixed = holecupFixed;
+		UpdateFixHolecupPosImg();
+	}
+	if (m_pHoleType) {
+		m_pHoleType->Enable(false);
+		m_pHoleType->SetVisible(false);
+	}
+}
+
+// JP 0xacace0: keeps the hole picked in "hole_selector".
+bool FrChangeRoomInfoDlg::OnHoleSelectorResult(int result, FrForm* pForm) {
+	if (result == FrOK) {
+		unsigned char hole;
+		if (JpHoleSelector_GetHole(pForm, &hole) && hole != m_fixedHole)
+			m_fixedHole = hole;
+	}
+	return true;
+}
+
+// JP 0xacb470: opens "hole_selector" under the fix_hole button.
+void FrChangeRoomInfoDlg::OnFixHoleUp(void) {
+	if (!m_pFixHole)
+		return;
+
+	FrForm* pSelector = CreateHoleSelector(g_pFresh->GetManager(), this, "hole_selector", 0);
+	if (!pSelector)
+		return;
+
+	const WRect& rect = m_pFixHole->GetRect();
+	WPoint pt(rect.x - 126.0f, rect.y + (rect.h + 3.0f));
+	pSelector->EnableDrag(false);
+	JpHoleSelector_SetCourse(pSelector, (unsigned char)m_course, m_fixedHole);
+	pSelector->Open((FRESH_RESULT_CALLBACK)&FrChangeRoomInfoDlg::OnHoleSelectorResult, pt, 0x89);
+}
+#endif

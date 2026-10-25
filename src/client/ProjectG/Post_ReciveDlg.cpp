@@ -1795,3 +1795,14 @@ void CPost_Contents::SetData(std::list<sMailIncludeItem>* pItemList) {
 		}
 	}
 }
+
+#ifdef JP_PAKS
+// JP 0x5b14d0, a JP CPost_ReciveDlg member (TaskMain's message 0x2C0):
+// enables or disables the post list (JP +0x124, KR m_pPostList +0x120)
+// when there is one.
+void Post_ReciveDlg_EnablePostList(CPost_ReciveDlg* dlg, bool enable) {
+	if (dlg->m_pPostList) {
+		dlg->m_pPostList->Enable(enable);
+	}
+}
+#endif

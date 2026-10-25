@@ -103,6 +103,27 @@ protected:
 	void OnHoleMaxInit(PG_MSGARG param);
 	void OnMakeChaosInit(PG_MSGARG param);
 	void OnOverGauge_Init(PG_MSGARG param);
+#ifdef JP_PAKS
+	// JP 983 only (layout "makeroom" of data/ui/room.xml): the course
+	// controls sit in the group box "map_ctrl" beside the artifact group
+	// "artifact_ctrl". The JP make buttons (0xae1780 vs, 0xae17b0 mass,
+	// 0xae17e0 battle, 0xae1800 chat, 0xae18c0 event) call
+	// ShowCoursePanel after ChangeGameType.
+	void OnMapCtrlInit(PG_MSGARG param);      // JP 0xade460
+	void OnArtifactCtrlInit(PG_MSGARG param); // JP 0xade580
+	void ShowCoursePanel(bool bVisible, bool bBesideArtifact); // JP 0xadf990
+	// "make_event": shown and enabled only for an administrator (JP
+	// CSharedDoc +0x812 & 4, the KR m_userInfo identity bit 4); LBUTTONDOWN
+	// 0xae18c0 = ChangeGameType(0xb) + ShowCoursePanel(1, 0).
+	void OnMakeEventInit(PG_MSGARG param);    // JP 0xadec20
+	void OnMakeEventDown(void);               // JP 0xae18c0
+	// "classictype_btn", the Natural Mode check (flag bit 0 of
+	// m_naturalModeFlags, JP +0x20c).
+	void OnClassicTypeInit(PG_MSGARG param);  // JP 0xade940
+	void OnClassicTypeUp(void);             // JP 0xade9c0
+	void SetNaturalModeFlags(unsigned int flags); // JP 0xadcf20
+	void UpdateClassicTypeButton(void);       // JP 0xadced0
+#endif
 	void OnGameTypeOwnerDraw(intptr_t param);
 	void OnUserLimitOwnerDraw(intptr_t param);
 	void OnHoleOwnerDraw(intptr_t param);
@@ -152,9 +173,21 @@ protected:
 	float m_courseX;               // 0x1c4, m_pCourse's x at OnInit
 	float m_btnDelay;              // 0x1c8, 0.7 s countdown before the buttons enable
 	PADDING(0x1cc, 0x1d0);
+#ifdef JP_PAKS
+	// JP 983 members (the JP class is larger; port only, 64-bit layout).
+	FrWnd* m_pMapCtrl;             // JP +0x180, "map_ctrl"
+	FrWnd* m_pArtifactCtrl;        // JP +0x188, "artifact_ctrl"
+	float m_mapCtrlOffsetX;        // JP global 0xf031f8: map_ctrl x - form x at its init
+	float m_mapCtrlOffsetY;        // JP global 0xf031fc: map_ctrl y - form y at its init
+	FrButton* m_pMakeEventBtn;     // JP +0x124, "make_event" (the JP's sixth make button)
+	FrButton* m_pClassicTypeBtn;   // JP +0x15c, "classictype_btn"
+	unsigned int m_naturalModeFlags; // JP +0x20c, bit 0: Natural Mode
+#endif
 };
 
+#ifndef JP_PAKS
 CHECK_SIZE(FrMakeRoomDlg, 0x1d0);
+#endif
 BEGIN_LAYOUT_CHECK(FrMakeRoomDlg)
 	CHECK_FIELD(FrMakeRoomDlg, m_pMakeBtn, 0x110);
 	CHECK_FIELD(FrMakeRoomDlg, m_pTitleEdit, 0x128);

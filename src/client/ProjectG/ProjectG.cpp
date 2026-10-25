@@ -81,6 +81,21 @@ extern "C" _CRTIMP int __cdecl mkdir(const char* dirName);
 #include "Miles.h"
 #include "shared/luasystem/LuaScriptManager.h"
 #include <algorithm>
+#ifdef JP_PAKS
+// The JP client's Refresh UI (src/jp, docs/JP_REFRESH_UI.md
+// "Hooks into the KR game code"): only port/CMakeLists.txt defines JP_PAKS.
+#include "RFTextureManager.h"
+#include "RFSceneManager.h"
+#include "RFTextManager.h"
+#include "JpWebLoginRequest.h" // CWebPageConnector, the JP web-page login
+#endif
+
+#ifdef JP_PAKS
+// The CProjectG instance: defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+template <> CProjectG* WSingleton<CProjectG>::m_pInstance = NULL;
+#endif
 
 // wtemplate.h:409-414 (not yet in src/client/ProjectG/wtemplate.h, which this
 // unit does not own): finds a game server by its id.
@@ -282,6 +297,11 @@ CMatchHistory::~CMatchHistory(void) {
 
 // projectg.cpp:349
 void InitSingletonClasses(void) {
+#ifdef JP_PAKS
+	// Hook 1, JP 0xa6574f / 0xa65774.
+	new RFTextureManager;
+	new RFSceneManager;
+#endif
 	new CPowerGauge;
 
 	new CMatchHistory;
@@ -294,6 +314,12 @@ void InitSingletonClasses(void) {
 
 // projectg.cpp:361
 void DeleteSingletonClasses(void) {
+#ifdef JP_PAKS
+	// Hook 10, JP 0xa639e2-0xa63a16.
+	if (RFTextManager::IsInstantiated()) delete RFTextManager::Instance();
+	if (RFSceneManager::IsInstantiated()) delete RFSceneManager::Instance();
+	if (RFTextureManager::IsInstantiated()) delete RFTextureManager::Instance();
+#endif
 	if (CIntrusion::IsInstantiated()) delete CIntrusion::Instance();
 	if (CShuffleBonus::IsInstantiated()) delete CShuffleBonus::Instance();
 	if (CSoundItemManager::IsInstantiated()) delete CSoundItemManager::Instance();
@@ -345,6 +371,11 @@ CProjectG::CProjectG(HWND hWnd) : m_inputDevList(16, 16), m_appFlags(0) {
 
 	if (IsLocalContent((localContentType_t)0x51))
 		new CCardManager;
+
+#ifdef JP_PAKS
+	// JP 0xa66d80: the JP-only web-page login singleton (0x230 bytes).
+	new CWebPageConnector;
+#endif
 
 	new CPangFBI;
 
@@ -421,6 +452,10 @@ CProjectG::~CProjectG(void) {
 		if (CReplayControlManager::IsInstantiated()) delete CReplayControlManager::Instance();
 	if (IsLocalContent((localContentType_t)0x51))
 		if (CCardManager::IsInstantiated()) delete CCardManager::Instance();
+#ifdef JP_PAKS
+	// JP ~CProjectG 0xa66700.
+	if (CWebPageConnector::IsInstantiated()) delete CWebPageConnector::Instance();
+#endif
 
 	if (IsLocalContent((localContentType_t)0x55))
 		if (CAztecHoleinEffect::IsInstantiated()) delete CAztecHoleinEffect::Instance();
@@ -576,6 +611,11 @@ bool CProjectG::Ready(void) {
 	g_pFresh = new Fresh;
 	g_pFresh->Init("all.xml", true, NULL);
 	g_pFresh->GetManager()->CreateToolTip();
+#ifdef JP_PAKS
+	// Hook 2, JP 0xa69a5e / 0xa69a80.
+	if (RFSceneManager::Instance()) RFSceneManager::Instance()->Setup();
+	new RFTextManager;
+#endif
 
 	COption::Instance()->dApplyDebugSetting();
 
@@ -697,6 +737,11 @@ void CProjectG::LoadKeyLayout(void) {
 		{ "FUNC_10", 0x17, 1 },
 		{ "FUNC_11", 0x18, 1 },
 		{ "FUNC_12", 0x19, 1 },
+#ifdef JP_PAKS
+		// JP 0xa61d20: the review keys.
+		{ "REVIEW_PREV", 0x5B, 1 },
+		{ "REVIEW_NEXT", 0x5D, 1 },
+#endif
 		{ "FUNC_15", 0x66, 1 },
 		{ "INSERT", 0x7F, 1 },
 		{ "ESCAPE", 0x1B, 1 },
@@ -732,6 +777,19 @@ void CProjectG::LoadKeyLayout(void) {
 		{ "PAINT", 0x50 },
 		{ "GRID", 0x47 },
 		{ "DRAG", 0x44 },
+#ifdef JP_PAKS
+		// JP 0xa61d20: the drawing tools, the auto-shot keys and the item search.
+		{ "BRUSH", 0x42 },
+		{ "ZOOMIN", 0x5D },
+		{ "ZOOMOUT", 0x5B },
+		{ "PEN", 0x50 },
+		{ "ERASER", 0x45 },
+		{ "PICKCOLOR", 0x49 },
+		{ "AUTO_TOMAHAWK", 0x54 },
+		{ "AUTO_COBRA", 0x43 },
+		{ "AUTO_SPIKE", 0x53 },
+		{ "SEARCH", 0x10, 1 },
+#endif
 		{ NULL },
 	};
 
@@ -1495,6 +1553,26 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 
 	// The rank server's socket: on loss, back to the lobby's room list.
 	case WM_USER + 14:
+#ifdef JP_PAKS
+		// JP 0xa68544 (WinProc 0xa67dd0): only tells the lobby actor (msg
+		// 0x1A) when the current task has one; FD_CLOSE just closes the socket.
+		if (WSAGETSELECTERROR(lParam)) {
+			WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_RANK)->m_bConnected = 0;
+			if (AfxGetTask()->GetActor("Lobby"))
+				CTaskManager::Instance()->PostMsg(0, "Lobby", 0x1A, 0, 0, 0, 0);
+			return 0;
+		}
+		if (WSAGETSELECTEVENT(lParam) == FD_READ) {
+			// The JP TryRead (0xa4d020) takes a bool, passed false here.
+			if (WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_RANK) && WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_RANK)->TryRead() == 0) {
+				if (AfxGetTask()->GetActor("Lobby"))
+					CTaskManager::Instance()->PostMsg(0, "Lobby", 0x1A, 0, 0, 0, 0);
+			}
+		} else if (WSAGETSELECTEVENT(lParam) == FD_CLOSE) {
+			WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_RANK)->Close();
+		}
+		return 0;
+#else
 		if (WSAGETSELECTERROR(lParam)) {
 			WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_RANK)->m_bConnected = 0;
 			CMouseCursor::Instance()->SetActive(false);
@@ -1517,6 +1595,7 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 			CTaskManager::Instance()->PostMsg(0, "Lobby", 0x1A, 0, 0, 0, 0);
 		}
 		return 0;
+#endif
 
 	case WM_SETFOCUS:
 		if (g_hwnd == GetForegroundWindow())
@@ -1581,6 +1660,10 @@ long __stdcall CProjectG::WinProc(HWND hWnd, unsigned int message, unsigned int 
 		break;
 	}
 
+#ifdef JP_PAKS
+	// Hook 3, JP 0xa67f38.
+	if (RFSceneManager::Instance()) RFSceneManager::Instance()->OnWindowMessage(message, wParam, lParam);
+#endif
 	return m_procManager ? m_procManager->WinProc(g_hwnd, message, wParam, lParam) : 0;
 }
 

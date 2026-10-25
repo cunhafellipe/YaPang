@@ -26,6 +26,9 @@ class MsgObject;
 class CWork;
 class CBackGround;
 class WReceivedPacket;
+#ifdef JP_PAKS
+class CTaskWidget;
+#endif
 
 // Entry of a task's actor list: the actor comes first. CTask::AddActor
 // allocates it as a char array, sizeof(sActor) plus the class name's length.
@@ -163,6 +166,22 @@ private:
 	bool m_pause;           // 0x1F5
 	UNKNOWN(0x1F6, 0x1F8);
 	float m_netSyncTime;    // 0x1F8 (time not yet handed to ProcessNetSyncActor, in 0.02 s steps)
+#ifdef JP_PAKS
+	// JP only (the KR CTask ends at 0x1FC): the task's widget, a Fresh page
+	// loaded on the CAnotherHand thread (CTaskWidget,
+	// src/jp/JpTaskPage.h). ms_pNullWidget (JP 0xf00688, a
+	// CNullWidget the JP constructor 0x9bf340 creates through the object
+	// factory) stands for "none". The members are defined in JpTaskPage.cpp.
+public:
+	void SetWidget(CTaskWidget *pWidget);   // JP 0x9b7780
+	void ResetWidget(void);                 // JP 0x9b7790
+	void DeleteWidget(void);                // JP 0x9b77d0 (the JP destructor's first call)
+	FrForm *GetWidgetForm(void) const;      // JP 0x9b7810 (0x9b7830 is a copy taking an unused argument)
+	bool IsWidgetLayout(const char *layout) const; // JP 0x9bd4f0
+	static CTaskWidget *ms_pNullWidget;     // JP 0xf00688
+private:
+	CTaskWidget *m_pWidget; // 0x1FC (JP)
+#endif
 };
 BEGIN_LAYOUT_CHECK(CTask)
 	CHECK_FIELD(CTask, m_unknownC, 0xC);
@@ -181,6 +200,9 @@ BEGIN_LAYOUT_CHECK(CTask)
 	CHECK_FIELD(CTask, m_bRecieveWhisper, 0x1F4);
 	CHECK_FIELD(CTask, m_pause, 0x1F5);
 	CHECK_FIELD(CTask, m_netSyncTime, 0x1F8);
+#ifdef JP_PAKS
+	CHECK_FIELD(CTask, m_pWidget, 0x1FC);
+#endif
 END_LAYOUT_CHECK
 CHECK_SIZE(CTask::TIP_ITEM, 0x20);
 CHECK_FIELD(CTask::TIP_ITEM, m_text, 0x4);

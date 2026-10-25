@@ -26,20 +26,15 @@ public:
 	static void Preserve(void);
 	static void Restore(void);
 	static void PlayWithMap(unsigned char map);
-
 	// Whether the jukebox track was playing when Preserve stopped it.
 	static bool m_preserve_isPlaying;
-
 private:
 	static sFRESH_ENTRY _MsgEntries[];
-
 protected:
 	static sFRESH_MSGMAP _MsgMap;
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;
-
 	virtual bool OnInit(void);
 	virtual void OnProc(const float dt);
-
 	void OnTitleInit(intptr_t param);
 	void OnPlayInit(intptr_t param);
 	void OnCloseBtnUp(void);
@@ -49,6 +44,11 @@ protected:
 	void OnNextBtnUp(void);
 	void OnChangeTitle(void);
 	void OnChangePlayPauseButton(void);
+#ifdef JP_PAKS
+	void OnListInit(intptr_t param);       // JP 0x7bacf0 ("jukeboxlist" INIT)
+	void OnListOwnerDraw(intptr_t param);  // JP 0x7bb290
+	void OnListBtnUp(void);                // JP 0x7bb6a0
+#endif
 
 	// Index of the current track in the jukebox's track list (0..23).
 	static int m_curBGM;

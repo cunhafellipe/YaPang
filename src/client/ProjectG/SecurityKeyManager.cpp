@@ -57,7 +57,11 @@ sSKItem* CSecurityKeyManager::GetItem(eSKContent content, unsigned long serial) 
 
 // securitykeymanager.cpp:68
 void CSecurityKeyManager::ReqCreateKey(eSKContent content, unsigned long serial) {
+#ifdef JP_PAKS
+	WSendPacket packet((enumClientPacket)0xC9); // JP 0x7d8e50 sends 0x00C9 (0x7d8e75)
+#else
 	WSendPacket packet(GCT_SECURITY_KEY);
+#endif
 	packet.Encode1(0);
 	packet.Encode4(MyUID());
 	packet.Encode1(content);
@@ -82,7 +86,11 @@ void CSecurityKeyManager::ResCreateKey(eSKContent content, unsigned long serial,
 
 // securitykeymanager.cpp:110
 void CSecurityKeyManager::ReqCheckKey(eSKContent content, unsigned long serial, std::string key) {
+#ifdef JP_PAKS
+	WSendPacket packet((enumClientPacket)0xC9); // JP 0x7d9020 sends 0x00C9 (0x7d9054)
+#else
 	WSendPacket packet(GCT_SECURITY_KEY);
+#endif
 	packet.Encode1(1);
 	packet.Encode4(MyUID());
 	packet.Encode1(content);

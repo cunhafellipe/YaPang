@@ -56,6 +56,9 @@ FrComboBox::FrComboBox(void) {
 	m_pButton = 0;
 	m_pListBox = 0;
 	m_selectColor = 0;
+#ifdef JP_PAKS
+	m_listDirection = LIST_KEEPSIDE;
+#endif
 }
 
 // frcombobox.cpp:43
@@ -140,8 +143,24 @@ void FrComboBox::ResizeListRect(void) {
 
 		WRect rect = m_pListBox->GetRect();
 		rect.h = (float)(m_lineHeight * num + m_topMargin * 2);
+#ifdef JP_PAKS
+		// JP 0xbfe780: the list direction picks the side.
+		switch (m_listDirection) {
+		case LIST_KEEPSIDE:
+			rect.y = rect.y > m_rect.y ? m_rect.y + m_rect.h + 2.0f
+				: m_rect.y - rect.h - 2.0f;
+			break;
+		case LIST_ABOVE:
+			rect.y = m_rect.y - rect.h - 2.0f;
+			break;
+		case LIST_BELOW:
+			rect.y = m_rect.y + m_rect.h + 2.0f;
+			break;
+		}
+#else
 		rect.y = rect.y > m_rect.y ? m_rect.y + m_rect.h + 2.0f
 			: m_rect.y - rect.h - 2.0f;
+#endif
 		m_pListBox->SetRect(rect);
 	}
 }
@@ -210,6 +229,21 @@ bool FrComboBox::IsSelectString(const std::string& str) {
 
 	return (*m_selected)->text == str ? true : false;
 }
+
+#ifdef JP_PAKS
+// JP 0xbff1d0
+bool FrComboBox::SelectString(const char* str) {
+	for (std::list<FrLine*>::iterator it = m_comboList.begin(); it != m_comboList.end(); ++it) {
+		if ((*it)->text == str) {
+			m_selected = it;
+			SetLine(1, (*it)->text.c_str(), 0, false, 0);
+			return true;
+		}
+	}
+
+	return false;
+}
+#endif
 
 // frcombobox.cpp:246
 void FrComboBox::OnKeyFocus(CChatMsg* im) {

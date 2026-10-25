@@ -30,6 +30,12 @@
 #include "quadtree.h"
 #include "ChatMsg.h"
 
+#ifdef JP_PAKS
+// JP 983: the tutorial container's mission send (0x9079e0,
+// src/jp/JpTutorialWidget.cpp), declared here (L38).
+void JpTutorialContainer_SendMissionResult(int index, unsigned long missionBit, int played, int complete);
+#endif
+
 // tutorial.cpp:29 (run-time type and factory registration of CTutorial)
 const WRTTI CTutorial::m_RTTI("CTutorial", &CTaskMain::m_RTTI);
 
@@ -770,6 +776,16 @@ void CTutorial::MoveNextStep(void) {
 
 		int complete = m_tutorialInfo == 0x80;
 
+#ifdef JP_PAKS
+		// JP 0x7cd2d0: the mission's packet 0xAE goes through the tutorial
+		// container 0xa4 (0x9079e0, CTutorial +0xdac), then back to the
+		// lobby's tutorial page: Lobby 0 "TOPPAGE", Lobby 0x55 "tutorial"
+		// (the desktop's bar state 8, then 0x88 "CTutorialWidget").
+		JpTutorialContainer_SendMissionResult(m_tutorialIndex, m_tutorialInfo, 1, complete);
+		CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+		CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+		CTaskManager::Instance()->PostMsg(0, "Lobby", 0x55, (intptr_t)"tutorial", 0, 0, 0);
+#else
 		CTask *pTask = AfxGetPreservedTask();
 		if (pTask != 0) {
 			IActor *pActor = pTask->GetActor("TutorialMain");
@@ -780,6 +796,7 @@ void CTutorial::MoveNextStep(void) {
 
 		CTaskManager::Instance()->ChangeTask("CTutorialTask", "", false);
 		CTaskManager::Instance()->PostMsg(0, "TutorialMain", 0, (intptr_t)"TUTORIAL_MAIN", 0, 0, 0);
+#endif
 	}
 
 	if (GOLFDOC()->m_gameState < 15) {
@@ -1153,8 +1170,14 @@ bool CTutorial::OnSkipMissionFormResult(int result, FrForm *form) {
 	if (m_singleMission == true && result == 1) {
 		if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_DEFAULT)) {
 			CProjectG::Instance()->FromGolfToLobbySettings();
+#ifdef JP_PAKS
+			// JP 0x7c1f71: back to the lobby's tutorial page.
+			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+			CTaskManager::Instance()->PostMsg(0, "Lobby", 0x88, (intptr_t)"CTutorialWidget", (intptr_t)"TOPPAGE", 0, 0);
+#else
 			CTaskManager::Instance()->ChangeTask("CTutorialTask", "", false);
 			CTaskManager::Instance()->PostMsg(0, "TutorialMain", 0, (intptr_t)"TUTORIAL_MAIN", 0, 0, 0);
+#endif
 		}
 		return true;
 	}
@@ -1432,6 +1455,12 @@ bool CTutorial::OnMissionFailedFormResult(int result, FrForm *form) {
 
 			CProjectG::Instance()->FromGolfToLobbySettings();
 
+#ifdef JP_PAKS
+			// JP 0x7c2109: no 0x150 (played 0 sends nothing), back to the
+			// lobby's tutorial page.
+			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+			CTaskManager::Instance()->PostMsg(0, "Lobby", 0x88, (intptr_t)"CTutorialWidget", (intptr_t)"TOPPAGE", 0, 0);
+#else
 			CTask *pTask = AfxGetPreservedTask();
 			if (pTask != 0) {
 				IActor *pActor = pTask->GetActor("TutorialMain");
@@ -1442,6 +1471,7 @@ bool CTutorial::OnMissionFailedFormResult(int result, FrForm *form) {
 
 			CTaskManager::Instance()->ChangeTask("CTutorialTask", "", false);
 			CTaskManager::Instance()->PostMsg(0, "TutorialMain", 0, (intptr_t)"TUTORIAL_MAIN", 0, 0, 0);
+#endif
 
 			FreeInput();
 			return true;

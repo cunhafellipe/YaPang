@@ -22,6 +22,14 @@ public:
 	void ClearTimer(const char* name);
 	bool AddTimer(float time, const char* name);
 
+#ifdef JP_PAKS
+protected:
+	// JP: the timer's name, read and emptied by the JP OnTimer handlers
+	// (FrGrandPrixAwardDlg::OnTimer 0x549210).
+	const std::string& GetName() const { return m_name; }
+	void ClearName() { m_name.clear(); }
+#endif
+
 private:
 	std::string m_name;             // 0x04
 };

@@ -15,6 +15,10 @@ class FrEdit;
 class FrViewer;
 class FrWnd;
 class FrTreasureCourse;
+#ifdef JP_PAKS
+class FrGroupBox; class FrStatic;
+class WTitleFontEx;
+#endif
 
 class FrGraphicInterface;
 class WRect;
@@ -109,6 +113,30 @@ protected:
 	unsigned long m_shotTime;          // 0x194, sRoomInfo::m_value4D, ms (40000 by default in stroke play)
 	float m_btnDelay;                  // 0x198, 0.7 s countdown before the buttons enable
 	sRoomInfo m_roomInfo;              // 0x19c, copy of the current room
+#ifdef JP_PAKS
+	// JP 983 only: the JP class differs; the port appends these (the comments give the JP offsets).
+public:
+	void SetSingleRoom(bool holeMode4, bool holecupFixed, WTitleFontEx* pFont);
+protected:
+	void OnSingleCtrlInit(intptr_t param); void OnRepeatInit(intptr_t param);
+	void OnFixHoleInit(intptr_t param); void OnFixHoleUp(void); void OnFixHoleOwnerDraw(void);
+	bool OnHoleSelectorResult(int result, FrForm* pForm); void SetRoomOptions(unsigned long options);
+	void OnFixHolecupPosInit(intptr_t param); void OnFixHolecupPosUp(void); void UpdateFixHolecupPosImg(void);
+	void OnMapCtrlInit(intptr_t param); void OnTextMapInit(intptr_t param); void OnClassicTypeInit(intptr_t param);
+	void OnArtifactCtrlInit(intptr_t param); void OnArtiFrameInit(intptr_t param); void OnArtiIconInit(intptr_t param);
+	void OnArtiBanInit(intptr_t param); void OnArtiNameInit(intptr_t param); void OnArtiDescInit(intptr_t param);
+	void OnArtiPrevInit(intptr_t param); void OnArtiNextInit(intptr_t param); void OnClassicTypeUp(void);
+	FrGroupBox* m_pSingleCtrl; FrGroupBox* m_pRepeat;    // JP +0x140 "cover"/"single_ctrl", +0x144 "single_ctrl.repeat"
+	FrButton* m_pFixHole; FrButton* m_pFixHolecupPos;    // JP +0x148 ".repeat.fix_hole", +0x14c ".repeat.fix_holecup_pos"
+	FrGroupBox* m_pMapCtrl; FrArea* m_pTextMap;          // JP +0x150 "map_ctrl", +0x154 "map_ctrl.text_map"
+	FrGroupBox* m_pArtifactCtrl; FrArea* m_pArtiFrame;   // JP +0x158 "artifact_ctrl", +0x15c ".arti_frame"
+	FrArea* m_pArtiIcon; FrArea* m_pArtiBan;             // JP +0x160 "artifact_ctrl.arti_icon", +0x164 ".arti_ban"
+	FrStatic* m_pArtiName; FrStatic* m_pArtiDesc;        // JP +0x168 "artifact_ctrl.arti_name", +0x16c ".arti_desc"
+	FrButton* m_pArtiPrev; FrButton* m_pArtiNext;        // JP +0x170 "artifact_ctrl.arti_prev", +0x174 ".arti_next"
+	FrButton* m_pClassicType; unsigned long m_roomOptions;   // JP +0x178 "classictype_btn", +0x1d4 (bit 0: classic)
+	unsigned char m_fixedHole; bool m_holecupPosFixed; bool m_isSingleRoom;   // JP +0x1d8, +0x1d9, +0x1f0
+	WTitleFontEx* m_pSingleFont;       // JP +0x2d0, the room's digit font (fix_hole's owner draw)
+#endif
 };
 
 CHECK_SIZE(FrChangeRoomInfoDlg, 0x250);

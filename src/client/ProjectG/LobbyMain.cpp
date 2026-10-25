@@ -109,6 +109,77 @@
 #include "Browser.h"
 #include "birthdayeventdlg.h"
 #include "pg_boot_todo.h"
+#ifdef JP_PAKS
+// The JP client's Refresh UI (src/jp, docs/JP_REFRESH_UI.md
+// "Hooks into the KR game code"): only port/CMakeLists.txt defines JP_PAKS.
+// <unistd.h>'s access() mode would replace RFManager.h's R_OK enumerator.
+#undef R_OK
+#include "RFManager.h"
+#include "RFSceneManager.h"
+#include "RFLobbyDesktop.h"
+#include "JpLobbyGlue.h"
+#include "JpLobbyLoading.h"
+#include "JpMakeRoomDlg.h"
+#include "JpRoomListState.h"
+#include "JpAvatarMotionDlg.h"
+#include "JpNotifyTikiDlg.h"
+#include "JukeBoxDlg.h"
+#include "s5/Utilities.h"
+#endif
+
+#ifdef JP_PAKS
+// JP CLobbyMain +0x77c: the open room list form (message 0x8b (4, tab), JP
+// 0xabc986); cleared by its result callback 0xab6540.
+static FrRoomListDlg* s_jpRoomListDlg = NULL;
+// JP CLobbyMain +0x780: the open room form (FrGameRoomDlg's subclasses,
+// OpenRoomTypeForm 0xab6be0); cleared by its result callback 0xab6620.
+static FrForm* s_jpRoomTypeForm = NULL;
+// JpChatDlg.cpp: FrChatDlg::AddChatMsg (0x490d10) on the room form.
+void JpRoomTypeForm_AddChatMsg(FrForm* form, const char* text, unsigned int color);
+// JP CLobbyMain +0x4b8 (the lobby data container, contents type 0xa5) and
+// +0x778 (the room list forms' room-state dispatcher, JpRoomListState.h),
+// both set by OnPreLoadInit (JP 0xab9720).
+static IContentsDataContainer* s_jpLobbyData = NULL;
+static JpRoomListState* s_jpRoomListState = NULL;
+// JP CLobbyMain +0x4b0, +0x4b4, +0x74c, +0x750: the TOPPAGE motion chat
+// button, its open FrAvatarMotionDlg, the "motion changed" flag (set by the
+// button and the dialog's result) and the button's layout rect.
+static FrButton* s_jpMotionBtn = NULL;
+static FrAvatarMotionDlg* s_jpMotionDlg = NULL;
+static bool s_jpMotionDirty = false;
+static WRect s_jpMotionBtnRect;
+// JP CLobbyMain +0x770, +0x774, +0x760: the TOPPAGE jukebox button, its
+// open FrJukeBoxDlg and the button's layout rect.
+static FrButton* s_jpJukeboxBtn = NULL;
+static FrJukeBoxDlg* s_jpJukeboxDlg = NULL;
+static WRect s_jpJukeboxBtnRect;
+// JpLobbyTitleFonts.cpp: the JP CLobbyMain +0x784, +0x78c, +0x794, +0x79c
+// number fonts (slots 0..3), made by OnPreLoadInit (JP 0xab9807).
+class WTitleFontEx;
+void JpLobbyTitleFonts_Create(void);
+void JpLobbyTitleFonts_Release(void);
+WTitleFontEx* JpLobbyTitleFonts_Get(int slot);
+// JpLobbyTitleFonts.cpp, OnPreLoadInit JP 0xab9a44-0xab9a60: font 1
+// (+0x78c) to the GP clock (0xe74e1c +0x70), then its images (0x55cef0).
+void JpLobbyTitleFonts_SetupGrandPrixClock(void);
+// 0x657690 (JpLobbyTitleFonts.cpp, a JP CTaskMain member, name ours).
+void JpTaskMain_ResetLobbySceneState(CTaskMain* task);
+// 0xb4eb80 (RFTextManager.h): the text the JP text table gives a key.
+const char* Jp_LookupText(const char* key);
+// JP CLobbyMain +0x468: the open "notify_tiki" form (message 0x8b (12),
+// JP 0xabcbaa); cleared by its result 0xab2ec0.
+static FrUseTikiReportDlg* s_jpUseTikiReportDlg = NULL;
+
+// JP CLobbyMain +0x3e8 / +0x3ec / +0x3f0, the JP background camera sway's
+// state beside +0x3e0 (m_bgCameraDirection) and +0x3e4 (m_bgCameraPaused);
+// OnInit 0xab59b0 sets -1, 0, 0. The KR object has no room for them (the
+// lobby has one CLobbyMain): the side of the sway (-1, 0, +1), the seconds
+// the current move or pause has run, the move's length (5 s the first one,
+// then 10 s).
+static int s_jpBgCameraSide = -1;
+static float s_jpBgCameraTime = 0.0f;
+static float s_jpBgCameraDuration = 0.0f;
+#endif
 
 // The IME input device (public ?g_ime@@3PAVWInputDev@@A).
 extern WInputDev *g_ime;
@@ -853,6 +924,16 @@ sFRESH_ENTRY CLobbyMain::_MsgEntries[] = {
 	{ "TOPPAGE.Go_UCCShop", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&CLobbyMain::OnToppage_UCCShopBtnUp },
 	// lobbymain.cpp:742
 	{ "TOPPAGE.Go_CardShop", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&CLobbyMain::OnToppage_CardShopBtnUp },
+#ifdef JP_PAKS
+	// JP map 0xe0ed00: the motion chat button.
+	{ "TOPPAGE.motion_btn_start", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&CLobbyMain::OnToppage_MotionBtnInit },
+	{ "TOPPAGE.motion_btn_start", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&CLobbyMain::OnToppage_MotionBtnUp },
+	{ "TOPPAGE.motion_btn_start", FRCMD_HOVERON, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&CLobbyMain::OnToppage_MotionBtnHoverOn },
+	{ "TOPPAGE.motion_btn_start", FRCMD_HOVEROFF, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&CLobbyMain::OnToppage_MotionBtnHoverOff },
+	// JP rows 0xe0f1f0 / 0xe0f210: the jukebox button.
+	{ "TOPPAGE.portrait_jukeboxbtn", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&CLobbyMain::OnToppage_JukeboxBtnInit },
+	{ "TOPPAGE.portrait_jukeboxbtn", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&CLobbyMain::OnToppage_JukeboxBtnUp },
+#endif
 	// lobbymain.cpp:745
 	{ "SERVERLIST", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&CLobbyMain::OnServer_Init },
 	// lobbymain.cpp:746
@@ -2765,6 +2846,13 @@ CLobbyMain::~CLobbyMain(void) {
 	}
 
 	this << MsgObject(0, 2, 0, 0, 0, 0, 0);
+#ifdef JP_PAKS
+	// JP 0xaba6f3: the four number fonts (+0x79c .. +0x784), then (0xaba7cf)
+	// the room-list state (+0x778).
+	JpLobbyTitleFonts_Release();
+	delete s_jpRoomListState;
+	s_jpRoomListState = NULL;
+#endif
 }
 
 // lobbymain.cpp:2097
@@ -2772,6 +2860,28 @@ void CLobbyMain::OnPreLoadInit(void) {
 	CTaskMain::OnPreLoadInit();
 
 	WSingleton<CMouseCursor>::Instance()->SetAutoHide(false);
+#ifdef JP_PAKS
+	// JP 0xab975c: the lobby data container (0xa5) kept at +0x4b8 when
+	// found, the room tab 2 (0x62bf60), then a new room-list state at +0x778
+	// (the previous one deleted), then (0xab9807-0xab9a42) the four number
+	// fonts +0x784 .. +0x79c, then (0xab9a44) the GP clock, 0x657690 and
+	// the "LobbyBg" actor's "moon" message.
+	IContentsDataContainer* lobbyData = WSingleton<CContentsDoc>::Instance()->GetContainer((localContentType_t)0xa5);
+	if (lobbyData != NULL)
+		s_jpLobbyData = lobbyData;
+	JpSharedDoc_SetRoomTab(2);
+	JpRoomListState* state = new JpRoomListState(s_jpLobbyData);
+	if (state != s_jpRoomListState) {
+		delete s_jpRoomListState;
+		s_jpRoomListState = state;
+	}
+	JpLobbyTitleFonts_Create();
+	JpLobbyTitleFonts_SetupGrandPrixClock();
+	JpTaskMain_ResetLobbySceneState(this);
+	// JP 0xab9a6c: the "LobbyBg" actor's message 0x17a (6, "moon").
+	MsgObject moonMsg(0, 0x17a, 6, (intptr_t)"moon", 0, 0, 0);
+	(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("LobbyBg") << moonMsg;
+#endif
 }
 
 // lobbymain.cpp:2109
@@ -2794,9 +2904,18 @@ void CLobbyMain::OnInit(void) {
 		g_view->SetFOV(camera->m_fov * 0.017453292f);
 	}
 
+#ifdef JP_PAKS
+	// JP 0xab5a7a-0xab5aa7.
+	m_bgCameraPaused = false;
+	m_bgCameraDirection = -1.0f;
+	s_jpBgCameraSide = -1;
+	s_jpBgCameraDuration = 0.0f;
+	s_jpBgCameraTime = 0.0f;
+#else
 	m_bgCameraPaused = false;
 	m_bgCameraDirection = 1.0f;
 	m_bgCameraMoveTime = g_CurrentTime;
+#endif
 
 	m_cateNewRoom[0] = 0;
 	m_cateNewRoom[1] = 0;
@@ -2815,6 +2934,50 @@ void CLobbyMain::OnDestroy(void) {
 }
 
 // lobbymain.cpp:2174
+#ifdef JP_PAKS
+// JP 0xab5b00: a slow sway instead of the KR 80-second pan (0.15 units per
+// second, eased in over 2 seconds and out after 8), only while the lobby
+// camera is enabled: a 5-second move to the left, then every 1-second pause
+// turns the direction unless the camera stands at the middle side (0) and
+// starts a 10-second move. The camera sways between about -0.6 and +1.8
+// units from "DefaultCamera" along its x axis.
+void CLobbyMain::ProcessLobbyBgCamera(float dt) {
+	if (CSharedDoc::Instance()->m_3DBackgroundOff || !CSharedDoc::Instance()->m_lobbyCameraEnabled)
+		return;
+
+	if (s_jpBgCameraDuration == 0.0f)
+		s_jpBgCameraDuration = 5.0f;
+
+	if (m_bgCameraPaused) {
+		s_jpBgCameraTime += dt;
+		if (s_jpBgCameraTime > 1.0f) {
+			int side = s_jpBgCameraSide;
+			if (side != 0)
+				m_bgCameraDirection *= -1.0f;
+			m_bgCameraPaused = false;
+			s_jpBgCameraSide = (int)(side + m_bgCameraDirection);
+			s_jpBgCameraTime = 0.0f;
+			s_jpBgCameraDuration = 10.0f;
+		}
+		return;
+	}
+
+	if (s_jpBgCameraTime > s_jpBgCameraDuration) {
+		s_jpBgCameraTime = 0.0f;
+		m_bgCameraPaused = true;
+		return;
+	}
+
+	float speed = 1.0f;
+	s_jpBgCameraTime += dt;
+	if (s_jpBgCameraTime < 2.0f)
+		speed = s_jpBgCameraTime * 0.5f;
+	else if (s_jpBgCameraTime > 8.0f)
+		speed = 1.0f - (s_jpBgCameraTime - 8.0f) * 0.5f;
+
+	g_camera.pivot += g_camera.xa * m_bgCameraDirection * dt * 0.15f * speed;
+}
+#else
 // Pans the lobby's background camera sideways for 80 seconds, waits 2 seconds
 // and pans back, easing in and out over 2 seconds (0.3 units per second).
 void CLobbyMain::ProcessLobbyBgCamera(float dt) {
@@ -2845,6 +3008,7 @@ void CLobbyMain::ProcessLobbyBgCamera(float dt) {
 
 	g_camera.pivot += g_camera.xa * m_bgCameraDirection * dt * 0.3f * speed;
 }
+#endif
 
 // lobbymain.cpp:2215
 // Administrator hotkeys: F10 in a game room acts on the selected user,
@@ -3396,6 +3560,138 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		break;
 	}
 
+#ifdef JP_PAKS
+	case 0x8B:
+		// JP 0xabc7d4: switch on param1 (0..12). JP
+		// 0xabc7e7 (0, from FrRoomListDlg::OnMakeRoomLBtnUp with no
+		// channel): the "server" form, as the KR make-room button does.
+		if (msg.m_param1 == 0) {
+			m_serverDlg = CreateForm<FrServerDlg>(g_pFresh->GetManager(), this, "server", 0);
+			m_serverDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnServerDlgResult, WPoint(m_serverDlg->GetRect().x, 50.0f), 0x10);
+			m_serverDlg->SetIconRect(m_barButton[8]->GetRect());
+			break;
+		}
+		// JP 0xabc878 (1, from FrRoomListDlg::OnMakeRoomLBtnUp): the
+		// "makeroom" form, as the KR make-room button does.
+		if (msg.m_param1 == 1) {
+			m_makeRoomDlg = CreateForm<FrMakeRoomDlg>(g_pFresh->GetManager(), this, "makeroom", 0);
+			m_makeRoomDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnMakeRoomDlgResult, 3);
+			break;
+		}
+		// JP 0xabc8d0 (2): the "quick_start" form (JP +0x498, the KR
+		// m_extraEventDlg that OnQuickStartDlgResult 0xab67b0 clears) at
+		// (547, 158), flags 0xc0.
+		if (msg.m_param1 == 2) {
+			m_extraEventDlg = CreateForm<FrQuickStartDlg>(g_pFresh->GetManager(), this, "quick_start", 0);
+			if (m_extraEventDlg)
+				m_extraEventDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnQuickStartDlgResult, WPoint(547.0f, 158.0f), 0xc0);
+			break;
+		}
+		// JP 0xabc952 (3, from the room list's join of a private room,
+		// JpRoomListState.cpp 0x59b980): the "password" form (JP +0x42c,
+		// result 0xab9360), as the KR OnRoomList_RoomListDClick does.
+		if (msg.m_param1 == 3) {
+			if (!m_passwordDlg) {
+				m_passwordDlg = CreateForm<FrPasswordDlg>(g_pFresh->GetManager(), this, "password", 0);
+				m_passwordDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnPasswordDlgResult, 3);
+			}
+			break;
+		}
+		// JP 0xabcb58 (5): 0x657600, the "equip" form of the JP CTaskMain
+		// (+0x198, result 0x653be0): the KR OnGameRoom_EquipItemDown's form
+		// (gallery mode +0x812 bit 1 takes the first room player's items),
+		// without its InitControlsSelectedUserInfo.
+		if (msg.m_param1 == 5) {
+			if (!m_itemEquipDlg) {
+				m_itemEquipDlg = CreateForm<FrEquipDlg>(g_pFresh->GetManager(), this, "equip", NULL);
+				CSharedDoc* doc = CSharedDoc::Instance();
+				if (GalleryMode())
+					m_itemEquipDlg->Init(doc->m_roomPlayers[0].m_equipItem, true);
+				else
+					m_itemEquipDlg->Init(doc->m_equipItem, true);
+				m_itemEquipDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnItemEquipResult, 3);
+			}
+			break;
+		}
+		// JP 0xabcb62-0xabcba5 (6..0xb, GolfRule::ReturnLobby posts them
+		// after a match): the room form of type 3, 4, 5, 8, 6, 7.
+		if (msg.m_param1 >= 6 && msg.m_param1 <= 0xB) {
+			static const int s_roomTypes[6] = { 3, 4, 5, 8, 6, 7 };
+			OpenRoomTypeForm(s_roomTypes[msg.m_param1 - 6]);
+			break;
+		}
+		// JP 0xabcbaa (12, FrGameRoomDlg::SendLeaveFinishedGame 0x5037b0):
+		// the JP-only "notify_tiki" form (JpNotifyTikiDlg.h, +0x468) once,
+		// with the count of the tiki report item (0x1A000041) the player
+		// holds in the JP CSharedDoc +0x375c list (the KR m_itemInfoList).
+		if (msg.m_param1 == 0xC) {
+			if (s_jpUseTikiReportDlg)
+				break;
+			int count = 0;
+			CSharedDoc* shared = CSharedDoc::Instance();
+			std::list<sItemInfo>::iterator it;
+			for (it = shared->m_itemInfoList.begin(); it != shared->m_itemInfoList.end(); ++it) {
+				if (it->m_typeId == 0x1A000041)
+					break;
+			}
+			if (it != shared->m_itemInfoList.end() && (short)it->m_count > 0)
+				count = (short)it->m_count;
+			s_jpUseTikiReportDlg = CreateUseTikiReportDlg(g_pFresh->GetManager(), this, "notify_tiki", NULL);
+			s_jpUseTikiReportDlg->SetNotice(Jp_LookupText("\\c0xffff0000\\c\xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE\\c0xff000000\\c\xB8\xA6 \xBB\xE7\xBF\xEB\xC7\xCF\xBD\xC3\xB8\xE9,\x0A\xB4\xD9\xB8\xA5 \xC7\xC3\xB7\xB9\xC0\xCC\xBE\xEE\xB5\xE9\xC0\xC7 \xBF\xCF\xC1\xD6\xB8\xA6 \xB1\xE2\xB4\xD9\xB8\xAE\xC1\xF6 \xBE\xCA\xB0\xED\x0A\xB4\xEB\xC8\xB8\xB8\xA6 \xB3\xA1\xB3\xBE \xBC\xF6 \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9.\x0A\x0A\x0A\\c0xffff0000\\c\xC6\xBC\xC5\xB0 \xB8\xAE\xC6\xF7\xC6\xAE\\c0xff000000\\c\xB8\xA6 \xBB\xE7\xBF\xEB\xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?"));
+			s_jpUseTikiReportDlg->SetAmount(MakeStr(Jp_LookupText("\xC7\xF6\xC0\xE7\xBC\xF6\xB7\xAE\x0A%d\xB0\xB3"), count));
+			s_jpUseTikiReportDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnUseTikiReportDlgResult, 1);
+			break;
+		}
+		// JP 0xabc986: open the room list form of tab param2 (0 multiplayer,
+		// 1 GP) over TOPPAGE, under the Refresh over bar.
+		if (msg.m_param1 == 4) {
+			CloseAllDialogs();
+			if (JpSharedDoc_GetCurrentRoomTab() == (int)msg.m_param2 && s_jpRoomListDlg)
+				break;
+
+			if (s_jpRoomListDlg) {
+				s_jpRoomListDlg->Close(FrOK, true);
+				if (RFLobbyDesktop::s_instance && RFLobbyDesktop::s_instance->GetLobbyState() == 9)
+					CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0x59, 1, 0, 0, 0);
+			}
+			// JP 0xabc9ed-0xabca15: the room form (+0x780) closes in lobby
+			// mode 8 (0x62bf90); its result 0xab6620 clears it.
+			if (s_jpRoomTypeForm && JpSharedDoc_GetLobbyMode() == 8)
+				s_jpRoomTypeForm->Close(FrNONE, true);
+
+			JpSharedDoc_SetCurrentRoomTab((int)msg.m_param2);
+			switch (JpSharedDoc_GetCurrentRoomTab()) {
+			case 0:
+				s_jpRoomListDlg = CreateMultiplayRoomDlg(g_pFresh->GetManager(), this, "roomlist", NULL);
+				JpSharedDoc_SetLobbyMode(1);
+				break;
+			case 1:
+				// JP 0xabca39: CTaskMain::SetConstantBGM 0x653f60.
+				SetConstantBGM("bgm_grandprix_lobby.mp3", false, true);
+				// JP 0xabca60-0xabca7d then calls FrRoomListDlg::SetLobbyValues
+				// 0x51ce50 with CLobbyMain +0x794, +0x784, +0x79c (fonts 2, 0,
+				// 3 of JpLobbyTitleFonts_Get): not in the port until its
+				// declaration takes three WTitleFontEx* (JpRoomListDlg.h
+				// declares the last two as int).
+				s_jpRoomListDlg = CreateGrandPrixRoomDlg(g_pFresh->GetManager(), this, "grandprix_list", NULL);
+				JpSharedDoc_SetLobbyMode(2);
+				break;
+			}
+
+			if (s_jpRoomListDlg) {
+				// JP 0xabcab0: 35 px down, under the Refresh over bar.
+				WRect rect = s_jpRoomListDlg->GetRect();
+				rect.y += 35.0f;
+				s_jpRoomListDlg->MoveWindow(WPoint(rect.x, rect.y));
+				s_jpRoomListDlg->EnableDrag(false);
+				// JP 0xabcb0c: the lobby's room-list state (+0x778).
+				s_jpRoomListDlg->SetRoomState(s_jpRoomListState);
+				s_jpRoomListDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnRoomListDlgResult, 1);
+			}
+		}
+		break;
+#endif
+
 	case 0x44:
 		// lobbymain.cpp:3017
 		OpenEventPrizeForm((unsigned char)msg.m_param1);
@@ -3417,6 +3713,26 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 					AfxGetTask()->SetWhisper(true);
 				}
 
+#ifdef JP_PAKS
+				// Hook 7, JP 0xabc322-0xabc37f: TOPPAGE shows the lobby's
+				// Refresh desktop (created by 0x5fff30 when there is none);
+				// any other layout deletes the manager's desktop.
+				if (stricmp(name, "TOPPAGE") == 0) {
+					RFLobbyDesktop::s_mode = 0;
+					if (RFLobbyDesktop::s_instance) {
+						RFLobbyDesktop::s_instance->ShowLobby(true);
+					} else {
+						RFLobbyDesktop* desktop = static_cast<RFLobbyDesktop*>(CreateLobbyDesktop(NULL));
+						if (desktop)
+							desktop->ShowLobby(true);
+					}
+					JpLobbyAvatarLoaded();  // JP: LobbyPlayer's loader 0x568860 sends 0x57 once the avatar is built; the port has no LobbyPlayer
+				} else if (RFLobbyDesktop::s_instance) {
+					if (RFSceneManager::Instance())
+						RFSceneManager::Instance()->GetManager()->DeleteDesktop();
+				}
+#endif
+
 				g_pFresh->OpenLayout(name, this, false);
 				WSingleton<CMouseCursor>::Instance()->Toggle(true);
 				CheckTikiReport(name);
@@ -3426,6 +3742,17 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 	}
 
 	case 0x03:
+#ifdef JP_PAKS
+		// JP 0xabc3c5: the line goes to the open room list form (+0x77c)
+		// and room form (+0x780) only (FrChatDlg::AddChatMsg 0x490d10
+		// keeps it in the CSharedDoc chat lines); no layout test, no
+		// m_chatView.
+		if (s_jpRoomListDlg)
+			s_jpRoomListDlg->AddChatMsg((const char*)msg.m_param1, msg.m_param2);
+		if (s_jpRoomTypeForm)
+			JpRoomTypeForm_AddChatMsg(s_jpRoomTypeForm, (const char*)msg.m_param1, msg.m_param2);
+		break;
+#endif
 		// lobbymain.cpp:3088, a chat line: kept for the chat view outside
 		// the game room layouts
 		if (strcmpi(g_pFresh->GetManager()->GetLayoutID(), "GAMEROOM") == 0
@@ -4443,51 +4770,90 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		// lobbymain.cpp:4454, the answer to a room create or enter request:
 		// param1 the result code. Failures show a notice; code 12 (no room
 		// found for a quick join) creates one itself.
+#ifdef JP_PAKS
+		// JP 0xabd307 (jump table 0xabec4c, code - 2): the same codes (2, 3,
+		// 4, 5, 7/9, 8, 12, 13, 15, 17, 18), each notice the JP text table's
+		// text of the KR literal (0xb4eb80).
+#endif
 		switch ((unsigned char)msg.m_param1) {
 		case 2:
 			// "The room is full"
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xC1\xA4\xBF\xF8\xC0\xCC \xC3\xCA\xB0\xFA \xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9"), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xC1\xA4\xBF\xF8\xC0\xCC \xC3\xCA\xB0\xFA \xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 3:
 			// "The room does not exist"
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xC1\xB8\xC0\xE7\xC7\xCF\xC1\xF6 \xBE\xCA\xB4\xC2 \xB9\xE6\xC0\xD4\xB4\xCF\xB4\xD9"), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xC1\xB8\xC0\xE7\xC7\xCF\xC1\xF6 \xBE\xCA\xB4\xC2 \xB9\xE6\xC0\xD4\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 4:
 			// "Wrong password"
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xBA\xF1\xB9\xD0\xB9\xF8\xC8\xA3\xB0\xA1 \xC6\xB2\xB7\xC8\xBD\xC0\xB4\xCF\xB4\xD9"), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xBA\xF1\xB9\xD0\xB9\xF8\xC8\xA3\xB0\xA1 \xC6\xB2\xB7\xC8\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 7:
 		case 9:
 			// "The room creation request failed"
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xB9\xE6\xB8\xB8\xB5\xE9\xB1\xE2 \xBF\xE4\xC3\xBB\xC0\xCC \xBD\xC7\xC6\xD0\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9"), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xB9\xE6\xB8\xB8\xB5\xE9\xB1\xE2 \xBF\xE4\xC3\xBB\xC0\xCC \xBD\xC7\xC6\xD0\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 8:
 			// "The game in this room has started"
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xB0\xD4\xC0\xD3 \xC1\xF8\xC7\xE0\xC1\xDF\xC0\xCE \xB9\xE6\xC0\xD4\xB4\xCF\xB4\xD9"), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xB0\xD4\xC0\xD3 \xC1\xF8\xC7\xE0\xC1\xDF\xC0\xCE \xB9\xE6\xC0\xD4\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 5:
 			// "At your current level you cannot create or enter a room."
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xC7\xF6\xC0\xE7 \xB7\xB9\xBA\xA7\xBF\xA1\xBC\xAD\xB4\xC2 \xB9\xE6\xC0\xBB \xB8\xB8\xB5\xE9\xB0\xC5\xB3\xAA \xB9\xE6\xBF\xA1 \xC0\xD4\xC0\xE5\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xC7\xF6\xC0\xE7 \xB7\xB9\xBA\xA7\xBF\xA1\xBC\xAD\xB4\xC2 \xB9\xE6\xC0\xBB \xB8\xB8\xB5\xE9\xB0\xC5\xB3\xAA \xB9\xE6\xBF\xA1 \xC0\xD4\xC0\xE5\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 13:
 			// "You must join a guild."
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xB1\xE6\xB5\xE5\xBF\xA1 \xB0\xA1\xC0\xD4\xC7\xD8\xBE\xDF \xC7\xD5\xB4\xCF\xB4\xD9."), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xB1\xE6\xB5\xE5\xBF\xA1 \xB0\xA1\xC0\xD4\xC7\xD8\xBE\xDF \xC7\xD5\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 18:
 			// "Rooms cannot be opened on the Fantasy PangYa island."
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xC8\xAF\xBB\xF3\xC0\xC7 \xC6\xCE\xBE\xDF\xBC\xB6\xBF\xA1\xBC\xAD\xB4\xC2 \xB9\xE6 \xB0\xB3\xBC\xB3\xC0\xCC \xBA\xD2\xB0\xA1\xB4\xC9\xC7\xD5\xB4\xCF\xB4\xD9."), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xC8\xAF\xBB\xF3\xC0\xC7 \xC6\xCE\xBE\xDF\xBC\xB6\xBF\xA1\xBC\xAD\xB4\xC2 \xB9\xE6 \xB0\xB3\xBC\xB3\xC0\xCC \xBA\xD2\xB0\xA1\xB4\xC9\xC7\xD5\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 12: {
 			// lobbymain.cpp:4491, no room to join: a match channel offers to
 			// create a match room
+#ifndef JP_PAKS
+			// (JP 0xabd5ae has no match-channel branch: the level test first.)
 			if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x80) {
 				FrForm* form = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify_yesno", NULL);
 				// "There is no suitable match player at the moment..."; the
@@ -4497,13 +4863,18 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 				form->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnMatchRoomCreateDlgResult, 0);
 				return;
 			}
+#endif
 
 			// lobbymain.cpp:4501
 			if ((WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x400)
 				&& WSingleton<CSharedDoc>::Instance()->m_myLevel < 11
 				&& !AdminMode()) {
 				// "Could not find a room you can play in."
+#ifdef JP_PAKS
+				this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xB0\xD4\xC0\xD3\xC0\xBB \xC7\xD2 \xBC\xF6 \xC0\xD6\xB4\xC2 \xB9\xE6\xC0\xBB \xC3\xA3\xC1\xF6 \xB8\xF8\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9."), 0, 0, 0, 0);
+#else
 				this << MsgObject(0, 0x23, (intptr_t)"\xB0\xD4\xC0\xD3\xC0\xBB \xC7\xD2 \xBC\xF6 \xC0\xD6\xB4\xC2 \xB9\xE6\xC0\xBB \xC3\xA3\xC1\xF6 \xB8\xF8\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+#endif
 				return;
 			}
 
@@ -4511,7 +4882,12 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 			WSendPacket packet((enumClientPacket)8);
 			packet.Encode1(0);
 
+#ifdef JP_PAKS
+			// JP 0xabd654: 0x17.
+			unsigned char gameType = 0x17;
+#else
 			unsigned char gameType = 0x10;
+#endif
 			unsigned char course = FirstMap();
 
 			if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 2) {
@@ -4522,6 +4898,8 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 
 				packet.Encode1(4);
 				packet.Encode1(18);
+#ifndef JP_PAKS
+			// (JP 0xabd6c9: no match-channel kind.)
 			} else if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x80) {
 				packet.Encode4(60000);
 				packet.Encode4(0);
@@ -4530,6 +4908,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 
 				packet.Encode1(3);
 				packet.Encode1(9);
+#endif
 			} else if (WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x4000) {
 				packet.Encode4(40000);
 				packet.Encode4(0);
@@ -4558,6 +4937,10 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 			packet.Encode1(gameType == 10 ? 2 : 0);
 			packet.EncodeStr(std::string(WSingleton<CSharedDoc>::Instance()->GetDefaultTitle(gameType)));
 			packet.EncodeStr(std::string(""));
+#ifdef JP_PAKS
+			// JP 0xabd85d: a trailing zero dword.
+			packet.Encode4(0);
+#endif
 			packet.Send(SEND_TO_DEFAULT);
 
 			this << MsgObject(0, 0x16, 1, 0, 0, 0, 0);
@@ -4566,17 +4949,31 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 
 		case 15:
 			// "Not enough pins for the pin battle"
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xC6\xCE\xB9\xE8\xC6\xB2\xBF\xA1 \xC7\xCA\xBF\xE4\xC7\xD1 \xC6\xCE\xC0\xCC \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9"), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xC6\xCE\xB9\xE8\xC6\xB2\xBF\xA1 \xC7\xCA\xBF\xE4\xC7\xD1 \xC6\xCE\xC0\xCC \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9", 0, 0, 0, 0);
+#endif
 			break;
 
 		case 17:
 			// "Not enough pins for the approach game."
+#ifdef JP_PAKS
+			this << MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xBE\xEE\xC7\xC1\xB7\xCE\xC4\xA1\xB0\xD4\xC0\xD3\xBF\xA1 \xC7\xCA\xBF\xE4\xC7\xD1 \xC6\xCE\xC0\xCC \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9."), 0, 0, 0, 0);
+#else
 			this << MsgObject(0, 0x23, (intptr_t)"\xBE\xEE\xC7\xC1\xB7\xCE\xC4\xA1\xB0\xD4\xC0\xD3\xBF\xA1 \xC7\xCA\xBF\xE4\xC7\xD1 \xC6\xCE\xC0\xCC \xBA\xCE\xC1\xB7\xC7\xD5\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+#endif
 			break;
 		}
 
 		// lobbymain.cpp:4593
+#ifdef JP_PAKS
+		// JP 0xabd974: the room list form's (+0x77c) controls instead.
+		if (s_jpRoomListDlg)
+			s_jpRoomListDlg->EnableRoomEnterControls(true);
+#else
 		EnableRoomEnterControls(true);
+#endif
 		break;
 
 	case 0x3D: {
@@ -5108,6 +5505,37 @@ void CLobbyMain::OnToppage_Init(PG_MSGARG) {
 
 // lobbymain.cpp:5503
 void CLobbyMain::OnToppage_Finish(void) {
+#ifdef JP_PAKS
+	// The JP TOPPAGE layout has no Fresh bars (its utab_mcr, ubar_mcr and
+	// obar_mcr items are commented out in data/ui/lobby.xml): the Refresh
+	// lobby desktop (hook 7) draws them. The port's FrElement loader adds
+	// them back for the KR controls this code keeps; hide them.
+	for (int i = 0; i < 3; i++) {
+		if (m_barFrame[i] != 0) {
+			m_barFrame[i]->SetVisible(false);
+		}
+	}
+	// The JP TOPPAGE controls the KR message map has no INIT entry for:
+	// "PremiumService" (JP 0x596290 hides it; it then sends message 0xcb to
+	// the "Lobby" actor when the premium bit, JP CSharedDoc +0x812 bit 14,
+	// is set: not ported) and "premium_service_end_notice" (JP 0x596180:
+	// SetVisible/Enable with JP CSharedDoc +0x1160a, the premium-ended flag
+	// the port does not have, so false). Both are layout items, direct
+	// children of the desktop when FINISH arrives.
+	static const char* const jpHiddenItems[] = { "PremiumService", "premium_service_end_notice" };
+	for (int i = 0; i < 2; i++) {
+		FrWnd* item = g_pFresh->GetDesktop()->FindChildByName(jpHiddenItems[i]);
+		if (item != 0) {
+			item->SetVisible(false);
+			item->Enable(false);
+		}
+	}
+	// The JP TOPPAGE FINISH handler (message map 0xe0d130, handler
+	// 0x593070) is an empty function: the paran-nick event prize and gift
+	// mail below moved to CTutorialWidget::Open 0x6b2d40, and the JP sends
+	// no gift alarm (0xAA) here.
+	return;
+#endif
 	if (CSharedDoc::Instance()->m_paranNickChanged) {
 		if (IsLocalContent((localContentType_t)0x10)) {
 			CSharedDoc::Instance()->m_paranNickChanged = false;
@@ -5201,6 +5629,15 @@ void CLobbyMain::OnToppage_FamilyUp(void) {
 void CLobbyMain::OnToppage_PangysStudyInit(intptr_t param) {
 	m_toppagePangysStudyBtn = DYNAMIC_CAST(FrButton, param);
 	if (m_toppagePangysStudyBtn) {
+#ifdef JP_PAKS
+		// JP 0x596030: past level 5 (JP CSharedDoc +0x91d, the KR
+		// m_myLevel) the tutorial button is hidden and disabled.
+		if (CSharedDoc::Instance()->m_myLevel > 5) {
+			m_toppagePangysStudyBtn->SetVisible(false);
+			m_toppagePangysStudyBtn->Enable(false);
+			return;
+		}
+#endif
 		m_toppagePangysStudyBtn->SetPushSound("ui_desktop_icon_click");
 		m_toppagePangysStudyBtn->EnableHover(true, 0.5f);
 	}
@@ -5210,8 +5647,14 @@ void CLobbyMain::OnToppage_PangysStudyInit(intptr_t param) {
 void CLobbyMain::OnToppage_PangysStudyUp(void) {
 	CloseAllDialogs();
 
+#ifdef JP_PAKS
+	// JP 0x5937f0: the tutorial is a CTaskWidget page over TOPPAGE
+	// (JpTutorialWidget.cpp), opened by this actor's own message 0x88.
+	this << MsgObject(0, 0x88, (intptr_t)"CTutorialWidget", (intptr_t)"TOPPAGE", 0, 0, 0);
+#else
 	CTaskManager::Instance()->ChangeTask("CTutorialTask", "", false);
 	CTaskManager::Instance()->PostMsg(0, "TutorialMain", 0, (intptr_t)"TUTORIAL_MAIN", 0, 0, 0);
+#endif
 }
 
 // lobbymain.cpp:5623
@@ -5255,6 +5698,111 @@ void CLobbyMain::OnToppage_PcbangUp(void) {
 	m_pcbangNoticeDlg->SetIconRect(m_toppagePcbangBtn->GetRect());
 	m_pcbangNoticeDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnPCBangDlgResult, 0x11);
 }
+
+#ifdef JP_PAKS
+// The JP "single_mode_start" form (class name ours, JP-only, no KR
+// counterpart): FrForm-derived, 0x170 bytes, constructor 0x521790 (vtable
+// 0xd0815c, its own slots [0] 0x5218b0 and [1] 0x5218f0; the images
+// "single_start_img_course" / "_chipin" and texts "single_start_expl_course"
+// / "_chipin"), RTTI 0xe74f64; its byte +0x160 (0xff from the constructor)
+// is the kind the player picked: 0, 4 or 6. Not decompiled yet: declared.
+class CSingleModeStartDlg;
+// 0x595490: CreateForm<CSingleModeStartDlg> (the KR CreateForm<T> body:
+// new 0x170, _Init 0xbe6940, DYNAMIC_CAST), returned as its FrForm base.
+FrForm* CreateSingleModeStartDlg(FrWndManager* manager, FrCmdTarget* owner, const char* name, FrWnd* parent);
+// DYNAMIC_CAST(CSingleModeStartDlg, form) (IObject::DynamicCast with
+// 0xe74f64, through __rtti_obj).
+CSingleModeStartDlg* SingleModeStartDlg_Cast(FrForm* form);
+// The kind byte at +0x160.
+unsigned char SingleModeStartDlg_GetKind(const CSingleModeStartDlg* dialog);
+
+// The JP CSharedDoc (0xe47dbc) state the single mode start and the room
+// forms write (port/refresh/game/JpLobbyGlue.cpp). The JP room record starts
+// at +0x10904 and matches the KR sRoomInfo up to +0x4c (JpLobbyGlue.h).
+// +0x1094f (room +0x4b, the KR m_roomInfo.m_value4B): the single mode kind
+// (0, or 4), sent as the room's mode byte.
+void Jp_GameState_SetSingleModeKind(unsigned char kind);
+unsigned char Jp_GameState_SingleModeKind(void);
+// +0x1094b (room +0x47, the KR m_roomInfo.m_holeCount by its offset): 0x13
+// before the 0x113 message.
+void Jp_GameState_Set1094b(unsigned char value);
+// +0x10b29 (the KR m_lobbyStateFlag2): 0 before the 0x113 message.
+void Jp_GameState_Set10b29(unsigned char value);
+// 0x636c40 / 0x633580: a byte kept scrambled at +0x115f8/+0x115f9 (keyed
+// by +0x11606; no KR member): 1 for kind 4 (sent after the mode byte),
+// 0xff when the single room is left.
+void Jp_GameState_Set115f8(unsigned char value);
+unsigned char Jp_GameState_115f8(void);
+// +0x11609 (no KR member): set for kind 4; the packet sends 7 when set,
+// else 6.
+void Jp_GameState_Set11609(bool value);
+bool Jp_GameState_11609(void);
+// 0x63d300: the map at +0x3890 (head +0x3894): each node's +0x14 object is
+// deleted (its vtable slot 0 with 1) and cleared, then 0x50fd30 empties it.
+void Jp_GameState_ClearList3890(void);
+// IsLocalContent(0x58): the object 0xe74c78 points to gets +0x32f4 = 1.
+void Jp_SetE74c78Flag32f4(void);
+// 0x50f810: (float)+0x98c / (float)max(+0x960, 1) * 100.0 compared with
+// the float 0xcfe8d4 (true when not below it).
+bool Jp_GameState_50f810(void);
+// The loop 0xabaa94-0xabab1f run when 0x50f810 is false: for each of the
+// GetMyPartTidList() count (+5) entries (+8), and the matching entry (+0xc,
+// +0x6c) of the equipped character (+0xa2a) in the character map (+0x3704,
+// 0x50cf40), the ids 0x4ce760 (on the object at 0xe73e14) accepts are
+// cleared.
+void Jp_GameState_ClearCheckedParts(void);
+// 0x641650 (JP SharedDoc unit): the course of a course-kind single mode
+// (a random pick among the courses 0xd15fe8 / 0xd15ef8 list, weighted, for
+// the player's level +0x91d).
+unsigned char Jp_GameState_SingleModeCourse(void);
+// JP +0x10488 (role not traced): the GP room exit is skipped when it is set
+// and the room sort (0x62bf30) is 0.
+bool Jp_GameState_10488(void);
+// JP 0xab668c-0xab6691: the current task's (0xe73df0, 0x9b79c0) JP byte
+// +0x1f8 cleared (the KR CTask has its float m_netSyncTime there).
+void Jp_Task_ClearByte1f8(void);
+// 0xb2ef90 (fastcall, the byte in cl): the KR CTaskMain::SendRoomExitPacket
+// without its message to the task, the byte as its first field.
+void Jp_SendRoomExitPacket(bool flag);
+// 0xb2e2f0 (fastcall, the byte in cl): the same packet as 0x17a (the GP
+// room exit), without the slot / room number resets.
+void Jp_SendGrandPrixRoomExitPacket(bool flag);
+// 0xab5490 / 0xab5560 / 0xab5630 / 0xab5700 (JpLobbyGlue.cpp): the room
+// form of a room type (3 stroke, 4/5/8 mass, 6 GP, 7 single); NULL for
+// another type.
+FrForm* JpCreateRoomTypeForm(FrWndManager* manager, FrCmdTarget* owner, int type);
+// 0x4ff200: FrGameRoomDlg::m_roomState (+0x178) of the form.
+void JpRoomTypeForm_SetRoomState(FrForm* form, int state);
+// 0xb4eb80 (RFTextManager.h): the text the JP text table gives a key.
+const char* Jp_LookupText(const char* key);
+// commonutil.cpp:1037 (commonutil.h does not declare it yet).
+void LimitText(char* str, int limit);
+
+// JP 0x595f60: the tool tip cleared (CIconToolTip::GetInstance, inlined),
+// then the "single_mode_start" form opened with OnSingleModeStartDlgResult,
+// flag 0x21; no CloseAllDialogs, no member keeps the form, no null test.
+void CLobbyMain::OnToppage_SingleModeUp(void) {
+	CIconToolTip::GetInstance()->ClearToolTip();
+	FrForm* form = CreateSingleModeStartDlg(g_pFresh->GetManager(), this, "single_mode_start", NULL);
+	form->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnSingleModeStartDlgResult, 0x21);
+}
+
+// JpLobbyGlue.h: JP 0x595f60 is the CLobbyMain member above.
+void LobbyMain_OpenSingleModeStart(CLobbyMain* lobby) {
+	lobby->OnToppage_SingleModeUp();
+}
+
+// JP 0x596370: OnToppage_PcbangUp with premiumservice.ini, a null check and
+// no SetIconRect.
+void CLobbyMain::OnToppage_PremiumUp(void) {
+	CloseAllDialogs();
+	m_premiumNoticeDlg = CreateForm<FrNoticeDlg>(g_pFresh->GetManager(), this, "notice_popup", NULL);
+	if (m_premiumNoticeDlg) {
+		m_premiumNoticeDlg->LoadInitFile("premiumservice.ini");
+		m_premiumNoticeDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnPremiumDlgResult, 0x11);
+	}
+}
+#endif
 
 // lobbymain.cpp:5681
 void CLobbyMain::OnToppage_RentalExpiredAlramInit(intptr_t param) {
@@ -5987,7 +6535,13 @@ bool CLobbyMain::OnMakeRoomDlgResult(int ret, FrForm*) {
 			}
 		}
 	} else {
+#ifdef JP_PAKS
+		// JP 0xab2e94: the room list form's (+0x77c) controls instead.
+		if (s_jpRoomListDlg)
+			s_jpRoomListDlg->EnableRoomEnterControls(true);
+#else
 		EnableRoomEnterControls(true);
+#endif
 	}
 
 	m_makeRoomDlg = 0;
@@ -6337,7 +6891,13 @@ bool CLobbyMain::OnPasswordDlgResult(int result, FrForm*) {
 			if (pOk)
 				pOk->Enable(false);
 
+#ifdef JP_PAKS
+			// JP 0xab945a: the room list form's (+0x77c) controls instead.
+			if (s_jpRoomListDlg)
+				s_jpRoomListDlg->EnableRoomEnterControls(false);
+#else
 			EnableRoomEnterControls(false);
+#endif
 
 			WSendPacket packet((enumClientPacket)9);
 			packet.Encode2(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber);
@@ -6347,10 +6907,21 @@ bool CLobbyMain::OnPasswordDlgResult(int result, FrForm*) {
 			HandleMsg(MsgObject(0, 0x16, 0, 0, 0, 0, 0));
 			HandleMsg(MsgObject(0, 1, 0, 0, 0, 0, 0));
 		} else {
+#ifdef JP_PAKS
+			// JP 0xab9514: the room list form's (+0x77c) controls.
+			if (s_jpRoomListDlg)
+				s_jpRoomListDlg->EnableRoomEnterControls(true);
+#else
 			EnableRoomEnterControls(true);
+#endif
 		}
 	} else {
+#ifdef JP_PAKS
+		if (s_jpRoomListDlg)
+			s_jpRoomListDlg->EnableRoomEnterControls(true);
+#else
 		EnableRoomEnterControls(true);
+#endif
 	}
 
 	m_passwordDlg = 0;
@@ -6366,6 +6937,380 @@ bool CLobbyMain::OnPCBangDlgResult(int, FrForm*) {
 	}
 	return true;
 }
+
+#ifdef JP_PAKS
+// JP 0xab3540: the "on" images of the motion chat button.
+void CLobbyMain::SetMotionBtnImages(void) {
+	s_jpMotionBtn->SetButtonImg("motionchat_btn_on_Normal", FrButton::NORMAL);
+	s_jpMotionBtn->SetButtonImg("motionchat_btn_on_Hover", FrButton::OVER);
+	s_jpMotionBtn->SetButtonImg("motionchat_btn_on_Hover", FrButton::PRESSED);
+}
+
+// JP 0xab4420: the dialog closes itself (its closing state).
+void CLobbyMain::CloseMotionDlg(void) {
+	if (s_jpMotionDlg) {
+		s_jpMotionDlg->BeginClose();
+	}
+}
+
+// JP 0xab44e0: keeps the button at its layout distance from the right edge
+// of the screen (the layout is 800 wide).
+void CLobbyMain::MoveMotionBtn(void) {
+	if (s_jpMotionBtn) {
+		float right = 800.0 - s_jpMotionBtnRect.x;
+		float width = g_view ? g_view->GetWidth() : 800.0f;
+		s_jpMotionBtn->MoveWindow(WPoint(width - right, s_jpMotionBtnRect.y));
+	}
+}
+
+// JP 0xab7350: TOPPAGE.motion_btn_start's INIT. The JP button also gets
+// 0 and 0.1 in two JP-only FrWnd members (+0x104, +0x108; the KR Fresh has
+// no counterpart).
+void CLobbyMain::OnToppage_MotionBtnInit(PG_MSGARG param) {
+	s_jpMotionBtn = DYNAMIC_CAST(FrButton, param);
+	s_jpMotionBtn->UseDblClick(false);
+	s_jpMotionBtn->EnableHover(true, 0.0f);
+	s_jpMotionBtnRect = s_jpMotionBtn->GetRect();
+	MoveMotionBtn();
+	SetMotionBtnImages();
+}
+
+// JP 0xab7430: the button's tool tip (bar button 0x1a).
+void CLobbyMain::OnToppage_MotionBtnHoverOn(PG_MSGARG) {
+	CIconToolTip::GetInstance()->SetToolTip((eBarButton)0x1a);
+}
+
+// JP 0xab74b0
+void CLobbyMain::OnToppage_MotionBtnHoverOff(PG_MSGARG) {
+	CIconToolTip::GetInstance()->ClearToolTip();
+}
+
+// JP 0xab7530: the motion dialog's result: the button is usable again and
+// the lobby actor gets message 0x19d (1).
+bool CLobbyMain::OnMotionDlgResult(int, FrForm*) {
+	if (s_jpMotionBtn) {
+		s_jpMotionBtn->SetStatus(FrButton::NORMAL);
+		s_jpMotionBtn->EnableHover(true, 0.0f);
+	}
+	s_jpMotionDirty = true;
+	s_jpMotionDlg = NULL;
+
+	MsgObject msg(0, 0x19d, 1, 0, 0, 0, 0);
+	(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("Lobby") << msg;
+	return true;
+}
+
+// JP 0xab8350: opens the motion dialog under the button when the lobby
+// avatar answers message 0x198 and a character is selected.
+void CLobbyMain::OpenMotionDlg(void) {
+	int typeId = 0;
+	MsgObject msg(0, 0x198, 0, 0, 0, 0, 0);
+	// The avatar actor answers in msg.m_param1.
+	(!CTaskManager::Instance() ? 0 : CTaskManager::Instance()->GetCurrentTask())->GetActor("LobbyAvatar") << msg;
+	if (msg.m_param1 == 0) {
+		return;
+	}
+	if (RFLobbyDesktop::s_instance) {
+		typeId = RFLobbyDesktop::s_instance->GetSelectedCharacterTypeId();
+	}
+	if (typeId == -1) {
+		return;
+	}
+
+	SetMotionBtnImages();
+	const WRect& rect = s_jpMotionBtn->GetRect();
+	WPoint pt(rect.x - 32.0, rect.y + 35.0);
+	s_jpMotionDlg = CreateAvatarMotionDlg(g_pFresh->GetManager(), this, "motiondlg", NULL);
+	s_jpMotionDlg->EnableDrag(false);
+	s_jpMotionDlg->SetFixed(true);
+	s_jpMotionDlg->SetOpenedFrom(2);
+	s_jpMotionDlg->SetCharacterTypeId(typeId);
+	s_jpMotionDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnMotionDlgResult, pt, 5);
+	s_jpMotionBtn->EnableHover(false, 0.0f);
+	s_jpMotionBtn->SetButtonImg("motionchat_btn_on_Normal", FrButton::NORMAL);
+	CIconToolTip::GetInstance()->ClearToolTip();
+}
+
+// JP 0xab4540: keeps the jukebox button at its layout distance from the
+// right edge of the screen (the layout is 800 wide).
+void CLobbyMain::MoveJukeboxBtn(void) {
+	if (s_jpJukeboxBtn) {
+		float right = 800.0 - s_jpJukeboxBtnRect.x;
+		float width = g_view ? g_view->GetWidth() : 800.0f;
+		s_jpJukeboxBtn->MoveWindow(WPoint(width - right, s_jpJukeboxBtnRect.y));
+	}
+}
+
+// JP 0xab75d0: TOPPAGE.portrait_jukeboxbtn's INIT: the button kept with its
+// layout rect, moved, its images by the jukebox state.
+void CLobbyMain::OnToppage_JukeboxBtnInit(PG_MSGARG param) {
+	s_jpJukeboxBtn = DYNAMIC_CAST(FrButton, param);
+	if (s_jpJukeboxBtn) {
+		s_jpJukeboxBtnRect = s_jpJukeboxBtn->GetRect();
+		MoveJukeboxBtn();
+		s_jpJukeboxBtn->SetButtonImg(FrJukeBoxDlg::m_preserve_isPlaying ? "btn_jukebox_o" : "btn_jukebox_n", FrButton::NORMAL);
+		s_jpJukeboxBtn->SetButtonImg("btn_jukebox_o_o", FrButton::OVER);
+	}
+}
+
+// JP 0xab7740: TOPPAGE.portrait_jukeboxbtn's LBUTTONUP: closes the open
+// jukebox, or opens "jukeboxdlg" (fixed, flag 1), hides the button and
+// closes the motion dialog. The JP also selects the playing BGM's track
+// (0x7ba810 with the sound manager 0xf023f4 +0x24, a JP-only FrJukeBoxDlg
+// static): not in the port.
+void CLobbyMain::OnToppage_JukeboxBtnUp(void) {
+	if (s_jpJukeboxDlg) {
+		s_jpJukeboxDlg->Close(true);
+		return;
+	}
+	if (!s_jpJukeboxBtn)
+		return;
+	s_jpJukeboxDlg = CreateForm<FrJukeBoxDlg>(g_pFresh->GetManager(), this, "jukeboxdlg", 0);
+	s_jpJukeboxDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnJukeboxDlgResult, 1);
+	s_jpJukeboxDlg->SetFixed(true);
+	s_jpJukeboxBtn->SetVisible(false);
+	if (s_jpMotionDlg)
+		s_jpMotionDlg->Close(true);
+}
+
+// JP 0xab35c0: the jukebox's result: the button usable and shown again.
+bool CLobbyMain::OnJukeboxDlgResult(int, FrForm*) {
+	if (s_jpJukeboxBtn)
+		s_jpJukeboxBtn->SetStatus(FrButton::NORMAL);
+	s_jpJukeboxBtn->SetVisible(true);
+	s_jpJukeboxDlg = NULL;
+	return true;
+}
+
+// JP 0xab8520: TOPPAGE.motion_btn_start's LBUTTONUP toggles the dialog.
+void CLobbyMain::OnToppage_MotionBtnUp(void) {
+	s_jpMotionDirty = true;
+	if (s_jpMotionDlg) {
+		CloseMotionDlg();
+	} else {
+		OpenMotionDlg();
+	}
+}
+
+// JP 0xab6540 (name ours): the room list form's result (message 0x8b (4)).
+// Leaving it leaves the lobby (packet 0x82, or 0x177 for the GP tab) and
+// sends the lobby message 1; the layout is still TOPPAGE.
+bool CLobbyMain::OnRoomListDlgResult(int result, FrForm*) {
+	s_jpRoomListDlg = NULL;
+	if (result != 0) {
+		switch (JpSharedDoc_GetCurrentRoomTab()) {
+		case 0: {
+			WSendPacket packet(GCT_LEAVE_LOBBY);
+			packet.Send(SEND_TO_DEFAULT);
+			break;
+		}
+		case 1: {
+			WSendPacket packet(0x177);
+			packet.Send(SEND_TO_DEFAULT);
+			break;
+		}
+		}
+		HandleMsg(MsgObject(0, 1, 0, 0, 0, 0, 0));
+		JpSharedDoc_SetLobbyMode(0);
+	}
+	return true;
+}
+
+// JP 0xab6be0 (name ours): message 0x8b (6..0xb). Closes the room list form
+// (+0x77c) and the previous room form (+0x780), sets the lobby mode to the
+// room type and opens the type's room form (JpLobbyGlue.cpp's
+// JpCreateRoomTypeForm): 35 px down (the single room: moved right by
+// (screen width - 800) * 0.3 instead), its room state the type, not
+// draggable, opened with flag 1 (the single room 2, type 8 0). The JP
+// also calls FrGameRoomDlg::SetLobbyValues 0x4ff300 (0xab6d60, after
+// MoveWindow) with CLobbyMain +0x784, +0x794 (fonts 0 and 2 of
+// JpLobbyTitleFonts_Get): not in the port until its declaration takes two
+// WTitleFontEx* (JpGameRoomDlg.h declares the first as int) and a glue
+// like JpRoomTypeForm_SetRoomState reaches it from the FrForm*.
+void CLobbyMain::OpenRoomTypeForm(int type) {
+	if (s_jpRoomListDlg)
+		s_jpRoomListDlg->Close(FrNONE, false);
+	if (s_jpRoomTypeForm) {
+		s_jpRoomTypeForm->Close(FrNONE, false);
+		s_jpRoomTypeForm = NULL;
+	}
+	JpSharedDoc_SetLobbyMode(type);
+
+	s_jpRoomTypeForm = JpCreateRoomTypeForm(g_pFresh->GetManager(), this, type);
+	if (!s_jpRoomTypeForm)
+		return;
+
+	unsigned long flag = type == 7 ? 2 : (type == 8 ? 0 : 1);
+	WRect rect = s_jpRoomTypeForm->GetRect();
+	if (type == 7)
+		rect.x += (g_view->GetWidth() - 800.0) * 0.30000001192092896;
+	else
+		rect.y += 35.0f;
+	s_jpRoomTypeForm->MoveWindow(WPoint(rect.x, rect.y));
+	JpRoomTypeForm_SetRoomState(s_jpRoomTypeForm, type);
+	s_jpRoomTypeForm->EnableDrag(false);
+	s_jpRoomTypeForm->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnRoomTypeFormResult, flag);
+}
+
+// JP 0xab6620 (name ours): the room form's result. Leaving the room (any
+// result but 0) re-enables the room list form, sends the room exit of the
+// lobby mode (3..5: 0xb2ef90, the KR SendRoomExitPacket's packet, back to
+// mode 1; 6 unless +0x10488 is set and 0x62bf30 is 0: the GP room exit
+// 0xb2e2f0, mode 2; 7: the single mode state cleared, the room exit,
+// mode 0), clears the room's player objects (0x63d300) and sends the lobby
+// message 1.
+bool CLobbyMain::OnRoomTypeFormResult(int result, FrForm*) {
+	s_jpRoomTypeForm = NULL;
+	if (result != 0) {
+		if (s_jpRoomListDlg)
+			s_jpRoomListDlg->EnableRoomEnterControls(true);
+		switch (JpSharedDoc_GetLobbyMode()) {
+		case 3:
+		case 4:
+		case 5:
+			Jp_SendRoomExitPacket(false);
+			JpSharedDoc_SetLobbyMode(1);
+			break;
+		case 6:
+			if (!Jp_GameState_10488() || JpSharedDoc_GetRoomSort() != 0) {
+				Jp_SendGrandPrixRoomExitPacket(false);
+				JpSharedDoc_SetLobbyMode(2);
+			}
+			break;
+		case 7:
+			if (Jp_GameState_SingleModeKind() == 4)
+				Jp_GameState_SetSingleModeKind(0);
+			Jp_Task_ClearByte1f8();
+			Jp_GameState_Set115f8(0xFF);
+			Jp_GameState_Set11609(false);
+			Jp_SendRoomExitPacket(false);
+			JpSharedDoc_SetLobbyMode(0);
+			break;
+		}
+		Jp_GameState_ClearList3890();
+		HandleMsg(MsgObject(this, 1, 0, 0, 0, 0, 0));
+	}
+	return true;
+}
+
+// JP 0xab2ec0
+bool CLobbyMain::OnUseTikiReportDlgResult(int result, FrForm*) {
+	s_jpUseTikiReportDlg = NULL;
+	if (result == FrOK) {
+		if (s_jpRoomTypeForm)
+			s_jpRoomTypeForm->Close(FrOK, false);
+	} else if (result == FrNO) {
+		if (s_jpRoomTypeForm)
+			s_jpRoomTypeForm->Close(FrNONE, false);
+	}
+	return true;
+}
+
+// JP 0xab6780: OnPCBangDlgResult on m_premiumNoticeDlg.
+bool CLobbyMain::OnPremiumDlgResult(int, FrForm*) {
+	m_premiumNoticeDlg = 0;
+
+	if (CSharedDoc::Instance()->m_noticeShown) {
+		OnToppage_NoticeUp();
+	}
+	return true;
+}
+
+// JP 0xaba930: on FrYES with a CSingleModeStartDlg, starts a one-player
+// practice room: the JP game state for the picked kind (0 and 6: the course
+// kinds, 4: chip-in), message 0x113 to the lobby actor, then packet 8 (the
+// room creation; the JP layout has more fields than the KR one, see
+// CLobbyMain::OnMatchRoomCreateDlgResult): one player, game type 0x13 with
+// 18 holes on 0x641650's course and a 2100000 ms game time, or for kind 6
+// game type 0x0e with 1 hole on course 0x40 and 1800000 ms; the title is the
+// translated "1-player practice mode", the password the base64 of a random
+// 7-digit number cut to 8 bytes.
+bool CLobbyMain::OnSingleModeStartDlgResult(int result, FrForm* form) {
+	if (result != FrYES || form == NULL) {
+		return true;
+	}
+	CSingleModeStartDlg* dialog = SingleModeStartDlg_Cast(form);
+	if (dialog == NULL) {
+		return true;
+	}
+	unsigned char kind = SingleModeStartDlg_GetKind(dialog);
+	if (kind == 4) {
+		Jp_GameState_SetSingleModeKind(4);
+		Jp_GameState_Set115f8(1);
+		Jp_GameState_Set11609(true);
+	} else if (kind == 0 || kind == 6) {
+		Jp_GameState_SetSingleModeKind(0);
+	} else {
+		return true;
+	}
+
+	Jp_GameState_Set1094b(0x13);
+	Jp_GameState_Set10b29(0);
+	SendMsg(this, "Lobby", 0x113, 0, 0, 0, 0);
+	// JP +0x1094c / +0x109b8: the room's game type and mode (the KR
+	// m_roomInfo.m_gameType / m_roomMode, JpLobbyGlue.h).
+	JpSharedDoc_SetRoomGameType(0x17);
+	JpSharedDoc_SetRoomGameMode(0x17);
+	Jp_GameState_ClearList3890();
+	if (IsLocalContent((localContentType_t)0x58)) {
+		Jp_SetE74c78Flag32f4();
+	}
+	if (!Jp_GameState_50f810()) {
+		Jp_GameState_ClearCheckedParts();
+	}
+
+	bool flag = false;
+	unsigned long shotTime = 0;
+	unsigned long gameTime;
+	unsigned char maxPlayers = 1;
+	unsigned char gameType;
+	unsigned char holes;
+	unsigned char course;
+	unsigned char mode = Jp_GameState_SingleModeKind();
+	// CP949: "1-player practice mode"
+	std::string title(Jp_LookupText("1\xC0\xCE \xBF\xAC\xBD\xC0 \xB8\xF0\xB5\xE5"));
+
+	char number[8] = { 0 };
+	char encoded[0x100] = { 0 };
+	_snprintf(number, sizeof(number), "%07d", rand());
+	number[sizeof(number) - 1] = 0;
+	S5::UTIL::Base64Encode(number, (int)strlen(number), encoded);
+	LimitText(encoded, 8);
+	std::string password(encoded);
+
+	if (kind == 6) {
+		gameTime = 1800000;
+		gameType = 0x0E;
+		holes = 1;
+		course = 0x40;
+	} else {
+		gameTime = 2100000;
+		gameType = 0x13;
+		holes = 18;
+		course = Jp_GameState_SingleModeCourse();
+	}
+
+	WSendPacket packet((enumClientPacket)8);
+	packet.Encode1(flag != false);
+	packet.Encode4(shotTime);
+	packet.Encode4(gameTime);
+	packet.Encode1(maxPlayers);
+	packet.Encode1(gameType);
+	packet.Encode1(holes);
+	packet.Encode1(course);
+	packet.Encode1(mode);
+	if (mode == 4) {
+		packet.Encode1(Jp_GameState_115f8());
+		packet.Encode4(Jp_GameState_11609() ? 7 : 6);
+	}
+	packet.Encode4(0);
+	packet.EncodeStr(title);
+	packet.EncodeStr(password);
+	packet.Encode4(0);
+	packet.Send(SEND_TO_DEFAULT);
+	return true;
+}
+#endif
 
 // lobbymain.cpp:7364
 bool CLobbyMain::OnCreateInfoResult(int, FrForm*) {
@@ -6514,7 +7459,12 @@ bool CLobbyMain::OnQuickStartDlgResult(int result, FrForm*) {
 			m_quickResultDlg = CreateForm<FrQuickResultDlg>(g_pFresh->GetManager(), this, "quick_result", NULL);
 			if (m_quickResultDlg) {
 				m_quickResultDlg->Open((FRESH_RESULT_CALLBACK)&CLobbyMain::OnQuickResultDlgResult, 0x40);
+#ifdef JP_PAKS
+				// JP 0xab680f: the JP text table's text.
+				((FrQuickResultDlg*)m_quickResultDlg)->SetContents(MakeStr(Jp_LookupText("\xB8\xC5\xC4\xAA \xB4\xEB\xBB\xF3\xC0\xBB \xB0\xCB\xBB\xF6 \xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9.")));
+#else
 				((FrQuickResultDlg*)m_quickResultDlg)->SetContents(MakeStr("\xB8\xC5\xC4\xAA \xB4\xEB\xBB\xF3\xC0\xBB \xB0\xCB\xBB\xF6 \xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9."));
+#endif
 			}
 		}
 		break;
@@ -8428,10 +9378,14 @@ void CLobbyMain::OnRoomList_Init(PG_MSGARG param) {
 void CLobbyMain::OnRoomList_Finish(void) {
 	m_titleArea->SetBgImg("title_roomlist");
 #ifdef JP_PAKS
-	// The JP form draws its own title row where the over bar sits; the bar
-	// stays for the controls this code keeps (docs/JP_CLIENT.md).
-	if (m_barFrame[0] != 0) {
-		m_barFrame[0]->SetVisible(false);
+	// The JP form draws its own title row where the over bar sits, and the
+	// JP "roomlist" form (room.xml) has no under bar or under tab at all:
+	// the port's FrElement loader adds the three bar macros back
+	// (docs/JP_CLIENT.md); hide them as on TOPPAGE.
+	for (int i = 0; i < 3; i++) {
+		if (m_barFrame[i] != 0) {
+			m_barFrame[i]->SetVisible(false);
+		}
 	}
 #endif
 
