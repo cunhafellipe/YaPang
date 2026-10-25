@@ -53,6 +53,52 @@
 #include "frgraphicinterface.h"
 #include "bitmap.h"
 #include "frwndmanager.h"
+#include "NetResourceManager.h"
+#include "ProjectG.h"
+
+// The JP FrGraphicInterface's title-font print 0xbed090 (defined in
+// JpRoomListState.cpp, not in a header yet): OnCurAztecOwnerDraw's count.
+void JpGdi_PrintTitleFont(FrGraphicInterface* gdi, WTitleFont* font, float x, float y,
+	const char* text, float spacing, int align, float scale, unsigned long color);
+
+// The JP CItemManager member 0xa18f50 (name ours): a ball type id
+// (0x14xxxxxx) whose JP ball record's dword +0x324 is 0 (the KR sBall has
+// no such field). Port placeholder (body below): false, the count shows.
+bool JpItemManager_IsUncountedBall(unsigned long typeId); // 0xa18f50
+bool JpItemManager_IsUncountedBall(unsigned long typeId) {
+	(void)typeId;
+	return false;
+}
+
+// OnMapLBtnUp's JP-only step: the JP FrTreasureCourse's window +0x120
+// (vtable +0x18, Enable; not identified, no KR member) enabled outside
+// the lobby mode 7. Port placeholder (body below): the KR dialog has no
+// such window.
+void JpTreasureCourse_EnableWnd120(FrTreasureCourse* dlg, bool enable);
+void JpTreasureCourse_EnableWnd120(FrTreasureCourse* dlg, bool enable) {
+	(void)dlg;
+	(void)enable;
+}
+
+// The JP 0x507ad0 (fastcall, in-unit; name ours): the room is public (JP room
+// +0x30, the KR m_isPublic), of game type 4, and the own list +0x375c holds
+// the item 0x1a000137 (count > 0): SetRoomControls then enables the start
+// on m_allReady alone, and OnStartLBtnUp opens the card notice. Port
+// placeholder (body below): false; the +0x375c list has no proven KR
+// counterpart yet.
+bool JpGameRoom_IsCardItemRoom(void); // 0x507ad0
+bool JpGameRoom_IsCardItemRoom(void) {
+	return false;
+}
+
+// SetRoomControls' last step with local content 0x55: the master flag into
+// the dword +0xd8 of the JP object at 0xe73de8 (not identified; the
+// counterpart of JpGameRoom_ClearStartState55). Port placeholder (body
+// below): nothing reads it in the port.
+void JpGameRoom_SetStartState55(bool master);
+void JpGameRoom_SetStartState55(bool master) {
+	(void)master;
+}
 
 // shareddoc.inl:213 (KR; not declared by SharedDoc.h): JP 0x502ed0, 0x16 names.
 const char* GetGameTypeName(unsigned char gameType);
@@ -302,10 +348,21 @@ bool FrGameRoomDlg::OnNewRecordDlgResult(int ret, FrForm* pForm) {
 	return true;
 }
 
+// 0x4ff270
+bool FrGameRoomDlg::OnMapSelectDlgResult(int, FrForm*) {
+	m_pMapSelectDlg = NULL;
+	return true;
+}
+
 // 0x4ff280
 bool FrGameRoomDlg::OnUserListDlgResult(int ret, FrForm* pForm) {
 	m_pUserListDlg = NULL;
 	return true;
+}
+
+// 0x4ff290
+void FrGameRoomDlg::SetAddOwnPlayer(bool add) {
+	m_addOwnPlayer = add;
 }
 
 // 0x4ff320
@@ -329,6 +386,75 @@ void FrGameRoomDlg::SetLobbyValues(WTitleFontEx* font154, WTitleFontEx* titleFon
 // LobbyMain.cpp holds (like JpLobbyGlue.cpp's JpRoomTypeForm_SetRoomState).
 void JpRoomTypeForm_SetLobbyValues(FrForm* form, WTitleFontEx* font154, WTitleFontEx* titleFont) {
 	static_cast<FrGameRoomDlg*>(form)->SetLobbyValues(font154, titleFont);
+}
+
+// The JP CLobbyMain::HandleMsg 0xabc060 cases on the room form (+0x780),
+// reached from the FrForm* the KR LobbyMain.cpp holds; ids are the KR ones
+// (the JP 0x2e / 0x2f / 0x30 are the KR 0x2d / 0x2e / 0x2f).
+void JpRoomTypeForm_OnLobbyMsg(FrForm* form, int id, intptr_t param1, intptr_t param2, intptr_t param3) {
+	FrGameRoomDlg* room = static_cast<FrGameRoomDlg*>(form);
+	switch (id) {
+	case 0x07:  // 0xabc5de
+		room->OnPlayerEntered((sSlotInfo*)param1, param2);
+		break;
+	case 0x08:  // 0xabc600
+		room->OnPlayerLeft(param1, param2, param3);
+		break;
+	case 0x09:  // 0xabc626
+		room->UpdatePlayerAngelFlags((sSlotInfo*)param1);
+		break;
+	case 0x0E:  // 0xabc644
+		room->MakeRoomUserList();
+		room->UpdateRoomMaster();
+		break;
+	case 0x0F:  // 0xabc667
+		room->UpdateRoomMaster();
+		break;
+	case 0x10:  // 0xabc67f: always from the room data (param1 ignored)
+		room->UpdateTitle(NULL);
+		break;
+	case 0x11:  // 0xabc69b
+		room->SetCourseImages((unsigned char)param1);
+		break;
+	case 0x12:  // 0xabc6ba
+		room->FillHoleModeCombo((int)param1);
+		break;
+	case 0x29:  // JP 0x2a, 0xabcebf
+		room->SetPlayerReady(param1, param2);
+		break;
+	case 0x2A:  // JP 0x2b, 0xabd15a
+		room->SortRank();
+		break;
+	case 0x2B:  // JP 0x2c, 0xabd111
+		room->LockRoomControls(param1);
+		break;
+	case 0x2D:  // JP 0x2e, 0xabd172
+		room->ShowGameResults();
+		break;
+	case 0x2E:  // JP 0x2f, 0xabd18a: always 0
+		room->SetAddOwnPlayer(false);
+		break;
+	case 0x2F:  // JP 0x30, 0xabd2ef
+		room->UpdateTeamControls();
+		break;
+	}
+}
+
+// 0x500760
+// The KR CLobbyMain::DrawFrameSelectedUserInfo (same shape): the
+// "gameroom_select_frame" bitmap 2 px up-left of rect while the mouse
+// (g_input +0x54 / +0x5c) is inside it.
+void FrGameRoomDlg::DrawFrameSelectedUserInfo(WRect rect) {
+	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
+	if (!pGDI) {
+		return;
+	}
+	if (rect.IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {
+		const Bitmap* pBmp = g_pFresh->GetBitmap("gameroom_select_frame");
+		if (pBmp) {
+			pGDI->DrawTexture(pBmp, WRect(rect.x - 2.0f, rect.y - 2.0f, (float)pBmp->Width(), (float)pBmp->Height()), 0xFFFFFFFF, 0);
+		}
+	}
 }
 
 // 0x500880
@@ -690,8 +816,9 @@ static unsigned char JpCourse_GetNext(unsigned char course) {
 
 // 0x503290
 void FrGameRoomDlg::InitRoom(void) {
-	// The original also clears the raw bytes 0x17f and 0x180.
+	// The original also clears the raw byte 0x180.
 	m_idleWarned = false;
+	m_allReady = false;
 	m_ready = false;
 	m_readyLocked = false;
 	if (WSingleton<CSharedDoc>::Instance()->m_userInfo.identity == 2) {
@@ -829,6 +956,25 @@ void FrGameRoomDlg::EnableEquipViewers(bool enable) {
 		m_pCurEquipItem->Enable(enable);
 	}
 	OnSelLBtnDown();
+}
+
+// 0x503720
+// The JP CLobbyMain::HandleMsg 0x2c (KR 0x2b): lock is 1 while the room
+// is locked (m_readyLocked): the ready button (modes 0x14 / 0x15) and the
+// start button are disabled, the blink window shows while unlocked.
+void FrGameRoomDlg::LockRoomControls(intptr_t lock) {
+	m_readyLocked = lock == 1;
+	int mode = JpSharedDoc_GetRoomGameMode();
+	if ((mode == 0x14 || mode == 0x15) && m_pReady) {
+		m_pReady->Enable(!m_readyLocked);
+	}
+	if (m_pStart) {
+		m_pStart->Enable(!m_readyLocked);
+	}
+	m_blinking = !m_readyLocked;
+	if (m_pBlinkWnd) {
+		m_pBlinkWnd->SetVisible(m_blinking);
+	}
 }
 
 // 0x5037b0
@@ -1230,6 +1376,40 @@ void FrGameRoomDlg::OnUserLBtnDown(void) {
 	}
 }
 
+// 0x505a70
+// The JP CLobbyMain::OnGameRoom_MapBtnUp (KR lobbymain.cpp, same shape):
+// the room master opens the course selection "treasuremap" (alone in the
+// room, before everyone is ready, or as an admin; not in the modes 0x14 /
+// 0x15, nor in the game types 6, 10 and 11). JP difference: the dialog's
+// +0x120 window is enabled outside the lobby mode 7.
+void FrGameRoomDlg::OnMapLBtnUp(void) {
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	if (m_pLobbyData->m_hostUserId != doc->m_userInfo.guid) {
+		return;
+	}
+	if (m_allReady && doc->m_roomPlayerList.size() > 1 && !((doc->m_userInfo.identity >> 2) & 1)) {
+		return;
+	}
+	int mode = JpSharedDoc_GetRoomGameMode();
+	if (mode == 0x14 || mode == 0x15) {
+		return;
+	}
+	int gameType = JpSharedDoc_GetRoomGameType();
+	if (gameType == 6 || (gameType >= 10 && gameType <= 11) || m_pMapSelectDlg) {
+		return;
+	}
+	m_pMapSelectDlg = CreateForm<FrTreasureCourse>(g_pFresh->GetManager(), this, "treasuremap", NULL);
+	if (m_pMapSelectDlg) {
+		m_pMapSelectDlg->SetSelectMap(JpSharedDoc_GetRoomCourse());
+		m_pMapSelectDlg->SetMapIndexChanged(false);
+		JpTreasureCourse_EnableWnd120(m_pMapSelectDlg, JpSharedDoc_GetLobbyMode() != 7);
+		// JP CSharedDoc +0x10594: the KR m_roomType.
+		m_pMapSelectDlg->LockRandom(doc->m_roomType == 2);
+		m_pMapSelectDlg->EnableDrag(false);
+		m_pMapSelectDlg->Open((FRESH_RESULT_CALLBACK)&FrGameRoomDlg::OnMapSelectDlgResult, 3);
+	}
+}
+
 // 0x505bc0
 void FrGameRoomDlg::OnReadyLBtnUp(void) {
 	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
@@ -1371,15 +1551,172 @@ void FrGameRoomDlg::OnChangeTeamLBtnUp(void) {
 	}
 }
 
+// 0x507780
+// The JP CLobbyMain::OnGameRoom_AztecOwnerDraw (KR, same shape: JP
+// CSharedDoc +0xa32 the KR m_myBallId, +0x3750 the KR m_myGearList). JP
+// differences: local content 0x84 (KR 0x87); there a ball the item manager
+// counts as uncounted (0xa18f50) shows no count; the count is printed with
+// the wind font (+0x3e4, 0xbed090), never for the ball 0x140000d8.
+void FrGameRoomDlg::OnCurAztecOwnerDraw(PG_MSGARG) {
+	if (!m_pCurAztec) {
+		return;
+	}
+	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
+	if (!pGDI) {
+		return;
+	}
+	unsigned long color = m_pCurAztec->IsEnabled() ? 0xFFFFFFFF : 0x50B0B0B0;
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	if (doc->m_myBallId == 0) {
+		const Bitmap* pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "w_caddie_no");
+		if (pBmp) {
+			pGDI->DrawTexture(pBmp, m_pCurAztec->GetRect(), color, 0);
+		}
+	} else {
+		IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(doc->m_myBallId);
+		if (pItem) {
+			int count = 0;
+			bool found = false;
+			if (IsLocalContent((localContentType_t)0x84)) {
+				std::list<sItemInfo>::iterator it;
+				for (it = doc->m_myGearList.begin(); it != doc->m_myGearList.end(); ++it) {
+					if (it->m_typeId == doc->m_myBallId) {
+						found = true;
+						count = JpItemManager_IsUncountedBall(doc->m_myBallId) ? 0 : it->m_count;
+						break;
+					}
+				}
+				// No such ball any more: back to the default ball.
+				if (!found) {
+					doc->m_myBallId = 0x14000000;
+					pItem = ItemManager()->FindCommonItem(doc->m_myBallId);
+				}
+				if (pItem) {
+					const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
+					if (pBmp) {
+						pGDI->DrawTexture(pBmp, WRect(m_pCurAztec->GetRect().x, m_pCurAztec->GetRect().y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
+					}
+				}
+			} else {
+				const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
+				if (pBmp) {
+					pGDI->DrawTexture(pBmp, WRect(m_pCurAztec->GetRect().x, m_pCurAztec->GetRect().y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
+				}
+				std::list<sItemInfo>::iterator it;
+				for (it = doc->m_myGearList.begin(); it != doc->m_myGearList.end(); ++it) {
+					if (it->m_typeId == doc->m_myBallId) {
+						count = it->m_count;
+						break;
+					}
+				}
+			}
+			if (count > 0 && doc->m_myBallId != 0x140000D8) {
+				unsigned long textColor = m_pCurAztec->IsEnabled() ? 0xFFFFFFFF : 0x7FFFFFFF;
+				JpGdi_PrintTitleFont(pGDI, m_pWindFont, m_pCurAztec->GetRect().x + 35.0f, m_pCurAztec->GetRect().y + 22.0f, MakeStr("%d", count), 1.0f, 2, 1.0f, textColor);
+			}
+		}
+	}
+	if (m_pCurAztec->IsEnabled()) {
+		DrawFrameSelectedUserInfo(m_pCurAztec->GetRect());
+	}
+}
+
+// 0x5074b0
+// The JP CLobbyMain::SetStartBtn (KR, same shape: the JP CSharedDoc
+// +0x109fc the KR m_roomPlayerList, record +0x54 bit 1 the KR
+// m_mannerFlag ready bit, +0x53 & 0x18 the master). The JP game types 4,
+// 5, 6, 9, 10, 11 and 18 (KR 4, 5, 6, 9, 10, 14) only need every guest
+// ready: both JP branches of that case (the 0xe73dec +0x40 / capacity
+// test) run the same loop.
+void FrGameRoomDlg::SetStartBtn(bool check) {
+	if (!check) {
+		return;
+	}
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	std::list<sSlotInfo>& players = doc->m_roomPlayerList;
+	std::list<sSlotInfo>::iterator it;
+	bool admin = ((doc->m_userInfo.identity >> 2) & 1) != 0;
+	switch (JpSharedDoc_GetRoomGameType()) {
+	case 4:
+	case 5:
+	case 6:
+	case 9:
+	case 10:
+	case 11:
+	case 18:
+		m_allReady = true;
+		for (it = players.begin(); it != players.end(); ++it) {
+			if (!(it->m_mannerFlag & 2) && !(it->m_attribute & 0x18)) {
+				m_allReady = false;
+				break;
+			}
+		}
+		break;
+	default:
+		if (players.size() == 1 && !admin) {
+			m_allReady = false;
+			break;
+		}
+		m_allReady = true;
+		if (JpSharedDoc_GetRoomGameType() == 1) {
+			// The team game: a full room with even teams.
+			if (doc->m_roomInfo.m_userLimit > players.size()) {
+				m_allReady = false;
+			}
+			if (m_allReady) {
+				int red = 0;
+				int blue = 0;
+				for (it = players.begin(); it != players.end(); ++it) {
+					unsigned char team = it->m_attribute & 3;
+					if (team == 0) {
+						red++;
+					} else if (team == 1) {
+						blue++;
+					}
+				}
+				if (red != blue) {
+					m_allReady = false;
+				}
+			}
+		}
+		if (m_allReady) {
+			for (it = players.begin(); it != players.end(); ++it) {
+				if (!(it->m_mannerFlag & 2) && !(it->m_attribute & 0x18)) {
+					m_allReady = false;
+					break;
+				}
+			}
+		}
+		break;
+	}
+	if (m_allReady && players.size() > 1) {
+		if (m_pBlinkWnd) {
+			m_blinkTimer = 0.0f;
+			m_blinking = true;
+		}
+		if (m_pMapSelectDlg) {
+			m_pMapSelectDlg->Close(true);
+		}
+	} else {
+		m_blinking = false;
+		if (m_pBlinkWnd) {
+			m_pBlinkWnd->SetVisible(false);
+		}
+	}
+}
+
 // 0x5083c0
 FrGameRoomDlg::FrGameRoomDlg(void) {
-	// The original also zeroes raw bytes the header keeps as UNKNOWN (0x148,
-	// 0x16c, 0x170, 0x1b4, 0x1b8, 0x1fc, 0x230, 0x240-0x244, 0x24c-0x258,
+	// The original also zeroes raw bytes the header keeps as UNKNOWN (0x1b4, 0x1fc, 0x240-0x244, 0x24c-0x258,
 	// 0x270, 0x374, 0x378, 0x380-0x390, 0x3c0, word 0x3dc); the port reads
 	// none of them yet. It leaves m_roomState, m_pGroup30s,
 	// m_pGroupGP, m_pFrameBg, m_pTeamBitmap, m_p30sSituBitmap,
 	// m_pGenderIcon and m_gpWaiting unset (their Init handlers store them).
 	m_pNewRecordDlg = NULL;
+	m_artifactDropSent = false;
+	m_pMapSelectDlg = NULL;
+	m_pRoomControlWnd = NULL;
+	m_pRoomSettingWnd = NULL;
 	m_pGrandPrixRoom = NULL;
 	m_lobbyValue = NULL;
 	m_pLobbyTitleFont = NULL;
@@ -1636,6 +1973,102 @@ void FrGameRoomDlg::HidePet(uint32_t uid) {
 	}
 }
 
+// 0x509440
+// The JP CLobbyMain::HandleMsg 8, a player left the room (KR
+// lobbymain.cpp:3396, same shape). JP differences: only the guild match
+// (game type 6) rebuilds the teams; the moved players' pet areas come from
+// their room position (JP record +0x2e).
+void FrGameRoomDlg::OnPlayerLeft(intptr_t param1, intptr_t uid, intptr_t param3) {
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	int gameType = JpSharedDoc_GetRoomGameType();
+	if (gameType != 6) {
+		if (m_pUserList && param1) {
+			m_pUserList->DelItem((void*)param1);
+		}
+	} else if (!doc->m_gameOver) {
+		RemakeTeam(true);
+	} else {
+		std::list<sSlotInfo*>& slots = param3 ? m_slotList2 : m_slotList1;
+		std::list<sSlotInfo*>::iterator it;
+		for (it = slots.begin(); it != slots.end(); ++it) {
+			if ((*it)->m_uid == (uint32_t)uid) {
+				slots.erase(it);
+				break;
+			}
+		}
+		RemakeTeam(false);
+	}
+	if (gameType == 4 || gameType == 10) {
+		// Keep 24 lines.
+		if (m_pUserList && m_pUserList->GetCurrentItemSize(true) < 24) {
+			m_pUserList->AddItem(NULL);
+		}
+		return;
+	}
+	if (IsMassGame((unsigned char)gameType)) {
+		return;
+	}
+	HidePet((uint32_t)uid);
+	std::map<DWORD, sRoomSlot>::iterator slot = doc->m_roomSlotMap.find((DWORD)uid);
+	if (slot != doc->m_roomSlotMap.end()) {
+		if (slot->second.m_pPetArea) {
+			slot->second.m_pPetArea->SetMouseEvent(false);
+		}
+		doc->m_roomSlotMap.erase(slot);
+	}
+	// The players after the one who left moved up one place: each pet goes
+	// to its new place's area.
+	for (slot = doc->m_roomSlotMap.begin(); slot != doc->m_roomSlotMap.end(); ++slot) {
+		std::list<sSlotInfo>& players = doc->m_roomPlayerList;
+		std::list<sSlotInfo>::iterator player;
+		for (player = players.begin(); player != players.end(); ++player) {
+			if (player->m_uid == slot->first) {
+				break;
+			}
+		}
+		if (player != players.end()) {
+			FrArea* area = (&m_pPet0)[JpSlotInfo_GetWaitingSlot(*player) - 1];
+			slot->second.m_pPetArea = area;
+			if (slot->second.m_pPet && area) {
+				slot->second.m_pPet->SetCenter(area->GetRect().x + area->GetRect().w * 0.5f,
+					area->GetRect().y + area->GetRect().h * 0.5f);
+				if (slot->second.m_angelFlags.flag1) {
+					slot->second.m_pPet->AttachAngelWingFx();
+				}
+			}
+		}
+	}
+	// Keep 4 lines.
+	if (m_pUserList && m_pUserList->GetCurrentItemSize(true) < 4) {
+		m_pUserList->AddItem(NULL);
+	}
+}
+
+// 0x509700
+// The JP CLobbyMain::HandleMsg 9 (KR 9): the player's angel wing bits
+// (record +0x56 bits 0-1, the KR m_flags57) into its room slot and into
+// its row of the user list.
+void FrGameRoomDlg::UpdatePlayerAngelFlags(sSlotInfo* player) {
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	std::map<DWORD, sRoomSlot>::iterator slot = doc->m_roomSlotMap.find(player->m_uid);
+	if (slot != doc->m_roomSlotMap.end()) {
+		slot->second.m_angelFlags.flag1 = player->m_flags57.flag1;
+		slot->second.m_angelFlags.flag0 = player->m_flags57.flag0;
+	}
+	if (!m_pUserList) {
+		return;
+	}
+	FrListBox::ITEM_LIST::iterator it;
+	for (it = m_pUserList->m_itemList.begin(); it != m_pUserList->m_itemList.end(); ++it) {
+		sSlotInfo* row = (sSlotInfo*)(*it)->pData;
+		if (row && row->m_uid == player->m_uid) {
+			row->m_flags57.flag0 = player->m_flags57.flag0;
+			row->m_flags57.flag1 = player->m_flags57.flag1;
+			break;
+		}
+	}
+}
+
 // 0x5097b0
 void FrGameRoomDlg::OnTitleInit(PG_MSGARG param) {
 	m_pTitle = DYNAMIC_CAST(FrEdit, param);
@@ -1746,6 +2179,52 @@ void FrGameRoomDlg::OnStartLBtnUp(void) {
 	EnableEquipViewers(m_ready);
 }
 
+// 0x509f90
+// The JP CLobbyMain::OnGameRoom_CaddieOwnerDraw (KR, same shape: JP
+// CSharedDoc +0xa26 the KR m_myCaddieId, +0x3714 the KR m_caddieMap): the
+// equipped caddie's icon, crossed by three red lines when its paid
+// contract ran out (flag 2, no days left, no caddie item, a fee).
+void FrGameRoomDlg::OnCurCaddieOwnerDraw(PG_MSGARG) {
+	if (!m_pCurCaddie) {
+		return;
+	}
+	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
+	if (!pGDI) {
+		return;
+	}
+	unsigned long color = m_pCurCaddie->IsEnabled() ? 0xFFFFFFFF : 0x50B0B0B0;
+	WRect rect = m_pCurCaddie->GetRect();
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	if (doc->m_myCaddieId == 0) {
+		const Bitmap* pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "w_caddie_no");
+		if (pBmp) {
+			pGDI->DrawTexture(pBmp, WRect(m_pCurCaddie->GetRect().x, m_pCurCaddie->GetRect().y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
+		}
+	} else {
+		std::map<unsigned int, sCaddieInfo>::iterator it = doc->m_caddieMap.find(doc->m_myCaddieId);
+		// The JP reads the found node without an end test (as KR); the port
+		// does not dereference end().
+		if (it != doc->m_caddieMap.end()) {
+			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
+			if (pItem) {
+				const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
+				if (pBmp) {
+					pGDI->DrawTexture(pBmp, WRect(m_pCurCaddie->GetRect().x, m_pCurCaddie->GetRect().y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
+				}
+			}
+			IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(it->second.typeId);
+			if (pCaddie && (it->second.flags & 2) && it->second.days <= 0 && it->second.cadItemTypeId == 0 && pCaddie->fee != 0) {
+				g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f - 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(rect.x, rect.y + rect.h * 0.5f + 1.0f), WPoint(rect.x + rect.w - 1.0f, rect.y + rect.h * 0.5f + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+			}
+		}
+	}
+	if (m_pCurCaddie->IsEnabled()) {
+		DrawFrameSelectedUserInfo(m_pCurCaddie->GetRect());
+	}
+}
+
 // 0x50a2a0
 // The JP CLobbyMain::OnGameRoom_ClubOwnerDraw (KR, same shape: JP
 // CSharedDoc +0xa2e the KR m_myClubId, +0x3740 the KR m_myItemMap).
@@ -1778,6 +2257,42 @@ void FrGameRoomDlg::OnCurClubOwnerDraw(PG_MSGARG) {
 	}
 	if (m_pCurClub->IsEnabled()) {
 		DrawFrameSelectedUserInfo(m_pCurClub->GetRect());
+	}
+}
+
+// 0x50a430
+// The JP CLobbyMain::OnGameRoom_MascotOwnerDraw (KR, same shape: JP
+// CSharedDoc +0xa8e the KR m_myMascotId, +0x3724 the KR m_myMascotMap).
+void FrGameRoomDlg::OnCurMascotOwnerDraw(PG_MSGARG) {
+	if (!m_pCurMascot) {
+		return;
+	}
+	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
+	if (!pGDI) {
+		return;
+	}
+	unsigned long color = m_pCurMascot->IsEnabled() ? 0xFFFFFFFF : 0x50B0B0B0;
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	if (doc->m_myMascotId == 0) {
+		const Bitmap* pBmp = g_pFresh->GetManager()->GetBitmap("ITEMS", "w_caddie_no");
+		if (pBmp) {
+			pGDI->DrawTexture(pBmp, WRect(m_pCurMascot->GetRect().x, m_pCurMascot->GetRect().y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
+		}
+	} else {
+		std::map<unsigned int, sMascotInfo>::iterator it = doc->m_myMascotMap.find(doc->m_myMascotId);
+		// No end test in the JP (as KR); the port does not dereference end().
+		if (it != doc->m_myMascotMap.end()) {
+			IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(it->second.typeId);
+			if (pItem) {
+				const Bitmap* pBmp = g_pFresh->GetBitmap(MakeStr("w_%s", pItem->m_icon));
+				if (pBmp) {
+					pGDI->DrawTexture(pBmp, WRect(m_pCurMascot->GetRect().x, m_pCurMascot->GetRect().y, (float)pBmp->Width(), (float)pBmp->Height()), color, 0);
+				}
+			}
+		}
+	}
+	if (m_pCurMascot->IsEnabled()) {
+		DrawFrameSelectedUserInfo(m_pCurMascot->GetRect());
 	}
 }
 
@@ -2076,6 +2591,290 @@ void FrGameRoomDlg::FillPlayerList(void) {
 	OpenNewRecordForm();
 }
 
+// 0x50c0b0
+// The JP CLobbyMain::SetRoomControls (KR lobbymain.cpp:7987, same shape).
+// JP differences: the player count is the room's byte (JP CSharedDoc
+// +0x10a00, the KR m_roomPlayerList.size()); the admin test is the
+// identity bit 2 everywhere; room mode 0x12 (KR 0xe) and game type 0xb
+// lock the settings too, the channel flag 0x80 does not; no map lock area;
+// the next course test is != LastMap(hole mode 4); the start button of
+// the master follows the room (a 100-player room with the option byte
+// +0x5a: from one player; else from two players once m_allReady is set,
+// one in the lobby mode 7, or m_allReady alone while the card item room
+// test 0x507ad0 holds); a guest's ready button is disabled in the modes
+// 0x14 / 0x15 by the room sort; the room setting window replaces the KR
+// channel room close button; local content 0x55 stores the master flag
+// into the JP object 0xe73de8 (+0xd8).
+void FrGameRoomDlg::SetRoomControls(bool master) {
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	sRoomInfo& room = doc->m_roomInfo;
+	unsigned char playerCount = (unsigned char)doc->m_roomPlayerList.size();
+	int gameType = JpSharedDoc_GetRoomGameType();
+	int roomMode = JpSharedDoc_GetRoomGameMode();
+	unsigned char course = JpSharedDoc_GetRoomCourse();
+	// A rookie channel locks the courses past the rookie ones.
+	bool lockedCourse = false;
+	if (doc->m_currentChannel.flags & 0x800) {
+		IFF_STRUCT::sCourse* pCourse = ItemManager()->FindCourse(0x28000000 | ((course > 0x7f && course != 0xfd) ? course - 0x80 : course));
+		if (pCourse && (pCourse->courseFlags & 0xf) >= 3) {
+			lockedCourse = true;
+		}
+	}
+	bool admin = ((doc->m_userInfo.identity >> 2) & 1) != 0;
+	if (admin) {
+		lockedCourse = false;
+	}
+	// The settings may change alone in the room, before everyone is ready,
+	// or as an admin.
+	bool canChange = playerCount == 1 || !m_allReady || admin;
+
+	if (m_pModify) {
+		if (master) {
+			m_pModify->Enable(canChange && roomMode != 0x12 && gameType != 0xb);
+		} else {
+			m_pModify->Enable(false);
+		}
+	}
+	if (m_pRoomControlWnd) {
+		if (gameType == 0xa || roomMode == 0x12 || !master) {
+			m_pRoomControlWnd->Enable(false);
+		} else {
+			m_pRoomControlWnd->Enable(canChange);
+		}
+	}
+	if (m_pMapPrev) {
+		if (master) {
+			m_pMapPrev->SetVisible(canChange && roomMode != 0x12 && gameType != 0xb);
+			if (gameType != 0xa) {
+				m_pMapPrev->Enable(course != FirstMap());
+			} else {
+				m_pMapPrev->Enable(false);
+			}
+		} else {
+			m_pMapPrev->SetVisible(false);
+		}
+	}
+	if (m_pMapNext) {
+		if (master) {
+			m_pMapNext->SetVisible(canChange && roomMode != 0x12 && gameType != 0xb);
+			if (gameType != 0xa) {
+				// JP CSharedDoc +0x1094f: the KR m_roomInfo.m_value4B (hole mode).
+				m_pMapNext->Enable(course != LastMap(room.m_value4B == 4));
+			} else {
+				m_pMapNext->Enable(false);
+			}
+		} else {
+			m_pMapNext->SetVisible(false);
+		}
+	}
+	if (m_pMapCombo) {
+		if (lockedCourse || (doc->m_currentChannel.flags & 0x10)
+			|| gameType == 0xa || roomMode == 0x12 || gameType == 0xb || !master) {
+			m_pMapCombo->Enable(false);
+		} else {
+			m_pMapCombo->Enable(canChange);
+		}
+	}
+
+	if (m_pStart) {
+		if (master) {
+			m_pStart->SetVisible(true);
+			m_pStart->Enable(true);
+			if (m_pReady) {
+				m_pReady->SetVisible(false);
+				if (m_pReady) {
+					m_pReady->Enable(false);
+				}
+			}
+			// JP room +0x33 (the KR m_userLimit) and +0x5a (m_option[1]).
+			if ((gameType != 0xb && room.m_option[1] != 0 && room.m_userLimit > 99)
+				|| (doc->m_userInfo.identity & 4) || (doc->m_userInfo.identity & 0x8000)) {
+				m_pStart->Enable(playerCount >= 1);
+			} else if (!JpGameRoom_IsCardItemRoom()) {
+				if (JpSharedDoc_GetLobbyMode() == 7) {
+					m_pStart->Enable(m_allReady && playerCount >= 1);
+				} else {
+					m_pStart->Enable(m_allReady && playerCount > 1);
+				}
+			} else {
+				m_pStart->Enable(m_allReady);
+			}
+		} else if (!m_readyRequested) {
+			m_pReady->SetButtonImg(m_ready ? "btn_ready_cancel_n" : "btn_ready_n", FrButton::NORMAL);
+			m_pReady->SetButtonImg(m_ready ? "btn_ready_cancel_o" : "btn_ready_o", FrButton::OVER);
+			m_pReady->SetVisible(true);
+			m_pReady->Enable(true);
+			m_pStart->SetVisible(false);
+			m_pStart->Enable(true);
+			if ((roomMode == 0x14 || roomMode == 0x15) && m_addOwnPlayer && JpSharedDoc_GetRoomSort() != 0) {
+				m_pReady->Enable(false);
+			}
+		}
+	}
+
+	if (m_pRoomSettingWnd) {
+		// JP +0x812 bit 1: GalleryMode (the KR m_userInfo.identity).
+		if (!(doc->m_userInfo.identity & 2)) {
+			if (master) {
+				m_pRoomSettingWnd->Enable(true);
+			} else {
+				m_pRoomSettingWnd->Enable(!m_ready);
+			}
+		} else {
+			m_pRoomSettingWnd->Enable((doc->m_userInfo.identity & 0xe) == 0xe && doc->m_userInfo.galleryGuid != 0xffffffff);
+		}
+		if (doc->m_currentChannel.flags & 8) {
+			m_pRoomSettingWnd->Enable(false);
+		}
+	}
+
+	SetRoomCharControl(2);
+	SetRoomCaddieControl(2);
+
+	// The guild match fixes the course.
+	if (gameType == 6) {
+		if (m_pRoomControlWnd) {
+			m_pRoomControlWnd->Enable(false);
+		}
+		if (m_pMapPrev) {
+			m_pMapPrev->Enable(false);
+		}
+		if (m_pMapNext) {
+			m_pMapNext->Enable(false);
+		}
+		if (m_pMapCombo) {
+			m_pMapCombo->Enable(false);
+		}
+		if (m_roomState == 8) {
+			RemakeTeam(true);
+		}
+	}
+	if (IsLocalContent((localContentType_t)0x55)) {
+		JpGameRoom_SetStartState55(master);
+	}
+}
+
+// 0x50c760
+// The JP CLobbyMain::HandleMsg 0xf room master update (KR CLobbyMain 0xf
+// by its place): the host is the master of the first list (+0x10a08, the
+// KR m_roomPlayerList2), then of the room players; an admin is always the
+// master. Then the ready state is reset, the blink window becomes the
+// start tip, a room artifact the master cannot use is dropped (packet 0xa,
+// option 0xd = 0, once, in the states 3 and 4), and the map button, the
+// start state, the room controls and the room control window follow.
+void FrGameRoomDlg::UpdateRoomMaster(void) {
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	m_pLobbyData->m_hostUserId = 0xffffffff;
+	bool master = false;
+	if (!((doc->m_userInfo.identity >> 2) & 1)) {
+		std::list<sSlotInfo>::iterator it;
+		for (it = doc->m_roomPlayerList2.begin(); it != doc->m_roomPlayerList2.end(); ++it) {
+			if (it->m_attribute & 0x18) {
+				m_pLobbyData->m_hostUserId = it->m_uid;
+				if (it->m_uid == doc->m_userInfo.guid) {
+					master = true;
+				}
+				break;
+			}
+		}
+		for (it = doc->m_roomPlayerList.begin(); it != doc->m_roomPlayerList.end(); ++it) {
+			if (it->m_attribute & 0x18) {
+				m_pLobbyData->m_hostUserId = it->m_uid;
+				if (it->m_uid == doc->m_userInfo.guid) {
+					master = true;
+				}
+				break;
+			}
+		}
+	} else {
+		master = true;
+		m_pLobbyData->m_hostUserId = doc->m_userInfo.guid;
+	}
+	m_ready = false;
+	m_readyRequested = false;
+	m_pBlinkWnd = m_pStartTip;
+	if (JpSharedDoc_GetRoomArtifact() != 0 && !m_artifactDropSent) {
+		if (JpGameRoom_FindArtifactBlockText() && (m_roomState == 3 || m_roomState == 4)) {
+			WSendPacket packet(0xa);
+			packet.Encode2(0xffff);
+			packet.Encode1(1);
+			packet.Encode1(0xd);
+			packet.Encode4(0);
+			packet.Send(SEND_TO_DEFAULT);
+			m_artifactDropSent = true;
+		}
+	}
+	if (m_pMap) {
+		m_pMap->Enable(JpSharedDoc_GetRoomGameMode() != 0x12 ? master : false);
+	}
+	SetStartBtn(master);
+	SetRoomControls(master);
+	if (m_pRoomControlWnd) {
+		m_pRoomControlWnd->Enable(master && JpSharedDoc_GetRoomGameType() != 6);
+	}
+}
+
+// 0x50ca30
+// The JP CLobbyMain::HandleMsg 0x2a (KR 0x29, same shape): state 2 is a
+// refused ready ("you cannot get ready now, try again in a moment"); for
+// the own player (or every player, uid -1) the own ready state, the blink,
+// the team change button (team game), the user list's and the "userlist"
+// form's right button; then the player record's ready bit (JP record +0x54
+// bit 1, the KR m_mannerFlag), the master test, SetStartBtn and the room
+// controls.
+void FrGameRoomDlg::SetPlayerReady(intptr_t uid, intptr_t state) {
+	if (state == 2) {
+		m_readyRequested = false;
+		AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)Jp_LookupText(
+			"\xc1\xf6\xb1\xdd\xc0\xba \xb7\xb9\xb5\xf0\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9. \xc0\xe1\xbd\xc3\xc8\xc4 \xb4\xd9\xbd\xc3 \xb7\xb9\xb5\xf0\xc7\xd8\xc1\xd6\xbc\xbc\xbf\xe4."),
+			0, 0, 0, 0));
+		return;
+	}
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	if ((uint32_t)uid == doc->m_userInfo.guid || (uint32_t)uid == 0xffffffff) {
+		m_readyRequested = false;
+		m_ready = state == 0;
+		m_blinking = state == 1;
+		if (JpSharedDoc_GetRoomGameType() == 1 && m_pChangeTeam) {
+			m_pChangeTeam->Enable(!m_ready);
+		}
+		if (m_pUserList) {
+			m_pUserList->UseRightButton(!m_ready);
+		}
+		if (m_pUserListDlg) {
+			m_pUserListDlg->EnableRightButton(!m_ready);
+		}
+	}
+	std::list<sSlotInfo>& players = doc->m_roomPlayerList;
+	std::list<sSlotInfo>::iterator it;
+	if ((uint32_t)uid != 0xffffffff) {
+		for (it = players.begin(); it != players.end(); ++it) {
+			if (it->m_uid == (uint32_t)uid) {
+				it->m_mannerFlag = (it->m_mannerFlag & ~2) | (state == 0 ? 2 : 0);
+				break;
+			}
+		}
+	} else {
+		for (it = players.begin(); it != players.end(); ++it) {
+			it->m_mannerFlag = (it->m_mannerFlag & ~2) | (state == 0 ? 2 : 0);
+		}
+	}
+	bool master = false;
+	for (it = players.begin(); it != players.end(); ++it) {
+		if (it->m_attribute & 0x18) {
+			if (it->m_uid == doc->m_userInfo.guid) {
+				master = true;
+			}
+			break;
+		}
+	}
+	if ((doc->m_userInfo.identity >> 2) & 1) {
+		master = true;
+	}
+	SetStartBtn(master);
+	SetRoomControls(master);
+}
+
 // 0x50cc20
 void FrGameRoomDlg::OnAssistTipInit(PG_MSGARG param) {
 	m_pAssistTip = DYNAMIC_CAST(FrArea, param);
@@ -2135,6 +2934,337 @@ void FrGameRoomDlg::SetCourseImages(unsigned char course) {
 		// JP record +0x53 & 0x18 (the KR m_attribute) or the admin bit.
 		SetRoomControls((it->m_attribute & 0x18) || AdminMode());
 	}
+}
+
+// 0x50d4c0
+// The JP CLobbyMain::HandleMsg 7, a player entered the room (KR
+// lobbymain.cpp:3293, same shape). JP differences: only the guild match
+// (game type 6) rebuilds the teams (after the game the player joins the
+// list of its team, 0x50bbe0); the slot's pet area is its room position
+// (JP record +0x2e) and the pet is built by AddPlayer (local content 0x55:
+// not for an invitation).
+void FrGameRoomDlg::OnPlayerEntered(sSlotInfo* slot, intptr_t param2) {
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	int gameType = JpSharedDoc_GetRoomGameType();
+	if (gameType != 6) {
+		if (m_pUserList) {
+			m_pUserList->AddItem(slot);
+			m_pUserList->SortItem(JpRoomUserCompare);
+		}
+	} else if (!doc->m_gameOver) {
+		RemakeTeam(true);
+	} else {
+		if ((slot->m_attribute & 3) == 0) {
+			m_slotList1.push_back(slot);
+		} else {
+			m_slotList2.push_back(slot);
+		}
+		RemakeTeam(false);
+	}
+	unsigned int lines;
+	if (gameType == 4 || gameType == 10) {
+		lines = 24;
+	} else {
+		if (IsMassGame((unsigned char)gameType)) {
+			return;
+		}
+		sRoomSlot roomSlot;
+		roomSlot.m_pPetArea = (&m_pPet0)[JpSlotInfo_GetWaitingSlot(*slot) - 1];
+		roomSlot.m_pPet = NULL;
+		roomSlot.m_characterInfo = *(sCharacterInfo*)param2;
+		roomSlot.m_angelFlags.flag0 = slot->m_flags57.flag0;
+		roomSlot.m_angelFlags.flag1 = slot->m_flags57.flag1;
+		doc->m_roomSlotMap[slot->m_uid] = roomSlot;
+		if (IsLocalContent((localContentType_t)0x55)) {
+			if (!slot->m_flags151.flag) {
+				AddPlayer(slot->m_uid);
+			}
+		} else {
+			AddPlayer(slot->m_uid);
+		}
+		lines = 4;
+	}
+	// Drop one empty line past the list's size.
+	if (m_pUserList && (unsigned int)m_pUserList->GetCurrentItemSize(true) > lines) {
+		FrListBox::ITEM_LIST::iterator it;
+		for (it = m_pUserList->m_itemList.begin(); it != m_pUserList->m_itemList.end(); ++it) {
+			if ((*it)->pData == NULL) {
+				m_pUserList->_DelItem(it);
+				break;
+			}
+		}
+		m_pUserList->SortItem(JpRoomUserCompare);
+	}
+}
+
+// 0x50d7d0
+// The JP CLobbyMain::OnGameRoom_RoomUserOwnerDraw (KR lobbymain.cpp:13190,
+// same shape and positions): one player card of the room. The row data is
+// the port's KR sSlotInfo (the JP record is the KR one a byte lower: +0x2e
+// room position, +0x2f identity, +0x33 title, +0x37 character, +0x47 room
+// card skin, +0x4b icon skin, +0x53 attribute, +0x54 manner / ready, +0x55
+// level, +0x56 angel, +0x58 guild UID, +0x154 bit 0 the invitation). JP
+// differences: local content 0x55 (KR 0x54), the master and the picked
+// player from the 0xa5 container (+0x14 host, +0xc picked), the pet
+// display gated by JP CSharedDoc +0x11410 (the KR m_bongdariShop[2]), no
+// ladder icon, and a GP host (identity 0x8000) shows LEVELS gp_host.
+void FrGameRoomDlg::OnUserOwnerDraw(PG_MSGARG param) {
+	FrListItem* pItem = (FrListItem*)param;
+	if (!pItem) {
+		return;
+	}
+	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
+	if (!pGDI) {
+		return;
+	}
+	// An empty slot: "team_base02".
+	if (!pItem->pData) {
+		pGDI->DrawTexture(m_pTeamBitmap[3], WRect(pItem->pos.x, pItem->pos.y, (float)m_pTeamBitmap[3]->Width(), (float)m_pTeamBitmap[3]->Height()), 0xFFFFFFFF, 0);
+		return;
+	}
+	if (IsLocalContent((localContentType_t)0x55)) {
+		if (((sSlotInfo*)pItem->pData)->m_flags151.flag) {
+			pGDI->DrawTexture(m_pInviteBitmap, WRect(pItem->pos.x, pItem->pos.y, (float)m_pInviteBitmap->Width(), (float)m_pInviteBitmap->Height()), 0xFFFFFFFF, 0);
+		}
+	}
+	sSlotInfo* pSlot = (sSlotInfo*)pItem->pData;
+	if (!pSlot) {
+		return;
+	}
+	CSharedDoc* doc = WSingleton<CSharedDoc>::Instance();
+	// The slot's pet, built on its first draw in the pet area of the
+	// player's room position (+0x190 + 4 * position: m_pPet0..m_pPet3).
+	if (doc->m_roomSlotMap[pSlot->m_uid].m_pPet == NULL) {
+		doc->m_roomSlotMap[pSlot->m_uid].m_pPetArea = (&m_pPet0)[JpSlotInfo_GetWaitingSlot(*pSlot) - 1];
+		doc->m_roomSlotMap[pSlot->m_uid].m_pPet = NULL;
+		doc->m_roomSlotMap[pSlot->m_uid].m_angelFlags.flag0 = pSlot->m_flags57.flag0;
+		doc->m_roomSlotMap[pSlot->m_uid].m_angelFlags.flag1 = pSlot->m_flags57.flag1;
+		if (IsLocalContent((localContentType_t)0x55)) {
+			if (!pSlot->m_flags151.flag) {
+				AddPlayer(pSlot->m_uid);
+			}
+		} else {
+			AddPlayer(pSlot->m_uid);
+		}
+	}
+
+	if (IsLocalContent((localContentType_t)0x55)) {
+		WRect rect(pItem->pos.x, pItem->pos.y, (float)m_pTeamBitmap[2]->Width(), (float)m_pTeamBitmap[2]->Height());
+		if (!pSlot->m_flags151.flag) {
+			if (!Jp_GameState_11410()) {
+				std::map<DWORD, sRoomSlot>::iterator it = doc->m_roomSlotMap.find(pSlot->m_uid);
+				if (it != doc->m_roomSlotMap.end()) {
+					if (it->second.m_pPet) {
+						it->second.m_pPet->Display(0.0f, 0.0f);
+					}
+				}
+			}
+			// JP CSharedDoc +0x1094c: the KR m_roomInfo.m_gameType (1: team game).
+			if (doc->m_roomInfo.m_gameType == 1) {
+				pGDI->DrawTexture(m_pTeamBitmap[pSlot->m_attribute & 3], rect, 0xFFFFFFFF, 0);
+			} else {
+				pGDI->DrawTexture(m_pTeamBitmap[2], rect, 0xFFFFFFFF, 0);
+			}
+		} else {
+			pGDI->DrawTexture(m_pInviteBitmap, rect, 0xFFFFFFFF, 0);
+		}
+		if (pSlot->m_roomCardSkinTypeId) {
+			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pSlot->m_roomCardSkinTypeId);
+			if (pSkin) {
+				const Bitmap* pCard = g_pFresh->GetBitmap(pSkin->m_cutinImage);
+				pGDI->DrawTexture(pCard, rect, 0xFFFFFFFF, 0);
+			}
+		}
+		// The kick mark: the room master's view of the other players.
+		if (doc->m_userInfo.guid == m_pLobbyData->m_hostUserId && !(pSlot->m_attribute & 0x18)) {
+			pGDI->DrawTexture(m_pKickBitmap, WRect(rect.x + rect.w - 8.0f - (float)m_pKickBitmap->Width(), rect.y + 8.0f, (float)m_pKickBitmap->Width(), (float)m_pKickBitmap->Height()), 0xFFFFFFFF, 0);
+		}
+		if (pSlot->m_uid == m_pLobbyData->m_selectedUserId) {
+			pGDI->DrawTexture(m_pTeamSelectBitmap, rect, 0xFFFFFFFF, 0);
+		}
+		// The master / ready banner, centred on the card.
+		int x = (int)pItem->pos.x + (m_pTeamBitmap[pSlot->m_attribute & 3]->Width() - m_pReadySignBitmap->Width()) / 2;
+		if (pSlot->m_attribute & 0x18) {
+			rect = WRect((float)x, pItem->pos.y + 6.0f, (float)m_pMasterSignBitmap->Width(), (float)m_pMasterSignBitmap->Height());
+			pGDI->DrawTexture(m_pMasterSignBitmap, rect, 0xFFFFFFFF, 0);
+		} else if (pSlot->m_flags55.flag1) {
+			rect = WRect((float)x, pItem->pos.y + 6.0f, (float)m_pReadySignBitmap->Width(), (float)m_pReadySignBitmap->Height());
+			pGDI->DrawTexture(m_pReadySignBitmap, rect, 0xFFFFFFFF, 0);
+		}
+		// The player's own character portrait (or its icon skin).
+		const char* iconName = NULL;
+		if (pSlot->m_iconSkinTypeId) {
+			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pSlot->m_iconSkinTypeId);
+			if (pSkin) {
+				iconName = pSkin->m_cutinImage;
+			}
+		} else {
+			IFF_STRUCT::sChar* pChar = ItemManager()->FindChar(pSlot->m_characterTypeId);
+			if (pChar) {
+				iconName = pChar->m_icon;
+			}
+		}
+		if (iconName) {
+			const Bitmap* pIcon = g_pFresh->GetBitmap(iconName);
+			if (pIcon) {
+				rect.x = pItem->pos.x + 8.0f;
+				rect.y = pItem->pos.y + 36.0f;
+				rect.w = (float)pIcon->Width();
+				rect.h = (float)pIcon->Height();
+				pGDI->DrawTexture(pIcon, rect, 0xFFFFFFFF, 0);
+			}
+		}
+		if (pSlot->m_attribute & 4) {
+			pGDI->DrawTexture(m_pDiveBitmap, WRect(pItem->pos.x + 6.0f, pItem->pos.y + 100.0f, (float)m_pDiveBitmap->Width(), (float)m_pDiveBitmap->Height()), 0xFFFFFFFF, 0);
+		}
+		const Bitmap* pGender;
+		if (pSlot->m_flags57.flag0) {
+			pGender = m_pGenderIcon[8 + pSlot->m_attributeBits.userFlag % 2];
+		} else if (pSlot->m_flags55.flag0) {
+			pGender = m_pGenderIcon[6 + pSlot->m_attributeBits.userFlag % 2];
+		} else {
+			pGender = m_pGenderIcon[pSlot->m_attributeBits.userFlag];
+		}
+		if (pGender) {
+			pGDI->DrawTexture(pGender, WRect(pItem->pos.x + 2.0f, pItem->pos.y + 98.0f, (float)pGender->Width(), (float)pGender->Height()), 0xFFFFFFFF, 0);
+		}
+		// The level badge: the equipped title's icon, else the level's
+		// (not on an invitation card); a GP host shows "gp_host".
+		const Bitmap* pLevel = NULL;
+		if (pSlot->m_titleTypeId) {
+			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pSlot->m_titleTypeId);
+			if (pSkin) {
+				pLevel = g_pFresh->GetBitmap(pSkin->m_icon);
+			}
+		} else if (!((sSlotInfo*)pItem->pData)->m_flags151.flag) {
+			pLevel = g_pFresh->GetBitmap(MakeStr("level_%03d", pSlot->m_level + 1));
+		}
+		if (pSlot->m_identity & 0x8000) {
+			pLevel = g_pFresh->GetManager()->GetBitmap("LEVELS", "gp_host");
+		}
+		if (pLevel) {
+			pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 90.0f - float2int(pLevel->Width() * 0.5f), pItem->pos.y + 68.0f, (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
+		}
+		if (pSlot->m_guildUID && pSlot->m_flags151.flag) {
+			const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pSlot->m_emblemName);
+			if (pEmblem) {
+				pGDI->DrawTexture(pEmblem, WRect(pItem->pos.x + 60.0f, pItem->pos.y + 44.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
+			}
+		}
+	} else {
+		if (!Jp_GameState_11410()) {
+			std::map<DWORD, sRoomSlot>::iterator it = doc->m_roomSlotMap.find(pSlot->m_uid);
+			if (it != doc->m_roomSlotMap.end()) {
+				if (it->second.m_pPet) {
+					it->second.m_pPet->Display(0.0f, 0.0f);
+				}
+			}
+		}
+		WRect rect(pItem->pos.x, pItem->pos.y, (float)m_pTeamBitmap[2]->Width(), (float)m_pTeamBitmap[2]->Height());
+		if (doc->m_roomInfo.m_gameType == 1) {
+			pGDI->DrawTexture(m_pTeamBitmap[pSlot->m_attribute & 3], rect, 0xFFFFFFFF, 0);
+		} else {
+			pGDI->DrawTexture(m_pTeamBitmap[2], rect, 0xFFFFFFFF, 0);
+		}
+		if (pSlot->m_roomCardSkinTypeId) {
+			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pSlot->m_roomCardSkinTypeId);
+			if (pSkin) {
+				const Bitmap* pCard = g_pFresh->GetBitmap(pSkin->m_cutinImage);
+				pGDI->DrawTexture(pCard, rect, 0xFFFFFFFF, 0);
+			}
+		}
+		if (doc->m_userInfo.guid == m_pLobbyData->m_hostUserId && !(pSlot->m_attribute & 0x18)) {
+			pGDI->DrawTexture(m_pKickBitmap, WRect(rect.x + rect.w - 8.0f - (float)m_pKickBitmap->Width(), rect.y + 8.0f, (float)m_pKickBitmap->Width(), (float)m_pKickBitmap->Height()), 0xFFFFFFFF, 0);
+		}
+		if (pSlot->m_uid == m_pLobbyData->m_selectedUserId) {
+			pGDI->DrawTexture(m_pTeamSelectBitmap, rect, 0xFFFFFFFF, 0);
+		}
+		int x = (int)pItem->pos.x + (m_pTeamBitmap[pSlot->m_attribute & 3]->Width() - m_pReadySignBitmap->Width()) / 2;
+		if (pSlot->m_attribute & 0x18) {
+			rect = WRect((float)x, pItem->pos.y + 6.0f, (float)m_pMasterSignBitmap->Width(), (float)m_pMasterSignBitmap->Height());
+			pGDI->DrawTexture(m_pMasterSignBitmap, rect, 0xFFFFFFFF, 0);
+		} else if (pSlot->m_flags55.flag1) {
+			rect = WRect((float)x, pItem->pos.y + 6.0f, (float)m_pReadySignBitmap->Width(), (float)m_pReadySignBitmap->Height());
+			pGDI->DrawTexture(m_pReadySignBitmap, rect, 0xFFFFFFFF, 0);
+		}
+		const char* iconName = NULL;
+		if (pSlot->m_iconSkinTypeId) {
+			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pSlot->m_iconSkinTypeId);
+			if (pSkin) {
+				iconName = pSkin->m_cutinImage;
+			}
+		} else {
+			IFF_STRUCT::sChar* pChar = ItemManager()->FindChar(pSlot->m_characterTypeId);
+			if (pChar) {
+				iconName = pChar->m_icon;
+			}
+		}
+		if (iconName) {
+			const Bitmap* pIcon = g_pFresh->GetBitmap(iconName);
+			if (pIcon) {
+				rect.x = pItem->pos.x + 8.0f;
+				rect.y = pItem->pos.y + 36.0f;
+				rect.w = (float)pIcon->Width();
+				rect.h = (float)pIcon->Height();
+				pGDI->DrawTexture(pIcon, rect, 0xFFFFFFFF, 0);
+			}
+		}
+		if (pSlot->m_attribute & 4) {
+			pGDI->DrawTexture(m_pDiveBitmap, WRect(pItem->pos.x + 6.0f, pItem->pos.y + 100.0f, (float)m_pDiveBitmap->Width(), (float)m_pDiveBitmap->Height()), 0xFFFFFFFF, 0);
+		}
+		const Bitmap* pGender;
+		if (pSlot->m_flags57.flag0) {
+			pGender = m_pGenderIcon[8 + pSlot->m_attributeBits.userFlag % 2];
+		} else if (pSlot->m_flags55.flag0) {
+			pGender = m_pGenderIcon[6 + pSlot->m_attributeBits.userFlag % 2];
+		} else {
+			pGender = m_pGenderIcon[pSlot->m_attributeBits.userFlag];
+		}
+		if (pGender) {
+			pGDI->DrawTexture(pGender, WRect(pItem->pos.x + 2.0f, pItem->pos.y + 98.0f, (float)pGender->Width(), (float)pGender->Height()), 0xFFFFFFFF, 0);
+		}
+		const char* levelName;
+		if (pSlot->m_titleTypeId) {
+			IFF_STRUCT::sSkin* pSkin = ItemManager()->FindSkin(pSlot->m_titleTypeId);
+			if (pSkin) {
+				levelName = pSkin->m_icon;
+			} else {
+				levelName = MakeStr("level_%03d", pSlot->m_level + 1);
+			}
+		} else {
+			levelName = MakeStr("level_%03d", pSlot->m_level + 1);
+		}
+		const Bitmap* pLevel = g_pFresh->GetBitmap(levelName);
+		if (pSlot->m_identity & 0x8000) {
+			pLevel = g_pFresh->GetManager()->GetBitmap("LEVELS", "gp_host");
+		}
+		if (pLevel) {
+			pGDI->DrawTexture(pLevel, WRect(pItem->pos.x + 60.0f, pItem->pos.y + 68.0f, (float)pLevel->Width(), (float)pLevel->Height()), 0xFFFFFFFF, 0);
+		}
+		if (pSlot->m_guildUID) {
+			const Bitmap* pEmblem = WSingleton<NetResourceManager>::Instance()->GetEmblemByName(pSlot->m_emblemName);
+			if (pEmblem) {
+				pGDI->DrawTexture(pEmblem, WRect(pItem->pos.x + 60.0f, pItem->pos.y + 44.0f, (float)pEmblem->Width(), (float)pEmblem->Height()), 0xFFFFFFFF, 0);
+			}
+		}
+	}
+
+	if (WSingleton<CProjectG>::Instance()->HidePrivacy()) {
+		return;
+	}
+	// The nick: red for the own player, black for the others.
+	if (pItem->underCursor) {
+		pGDI->SetTextColor(0xFFFFFFFF, 0xFF808080);
+		pGDI->SetTextStyle(2);
+	} else {
+		if (pSlot->m_uid == MyGuid(true)) {
+			pGDI->SetTextColor(0xFFFF0000, 0xFFFFFFFF);
+		} else {
+			pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
+		}
+		pGDI->SetTextStyle(0);
+	}
+	g_pFresh->GetManager()->PrintText(WPoint(pItem->pos.x + 20.0f, pItem->pos.y + 107.0f), 0, pSlot->m_nickname, -1.0f, 0xFFFFFFFF);
 }
 
 // 0x50eb20

@@ -89,6 +89,19 @@ static const char* JpShop_MakeStatusString(int slot, int value, int slotValue) {
 	return MakeStr("%s+%d/%s+%d", names[slot], value, slotName, slotValue);
 }
 
+// 0xa83ba0 (the KR DrawStatus2): a list row's stat lines, blue, from 182 +
+// x right and 36 + x down of the row, 14 apart.
+void JpShopMain::DrawStatus2(FrGraphicInterface* graphic, FrListItem* listItem, short* const status, short* const slotStatus, float x) {
+	float offsetY = 0.0f;
+	for (int i = 0; i < 5; i++) {
+		if (status[i] != 0 || slotStatus[i] != 0) {
+			graphic->SetTextColor(0xFF0000FF, 0xFFFFFFFF);
+			graphic->Print11(WPoint(x + 182.0f, offsetY + x + 36.0f) + listItem->pos, 2, JpShop_MakeStatusString(i, status[i], slotStatus[i]));
+			offsetY += 14.0f;
+		}
+	}
+}
+
 // 0xa83fc0 (the KR DrawStatus3)
 void JpShopMain::DrawStatus3(FrGraphicInterface* graphic, float x, float y, short* const status, short* const slotStatus) {
 	float offsetY = 0.0f;

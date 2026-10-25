@@ -742,6 +742,14 @@ void CSharedDoc::InitGameType(void) {
 	m_gameTypeNames[14].defaultPlayers = 30;
 	m_gameTypeNames[14].defaultHoles = 18;
 	m_gameTypeNames[14].name = "\xBA\xD2\xB0\xA1\xBB\xE7\xC0\xC7\xC7\xD1 \xC8\xA5\xB5\xB7";
+#ifdef JP_PAKS
+	// JP 0x62b3d0 stores every name through Jp_LookupText 0xb4eb80: the room
+	// title line, the room list and SetGameType's m_roomName show the
+	// Japanese game type names.
+	for (int i = 0; i < 15; i++) {
+		m_gameTypeNames[i].name = Jp_LookupText(m_gameTypeNames[i].name);
+	}
+#endif
 }
 
 // shareddoc.cpp:827

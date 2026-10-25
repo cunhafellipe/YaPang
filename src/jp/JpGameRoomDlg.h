@@ -58,6 +58,7 @@ class FrGaugeBarImage;
 class FrGroupBox;
 class FrListBox;
 class FrStatic;
+class FrTreasureCourse;
 class FrTreasureGift;
 class FrUserListDlg;
 class FrViewer;
@@ -165,6 +166,10 @@ public:
 	// its fonts +0x784 (CGPTimeCountFont) and +0x794 (CLobbyWindFont,
 	// JpLobbyTitleFonts.h) (name ours).
 	void SetLobbyValues(WTitleFontEx* font154, WTitleFontEx* titleFont); // 0x4ff300
+	// The room messages of the JP CLobbyMain::HandleMsg 0xabc060, by the
+	// KR message id (KR LobbyMain.cpp's JpForwardRoomFormMsg; this file's
+	// JpGameRoomDlg.cpp).
+	friend void JpRoomTypeForm_OnLobbyMsg(FrForm* form, int id, intptr_t param1, intptr_t param2, intptr_t param3);
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];                                // 0xe08718
@@ -283,6 +288,9 @@ protected:
 	bool OnApproachGiftDlgResult(int ret, FrForm* pForm);             // 0x505380
 	// The score dialog's result callback: clears m_pScoreDlg (name ours).
 	bool OnScoreDlgResult(int ret, FrForm* pForm);                    // 0x4ff250
+	// The "treasuremap" form's (OnMapLBtnUp) result: clears +0x148 (the
+	// KR CLobbyMain::OnMapSelectDlgResult).
+	bool OnMapSelectDlgResult(int ret, FrForm* pForm);                // 0x4ff270
 	// The "userlist" form's (OnInviteLBtnUp) result: clears +0x16c.
 	bool OnUserListDlgResult(int ret, FrForm* pForm);                 // 0x4ff280
 	// Mode 7 fixes the hole cup position (JP CSharedDoc byte +0x11609 = 1,
@@ -296,8 +304,16 @@ protected:
 	// The JP CLobbyMain::SetRoomControls (jp/pairing.tsv, by its strings;
 	// 1706 bytes): enables the room master's controls; declared only.
 	void SetRoomControls(bool master);                                // 0x50c0b0
+	// SetRoomControls' last steps with 2 (the KR BTN_DIR_NONE): the KR
+	// CLobbyMain::SetRoomCharControl / SetRoomCaddieControl by their place
+	// and shape (0 / 1 step the own character / caddie; declared only).
+	void SetRoomCharControl(int dir);                                 // 0x508f60
+	// The JP CLobbyMain::SetStartBtn (KR lobbymain.cpp:7865, same shape):
+	// with check, recomputes m_allReady and starts or stops the blink.
+	void SetStartBtn(bool check);                                     // 0x5074b0
+	void SetRoomCaddieControl(int dir);                               // 0x50b660
 	// The JP CLobbyMain::DrawFrameSelectedUserInfo (jp/pairing.tsv; 284
-	// bytes; the frame around an enabled "cur_*" viewer); declared only.
+	// bytes; the frame around an enabled "cur_*" viewer under the mouse).
 	void DrawFrameSelectedUserInfo(WRect rect);                       // 0x500760
 
 	// OnProc's last per-frame step: the KR CLobbyMain::RefreshAllUccClothes
@@ -339,6 +355,39 @@ protected:
 	// +0x1094c and room mode +0x109b8 jump tables, the result list
 	// +0x1042c, the guild uids +0x1095f / +0x10963).
 	void MakeRoomUserList(void);                                      // 0x50eb20
+	// JP CLobbyMain::HandleMsg 7 (0xabc5de): a player entered the room, the
+	// KR CLobbyMain 7 (lobbymain.cpp:3293; RemakeTeam, AddPlayer) (name ours).
+	void OnPlayerEntered(sSlotInfo* slot, intptr_t param2);           // 0x50d4c0
+	// 8 (0xabc600): a player left the room, the KR 8 (uid param2, team
+	// param3; RemakeTeam, HidePet) (name ours).
+	void OnPlayerLeft(intptr_t param1, intptr_t uid, intptr_t param3); // 0x509440
+	// 9 (0xabc626): a room player's angel wing bits into the room slot map
+	// (+0x3890) and the user list (+0x190), the KR 9 (name ours).
+	void UpdatePlayerAngelFlags(sSlotInfo* player);                   // 0x509700
+	// 0xf (0xabc667), and 0xe after MakeRoomUserList (0xabc644): the room
+	// master and its controls, the KR 0xf (name ours).
+	void UpdateRoomMaster(void);                                      // 0x50c760
+	// The JP 0x2a (0xabcebf, the KR 0x29): a player's ready state (param1
+	// uid, param2 0 ready / 1 not ready / 2 refused) (name ours).
+	void SetPlayerReady(intptr_t uid, intptr_t state);                 // 0x50ca30
+	// The JP 0x2b (0xabd15a, the KR 0x2a; also the first call of
+	// ShowGameResults): the rank sort, the KR CLobbyMain::SortRank (name
+	// ours).
+	void SortRank(void);                                              // 0x505640
+	// The JP 0x2c (0xabd111, the KR 0x2b): locks the room controls while
+	// param1 is 1 (the KR m_roomOptionC, start / close buttons, tip blink)
+	// (name ours).
+	void LockRoomControls(intptr_t lock);                             // 0x503720
+	// The JP 0x2e (0xabd172, the KR 0x2d): the game results, "uniteresult"
+	// (+0x164) when the game is over (+0x10488) (name ours).
+	void ShowGameResults(void);                                       // 0x5070c0
+	// The JP 0x2f (0xabd18a, the KR 0x2e; the join reply 0xac13fd sends it
+	// (0) for the single room): m_addOwnPlayer (+0x18d) (name ours).
+	void SetAddOwnPlayer(bool add);                                   // 0x4ff290
+	// The JP 0x30 (0xabd2ef, the KR 0x2f; the room change 0xac1014): the
+	// team controls ("bar_base" / "bar_redteam", "btn_teamchange_*")
+	// (name ours).
+	void UpdateTeamControls(void);                                    // 0x507380
 	// The JP CLobbyMain::RemakeTeam (jp/pairing.tsv, in-unit LobbyMain):
 	// lays the two team lists out in the user list; with rebuild, splits
 	// the room players first (declared only).
@@ -369,7 +418,10 @@ protected:
 	// cleared by OnNewRecordDlgResult; OnProc closes it when the approach
 	// gift ends.
 	FrForm* m_pNewRecordDlg;             // 0x144
-	UNKNOWN(0x148, 0x14c);
+	// "treasuremap" (OnMapLBtnUp 0x505a70, the KR CLobbyMain::
+	// m_mapSelectDlg), cleared by OnMapSelectDlgResult 0x4ff270; zeroed
+	// by the constructor.
+	FrTreasureCourse* m_pMapSelectDlg;   // 0x148
 	// Contents type 0xa5 (the constructor's CContentsDoc::GetContainer;
 	// left unset when missing): the picked room user.
 	CLobbyContainer* m_pLobbyData;       // 0x14c
@@ -412,7 +464,13 @@ protected:
 	// gallery player (JP CSharedDoc +0x812 == 2, the KR m_userInfo.identity).
 	bool m_ready;                        // 0x17d
 	bool m_readyLocked;                  // 0x17e
-	UNKNOWN(0x17f, 0x181);
+	// Clear lets the room master change the settings with other players in
+	// the room (SetRoomControls: modify, map prev / next / combo); set, it
+	// enables the start button once a second player is in (the KR
+	// CLobbyMain::m_roomOptionD by SetRoomControls' shape). InitRoom
+	// clears it; its writer is not traced yet (name ours).
+	bool m_allReady;                     // 0x17f
+	UNKNOWN(0x180, 0x181);
 	// Set by OnReadyLBtnUp once it has sent its request (the button is
 	// ignored while set); InitRoom clears it.
 	bool m_readyRequested;               // 0x181
@@ -437,7 +495,11 @@ protected:
 	FrViewer* m_pBackground;             // 0x1a8 "background"
 	FrViewer* m_pMapBackground;          // 0x1ac "map_background"
 	FrButton* m_pMap;                    // 0x1b0 "map"
-	UNKNOWN(0x1b4, 0x1bc);
+	UNKNOWN(0x1b4, 0x1b8);
+	// SetRoomControls enables it for the room master (the KR
+	// CLobbyMain::m_roomControlWnd); zeroed by the constructor, the handler
+	// that stores it is not identified.
+	FrWnd* m_pRoomControlWnd;            // 0x1b8
 	FrButton* m_pMapPrev;                // 0x1bc "mapprev"
 	FrButton* m_pMapNext;                // 0x1c0 "mapnext"
 	FrComboCtlEx* m_pMapCombo;           // 0x1c4 "mapcomboex"
@@ -470,7 +532,12 @@ protected:
 	FrStatic* m_pECurve;                 // 0x224 "ecurve"
 	FrButton* m_pInvite;                 // 0x228 "invite" (mass room)
 	FrButton* m_pChangeTeam;             // 0x22c "change_team"
-	UNKNOWN(0x230, 0x234);
+	// SetRoomControls: enabled for the master, for a guest while not ready,
+	// for a gallery player only as an observer with a gallery uid; disabled
+	// in channels with flag 8 (the KR CLobbyMain::m_roomSettingWnd).
+	// Zeroed by the constructor, the handler that stores it is not
+	// identified.
+	FrWnd* m_pRoomSettingWnd;            // 0x230
 	FrButton* m_pResultScore;            // 0x234 "group_result.score" (mass room)
 	FrArea* m_p30sTeamNum;               // 0x238 "group_30s.30_team_num" (mass room)
 	FrArea* m_p30sGuildNum;              // 0x23c "group_30s.30_guild_num" (mass room)
@@ -573,7 +640,11 @@ protected:
 	// RequestCloseInState8's CanLeaveFinishedGame result (the constructor
 	// zeroes the dword).
 	bool m_canLeaveFinishedGame;         // 0x3dc
-	UNKNOWN(0x3dd, 0x3e0);
+	// Set by UpdateRoomMaster once it has asked the server (packet 0xa,
+	// option 0xd) to drop a room artifact the master cannot use; zeroed by
+	// the constructor (name ours).
+	bool m_artifactDropSent;             // 0x3dd
+	UNKNOWN(0x3de, 0x3e0);
 	// The current room tab when the room opened (JpSharedDoc_GetCurrentRoomTab
 	// 0x62bf50: 1 GP, 0 multiplayer).
 	int m_roomTab;                       // 0x3e0
@@ -598,6 +669,7 @@ protected:
 BEGIN_LAYOUT_CHECK(FrGameRoomDlg)
 	CHECK_FIELD(FrGameRoomDlg, m_pRoomData, 0x140);
 	CHECK_FIELD(FrGameRoomDlg, m_pNewRecordDlg, 0x144);
+	CHECK_FIELD(FrGameRoomDlg, m_pMapSelectDlg, 0x148);
 	CHECK_FIELD(FrGameRoomDlg, m_pLobbyData, 0x14c);
 	CHECK_FIELD(FrGameRoomDlg, m_pGrandPrixRoom, 0x150);
 	CHECK_FIELD(FrGameRoomDlg, m_lobbyValue, 0x154);
@@ -612,6 +684,9 @@ BEGIN_LAYOUT_CHECK(FrGameRoomDlg)
 	CHECK_FIELD(FrGameRoomDlg, m_roomState, 0x178);
 	CHECK_FIELD(FrGameRoomDlg, m_idleWarned, 0x17c);
 	CHECK_FIELD(FrGameRoomDlg, m_addOwnPlayer, 0x18d);
+	CHECK_FIELD(FrGameRoomDlg, m_allReady, 0x17f);
+	CHECK_FIELD(FrGameRoomDlg, m_pRoomControlWnd, 0x1b8);
+	CHECK_FIELD(FrGameRoomDlg, m_pRoomSettingWnd, 0x230);
 	CHECK_FIELD(FrGameRoomDlg, m_slotList1, 0x2f0);
 	CHECK_FIELD(FrGameRoomDlg, m_slotList2, 0x2fc);
 	CHECK_FIELD(FrGameRoomDlg, m_pResultRanking, 0x294);

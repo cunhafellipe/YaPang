@@ -83,7 +83,21 @@ struct sJukeBoxBGM {
 // JP 0xe7b0e0 (a std::vector of sJukeBoxBGM, 8-byte rows) and 0xe7b0cc: the
 // track list and its max_count, read from BGMlist.lua by LoadBGMList. The
 // port keeps the script's strings (the script is released after the read).
-static std::vector<sJukeBoxBGM> s_jukeBoxBGM;
+// Port guard: the KR code indexes the list with m_curBGM from its INIT
+// handlers on, before OnInit read the script (the lobby's jukebox opens
+// without the lounge's Init); a row outside the list reads as an empty
+// track instead of past the vector.
+struct sJukeBoxBGMList {
+	std::vector<sJukeBoxBGM> rows;
+	bool empty(void) const { return rows.empty(); }
+	size_t size(void) const { return rows.size(); }
+	void push_back(const sJukeBoxBGM& bgm) { rows.push_back(bgm); }
+	const sJukeBoxBGM& operator[](int i) const {
+		static const sJukeBoxBGM none = { "", "" };
+		return i >= 0 && i < (int)rows.size() ? rows[i] : none;
+	}
+};
+static sJukeBoxBGMList s_jukeBoxBGM;
 static int s_jukeBoxBGMCount = 0;
 static std::list<std::string> s_jukeBoxBGMStrings;
 
@@ -127,6 +141,11 @@ static void LoadBGMList(void) {
 	// Port guard: the KR statics index the list; never past what was read.
 	s_jukeBoxBGMCount = (int)s_jukeBoxBGM.size();
 }
+
+// The JP's rand() % max_count, 0 for an empty list (no division by zero).
+static int RandomBGM(void) {
+	return s_jukeBoxBGMCount > 0 ? rand() % s_jukeBoxBGMCount : 0;
+}
 #else
 // The jukebox's track list (0x9f5cc0).
 static const sJukeBoxBGM s_jukeBoxBGM[] = {
@@ -169,7 +188,7 @@ void FrJukeBoxDlg::Init(void) {
 	// The JP reads BGMlist.lua on first use (OnInit 0x7bc1e0, PlayWithMap
 	// 0x7bbce0); the KR statics index it from here on.
 	LoadBGMList();
-	m_curBGM = rand() % s_jukeBoxBGMCount;
+	m_curBGM = RandomBGM();
 #else
 	m_curBGM = rand() % JUKEBOX_BGM_COUNT;
 #endif
@@ -264,6 +283,10 @@ FrJukeBoxDlg::FrJukeBoxDlg(void)
 
 // jukeboxdlg.cpp:157
 FrJukeBoxDlg::~FrJukeBoxDlg(void) {
+#ifdef JP_PAKS
+	// The port keeps the list box in a static (JP +0x110): not past the dialog.
+	s_jpJukeBoxList = NULL;
+#endif
 }
 
 // jukeboxdlg.cpp:162
@@ -276,10 +299,10 @@ bool FrJukeBoxDlg::OnInit(void) {
 	// light's rect 0x7bad60 (drawn by the row highlights 0x7badd0 /
 	// 0x7baed0) and the +0x150 flag from the sound manager's +0x75.
 	LoadBGMList();
-	m_curBGM = rand() % s_jukeBoxBGMCount;
+	m_curBGM = RandomBGM();
 	if (s_jpJukeBoxList) {
 		for (int i = 0; i <= s_jukeBoxBGMCount; ++i) {
-			s_jpJukeBoxList->AddItem(i == s_jukeBoxBGMCount ? (void*)&s_jpRandomRow : (void*)&s_jukeBoxBGM[i]);
+			s_jpJukeBoxList->AddItem(i == s_jukeBoxBGMCount ? (void*)&s_jpRandomRow : (void*)&s_jukeBoxBGM.rows[i]);
 			if (i != s_jukeBoxBGMCount && g_audio->IsPlaying(s_jukeBoxBGM[i].file)) {
 				m_curBGM = i;
 			}
@@ -306,12 +329,19 @@ void FrJukeBoxDlg::OnCloseBtnUp(void) {
 
 // jukeboxdlg.cpp:175
 void FrJukeBoxDlg::OnTitleInit(intptr_t param) {
+#ifdef JP_PAKS
+	// The INIT handlers run before OnInit: the list first (port).
+	LoadBGMList();
+#endif
 	m_pTitle = DYNAMIC_CAST(FrEdit, param);
 	if (m_pTitle) m_pTitle->SetLine(1, s_jukeBoxBGM[m_curBGM].title, 0xFFFFFFFF, false, 0);
 }
 
 // jukeboxdlg.cpp:181
 void FrJukeBoxDlg::OnPlayInit(intptr_t param) {
+#ifdef JP_PAKS
+	LoadBGMList();
+#endif
 	m_pPlay = DYNAMIC_CAST(FrButton, param);
 	OnChangePlayPauseButton();
 }
@@ -496,7 +526,7 @@ void FrJukeBoxDlg::OnListBtnUp(void) {
 		}
 		if (s_jukeBoxBGMCount <= 0)
 			return;
-		m_curBGM = rand() % s_jukeBoxBGMCount;
+		m_curBGM = RandomBGM();
 		g_audio->StopBGM(true);
 		g_audio->PlayBGM(s_jukeBoxBGM[m_curBGM].file, false, true);
 		s_jpRandomPlay = true;

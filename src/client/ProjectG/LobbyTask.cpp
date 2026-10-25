@@ -46,6 +46,11 @@ extern "C" const char *data_ab2c78[];
 // 0xb4eb80 (src/jp/RFTextManager.h, not on this unit's include
 // path in the port: it is not a PG_REFRESH_HOOK_SOURCES unit).
 const char* Jp_LookupText(const char* key);
+// 0x62bf90 (JpLobbyGlue.h): the JP lobby mode (CSharedDoc +0x11638), the
+// open room form's type (CLobbyMain::OpenRoomTypeForm sets it).
+int JpSharedDoc_GetLobbyMode(void);
+// JpLobbyGlue.h: the room mode (JP CSharedDoc +0x109b8).
+int JpSharedDoc_GetRoomGameMode(void);
 #endif
 
 // The received team chat's "to team" label: the JP exe shows
@@ -404,7 +409,16 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		// The lobby answers through refresh; 0 (or a game room layout) shows the room.
 		int refresh;
 		GetActor("Lobby") << MsgObject(0, 0x17, (intptr_t)&refresh, 0, 0, 0, 0);
+#ifdef JP_PAKS
+		// JP 0xac0f0c-0xac103a: no game room layout in the JP data; the
+		// lobby mode of an open stroke (3), mass (4) or single (7) room form
+		// stands for it. The JP's last message is its 0x30 (room form
+		// 0x507380, the team controls), the KR lobby's 0x2f below.
+		int lobbyMode = JpSharedDoc_GetLobbyMode();
+		if (lobbyMode == 3 || lobbyMode == 4 || lobbyMode == 7 || refresh == 0) {
+#else
 		if (g_pFresh->IsCurrentLayout("GAMEROOM") || g_pFresh->IsCurrentLayout("GAMEROOM_EXT") || refresh == 0) {
+#endif
 			GetActor("Lobby") << MsgObject(0, 2, 0, 0, 0, 0, 0);
 			GetActor("Lobby") << MsgObject(0, 0x10, 0, 0, 0, 0, 0);
 			GetActor("Lobby") << MsgObject(0, 0x11, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_course, 0, 0, 0, 0);
@@ -450,6 +464,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 				info->second.m_userInfo.m_slot = WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber;
 			}
 
+#ifndef JP_PAKS
 			const char *layout;
 			if (IsMassGame(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType)) {
 				GetActor("Lobby") << MsgObject(0, 0x2E, 0, 0, 0, 0, 0);
@@ -457,6 +472,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 			} else {
 				layout = "GAMEROOM";
 			}
+#endif
 
 			WSingleton<CSharedDoc>::Instance()->m_chatLineList.clear();
 
@@ -503,7 +519,34 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 				}
 			}
 
+#ifdef JP_PAKS
+			// JP 0xac137c-0xac1424: no layout change (the JP 0xac11bc goes
+			// from the user record straight to the chat lines, no 0x2e
+			// either): the lobby opens the room form, 0x8b (n) (CLobbyMain
+			// 0xabcb62: 6 stroke, 7 mass, 0xa GP, 0xb single). A mass game
+			// (0x500480) of room mode 0xc, 0xe or 0x13 (0x500200) is the
+			// single room, then the JP lobby's 0x2f (the room form's
+			// 0x4ff290 (0), the KR lobby's 0x2e: the chat window flag);
+			// modes 0x14 / 0x15 (0x46e6d0) the GP room.
+			{
+				int mode = JpSharedDoc_GetRoomGameMode();
+				int form = 6;
+				bool single = false;
+				if (IsMassGame(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType)) {
+					if (mode == 0xC || mode == 0xE || mode == 0x13) {
+						form = 0xB;
+						single = true;
+					} else {
+						form = (mode == 0x14 || mode == 0x15) ? 0xA : 7;
+					}
+				}
+				GetActor("Lobby") << MsgObject(0, 0x8B, form, 0, 0, 0, 0);
+				if (single)
+					GetActor("Lobby") << MsgObject(0, 0x2E, 0, 0, 0, 0, 0);
+			}
+#else
 			GetActor("Lobby") << MsgObject(0, 0, (intptr_t)layout, 0, 0, 0, 0);
+#endif
 		} else {
 			GetActor("Lobby") << MsgObject(0, 0x3B, result, 0, 0, 0, 0);
 		}
