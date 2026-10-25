@@ -1010,7 +1010,7 @@ void FrMessengerDlg::OnAliasToFriend(void) {
 }
 
 // messengerdlg.cpp:1655
-void FrMessengerDlg::DrawFriendGroup(int param) {
+void FrMessengerDlg::DrawFriendGroup(PG_PTRINT param) {
 	FrListItem* pItem = (FrListItem*)param;
 	sFriend* pFriend = (sFriend*)pItem->pData;
 
@@ -1067,7 +1067,7 @@ void FrMessengerDlg::DrawFriendGroup(int param) {
 }
 
 // messengerdlg.cpp:1737
-void FrMessengerDlg::DrawGuildGroup(int param) {
+void FrMessengerDlg::DrawGuildGroup(PG_PTRINT param) {
 	FrListItem* pItem = (FrListItem*)param;
 	sFriend* pFriend = (sFriend*)pItem->pData;
 

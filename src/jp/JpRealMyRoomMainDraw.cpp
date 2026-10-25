@@ -5,9 +5,7 @@
 // the functions read (the KR ones minus 0x230 for the pictures, minus 0x24c
 // for the edited equipment and the item list areas).
 //
-// Not written yet (owner draws of the 0xe13488 map): item_list 0x6166b0
-// (3839 bytes, the KR OnItemListOwnerDraw), pet 0x61f6d0, fitem_list
-// 0x60fb50, cardpacklist 0x60ff10 (the JP tests the sub tab +0x530 == 0x1c
+// Not written yet (owner draws of the 0xe13488 map): fitem_list 0x60fb50, cardpacklist 0x60ff10 (the JP tests the sub tab +0x530 == 0x1c
 // and ends in the card book's 0x7f4540), card_book_back_bg 0x6056e0 /
 // card_book 0x605700 (JpCardBook 0x7f5xxx draws), item_storage_bgi 0x60a3e0,
 // item_storage_list 0x60a6b0, item_storage_index 0x60a8d0,
@@ -29,6 +27,9 @@
 #include "PartTidList.h"
 #include "bitmap.h"
 #include "commonutil.h"
+#include "exhibition.h"
+#include "RankingDlg.h"
+#include "user_info.h"
 #include "fredit.h"
 #include "fresh.h"
 #include "frgraphicinterface.h"
@@ -579,6 +580,48 @@ void JpRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 	}
 }
 
+// Port body (JP 0x60d9b0, name ours; the KR OnPetOwnerDraw's tail): the
+// preview drawn when its loader is idle and no ranking or user info dialog
+// is open (0xe73e94 +0x2c, 0xe74da4 +0x2c). Left out: the shared doc's
+// +0x11410 (the KR CRealMyRoomMain::m_bongdariShop[2]) and +0x23c tests.
+void JpRealMyRoomMain::DisplayPreview(void) {
+	if (m_petLoader.IsWorking(0)) {
+		return;
+	}
+
+	if (WSingleton<CRankingInfo>::Instance()->GetDlg() != NULL || USERINFODLG() != NULL) {
+		return;
+	}
+
+	m_petLoader.Enter();
+	if (m_petExhibition != NULL) {
+		m_petExhibition->Display(0.0f, 0.0f);
+	}
+	m_petLoader.Leave();
+}
+
+// Port body (JP 0x61f6d0, the KR OnPetOwnerDraw): nothing while the lobby's
+// bars are busy (RFLobbyDesktop +0x240); on the main tab 4 the preview of
+// the sub tab 0x20 (jump table 0x61f818 over 0x61f82c, sub tab - 0xe);
+// elsewhere the preview, unless a UCC is being drawn (0x605e70, not
+// ported: never). Left out: the skin pages' frames (0x60da80 for the sub
+// tabs 0xe-0x10, 0x60de60 for 0x11 and 0x23) and cut-in frame (0x61ee90,
+// 0x22), and the card pack's bones on the sub tab 0x1c.
+void JpRealMyRoomMain::OnPetOwnerDraw(intptr_t param) {
+	if (RFLobbyDesktop::s_instance != NULL && RFLobbyDesktop::s_instance->IsBusy()) {
+		return;
+	}
+
+	if (m_mainTabIndex == 4) {
+		if (m_subTabIndex == 0x20) {
+			DisplayPreview();
+		}
+		return;
+	}
+
+	DisplayPreview();
+}
+
 // Port body (JP 0x61f8b0, the KR SelectItemList(FrListItem*); jump table
 // 0x6206a8 over 0x6206e4): only the parts case (JP index 0, sub tabs 2-4,
 // 0x16 ...: the KR case 1-3 / 26) in the lobby (RFLobbyDesktop::s_mode 0),
@@ -588,7 +631,8 @@ void JpRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 // restriction notices (main actor 0x23), the card / aux part case
 // (0x70000000 type ids, "LobbyAvatar" 0x18b), the lounge preview's
 // SetPart (0x8b28b0 on +0x584), ShowMainModel 0x61a810 and the other sub
-// tabs' cases (0x17 and the unlisted ones only return true).
+// tabs' cases (0x17 and the unlisted ones only return true); the caddie
+// (0xb) and mascot (0xd) rows go to ChangeCaddie / ChangeMascot.
 bool JpRealMyRoomMain::SelectItemList(FrListItem* pItem) {
 	switch (m_subTabIndex) {
 	case 5:
@@ -669,6 +713,28 @@ bool JpRealMyRoomMain::SelectItemList(FrListItem* pItem) {
 
 		m_pCharParts = partList.m_partTids;
 		memcpy(m_charPartIds, partList.m_partIds, sizeof(m_charPartIds));
+		return true;
+	}
+
+	case 0xb: {
+		// JP index 5: the row's caddie shown (left out: the notice 0x23 to
+		// the main actor when ChangeCaddie keeps the caddie, one above the
+		// player's level).
+		sCaddieInfo* pCaddie = (sCaddieInfo*)pItem->pData;
+		if (pCaddie != NULL) {
+			ChangeCaddie((uint32_t)pCaddie->id);
+		}
+		g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
+		return true;
+	}
+
+	case 0xd: {
+		// JP index 6: the row's mascot shown.
+		sMascotInfo* pMascot = (sMascotInfo*)pItem->pData;
+		if (pMascot != NULL) {
+			ChangeMascot((uint32_t)pMascot->id);
+		}
+		g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
 		return true;
 	}
 	}

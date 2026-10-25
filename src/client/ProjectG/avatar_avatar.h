@@ -263,6 +263,7 @@ class ntAvatarManager : public WSingleton<ntAvatarManager> {
 	friend class FrCardComposeDlg;
 	friend class FrAvatarMotionDlg;  // the JP motion dialog reads m_pMyAvatar
 	friend class JpShopMain;         // port glue: the JP shop main reads m_pMyAvatar (0xA4)
+	friend class JpRealMyRoomMain;   // the JP My Room sets and drops the avatar's state 2 (0xA4)
 #endif
 
 public:

@@ -1638,10 +1638,12 @@ JpShopMain::~JpShopMain(void) {
 	AfxPostMsg(NULL, "AvatarChat", 0x58, 0, 0, 0, 0);
 
 	if (RFLobbyDesktop::s_mode == 1) {
-		// Not written yet (REQUEST): the JP first clears the desktop's +0x184
-		// (RFLobbyDesktop::s_instance, a member RFLobbyDesktop.h does not
-		// model). Then the player's avatar drops state 4 (ntAvatar::SetState
-		// 0x7a4820).
+		// The desktop's m_pendingTaskChange (+0x184) is cleared (else its
+		// SyncInputState keeps the bars' Refresh input off), then the
+		// player's avatar drops state 4 (ntAvatar::SetState 0x7a4820).
+		if (RFLobbyDesktop::s_instance != NULL) {
+			RFLobbyDesktop::s_instance->ClearPendingTaskChange();
+		}
 		ntAvatarManager* manager = WSingleton<ntAvatarManager>::Instance();
 		if (manager) {
 			ntAvatar* myAvatar = manager->m_pMyAvatar;

@@ -529,6 +529,9 @@ uint32_t JpIffEnchant_GetValue(const JpIffEnchant* enchant);
 // fields JpMasteryGlue.cpp maps is not traced.
 class WSendPacket;
 void JpCharacter_EncodeRecord(WSendPacket& packet, const sCharacterInfo* character);
+// The same record with the JP tail the port keeps for `tailOwner` (an
+// edited copy of a shared doc character is sent with the doc record's tail).
+void JpCharacter_EncodeRecordWithTailOf(WSendPacket& packet, const sCharacterInfo* character, const sCharacterInfo* tailOwner);
 // 0xa189c0 (CItemManager::GetItemLevel, thiscall on the IFF manager): the
 // stat the parts' item levels give.
 uint8_t JpIff_GetItemLevelStat(uint32_t stat, const uint32_t* partTids, const uint32_t* auxPartTids);
