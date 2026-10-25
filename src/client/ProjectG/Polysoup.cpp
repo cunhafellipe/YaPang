@@ -722,7 +722,8 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 	m_pTextures = new sTexture[m_numTextures];
 
 	sModel **ppModels = new sModel *[m_numObjects];
-	for (int i = 0; i < m_numObjects; i++) {
+	int i;
+	for (i = 0; i < m_numObjects; i++) {
 		ppModels[i] = new sModel;
 	}
 
@@ -732,7 +733,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 	m_pBgModel = new sModel;
 
-	for (int i = 0; i < m_numCameras; i++) {
+	for (i = 0; i < m_numCameras; i++) {
 		sCamera *pCamera = &m_pCameras[i];
 
 		pFile->Read(pCamera->m_name, 0x20);
@@ -756,7 +757,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 	g_lightset.ambient = 0x808080;
 	g_lightset.ambient2 = 0xFFFFFF;
 
-	for (int i = 0; i < m_numPoints; i++) {
+	for (i = 0; i < m_numPoints; i++) {
 		sPoint *pPoint = &m_pPoints[i];
 
 		pFile->Read(&pPoint->m_type, 1);
@@ -791,7 +792,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 	g_lightset.ambient = ModifyColor(g_lightset.ambient, GOLFDOC()->m_fogBrightness);
 	g_lightset.ambient2 = ModifyColor(g_lightset.ambient2, GOLFDOC()->m_fogBrightness);
 
-	for (int i = 0; i < m_numAreas; i++) {
+	for (i = 0; i < m_numAreas; i++) {
 		sArea *pArea = &m_pAreas[i];
 
 		pFile->Read(&pArea->m_type, 1);
@@ -833,7 +834,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 		}
 	}
 
-	for (int i = 0; i < m_numTextures; i++) {
+	for (i = 0; i < m_numTextures; i++) {
 		pFile->Read(m_pTextures[i].m_name, 0x20);
 		m_pTextures[i].m_handle = GetResrcManager()->LoadTexture(m_pTextures[i].m_name, 0, 0, 0);
 		m_pTextures[i].m_param = m_pGolfDoc->m_propertyInfo.GetPropertyIndex(m_pTextures[i].m_name);
@@ -841,8 +842,8 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 	}
 
 	m_bAltCameraBounds = false;
-	for (int i = 0; i < m_numBoundAreas; i++) {
-		sBoundAreaRecord areaRecord;
+	sBoundAreaRecord areaRecord;
+	for (i = 0; i < m_numBoundAreas; i++) {
 		pFile->Read(&areaRecord, 0x18);
 
 		CNodeContainer node(std::string(areaRecord.m_name));
@@ -947,7 +948,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 
 			m_pBgModel->m_pTriangles[triIndex].m_plane.normal = WCrossProduct(pVertex[2] - pVertex[1], pVertex[0] - pVertex[1]);
 			m_pBgModel->m_pTriangles[triIndex].m_plane.normal.Normalize();
-			m_pBgModel->m_pTriangles[triIndex].m_plane.dis = m_pBgModel->m_pTriangles[triIndex].m_plane.normal.z * -1.0f * pVertex[0].z + m_pBgModel->m_pTriangles[triIndex].m_plane.normal.y * -1.0f * pVertex[0].y + m_pBgModel->m_pTriangles[triIndex].m_plane.normal.x * -1.0f * pVertex[0].x;
+			m_pBgModel->m_pTriangles[triIndex].m_plane.dis = WDotProduct(m_pBgModel->m_pTriangles[triIndex].m_plane.normal * -1.0f, pVertex[0]);
 			m_pBgModel->m_pTriangles[triIndex].m_doubleSided = (pMesh->xiDrawFlag2 & 0x400) != 0;
 			m_pBgModel->m_pTriangles[triIndex].m_propIndex = m_pTextures[m_texIndexMap[pMesh->texHandle]].m_param;
 			m_pBgModel->m_pTriangles[triIndex].m_texIndex = m_pTextures[m_texIndexMap[pMesh->texHandle]].m_handle;
@@ -1010,7 +1011,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 	int numInstances = 0;
 	int numRecords = m_numOtherRecords[4] + m_numOtherRecords[3] + m_numOtherRecords[2];
 	int modelIndex = 0;
-	for (int i = 0; i < numRecords; i++) {
+	for (i = 0; i < numRecords; i++) {
 		pFile->Read(&record, 0xAC);
 #ifdef PG_7XX
 		if (gbin72) {
@@ -1029,7 +1030,7 @@ bool WPolySoup::Load(const char *name, bool bPlaceHoleCup) {
 		pModel->m_sceneAabb = record.m_sceneAabb;
 		pModel->m_matrix = record.m_matrix;
 		pModel->m_basePos = (pModel->m_aabb.max + pModel->m_aabb.min) * 0.5f;
-		pModel->m_center = (pModel->m_aabb.min + pModel->m_aabb.max) * 0.5f;
+		pModel->m_center = (pModel->m_aabb.max + pModel->m_aabb.min) * 0.5f;
 		pModel->m_radius = (pModel->m_aabb.max - pModel->m_aabb.min).Magnitude() * 0.5f;
 		pModel->m_scale = sqrtf(record.m_matrix.xx * record.m_matrix.xx + record.m_matrix.zx * record.m_matrix.zx + record.m_matrix.yx * record.m_matrix.yx);
 		strncpy(pModel->m_name, record.m_name, 0x1F);
@@ -1988,9 +1989,7 @@ void WPolySoup::MakeStatistics(void) {
 // (sub_006b8aa0). The original has no reference to it; cl drops it until a
 // caller is found.
 static float InterpolateTriangle(float v0, float v1, float v2, float u, float v) {
-	float value = (v1 - v0) * u + (v2 - v0) * v;
-
-	return value + v0;
+	return (v1 - v0) * u + (v2 - v0) * v + v0;
 }
 
 // polysoup.cpp:2175
@@ -2018,10 +2017,11 @@ static void GetBarycentric(const WVector &a, const WVector &b, const WVector &c,
 // The barycentric weights of pos in the triangle (a, b, c), projected on the
 // plane the triangle's normal is closest to (sub_006ba880, register
 // arguments). u weighs c, v weighs b. Taking c before b reproduces the
-// original's registers (ecx a, edx b, esi c, edi pos). Emitted once its callers
+// original's registers (ecx a, edx b, esi c, edi pos); u and v come first so
+// the callers push them after the register arguments. Emitted once its callers
 // smBuildOutFragMeshes and smAddSmapPack are written. The projected pos is an
 // array: the original homes p[1] in the frame and copies it through eax.
-static void GetBarycentricProjected(const WVector &a, const WVector &c, const WVector &b, const WVector &pos, float &u, float &v) {
+static void GetBarycentricProjected(float &u, float &v, const WVector &a, const WVector &c, const WVector &b, const WVector &pos) {
 	float p[2];
 	float cx, cy, bx, by;
 	WVector normal;
@@ -2498,7 +2498,7 @@ w_mesh *WPolySoup::smAddSmapPack(SmInFragList *pList, cFile *pFile, int kind, in
 				unsigned short i1 = pSrc->indexList[pFrags[i].m_triIndex * 3 + 1];
 				int i2 = pSrc->indexList[pFrags[i].m_triIndex * 3 + 2];
 				float u, v;
-				GetBarycentricProjected(pSrc->vecList[i0], pSrc->vecList[i1], pSrc->vecList[i2], pVtx[vtx], u, v);
+				GetBarycentricProjected(u, v, pSrc->vecList[i0], pSrc->vecList[i1], pSrc->vecList[i2], pVtx[vtx]);
 				unsigned long color = ((unsigned char)InterpolateTriangle((float)(pSrc->vtxColorList[i0] >> 24), (float)(pSrc->vtxColorList[i1] >> 24), (float)(pSrc->vtxColorList[i2] >> 24), u, v) << 24) | 0xFFFFFF;
 
 				for (k = 0; k < numVtx; k++) {
@@ -2777,10 +2777,9 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 	float (*pOldUV)[2] = pMesh->uvData;
 	unsigned long *pOldColors = pMesh->vtxColorList;
 	int numTris = 1;
-	int i, j, k;
 
-	for (i = 1; i < numFrags; i++) {
-		if (pFrags[i].m_triIndex != pFrags[i - 1].m_triIndex) {
+	for (int n = 1; n < numFrags; n++) {
+		if (pFrags[n].m_triIndex != pFrags[n - 1].m_triIndex) {
 			numTris++;
 		}
 	}
@@ -2793,6 +2792,7 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 	float (*pNewUV)[2] = new float[numFrags * 3][2];
 	unsigned long *pNewColors = new unsigned long[numFrags * 3];
 	int numNew = 0;
+	int i;
 
 	for (i = 0; i < numFrags; i++) {
 		int tri = pFrags[i].m_triIndex * 3;
@@ -2800,11 +2800,10 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 		int i1 = pOldIdx[tri + 1];
 		int i2 = pOldIdx[tri + 2];
 
-		for (j = 0; j < 3; j++) {
+		for (int j = 0; j < 3; j++) {
 			int vtx = pFrags[i].m_vtx[j];
 
 			if (vtx < 0x8000) {
-				WVector *pPos = &pVtx[vtx];
 				float u, v;
 				// The XZ-plane weights are never selected: c2 removes the
 				// branch only after GetBarycentric was compiled (lines
@@ -2812,9 +2811,9 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 				// an unreferenced GetBarycentric with register arguments.
 				bool bProjected = true;
 				if (bProjected) {
-					GetBarycentricProjected(pOldVec[i0], pOldVec[i1], pOldVec[i2], *pPos, u, v);
+					GetBarycentricProjected(u, v, pOldVec[i0], pOldVec[i1], pOldVec[i2], pVtx[vtx]);
 				} else {
-					GetBarycentric(pOldVec[i0], pOldVec[i1], pOldVec[i2], *pPos, u, v);
+					GetBarycentric(pOldVec[i0], pOldVec[i1], pOldVec[i2], pVtx[vtx], u, v);
 				}
 
 				WVector normal;
@@ -2835,14 +2834,15 @@ void WPolySoup::smBuildOutFragMeshes(w_mesh *pMesh, SmOutFrag *pFrags, int numFr
 				uv[0] = InterpolateTriangle(pOldUV[i0][0], pOldUV[i1][0], pOldUV[i2][0], u, v);
 				uv[1] = InterpolateTriangle(pOldUV[i0][1], pOldUV[i1][1], pOldUV[i2][1], u, v);
 
+				int k;
 				for (k = 0; k < numNew; k++) {
-					if (WisEqual(pNewVec[k].x, pPos->x, data_a111e4) && WisEqual(pNewVec[k].y, pPos->y, data_a111e4) && WisEqual(pNewVec[k].z, pPos->z, data_a111e4) && WisEqual(pNewNorm[k].x, normal.x, data_a111e4) && WisEqual(pNewNorm[k].y, normal.y, data_a111e4) && WisEqual(pNewNorm[k].z, normal.z, data_a111e4) && WisEqual(pNewUV[k][0], uv[0], data_a111e4) && WisEqual(pNewUV[k][1], uv[1], data_a111e4)) {
+					if (WisEqual(pNewVec[k].x, pVtx[vtx].x, data_a111e4) && WisEqual(pNewVec[k].y, pVtx[vtx].y, data_a111e4) && WisEqual(pNewVec[k].z, pVtx[vtx].z, data_a111e4) && WisEqual(pNewNorm[k].x, normal.x, data_a111e4) && WisEqual(pNewNorm[k].y, normal.y, data_a111e4) && WisEqual(pNewNorm[k].z, normal.z, data_a111e4) && WisEqual(pNewUV[k][0], uv[0], data_a111e4) && WisEqual(pNewUV[k][1], uv[1], data_a111e4)) {
 						break;
 					}
 				}
 
 				if (k == numNew) {
-					pNewVec[numNew] = *pPos;
+					pNewVec[numNew] = pVtx[vtx];
 					pNewNorm[numNew] = normal;
 					memcpy(pNewUV[numNew], uv, sizeof(uv));
 					pNewColors[numNew] = color;
@@ -3252,15 +3252,16 @@ bool WPolySoup::IsInPoly(WVector &pos, std::vector<sCupVtx> &verts) {
 	if (verts.size() < 4)
 		return false;
 
+	WVector2D v[3];
+	v[0] = WVector2D(verts[0].m_pos.x, verts[0].m_pos.z);
+	v[1] = WVector2D(verts[1].m_pos.x, verts[1].m_pos.z);
+	v[2] = WVector2D(verts[2].m_pos.x, verts[2].m_pos.z);
 	WVector2D p(pos.x, pos.z);
-	WVector2D v0(verts[0].m_pos.x, verts[0].m_pos.z);
-	WVector2D v1(verts[1].m_pos.x, verts[1].m_pos.z);
-	WVector2D v2(verts[2].m_pos.x, verts[2].m_pos.z);
 	WVector2D e;
-	e = v1 - v0;
+	e = v[1] - v[0];
 	e /= e.Magnitude();
 	WVector2D d;
-	d = v2 - v0;
+	d = v[2] - v[0];
 	d /= d.Magnitude();
 	float winding = e.x * d.y - d.x * e.y;
 

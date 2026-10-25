@@ -84,6 +84,37 @@
 #include <mmsystem.h>
 #include <string.h>
 #include "pg_boot_todo.h"
+#ifdef JP_PAKS // the JP Refresh UI hooks (docs/JP_REFRESH_UI.md); only port/CMakeLists.txt defines JP_PAKS
+#undef R_OK    // <unistd.h>'s access() mode would replace RFManager.h's R_OK enumerator
+#include "RFManager.h"
+#include "RFSceneManager.h"
+#include "JpTaskPage.h" // CTaskWidget, the JP CTask +0x1fc widget (src/jp)
+#include "JpWebLoginRequest.h" // CWebPageConnector_OnLoginKeyPacket (src/jp)
+#include "JpAttendanceDlg.h"   // sAttendanceInfo, the 0x248 / 0x249 record (src/jp)
+#include "JpMasteryCard.h"     // ShowMasteryCardNotice, g_charMasteryCardDlg (src/jp)
+#include "JpMasteryStatus.h"   // g_charMasteryStatusDlg (src/jp)
+#include "JpMasterySlot.h"     // JpCharacter_SetMasteryData (src/jp)
+#include "JpLobbyGlue.h"       // JpSharedDoc_GetLobbyMode, JpSharedDoc_GetRoomGameMode (src/jp)
+// 0xb4eb80: the JP text for a Korean source text (src/jp/RFTextManager.h).
+const char* Jp_LookupText(const char* key);
+// The Tiki point balance, JP CSharedDoc +0x3860 (src/jp/JpItemGlue.h).
+void JpSharedDoc_SetTikiPoints(int points);
+// The 0x216 club set / part / caddie appliers (0x588ff0 / 0x589070 /
+// 0x5891c0, 0x588d60, 0x589460; src/jp/JpItemGlue.h): the JP
+// refusal code, 0 when applied.
+uint32_t JpClubSet_ApplyItemChange(unsigned char kind, uint32_t typeId, uint32_t serial, const unsigned short stats[5], unsigned char slot, uint32_t cardTypeId, const unsigned char extra[23]);
+uint32_t JpPart_SetCardSlot(uint32_t typeId, uint32_t serial, unsigned char slot, uint32_t cardTypeId);
+uint32_t JpCaddie_ApplyItemChange(uint32_t serial, unsigned char level, uint32_t experience);
+// The shop-entry pairs of the 0x20E reply, a map at JP CSharedDoc +0x113e0
+// (meaning not known): 0x9be750 clears it; 0x642990 inserts (first, second),
+// skipping a pair whose first is 0.
+void JpSharedDoc_ClearShopEnterPairs(void);
+void JpSharedDoc_AddShopEnterPair(unsigned int first, unsigned int second);
+// JP cases 0x9d4b1c (0x21D) and 0x9d4bb8 (0x21E): the quest lists
+// (src/jp/JpQuestHandler.h).
+void JpQuest_OnQuestProgressListPacket(WReceivedPacket& packet);
+void JpQuest_OnPlayerQuestListPacket(WReceivedPacket& packet);
+#endif
 
 extern HWND g_hwnd; // the game window (ProjectG.cpp)
 
@@ -207,6 +238,13 @@ IObject* CObjectFactory::CreateObject(const char* name) {
 	return 0;
 }
 
+#ifdef JP_PAKS
+// The CTaskManager instance: defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+template <> CTaskManager* WSingleton<CTaskManager>::m_pInstance = NULL;
+#endif
+
 // taskmanager.cpp:204
 GameGuardMsgHandler::GameGuardMsgHandler(void)
 	: m_bPushed(false) {
@@ -312,10 +350,26 @@ CTask::CTask(void)
 	m_stateFlags = 0;
 	m_netSyncTime = 0;
 	m_bRecieveWhisper = true;
+#ifdef JP_PAKS
+	// The JP constructor 0x9bf340 first creates ms_pNullWidget when it is
+	// NULL (ObjectFactory().CreateObject("CNullWidget"), DYNAMIC_CAST to
+	// CTaskWidget, throwing "Factory failed to create : %s Obj" / "Casting
+	// failed to change type"). CNullWidget is not decompiled or registered
+	// in the port: the "none" widget stays NULL there.
+	m_pWidget = ms_pNullWidget;
+#endif
 }
 
 // taskmanager.cpp:516
 CTask::~CTask(void) {
+#ifdef JP_PAKS
+	// JP 0x9bc170
+	DeleteWidget();
+	if (ms_pNullWidget) {
+		delete ms_pNullWidget;
+		ms_pNullWidget = NULL;
+	}
+#endif
 	sActor *pActor = m_actorList.Start();
 	while (pActor) {
 		delete pActor->m_pActor;
@@ -405,6 +459,9 @@ FrForm *CTask::LoadTipText(int, int) {
 
 		pForm->SetMessage(it->m_text.c_str(), false);
 		pForm->EnableDrag(false);
+#ifdef JP_PAKS
+		FrModalDim::Cancel();
+#endif
 		pForm->Open((FRESH_RESULT_CALLBACK)&CTask::OnTipDlgResult, 8);
 		return pForm;
 	}
@@ -789,6 +846,10 @@ void CTask::Display(void) {
 			g_view->Flush(0);
 		}
 	}
+#ifdef JP_PAKS
+	// Hook 5, JP 0x9bb6a9.
+	if (RFSceneManager::Instance()) RFSceneManager::Instance()->PreDraw();
+#endif
 }
 
 // taskmanager.cpp:1219
@@ -852,6 +913,14 @@ static const sNoticeText data_a13d4c[3] = {
 
 // taskmanager.cpp:1246
 int CTask::OnPacketCommon(WReceivedPacket &packet) {
+#ifdef JP_PAKS
+	// JP 0x9c20d7-0x9c20ed: the task's widget (+0x1fc, slot [6]) sees the
+	// packet first; nonzero = handled, return 1 (0x9d78a7). The JP widget is
+	// never NULL (CNullWidget); the port's "none" widget is.
+	if (m_pWidget && m_pWidget->OnPacket(packet)) {
+		return 1;
+	}
+#endif
 	packet.Reset();
 	unsigned short type = packet.Decode2();
 	g_iRecvPacketType = type;
@@ -949,6 +1018,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 		}
 		break;
+#ifndef JP_PAKS // the JP has no 0x11B (jump table 0x9d7d70: the default); its tutorial reader is 0x11F
 	case 0x11b:
 		{
 			// taskmanager.cpp:1361
@@ -967,6 +1037,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 		}
 		break;
+#endif
 	case 0x112:
 		{
 			// taskmanager.cpp:1380
@@ -1221,7 +1292,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:1632
 		SendMessage(g_hwnd, 0xADB3, 0, 0);
 		// taskmanager.cpp:1640
-		FrBongdariShopDlg* pDlg = FrStaticCast<FrBongdariShopDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop");
+		FrBongdariShopDlg* pDlg = FR_STATIC_CAST(FrBongdariShopDlg, pWnd);
 		// taskmanager.cpp:1642
 		if (pDlg) {
 			// taskmanager.cpp:1646
@@ -1268,6 +1340,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		for (unsigned char hole = 0; hole < 18; hole++) {
 			// taskmanager.cpp:1684
 			CSharedDoc::Instance()->m_holeRandom[hole] = packet.Decode4();
+#ifdef JP_PAKS
+			// JP 0x9c29a8-0x9c2a2d: the pin and the course come from the
+			// packet for every hole, whatever the room mode (JP CSharedDoc
+			// +0x104fa pin, +0x1050c course, +0x1051e hole, +0x10534 random).
+			CSharedDoc::Instance()->m_holePin[hole] = packet.Decode1();
+			CSharedDoc::Instance()->m_holeCourse[hole] = packet.Decode1();
+#else
 			// taskmanager.cpp:1685
 			CSharedDoc::Instance()->m_holePin[hole] = (unsigned char)(CSharedDoc::Instance()->m_holeRandom[hole] % 3);
 			// taskmanager.cpp:1687
@@ -1275,16 +1354,23 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:1688
 				CSharedDoc::Instance()->m_holeCourse[hole] = packet.Decode1();
 			}
+#endif
 			// taskmanager.cpp:1690
 			CSharedDoc::Instance()->m_holeOrder[hole] = packet.Decode1();
 		}
 		// taskmanager.cpp:1694
 		memset(CSharedDoc::Instance()->m_courseHoleOn, 0, sizeof(CSharedDoc::Instance()->m_courseHoleOn));
+#ifdef JP_PAKS
+		// JP 0x9c2a5a: hole 0's course is the map, with no room-mode test
+		// (the JP shuffle-course mode is 0x12, not KR's 0xE).
+		SetCurMap(CSharedDoc::Instance()->m_holeCourse[0]);
+#else
 		// taskmanager.cpp:1696
 		if (CSharedDoc::Instance()->m_roomInfo.m_roomMode == 0xE) {
 			// taskmanager.cpp:1697
 			SetCurMap(CSharedDoc::Instance()->m_holeCourse[0]);
 		}
+#endif
 		// taskmanager.cpp:1703
 		CGimmickContainer *pGimmick = NULL;
 		CContentsDoc::Instance()->GetContainer((localContentType_t)0xA3, pGimmick);
@@ -2037,6 +2123,27 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:2511
 				CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", 0);
 			}
+#ifdef JP_PAKS
+			// JP 0x9c49b7: the top page unless the lobby flag is set or the
+			// JP lobby mode (0x62bf90) is 1 or 2; then the room list, which
+			// the JP draws as the top page plus message 0x8B (4, GP): GP 1
+			// for room modes 0x14 / 0x15 (0x46e6d0), nothing for 0x17,
+			// 0xC, 0xE, 0x13 (0x500200).
+			if (!CSharedDoc::Instance()->m_lobbyStateFlag && JpSharedDoc_GetLobbyMode() != 2 && JpSharedDoc_GetLobbyMode() != 1) {
+				AfxPostMsg(0, "Lobby", 2, 0, 0, 0, 0);
+				AfxPostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+			} else {
+				AfxPostMsg(0, "Lobby", 2, 0, 0, 0, 0);
+				unsigned char roomMode = (unsigned char)JpSharedDoc_GetRoomGameMode();
+				if (roomMode >= 0x14 && roomMode <= 0x15) {
+					AfxPostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+					AfxPostMsg(0, "Lobby", 0x8B, 4, 1, 0, 0);
+				} else if (roomMode != 0x17 && roomMode != 0xC && roomMode != 0xE && roomMode != 0x13) {
+					AfxPostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+					AfxPostMsg(0, "Lobby", 0x8B, 4, 0, 0, 0);
+				}
+			}
+#else
 			// taskmanager.cpp:2514
 			if (CSharedDoc::Instance()->m_lobbyStateFlag) {
 				// taskmanager.cpp:2516
@@ -2049,6 +2156,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:2522
 				AfxPostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
 			}
+#endif
 			// taskmanager.cpp:2527
 			if (WSingleton<CSceneManager>::IsInstantiated()) {
 				// taskmanager.cpp:2528
@@ -2522,11 +2630,25 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false)) {
 			// taskmanager.cpp:3018
 			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", 0);
+#ifdef JP_PAKS
+			// JP 0x9c8df5: the JP room list is the top page plus message
+			// 0x8B (4, 0), posted for the new task's main actor (0x655850,
+			// CTaskManager 0x9c16a0's main-actor queue): the lobby's "Lobby".
+			AfxPostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+			AfxPostMsg(0, "Lobby", 0x8B, 4, 0, 0, 0);
+#else
 			// taskmanager.cpp:3022
 			AfxPostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+#endif
 		} else {
+#ifdef JP_PAKS
+			// JP 0x9c8e2a: the same two messages, sent at once.
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0, (intptr_t)"TOPPAGE", 0, 0, 0, 0));
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x8B, 4, 0, 0, 0, 0));
+#else
 			// taskmanager.cpp:3030
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0, (intptr_t)"ROOMLIST", 0, 0, 0, 0));
+#endif
 		}
 		break;
 	case 0xf4:
@@ -2773,6 +2895,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				tidList.SetTids(&character, CSharedDoc::Instance()->m_myLevel);
 				// taskmanager.cpp:3307
 				CSharedDoc::Instance()->AddChar(&character);
+#ifdef JP_PAKS
+				// The JP record (0x201 bytes, 0x9c6024) carries the mastery
+				// data the KR one lacks: +0x1c8 the 5 stat points, +0x1cd the
+				// open slot number, +0x1d1 the 12 card type ids. The port's
+				// KR record is followed by them on the wire (offline server).
+				JpCharacter_DecodeMasteryTail(packet, &CSharedDoc::Instance()->m_characterMap[character.id]);
+#endif
 			}
 			// taskmanager.cpp:3309
 			if (total == count) {
@@ -3167,8 +3296,37 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0x12d:
+#ifdef JP_PAKS
+		// JP 0x9d1b97 (byte table 0x9d7f80 [0x98] -> jump table 0x9d7d70
+		// [88]): the my-room furniture, the KR CRealMyRoomTask 0x125 layout,
+		// into JP CSharedDoc +0x37d4 (the KR m_furnitureList; AddFurniture is
+		// JP 0x640620). The JP has no KR card list reader at 0x12D.
+		{
+			CSharedDoc::Instance()->m_furnitureList.clear();
+			unsigned long result = packet.Decode4();
+			if (result != 1) {
+				// the KR "RealMyRoom" 0x228 (0x125, result)
+				AfxGetTask()->GetMainActor() << MsgObject(0, 0x2a6, 0x12d, result, 0, 0, 0);
+			} else {
+				CSharedDoc::Instance()->m_furnitureList.clear();
+				int count = (unsigned short)packet.Decode2();
+				for (int i = count; i > 0; i--) {
+					sFurniture_List furniture;
+					memset(&furniture, 0, sizeof(furniture));
+					packet.DecodeBuffer(&furniture, sizeof(furniture));
+					CSharedDoc::Instance()->AddFurniture(furniture);
+				}
+			}
+			IActor *pMain = AfxGetTask()->GetMainActor();
+			if (pMain) {
+				pMain << MsgObject(0, 0x107, 0, 0, 0, 0, 0);
+				pMain << MsgObject(0, 2, 0, 0, 0, 0, 0);
+			}
+		}
+#else
 		// taskmanager.cpp:3750
 		CSharedDoc::Instance()->m_myCardList.clear();
+#endif
 		break;
 	case 0x130:
 		// taskmanager.cpp:3760
@@ -3208,7 +3366,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					}
 				}
 				// taskmanager.cpp:3797
-				GetActor("RealMyRoom") << MsgObject(0, 0x21A, 0, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x21A, 0, 0, 0, 0, 0);
 			} else if (result == 1) {
 				// taskmanager.cpp:3806
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x25, (intptr_t)"\xc4\xab\xb5\xe5 \xc1\xa4\xba\xb8\xb8\xa6 \xb9\xde\xb4\xc2\xb5\xa5 \xbd\xc7\xc6\xd0 \xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9", 0, 0, 0, 0));
@@ -3253,8 +3411,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				}
 			}
 			// taskmanager.cpp:3866
-			MsgObject msg(0, 2, 0, 0, 0, 0, 0);
-			GetActor("RealMyRoom") << msg;
+			GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
 		}
 		break;
 	case 0x158:
@@ -3522,6 +3679,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:4249
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xc4\xab\xb5\xe5\xc0\xc7 \xb1\xe2\xb0\xa3\xc1\xa6 \xc6\xaf\xbc\xf6\xb4\xc9\xb7\xc2 \xbb\xe8\xc1\xa6\xbf\xa1 \xbd\xc7\xc6\xd0 \xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9", 0, 0, 0, 0));
 		}
+		// taskmanager.cpp:4252
+		GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
 		break;
 	}
 	case 0x14c: {
@@ -4377,7 +4536,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:5196
 			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 				// taskmanager.cpp:5197
-				GetActor("Lobby") << MsgObject(0, 3, (intptr_t)text, 0xFFFF7878, 0, 0, 0);
+				AfxGetTask()->GetActor("Lobby") << MsgObject(0, 3, (intptr_t)text, 0xFFFF7878, 0, 0, 0);
 			} else {
 				// taskmanager.cpp:5199
 				CChatMsg::Instance()->AddChatMsg(text, 0xFFFF7878, false, false);
@@ -4425,6 +4584,17 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			CSharedDoc::Instance()->m_myPang = pang;
 		}
 		break;
+#ifdef JP_PAKS
+	// JP 0x9cb004 (jump table 0x9d7d70, entry 9): 0xAA is the JP id of the
+	// 0xA8 below (the JP has no 0xA8 reader), with the same layout: u16 n,
+	// n x sBuyItemResult (0x26), the 0x1A000042 extension, then the
+	// IsAngelWing / Halloween checks (0x9cbdf1). The JP hands each item to
+	// the "realmyroom" / "shopmain" page actor when that lobby page is up;
+	// here the items go to CSharedDoc as the KR does outside its shop and
+	// my-room tasks. The pang / cookie balances SuperSS-Dev appends are not
+	// read.
+	case 0xaa:
+#endif
 	case 0xa8:
 		// The items of a purchase (after the shop's 0x1D): u16 n, n x
 		// sBuyItemResult. The shop and the my-room hand each item to their
@@ -4905,24 +5075,55 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:5800
 					CSharedDoc::Instance()->m_myPang = packet.Decode8();
 					// taskmanager.cpp:5802
+#ifdef JP_PAKS
+					// JP 0x9cbed0: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc2\xca\xc1\xf6\xb8\xa6 \xb3\xb2\xb0\xe5\xbd\xc0\xb4\xcf\xb4\xd9. \xbb\xf3\xb4\xeb\xb9\xe6\xc0\xcc \xb4\xd9\xc0\xbd \xb7\xce\xb1\xd7\xc0\xce\xc7\xd2 \xb6\xa7 \xc0\xfc\xb4\xde\xb5\xcb\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xc2\xca\xc1\xf6\xb8\xa6 \xb3\xb2\xb0\xe5\xbd\xc0\xb4\xcf\xb4\xd9. \xbb\xf3\xb4\xeb\xb9\xe6\xc0\xcc \xb4\xd9\xc0\xbd \xb7\xce\xb1\xd7\xc0\xce\xc7\xd2 \xb6\xa7 \xc0\xfc\xb4\xde\xb5\xcb\xb4\xcf\xb4\xd9.");
+#endif
 					break;
 				case 3:
 					// taskmanager.cpp:5807
+#ifdef JP_PAKS
+					// JP 0x9cbefa: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xbb\xf3\xb4\xeb\xb9\xe6\xc0\xc7 \xc2\xca\xc1\xf6\xc7\xd4\xc0\xcc \xb0\xa1\xb5\xe6\xc2\xf7\xbc\xad \xc2\xca\xc1\xf6\xb8\xa6 \xba\xb8\xb3\xbe \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xbb\xf3\xb4\xeb\xb9\xe6\xc0\xc7 \xc2\xca\xc1\xf6\xc7\xd4\xc0\xcc \xb0\xa1\xb5\xe6\xc2\xf7\xbc\xad \xc2\xca\xc1\xf6\xb8\xa6 \xba\xb8\xb3\xbe \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					break;
 				case 7:
 				case 10:
 					// taskmanager.cpp:5814
+#ifdef JP_PAKS
+					// JP 0x9cbf24: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc0\xda\xbd\xc5\xbf\xa1\xb0\xd4 \xc2\xca\xc1\xf6\xb8\xa6 \xba\xb8\xb3\xbe\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xc0\xda\xbd\xc5\xbf\xa1\xb0\xd4 \xc2\xca\xc1\xf6\xb8\xa6 \xba\xb8\xb3\xbe\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					break;
 				case 12:
 					// taskmanager.cpp:5818
+#ifdef JP_PAKS
+					// JP 0x9cbf4e: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xba\xb8\xc0\xaf\xc6\xce\xc0\xcc \xba\xce\xc1\xb7\xc7\xcf\xbf\xa9 \xc2\xca\xc1\xf6\xb8\xa6 \xba\xb8\xb3\xbe\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xba\xb8\xc0\xaf\xc6\xce\xc0\xcc \xba\xce\xc1\xb7\xc7\xcf\xbf\xa9 \xc2\xca\xc1\xf6\xb8\xa6 \xba\xb8\xb3\xbe\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					break;
 				default:
 					// taskmanager.cpp:5830
+#ifdef JP_PAKS
+					// JP 0x9cbf72: a notify form instead of Notify1, its text
+					// Jp_LookupText (0xb4eb80) of 0xd40388 (the KR nickname
+					// change failure text, as the JP has it), opened with 3.
+					{
+						FrForm *pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
+						pForm->SetMessage(Jp_LookupText("\xba\xb0\xb8\xed \xba\xaf\xb0\xe6\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9."), false);
+						pForm->Open((FRESH_RESULT_CALLBACK)0, 3);
+					}
+#else
 					CMessengerInfo::Instance()->Notify1("\xc2\xca\xc1\xf6 \xba\xb8\xb3\xbb\xb1\xe2\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					break;
 				}
 			}
@@ -4945,10 +5146,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:6048
 		int result = packet.Decode4();
 		// taskmanager.cpp:6051
-		FrBongdariShopDlg* pDlg = FrStaticCast<FrBongdariShopDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop");
+		// taskmanager.cpp:6052
+		FrBongdariShopDlg* pDlg = 0;
 		// taskmanager.cpp:6054
-		if (pDlg) {
+		if (FR_STATIC_CAST(FrBongdariShopDlg, pWnd)) {
 			// taskmanager.cpp:6058
+			pDlg = (FrBongdariShopDlg*)pWnd;
 			pDlg->EnableExitButton(true);
 		}
 		// taskmanager.cpp:6061
@@ -4988,8 +5192,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				pDlg->SetDataFee(0);
 			}
 			// taskmanager.cpp:6102
-			MsgObject msg(0, 0xE1, 0, 0, 0, 0, 0);
-			AfxGetTask()->GetActor("RealMyRoom") << msg;
+			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xE1, 0, 0, 0, 0, 0);
 			break;
 		}
 		case 2:
@@ -5010,7 +5213,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		CSharedDoc::Instance()->SetBsUsableBonusTimes((short)packet.Decode4());
 		{
 			// taskmanager.cpp:6139
-			FrBongdariShopDlg* pDlg = FrStaticCast<FrBongdariShopDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop"));
+			FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop");
+			FrBongdariShopDlg* pDlg = FR_STATIC_CAST(FrBongdariShopDlg, pWnd);
 			// taskmanager.cpp:6142
 			if (pDlg == 0)
 				break;
@@ -5028,7 +5232,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		switch (packet.Decode1()) {
 		case 2:
 			// taskmanager.cpp:6331
+#ifdef JP_PAKS
+			// JP 0x9c6c86: the text goes through Jp_LookupText (0xb4eb80).
+			CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xb8\xde\xbd\xc5\xc0\xfa\xbc\xad\xb9\xf6\xbf\xa1 \xc1\xa2\xbc\xd3\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd1 \xb7\xce\xb1\xd7\xc0\xce\xc1\xa4\xba\xb8\xb0\xa1 \xc0\xdf\xb8\xf8\xb5\xc7\xbe\xee \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xc1\xf6 \xb8\xf8\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 			CMessengerInfo::Instance()->Notify1("\xb8\xde\xbd\xc5\xc0\xfa\xbc\xad\xb9\xf6\xbf\xa1 \xc1\xa2\xbc\xd3\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd1 \xb7\xce\xb1\xd7\xc0\xce\xc1\xa4\xba\xb8\xb0\xa1 \xc0\xdf\xb8\xf8\xb5\xc7\xbe\xee \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xc1\xf6 \xb8\xf8\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 			// taskmanager.cpp:6332
 			if (WNetworkSystem::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)) {
 				// taskmanager.cpp:6333
@@ -5313,10 +5522,20 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:6652
 					} else if (result == 13) {
 						// taskmanager.cpp:6654
+#ifdef JP_PAKS
+						// JP 0x9c7205: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc8\xb8\xbf\xf8\xc5\xbb\xc5\xf0\xc7\xd1 \xbe\xc6\xc0\xcc\xb5\xf0\xc0\xd4\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xc8\xb8\xbf\xf8\xc5\xbb\xc5\xf0\xc7\xd1 \xbe\xc6\xc0\xcc\xb5\xf0\xc0\xd4\xb4\xcf\xb4\xd9.");
+#endif
 					} else {
 						// taskmanager.cpp:6660
+#ifdef JP_PAKS
+						// JP 0x9c721c: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xb4\xeb\xc8\xad\xb8\xed\xc0\xcc \xc1\xb8\xc0\xe7\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xb4\xeb\xc8\xad\xb8\xed\xc0\xcc \xc1\xb8\xc0\xe7\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					}
 				}
 				break;
@@ -5348,7 +5567,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 								BuddyMGR->AddBuddy(&buddy);
 							}
 							// taskmanager.cpp:6704
+#ifdef JP_PAKS
+							// JP 0x9c72f0: the text goes through Jp_LookupText (0xb4eb80).
+							CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8\xb5\xee\xb7\xcf\xc0\xbb \xbf\xe4\xc3\xbb\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 							CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8\xb5\xee\xb7\xcf\xc0\xbb \xbf\xe4\xc3\xbb\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 							// taskmanager.cpp:6705
 							CMessengerInfo::Instance()->Refresh();
 						}
@@ -5356,47 +5580,92 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						break;
 					case 11:
 						// taskmanager.cpp:6713
+#ifdef JP_PAKS
+						// JP 0x9c7318: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc0\xcc\xb9\xcc \xc4\xa3\xb1\xb8\xb7\xce \xb5\xee\xb7\xcf\xb5\xc7\xbe\xee \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xc0\xcc\xb9\xcc \xc4\xa3\xb1\xb8\xb7\xce \xb5\xee\xb7\xcf\xb5\xc7\xbe\xee \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:6715
 						break;
 					case 2:
 						// taskmanager.cpp:6721
+#ifdef JP_PAKS
+						// JP 0x9c7335: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xb4\xf5 \xc0\xcc\xbb\xf3 \xc4\xa3\xb1\xb8\xb5\xee\xb7\xcf\xc0\xbb \xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xb4\xf5 \xc0\xcc\xbb\xf3 \xc4\xa3\xb1\xb8\xb5\xee\xb7\xcf\xc0\xbb \xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:6723
 						break;
 					case 3:
 						// taskmanager.cpp:6729
+#ifdef JP_PAKS
+						// JP 0x9c7352: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xbb\xf3\xb4\xeb\xb9\xe6 \xc4\xa3\xb1\xb8\xbd\xbd\xb7\xd4\xc0\xcc \xb8\xf0\xb5\xce \xc2\xf7 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xbb\xf3\xb4\xeb\xb9\xe6 \xc4\xa3\xb1\xb8\xbd\xbd\xb7\xd4\xc0\xcc \xb8\xf0\xb5\xce \xc2\xf7 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:6731
 						break;
 					case 6:
 						// taskmanager.cpp:6737
+#ifdef JP_PAKS
+						// JP 0x9c736f: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc0\xda\xb1\xe2 \xc0\xda\xbd\xc5\xc0\xbb \xc4\xa3\xb1\xb8\xb7\xce \xb5\xee\xb7\xcf\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xc0\xda\xb1\xe2 \xc0\xda\xbd\xc5\xc0\xbb \xc4\xa3\xb1\xb8\xb7\xce \xb5\xee\xb7\xcf\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:6739
 						break;
 					case 7:
 						// taskmanager.cpp:6745
+#ifdef JP_PAKS
+						// JP 0x9c738c: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xb4\xeb\xc8\xad\xb8\xed\xc0\xcc \xc1\xb8\xc0\xe7\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xb4\xeb\xc8\xad\xb8\xed\xc0\xcc \xc1\xb8\xc0\xe7\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:6747
 						break;
 					case 8:
 						// taskmanager.cpp:6752
+#ifdef JP_PAKS
+						// JP 0x9c73a9: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xb4\xeb\xc8\xad\xb8\xed\xc0\xcc \xc1\xb8\xc0\xe7\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xb4\xeb\xc8\xad\xb8\xed\xc0\xcc \xc1\xb8\xc0\xe7\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9..");
+#endif
 						// taskmanager.cpp:6754
 						break;
 					case 4:
 						// taskmanager.cpp:6760
+#ifdef JP_PAKS
+						// JP 0x9c73c6: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8 \xc7\xe3\xb0\xa1 \xb4\xeb\xb1\xe2 \xbb\xf3\xc5\xc2\xc0\xd4\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8 \xc7\xe3\xb0\xa1 \xb4\xeb\xb1\xe2 \xbb\xf3\xc5\xc2\xc0\xd4\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:6762
 						break;
 					case 5:
 						// taskmanager.cpp:6767
+#ifdef JP_PAKS
+						// JP 0x9c73e3: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8\xc3\xdf\xb0\xa1 \xc8\xc4 \xbd\xc2\xc0\xce \xb0\xc5\xc0\xfd \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8\xc3\xdf\xb0\xa1 \xc8\xc4 \xbd\xc2\xc0\xce \xb0\xc5\xc0\xfd \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:6769
 						break;
 					default:
 						// taskmanager.cpp:6772
+#ifdef JP_PAKS
+						// JP 0x9c7400: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8 \xb5\xee\xb7\xcf\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8 \xb5\xee\xb7\xcf\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:6777
 						break;
 					}
@@ -5426,6 +5695,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:6800
 					CMessengerInfo::Instance()->Refresh();
 					// taskmanager.cpp:6802
+#ifdef JP_PAKS
+					// JP 0x9c74ad-0x9c7515: both parts and the whole notice go through Jp_LookupText (0xb4eb80).
+					std::string notice(Jp_LookupText("\xbe\xcb\xb8\xb2 : "));
+					notice += buddy.nick;
+					notice += Jp_LookupText(" \xb4\xd4\xc0\xcc \xc4\xa3\xb1\xb8\xbf\xe4\xc3\xbb\xc0\xbb \xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.");
+					CMessengerInfo::Instance()->Notify2(Jp_LookupText(notice.c_str()));
+#else
 					std::string notice("\xbe\xcb\xb8\xb2 : ");
 					// taskmanager.cpp:6803
 					notice += buddy.nick;
@@ -5433,6 +5709,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					notice += " \xb4\xd4\xc0\xcc \xc4\xa3\xb1\xb8\xbf\xe4\xc3\xbb\xc0\xbb \xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.";
 					// taskmanager.cpp:6806
 					CMessengerInfo::Instance()->Notify2(notice.c_str());
+#endif
 				}
 				// taskmanager.cpp:6808
 				break;
@@ -5505,7 +5782,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:6942
 				if (packet.Decode4() != 0) {
 					// taskmanager.cpp:6945
+#ifdef JP_PAKS
+					// JP 0x9c78bd: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8\xbb\xe8\xc1\xa6\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8\xbb\xe8\xc1\xa6\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					// taskmanager.cpp:6946
 					break;
 				} else {
@@ -5530,7 +5812,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:6984
 				if (packet.Decode4() != 0) {
 					// taskmanager.cpp:6987
+#ifdef JP_PAKS
+					// JP 0x9c793e: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8\xba\xed\xb7\xb0 \xbc\xb3\xc1\xa4\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8\xba\xed\xb7\xb0 \xbc\xb3\xc1\xa4\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					// taskmanager.cpp:6988
 					break;
 				} else {
@@ -5547,7 +5834,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:7011
 				if (packet.Decode4() != 0) {
 					// taskmanager.cpp:7014
+#ifdef JP_PAKS
+					// JP 0x9c7994: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xba\xed\xb7\xb0 \xc7\xd8\xc1\xf6\xb8\xa6 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xba\xed\xb7\xb0 \xc7\xd8\xc1\xf6\xb8\xa6 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					// taskmanager.cpp:7015
 					break;
 				} else {
@@ -5585,12 +5877,22 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					break;
 				case 9:
 					// taskmanager.cpp:7069
+#ifdef JP_PAKS
+					// JP 0x9c79fe: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8 \xb5\xee\xb7\xcf\xb5\xc7\xbe\xee\xc0\xd6\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8 \xb5\xee\xb7\xcf\xb5\xc7\xbe\xee\xc0\xd6\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					// taskmanager.cpp:7071
 					break;
 				case 1:
 					// taskmanager.cpp:7075
+#ifdef JP_PAKS
+					// JP 0x9c7a1b: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xba\xb0\xb8\xed\xba\xaf\xb0\xe6\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xba\xb0\xb8\xed\xba\xaf\xb0\xe6\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					// taskmanager.cpp:7077
 					break;
 				}
@@ -5624,7 +5926,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 							BuddyMGR->AddBuddy(&buddy);
 						}
 						// taskmanager.cpp:7131
+#ifdef JP_PAKS
+						// JP 0x9c7b48 -> 0x9c7e3d: the format goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify2(MakeStr(Jp_LookupText("%s\xb4\xd4\xc0\xcc \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9"), buddy.nick));
+#else
 						CMessengerInfo::Instance()->Notify2(MakeStr("%s\xb4\xd4\xc0\xcc \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9", buddy.nick));
+#endif
 					} else {
 						// taskmanager.cpp:7137
 						if ((pBuddy->listFlags & 4) || !(pBuddy->flags & 4))
@@ -5632,7 +5939,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						// taskmanager.cpp:7140
 						pBuddy->flags |= 2;
 						// taskmanager.cpp:7146
+#ifdef JP_PAKS
+						// JP 0x9c7b9b -> 0x9c7e3d: the format goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify2(MakeStr(Jp_LookupText("%s\xb4\xd4\xc0\xcc \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9"), pBuddy->nick));
+#else
 						CMessengerInfo::Instance()->Notify2(MakeStr("%s\xb4\xd4\xc0\xcc \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9", pBuddy->nick));
+#endif
 					}
 					// taskmanager.cpp:7150
 					CMessengerInfo::Instance()->Refresh();
@@ -5665,7 +5977,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 							break;
 					}
 					// taskmanager.cpp:7195
+#ifdef JP_PAKS
+					// JP 0x9c7be0/0x9c7c0d -> 0x9c7e3d: the format goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify2(MakeStr(Jp_LookupText("%s\xb4\xd4\xc0\xcc \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9"), pBuddy->nick));
+#else
 					CMessengerInfo::Instance()->Notify2(MakeStr("%s\xb4\xd4\xc0\xcc \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9", pBuddy->nick));
+#endif
 					// taskmanager.cpp:7199
 					CMessengerInfo::Instance()->Refresh();
 				}
@@ -5727,13 +6044,23 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:7383
 					if (result == 9) {
 						// taskmanager.cpp:7386
+#ifdef JP_PAKS
+						// JP 0x9c7dba -> 0x9c79fe: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8 \xb5\xee\xb7\xcf\xb5\xc7\xbe\xee\xc0\xd6\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8 \xb5\xee\xb7\xcf\xb5\xc7\xbe\xee\xc0\xd6\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						break;
 					}
 					// taskmanager.cpp:7388
 					if (result != 0) {
 						// taskmanager.cpp:7390
+#ifdef JP_PAKS
+						// JP 0x9c7dca: the text goes through Jp_LookupText (0xb4eb80).
+						CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc4\xa3\xb1\xb8 \xc7\xe3\xbf\xeb\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 						CMessengerInfo::Instance()->Notify1("\xc4\xa3\xb1\xb8 \xc7\xe3\xbf\xeb\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 						// taskmanager.cpp:7391
 						break;
 					}
@@ -5747,7 +6074,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:7404
 					strcpy(pBuddy->group, "Friend");
 					// taskmanager.cpp:7406
+#ifdef JP_PAKS
+					// JP 0x9c7e20-0x9c7e3d: the format goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify2(MakeStr(Jp_LookupText("%s\xb4\xd4\xc0\xcc \xc4\xa3\xb1\xb8\xb0\xa1 \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9"), pBuddy->nick));
+#else
 					CMessengerInfo::Instance()->Notify2(MakeStr("%s\xb4\xd4\xc0\xcc \xc4\xa3\xb1\xb8\xb0\xa1 \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9", pBuddy->nick));
+#endif
 					CMessengerInfo::Instance()->Refresh();
 				}
 				// taskmanager.cpp:7412
@@ -5769,7 +6101,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 							// taskmanager.cpp:7513
 							strcpy(pBuddy->group, "Friend");
 							// taskmanager.cpp:7515
+#ifdef JP_PAKS
+							// JP 0x9c7eb8-0x9c7ece: the format goes through Jp_LookupText (0xb4eb80).
+							CMessengerInfo::Instance()->Notify2(MakeStr(Jp_LookupText("%s\xb4\xd4\xc0\xcc \xc4\xa3\xb1\xb8\xb0\xa1 \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9"), pBuddy->nick));
+#else
 							CMessengerInfo::Instance()->Notify2(MakeStr("%s\xb4\xd4\xc0\xcc \xc4\xa3\xb1\xb8\xb0\xa1 \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9", pBuddy->nick));
+#endif
 						}
 						// taskmanager.cpp:7519
 						CMessengerInfo::Instance()->Refresh();
@@ -5795,7 +6132,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						CSharedDoc::Instance()->m_noteList.push_back(note);
 					}
 					// taskmanager.cpp:7539
+#ifdef JP_PAKS
+					// JP 0x9c7f6a: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc2\xca\xc1\xf6\xb0\xa1 \xb5\xb5\xc2\xf8\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9"));
+#else
 					CMessengerInfo::Instance()->Notify1("\xc2\xca\xc1\xf6\xb0\xa1 \xb5\xb5\xc2\xf8\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9");
+#endif
 				}
 				// taskmanager.cpp:7541
 				break;
@@ -5808,16 +6150,31 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:7551
 					CSharedDoc::Instance()->m_myPang -= 10;
 					// taskmanager.cpp:7553
+#ifdef JP_PAKS
+					// JP 0x9c800a: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc2\xca\xc1\xf6\xb8\xa6 \xb3\xb2\xb0\xe5\xbd\xc0\xb4\xcf\xb4\xd9. \xbb\xf3\xb4\xeb\xb9\xe6\xc0\xcc \xb4\xd9\xc0\xbd \xb7\xce\xb1\xd7\xc0\xce\xc7\xd2 \xb6\xa7 \xc0\xfc\xb4\xde\xb5\xcb\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xc2\xca\xc1\xf6\xb8\xa6 \xb3\xb2\xb0\xe5\xbd\xc0\xb4\xcf\xb4\xd9. \xbb\xf3\xb4\xeb\xb9\xe6\xc0\xcc \xb4\xd9\xc0\xbd \xb7\xce\xb1\xd7\xc0\xce\xc7\xd2 \xb6\xa7 \xc0\xfc\xb4\xde\xb5\xcb\xb4\xcf\xb4\xd9.");
+#endif
 					break;
 				case 3:
 					// taskmanager.cpp:7558
+#ifdef JP_PAKS
+					// JP 0x9c7fa2: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xbb\xf3\xb4\xeb\xb9\xe6\xc0\xc7 \xc2\xca\xc1\xf6\xc7\xd4\xc0\xcc \xb0\xa1\xb5\xe6\xc2\xf7\xbc\xad \xc2\xca\xc1\xf6\xb8\xa6 \xba\xb8\xb3\xbe \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xbb\xf3\xb4\xeb\xb9\xe6\xc0\xc7 \xc2\xca\xc1\xf6\xc7\xd4\xc0\xcc \xb0\xa1\xb5\xe6\xc2\xf7\xbc\xad \xc2\xca\xc1\xf6\xb8\xa6 \xba\xb8\xb3\xbe \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					// taskmanager.cpp:7559
 					break;
 				case 1:
 					// taskmanager.cpp:7562
+#ifdef JP_PAKS
+					// JP 0x9c7fbf: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify1(Jp_LookupText("\xc2\xca\xc1\xf6 \xba\xb8\xb3\xbb\xb1\xe2\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9."));
+#else
 					CMessengerInfo::Instance()->Notify1("\xc2\xca\xc1\xf6 \xba\xb8\xb3\xbb\xb1\xe2\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.");
+#endif
 					// taskmanager.cpp:7563
 					break;
 				}
@@ -5890,7 +6247,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 							// taskmanager.cpp:7665
 							if (!(pBuddy->flags & 2))
 								// taskmanager.cpp:7670
+#ifdef JP_PAKS
+								// JP 0x9c81b4-0x9c81ca: the format goes through Jp_LookupText (0xb4eb80).
+								CMessengerInfo::Instance()->Notify2(MakeStr(Jp_LookupText("%s\xb4\xd4\xc0\xcc \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9"), pBuddy->nick));
+#else
 								CMessengerInfo::Instance()->Notify2(MakeStr("%s\xb4\xd4\xc0\xcc \xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9", pBuddy->nick));
+#endif
 							// taskmanager.cpp:7673
 							pBuddy->flags |= 2;
 							break;
@@ -5918,7 +6280,12 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						// taskmanager.cpp:7703
 						WNetworkSystem::Instance()->ForceShutDown(WNetworkSystem::NET_UNIT_MSN);
 					// taskmanager.cpp:7704
+#ifdef JP_PAKS
+					// JP 0x9c824f-0x9c825c: the text goes through Jp_LookupText (0xb4eb80).
+					CMessengerInfo::Instance()->Notify2(Jp_LookupText("\xb8\xde\xbd\xc5\xc0\xfa\xbc\xad\xb9\xf6\xbf\xa1 \xc0\xdf\xb8\xf8\xb5\xc8 \xc0\xaf\xc0\xfa \xc1\xa4\xba\xb8\xb0\xa1 \xc0\xfc\xb4\xde\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9. \xc0\xe7 \xc1\xa2\xbc\xd3\xc7\xd8\xc1\xd6\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9"));
+#else
 					CMessengerInfo::Instance()->Notify2("\xb8\xde\xbd\xc5\xc0\xfa\xbc\xad\xb9\xf6\xbf\xa1 \xc0\xdf\xb8\xf8\xb5\xc8 \xc0\xaf\xc0\xfa \xc1\xa4\xba\xb8\xb0\xa1 \xc0\xfc\xb4\xde\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9. \xc0\xe7 \xc1\xa2\xbc\xd3\xc7\xd8\xc1\xd6\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9");
+#endif
 				}
 				// taskmanager.cpp:7705
 				break;
@@ -6065,6 +6432,11 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 		}
 		break;
+#ifdef JP_PAKS
+	// The JP server's id for the server time (docs/protocol/shop.md, "JP
+	// shop page opening"): the same SYSTEMTIME as 0xB8.
+	case 0xba:
+#endif
 	case 0xb8:
 		// taskmanager.cpp:7922
 		{
@@ -6089,7 +6461,6 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:7961
 		// taskmanager.cpp:7962
 		if (packet.Decode4() != 0) {
-	case 0x94:
 			// taskmanager.cpp:7965
 			CSharedDoc::Instance()->m_myBonusCash = packet.Decode8();
 			// taskmanager.cpp:7966
@@ -6098,6 +6469,15 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:7974
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xba\xb8\xc0\xaf\xc7\xcf\xb0\xed \xc0\xd6\xb4\xc2 \xc4\xed\xc5\xb0\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
 		}
+		break;
+#ifdef JP_PAKS
+	// The JP server's id for the cookie balance (docs/protocol/shop.md, "JP
+	// shop page opening"): the same u64 as 0x94.
+	case 0x96:
+#endif
+	case 0x94:
+		CSharedDoc::Instance()->m_myBonusCash = packet.Decode8();
+		CSharedDoc::Instance()->RefreshAllCookie();
 		break;
 	case 0xc8:
 		// taskmanager.cpp:7983
@@ -6225,9 +6605,17 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:8150
 		int result = packet.Decode4();
 		// taskmanager.cpp:8153
-		FrScratchDlg* pDlg = FrStaticCast<FrScratchDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("scratchdlg"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("scratchdlg");
+		// taskmanager.cpp:8154
+		FrScratchDlg* pDlg = 0;
+		// taskmanager.cpp:8156
+		if (FR_STATIC_CAST(FrScratchDlg, pWnd)) {
+			// taskmanager.cpp:8158
+			pDlg = (FrScratchDlg*)pWnd;
+		}
 		// taskmanager.cpp:8161
-		if (result == 0) {
+		switch (result) {
+		case 0: {
 			// taskmanager.cpp:8165
 			int count = packet.Decode4();
 			// taskmanager.cpp:8167
@@ -6251,12 +6639,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8183
 				AfxPostMsg(0, "RealMyRoom", 0xE1, 0, 0, 0, 0);
 			}
-		} else if (result == 0x1B) {
+			break;
+		}
+		case 0x1B:
 			// taskmanager.cpp:8190
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xbd\xba\xc5\xa9\xb7\xa1\xc4\xa1\xb8\xa6 \xc0\xcc\xbf\xeb\xc7\xcf\xbd\xc3\xb4\xc2\xb5\xa5 \xba\xd2\xc6\xed\xc0\xbb \xb5\xe5\xb7\xc1 \xc1\xcb\xbc\xdb\xc7\xd5\xb4\xcf\xb4\xd9. \xc0\xe7\xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbd\xc3\xb8\xe9 \xc1\xa4\xbb\xf3\xc0\xfb\xc0\xb8\xb7\xce \xc0\xcc\xbf\xeb\xc7\xcf\xbd\xc7 \xbc\xf6 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
-		} else {
+			break;
+		default:
 			// taskmanager.cpp:8195
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xbd\xba\xc5\xa9\xb7\xa1\xc4\xa1 \xc0\xcc\xbf\xeb \xbf\xc0\xb7\xf9\xb0\xa1 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
+			break;
 		}
 		break;
 	}
@@ -6264,10 +6656,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:8203
 		int result = packet.Decode4();
 		// taskmanager.cpp:8206
-		FrScratchDlg* pDlg = FrStaticCast<FrScratchDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("scratchdlg"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("scratchdlg");
+		// taskmanager.cpp:8207
+		FrScratchDlg* pDlg = 0;
 		// taskmanager.cpp:8209
-		if (pDlg) {
+		if (FR_STATIC_CAST(FrScratchDlg, pWnd)) {
 			// taskmanager.cpp:8212
+			pDlg = (FrScratchDlg*)pWnd;
 			pDlg->EnableScratchSerialNumber(true);
 		}
 		// taskmanager.cpp:8215
@@ -6446,7 +6841,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8421
 				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
 				// taskmanager.cpp:8422
-				if (FrStaticCast<COfflineShopVisitorDlg>(pWnd)) {
+				if (FR_STATIC_CAST(COfflineShopVisitorDlg, pWnd)) {
 					break;
 				}
 				// taskmanager.cpp:8424
@@ -6504,44 +6899,45 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				}
 				// taskmanager.cpp:8479
 				std::list<sStall>::iterator it = pStallList->begin();
-				if (it == pStallList->end()) {
+				if (it != pStallList->end()) {
+					// taskmanager.cpp:8481
+					if (it->ownerUID != stallOwnerUID) {
+						break;
+					}
+					// taskmanager.cpp:8483
+					if (it->open <= 0) {
+						break;
+					}
+					// taskmanager.cpp:8485
+					if (it->slots[0].used != slot) {
+						break;
+					}
+					// taskmanager.cpp:8487
+					memset(&it->slots[0].item, 0, sizeof(sTradeItem));
+				} else {
 					break;
 				}
-				// taskmanager.cpp:8481
-				if (it->ownerUID != stallOwnerUID) {
-					break;
-				}
-				// taskmanager.cpp:8483
-				if (it->open <= 0) {
-					break;
-				}
-				// taskmanager.cpp:8485
-				if (it->slots[0].used != slot) {
-					break;
-				}
-				// taskmanager.cpp:8487
-				memset(&it->slots[0].item, 0, sizeof(sTradeItem));
 			}
 			// taskmanager.cpp:8502
 			if (MyUID() == CSharedDoc::Instance()->m_myRoomOwnerUID) {
 				// taskmanager.cpp:8505
 				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
 				// taskmanager.cpp:8508
-				COfflineShopEditDlg *pEditDlg = FrStaticCast<COfflineShopEditDlg>(pWnd);
+				COfflineShopEditDlg *pEditDlg = FR_STATIC_CAST(COfflineShopEditDlg, pWnd);
 				if (pEditDlg)
 					// taskmanager.cpp:8516
 					pEditDlg->SetListTradeItem();
 				// taskmanager.cpp:8520
 				pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
 				// taskmanager.cpp:8522
-				FrOfflineTradeFinishEditDlg *pFinishDlg = FrStaticCast<FrOfflineTradeFinishEditDlg>(pWnd);
+				FrOfflineTradeFinishEditDlg *pFinishDlg = FR_STATIC_CAST(FrOfflineTradeFinishEditDlg, pWnd);
 				if (pFinishDlg)
 					// taskmanager.cpp:8526
 					pFinishDlg->SetListTradeItem((std::list<sTradeItem> *)0);
 				// taskmanager.cpp:8530
 				pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
 				// taskmanager.cpp:8532
-				COfflineShopDlg *pShopDlg = FrStaticCast<COfflineShopDlg>(pWnd);
+				COfflineShopDlg *pShopDlg = FR_STATIC_CAST(COfflineShopDlg, pWnd);
 				if (pShopDlg == 0) {
 					break;
 				}
@@ -6553,14 +6949,14 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8542
 				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
 				// taskmanager.cpp:8544
-				FrOfflineTradeFinishEditDlg *pFinishDlg = FrStaticCast<FrOfflineTradeFinishEditDlg>(pWnd);
+				FrOfflineTradeFinishEditDlg *pFinishDlg = FR_STATIC_CAST(FrOfflineTradeFinishEditDlg, pWnd);
 				if (pFinishDlg)
 					// taskmanager.cpp:8548
 					pFinishDlg->Close(true);
 				// taskmanager.cpp:8551
 				pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
 				// taskmanager.cpp:8553
-				COfflineShopVisitorDlg *pVisitorDlg = FrStaticCast<COfflineShopVisitorDlg>(pWnd);
+				COfflineShopVisitorDlg *pVisitorDlg = FR_STATIC_CAST(COfflineShopVisitorDlg, pWnd);
 				if (pVisitorDlg == 0) {
 					break;
 				}
@@ -6683,21 +7079,24 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8617
 				if (MyUID() == CSharedDoc::Instance()->m_myRoomOwnerUID) {
 					// taskmanager.cpp:8620
-					FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+					FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+					FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 					// taskmanager.cpp:8623
 					if (pEditDlg) {
 						// taskmanager.cpp:8630
 						pEditDlg->Close(true);
 					}
 					// taskmanager.cpp:8634
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:8636
 					if (pBuyDlg) {
 						pBuyDlg->Close(true);
 					}
 				} else {
 					// taskmanager.cpp:8662
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:8664
 					if (pBuyDlg) {
 						// taskmanager.cpp:8668
@@ -6705,7 +7104,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					}
 				}
 				// taskmanager.cpp:8671
-				FrWnd *pShopDlg = FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg"));
+				FrWnd *pShopWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
+				FrWnd *pShopDlg = FR_STATIC_CAST(FrWnd, pShopWnd);
 				// taskmanager.cpp:8674
 				if (pShopDlg) {
 					// taskmanager.cpp:8678
@@ -6748,7 +7148,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					CSharedDoc::Instance()->AddMaketListItem(s_saleItem);
 				}
 				// taskmanager.cpp:8727
-				COfflineTradeDlg *pDlg = FrStaticCast<COfflineTradeDlg>(pWnd);
+				COfflineTradeDlg *pDlg = FR_STATIC_CAST(COfflineTradeDlg, pWnd);
 				if (pDlg) {
 					// taskmanager.cpp:8745
 					pDlg->SetListItem();
@@ -6761,7 +7161,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8755
 				CSharedDoc::Instance()->ClearMaketList();
 				// taskmanager.cpp:8756
-				COfflineTradeDlg *pDlg = FrStaticCast<COfflineTradeDlg>(pWnd);
+				COfflineTradeDlg *pDlg = FR_STATIC_CAST(COfflineTradeDlg, pWnd);
 				if (pDlg) {
 					// taskmanager.cpp:8762
 					pDlg->SetListItem();
@@ -6879,21 +7279,24 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8820
 				if (MyUID() == CSharedDoc::Instance()->m_myRoomOwnerUID) {
 					// taskmanager.cpp:8823
-					FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+					FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+					FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 					// taskmanager.cpp:8826
 					if (pEditDlg) {
 						// taskmanager.cpp:8833
 						pEditDlg->Close(true);
 					}
 					// taskmanager.cpp:8837
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:8839
 					if (pBuyDlg) {
 						pBuyDlg->Close(true);
 					}
 				} else {
 					// taskmanager.cpp:8865
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:8867
 					if (pBuyDlg) {
 						// taskmanager.cpp:8871
@@ -6901,7 +7304,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					}
 				}
 				// taskmanager.cpp:8874
-				FrWnd *pShopDlg = FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg"));
+				FrWnd *pShopWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
+				FrWnd *pShopDlg = FR_STATIC_CAST(FrWnd, pShopWnd);
 				// taskmanager.cpp:8876
 				if (pShopDlg) {
 					// taskmanager.cpp:8880
@@ -6960,7 +7364,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:8962
 			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
 			// taskmanager.cpp:8965
-			COfflineShopEditDlg *pEditDlg = FrStaticCast<COfflineShopEditDlg>(pWnd);
+			COfflineShopEditDlg *pEditDlg = FR_STATIC_CAST(COfflineShopEditDlg, pWnd);
 			if (pEditDlg) {
 				// taskmanager.cpp:8969
 				pEditDlg->m_closing = 1;
@@ -6983,14 +7387,14 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:8996
 			pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
 			// taskmanager.cpp:8998
-			FrOfflineTradeFinishEditDlg *pFinishDlg = FrStaticCast<FrOfflineTradeFinishEditDlg>(pWnd);
+			FrOfflineTradeFinishEditDlg *pFinishDlg = FR_STATIC_CAST(FrOfflineTradeFinishEditDlg, pWnd);
 			if (pFinishDlg)
 				// taskmanager.cpp:9002
 				pFinishDlg->SetListTradeItem((std::list<sTradeItem> *)0);
 			// taskmanager.cpp:9006
 			pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
 			// taskmanager.cpp:9008
-			COfflineShopDlg *pShopDlg = FrStaticCast<COfflineShopDlg>(pWnd);
+			COfflineShopDlg *pShopDlg = FR_STATIC_CAST(COfflineShopDlg, pWnd);
 			if (pShopDlg == 0) {
 				break;
 			}
@@ -7041,7 +7445,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:9054
 					CSharedDoc::Instance()->InitTradeData();
 					// taskmanager.cpp:9056
-					FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+					FrWnd *pTradeWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+					FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pTradeWnd);
 					// taskmanager.cpp:9058
 					if (pTradeDlg) {
 						// taskmanager.cpp:9064
@@ -7050,7 +7455,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:9069
 					if (strcmp(nick.c_str(), MyNick()) == 0) {
 						// taskmanager.cpp:9071
-						FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+						FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+						FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 						// taskmanager.cpp:9073
 						if (pEditDlg) {
 							// taskmanager.cpp:9079
@@ -7062,7 +7468,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						result = 3;
 						CSharedDoc::Instance()->InitTradeData();
 						// taskmanager.cpp:9089
-						FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+						FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+						FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 						// taskmanager.cpp:9091
 						if (pBuyDlg) {
 							// taskmanager.cpp:9097
@@ -7101,14 +7508,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:9130
 					CSharedDoc::Instance()->SetStateTrade(STATE_TRADE_READY);
 					// taskmanager.cpp:9132
-					FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+					FrWnd *pTradeWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+					FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pTradeWnd);
 					// taskmanager.cpp:9134
 					if (pTradeDlg) {
 						// taskmanager.cpp:9138
 						pTradeDlg->Close(true);
 					}
 					// taskmanager.cpp:9141
-					FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+					FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+					FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 					// taskmanager.cpp:9143
 					if (!pEditDlg) {
 						// taskmanager.cpp:9145
@@ -7128,14 +7537,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:9158
 					CSharedDoc::Instance()->InitTradeData();
 					// taskmanager.cpp:9160
-					FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+					FrWnd *pTradeWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+					FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pTradeWnd);
 					// taskmanager.cpp:9162
 					if (pTradeDlg) {
 						// taskmanager.cpp:9166
 						pTradeDlg->Close(true);
 					}
 					// taskmanager.cpp:9169
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:9171
 					if (pBuyDlg) {
 						// taskmanager.cpp:9175
@@ -7198,7 +7609,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9235
 			SetTradeResultCode(result, 0xE4, 0);
 			// taskmanager.cpp:9237
-			FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+			FrTradeDlg *pDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 			// taskmanager.cpp:9240
 			if (!pDlg) {
 				// taskmanager.cpp:9246
@@ -7271,14 +7683,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						// taskmanager.cpp:9312
 						CSharedDoc::Instance()->SetTradeTitle(title);
 						// taskmanager.cpp:9314
-						FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+						FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+						FrTradeDlg *pDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 						// taskmanager.cpp:9317
 						if (pDlg) {
 							// taskmanager.cpp:9321
 							pDlg->UpdateTradeTitle();
 						}
 						// taskmanager.cpp:9324
-						FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+						FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+						FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 						// taskmanager.cpp:9326
 						if (pEditDlg) {
 							// taskmanager.cpp:9330
@@ -7311,7 +7725,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9355
 			SetTradeResultCode(result, 0xE7, 0);
 			// taskmanager.cpp:9357
-			FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+			FrTradeDlg *pDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 			// taskmanager.cpp:9359
 			if (pDlg == 0)
 				break;
@@ -7378,14 +7793,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			if (result != 1)
 				break;
 			// taskmanager.cpp:9429
-			FrWnd *pEditDlg = FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+			FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+			FrWnd *pEditDlg = FR_STATIC_CAST(FrWnd, pEditWnd);
 			// taskmanager.cpp:9431
 			if (pEditDlg) {
 				// taskmanager.cpp:9435
 				pEditDlg->Close(true);
 			}
 			// taskmanager.cpp:9438
-			FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+			FrTradeDlg *pDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 			// taskmanager.cpp:9440
 			if (pDlg)
 				break;
@@ -7411,7 +7828,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9464
 			if (!IS_SUCCESSFUL(err)) {
 				// taskmanager.cpp:9466
-				GetActor(data_aa04ec[3]) << MsgObject(0, 0x273, 0, err, 0, 0, 0);
+				MsgObject msg(0, 0x273, 0, err, 0, 0, 0);
+				GetActor(data_aa04ec[3]) << msg;
 				return 1;
 			}
 			// Leaves no code; the original's only trace is the xtAlways<0>::Get
@@ -7449,7 +7867,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9492
 			if (!IS_SUCCESSFUL(err)) {
 				// taskmanager.cpp:9494
-				GetActor(data_aa04ec[3]) << MsgObject(0, 0x273, 0, err, 0, 0, 0);
+				MsgObject msg(0, 0x273, 0, err, 0, 0, 0);
+				GetActor(data_aa04ec[3]) << msg;
 				return 1;
 			}
 			// taskmanager.cpp:9498
@@ -7486,7 +7905,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9521
 			if (!IS_SUCCESSFUL(err)) {
 				// taskmanager.cpp:9523
-				GetActor(data_aa04ec[3]) << MsgObject(0, 0x273, 0, err, 0, 0, 0);
+				MsgObject msg(0, 0x273, 0, err, 0, 0, 0);
+				GetActor(data_aa04ec[3]) << msg;
 				return 1;
 			}
 			// taskmanager.cpp:9527
@@ -7837,7 +8257,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9910
 			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
 			// taskmanager.cpp:9912
-			FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(pWnd);
+			FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 			if (pTradeDlg)
 				// taskmanager.cpp:9916
 				pTradeDlg->EnableSendingServer(false);
@@ -7903,7 +8323,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:9973
 				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
 				// taskmanager.cpp:9975
-				FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(pWnd);
+				FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pWnd);
 				if (pBuyDlg) {
 					// taskmanager.cpp:9980
 					if (!pBuyDlg->IsClosing()) {
@@ -7931,7 +8351,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 								// taskmanager.cpp:10000
 								FrWnd *pNotifyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("notify_okcancel");
 								// taskmanager.cpp:10002
-								FrForm *pNotify = FrStaticCast<FrForm>(pNotifyWnd);
+								FrForm *pNotify = FR_STATIC_CAST(FrForm, pNotifyWnd);
 								if (pNotify)
 									// taskmanager.cpp:10006
 									pNotify->Close(true);
@@ -7942,7 +8362,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:10014
 				FrWnd *pTradeWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
 				// taskmanager.cpp:10017
-				FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(pTradeWnd);
+				FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pTradeWnd);
 				if (pTradeDlg)
 					// taskmanager.cpp:10024
 					pTradeDlg->SetListTradeItem(true);
@@ -8059,7 +8479,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				break;
 			}
 			// taskmanager.cpp:10182
-			FrRecycleDlg *pDlg = FrStaticCast<FrRecycleDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("recycledlg"));
+			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("recycledlg");
+			FrRecycleDlg *pDlg = FR_STATIC_CAST(FrRecycleDlg, pWnd);
 			// taskmanager.cpp:10183
 			if (pDlg) {
 				// taskmanager.cpp:10187
@@ -8078,6 +8499,17 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:10198
 		}
 		break;
+#ifdef JP_PAKS
+	// JP 0x9c8400 (the case of 0x9c20a0; jump tables 0x9d7d0c by result,
+	// 0x9d7d28 by kind): this KR 0x69 on its JP id, with the JP character
+	// record's tail (kind 0), JP-only kinds 9 and 10 and result 6. The rest
+	// is the KR code: the JP kind 0 / 5 message is 0x48 with CSharedDoc
+	// +0x81a, kind 4 copies the skins into the main actor's player (+0x2ea)
+	// and posts Lobby message 0x276, and the JP 0x3e-byte mascot record is
+	// read as the KR one; the port's lobby is the KR CLobbyMain (message
+	// 0x49, the KR stores).
+	case 0x6b:
+#endif
 	case 0x69:
 		// taskmanager.cpp:10205
 		{
@@ -8098,10 +8530,24 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 							packet.DecodeBuffer(&characterInfo, sizeof(sCharacterInfo));
 							// taskmanager.cpp:10217
 							CSharedDoc::Instance()->m_characterMap[characterInfo.id] = characterInfo;
+#ifdef JP_PAKS
+							// JP 0x9c843b: a 0x201-byte record; the port's
+							// wire form is the KR record and the JP tail
+							// (as 0x6e).
+							if (g_iRecvPacketType == 0x6b)
+								JpCharacter_DecodeMasteryTail(packet, &CSharedDoc::Instance()->m_characterMap[characterInfo.id]);
+#endif
 							// taskmanager.cpp:10218
 							CSharedDoc::Instance()->BuildMyPartTidList(characterInfo);
 							// taskmanager.cpp:10219
 							CTask *pTask = AfxGetTask();
+#ifdef JP_PAKS
+							// JP 0x9c84bf: message 0x2EB when the task is a
+							// CLobbyTask (RTTI 0xf03040, static init
+							// 0xcec8a0).
+							if ((__rtti_obj = pTask) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false)
+								pTask->SendMsgToMainActor(MsgObject(0, 0x2EB, 0, 0, 0, 0, 0));
+#endif
 							// taskmanager.cpp:10220
 							if ((__rtti_obj = pTask) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false)
 								// taskmanager.cpp:10221
@@ -8161,12 +8607,42 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						}
 						// taskmanager.cpp:10278
 						break;
+#ifdef JP_PAKS
+					case 9:
+						{
+							// JP 0x9c8761: u32 a character id (-1: the
+							// equipped one), 16 bytes into its JP record
+							// +0x1b8..+0x1c7 (0x63f3f0 finds it in the +0x3704
+							// map, type id group 1): past the KR
+							// sCharacterInfo's fields, no KR store.
+							unsigned long id = packet.Decode4();
+							unsigned char block[0x10];
+							packet.DecodeBuffer(block, sizeof(block));
+							PG_BOOT_TODOF(("JP 0x6b kind 9: character %#lx +0x1b8 block not kept", id));
+						}
+						break;
+					case 10:
+						{
+							// JP 0x9c87e1: 8 bytes into JP CSharedDoc +0xa92 /
+							// +0xa96, after the equipment block (KR
+							// m_myEquip ends at m_myMascotId): no KR store.
+							unsigned char block[8];
+							packet.DecodeBuffer(block, sizeof(block));
+							PG_BOOT_TODOF(("JP 0x6b kind 10: CSharedDoc +0xa92 pair not kept"));
+						}
+						break;
+#endif
 					case 1:
 					case 3:
 						break;
 					default:
 						// taskmanager.cpp:10301
+#ifdef JP_PAKS
+						// JP 0x9c8826 (0xd40784): the text goes through Jp_LookupText (0xb4eb80).
+						AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xbe\xcb \xbc\xf6 \xbe\xf8\xb4\xc2 \xb8\xed\xb7\xc9 \xc4\xda\xb5\xe5"), 0, 0, 0, 0));
+#else
 						AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xbe\xcb \xbc\xf6 \xbe\xf8\xb4\xc2 \xb8\xed\xb7\xc9 \xc4\xda\xb5\xe5", 0, 0, 0, 0));
+#endif
 						// taskmanager.cpp:10305
 						break;
 					}
@@ -8174,22 +8650,57 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				break;
 			case 1:
 				// taskmanager.cpp:10308
+#ifdef JP_PAKS
+				// JP 0x9c884a (0xd4076c): the text goes through Jp_LookupText (0xb4eb80).
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)Jp_LookupText("DB \xbf\xa1\xb7\xaf\xb7\xce \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9"), 0, 0, 0, 0));
+#else
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"DB \xbf\xa1\xb7\xaf\xb7\xce \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9", 0, 0, 0, 0));
+#endif
 				// taskmanager.cpp:10309
 				break;
 			case 5:
 				// taskmanager.cpp:10312
+#ifdef JP_PAKS
+				// JP 0x9c886e (0xd40758): the text goes through Jp_LookupText (0xb4eb80).
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xc0\xe5\xc2\xf8\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9"), 0, 0, 0, 0));
+#else
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xc0\xe5\xc2\xf8\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9", 0, 0, 0, 0));
+#endif
 				// taskmanager.cpp:10313
 				break;
 			case 0:
 				// taskmanager.cpp:10316
+#ifdef JP_PAKS
+				// JP 0x9c8892 (0xd4073c): the text goes through Jp_LookupText (0xb4eb80).
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xc0\xdf\xb8\xf8\xb5\xc8 \xbe\xc6\xc0\xcc\xc5\xdb \xc4\xda\xb5\xe5\xc0\xd4\xb4\xcf\xb4\xd9"), 0, 0, 0, 0));
+#else
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xc0\xdf\xb8\xf8\xb5\xc8 \xbe\xc6\xc0\xcc\xc5\xdb \xc4\xda\xb5\xe5\xc0\xd4\xb4\xcf\xb4\xd9", 0, 0, 0, 0));
+#endif
 				// taskmanager.cpp:10317
 				break;
+#ifdef JP_PAKS
+			case 6:
+				{
+					// JP 0x9c88b3: u32 an error code; non-zero: message 0x23
+					// with Jp_LookupText of 0xd4070c formatted with it
+					// (0x98c3f0).
+					unsigned long code = packet.Decode4();
+					if (code != 0) {
+						char text[512];
+						wsprintfA(text, Jp_LookupText("\xbe\xc6\xc0\xcc\xc5\xdb\xc0\xbb \xbd\xbd\xb7\xd4\xbf\xa1 \xc0\xe5\xc2\xf8 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.\n\nerrCode(%d)"), (int)code);
+						AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)text, 0, 0, 0, 0));
+					}
+				}
+				break;
+#endif
 			default:
 				// taskmanager.cpp:10320
+#ifdef JP_PAKS
+				// JP 0x9c88eb (0xd406f4): the text goes through Jp_LookupText (0xb4eb80).
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)Jp_LookupText("\xbe\xcb \xbc\xf6 \xbe\xf8\xb4\xc2 \xb0\xe1\xb0\xfa \xc4\xda\xb5\xe5"), 0, 0, 0, 0));
+#else
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xbe\xcb \xbc\xf6 \xbe\xf8\xb4\xc2 \xb0\xe1\xb0\xfa \xc4\xda\xb5\xe5", 0, 0, 0, 0));
+#endif
 				break;
 			}
 			// taskmanager.cpp:10324
@@ -8568,6 +9079,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 		}
 		break;
+#ifndef JP_PAKS
+	// JP_PAKS: 0x10B is the JP id of the 0x109 reply below (JP 0x9cf324).
 	case 0x10b:
 		// taskmanager.cpp:10740
 		AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
@@ -8649,6 +9162,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 		}
 		break;
+#endif
 	case 0x107:
 		// taskmanager.cpp:10812
 		{
@@ -8724,7 +9238,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:10880
 			if (type == 2 && ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false))
 				// taskmanager.cpp:10882
-				GetActor("RealMyRoom") << MsgObject(0, 0x67, 0, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x67, 0, 0, 0, 0, 0);
 		}
 		break;
 	case 0xc3:
@@ -8868,6 +9382,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		}
 		break;
 	case 0x109:
+#ifdef JP_PAKS
+	// JP 0x9cf324 reads 0x10B (the reply to 0x98, KR 0x95) with this body:
+	// u32, u32, u32 to SetBsUsableBonusTimes 0x9b92f0 (+0x837),
+	// SetBsRemainedBonusTimes 0x9b9310 (+0x839), dropped; then by
+	// m_pointEventState (+0x11028) main actor message 0x27D or "Lobby"
+	// 0x27E, the JP ids of 0x200 (CTaskMain: bongdari_shop) and 0x201
+	// (CLobbyMain: the point event dialog). The port's actors are the KR
+	// ones, so the KR ids stay.
+	case 0x10b:
+#endif
 		// taskmanager.cpp:11036
 		{
 			unsigned long usable = packet.Decode4();
@@ -9073,15 +9597,15 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11237
 			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 				// taskmanager.cpp:11239
-				GetActor("Score") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("Score") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
 			// taskmanager.cpp:11241
 			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 				// taskmanager.cpp:11243
-				GetActor("Lobby") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("Lobby") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
 			// taskmanager.cpp:11247
 			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 				// taskmanager.cpp:11249
-				GetActor("RealMyRoom") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
 			}
 		}
 		break;
@@ -9202,6 +9726,23 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		break;
 	}
 	case 0x11f: {
+#ifdef JP_PAKS
+		// JP 0x9c8bd6 (jump table 0x9d7d70 [83]): the tutorial step, the KR
+		// 0x11B on the JP id: u8 type, u8 value, type 3 then 12 bytes into
+		// m_tutorialData (JP CSharedDoc +0x10d50); the JP reads the contents
+		// container 0xa4 and drops it, then, with the "tutorialmain" widget
+		// up (0x9bd4f0), posts its main actor message 0x1BC (the KR
+		// TutorialMain message 0x151).
+		unsigned char type = packet.Decode1();
+		unsigned char value = packet.Decode1();
+		if (type == 3) {
+			packet.DecodeBuffer(CSharedDoc::Instance()->m_tutorialData, 0xC);
+		}
+		CContentsDoc::Instance()->GetContainer((localContentType_t)0xa4);
+		if (AfxGetTask()->IsWidgetLayout("tutorialmain")) {
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x1bc, type, value, 0, 0, 0));
+		}
+#else
 		// taskmanager.cpp:11570
 		CHalloweenEvent *pEvent = 0;
 		CContentsDoc::Instance()->GetContainer((localContentType_t)0x21, pEvent);
@@ -9212,8 +9753,10 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11575
 			pEvent->SetGiftCnt(packet.Decode4());
 		}
+#endif
 		break;
 	}
+#ifndef JP_PAKS // the JP has no 0x120 here (jump table 0x9d7d70 [131]: the default; the tutorial widget reads it)
 	case 0x120:
 		// taskmanager.cpp:11582
 		if (IsLocalContent((localContentType_t)0x21)) {
@@ -9237,6 +9780,17 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			send.Send(SEND_TO_MSN);
 		}
 		break;
+#endif
+#ifdef JP_PAKS
+	// JP 0x9d0015 (byte table 0x9d7f80 [0x95] -> jump table 0x9d7d70 [86]):
+	// the KR 0x122 on the JP id (the JP 0x122 is the default), u32 kind
+	// through the 16-entry jump table 0x9d82ac. Kinds 8 / 9 (the my-room
+	// authority saved / not saved) are the JP bodies below; kinds 0..5 and
+	// 11 run the KR bodies (the JP posts its renumbered messages, e.g. kind
+	// 0 0x7a under local content 0x59, kind 1 0x298); kind 15 (0x9d002c, a
+	// notify form by a u32 sub-kind) is not read.
+	case 0x12a:
+#endif
 	case 0x122:
 		// taskmanager.cpp:11617
 		switch (packet.Decode4()) {
@@ -9377,18 +9931,33 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11780
 			std::string msg = packet.DecodeStr();
 			// taskmanager.cpp:11781
+#ifdef JP_PAKS
+			// JP 0x9d066f-0x9d068d: the formatted text goes through Jp_LookupText (0xb4eb80).
+			CMessengerInfo::Instance()->Notify2(Jp_LookupText(MakeStr("%s", msg.c_str())));
+#else
 			CMessengerInfo::Instance()->Notify2(MakeStr("%s", msg.c_str()));
+#endif
 			// taskmanager.cpp:11782
 			break;
 		}
 		case 8:
+#ifdef JP_PAKS
+			// JP 0x9d06a2: main actor message 0x2A6 (the KR "RealMyRoom" 0x228).
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2a6, 0x12a, 1, 0, 0, 0));
+#else
 			// taskmanager.cpp:11786
 			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x228, 0x122, 1, 0, 0, 0);
+#endif
 			// taskmanager.cpp:11788
 			break;
 		case 9:
+#ifdef JP_PAKS
+			// JP 0x9d06c6: main actor message 0x2A6 (the KR "RealMyRoom" 0x228).
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2a6, 0x12a, 0, 0, 0, 0));
+#else
 			// taskmanager.cpp:11791
 			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x228, 0x122, 0, 0, 0, 0);
+#endif
 			// taskmanager.cpp:11808
 			break;
 		}
@@ -9427,6 +9996,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 		}
 		break;
+#ifndef JP_PAKS // JP 0x12A is the KR 0x122 above, JP 0x12B the KR 0x123 (byte table 0x9d7f80 [0x95] / [0x96])
 	case 0x12a:
 		// taskmanager.cpp:11898
 		if (!IsLocalContent((localContentType_t)0x58)) {
@@ -9475,6 +10045,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		CSharedDoc::Instance()->SetAppGiftDownloadState(CSharedDoc::APP_GIFT_DOWNLOAD_READY);
 		break;
 	}
+#endif
 	case 0x12c:
 		// taskmanager.cpp:11954
 		if (!IsLocalContent((localContentType_t)0x67))
@@ -10099,10 +10670,10 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:12570
 			unsigned short filter = packet.Decode2();
 			// taskmanager.cpp:12572
-			char text[0x100] = { 0, };
-			char serverName[0x28] = { 0, };
-			char serverType[0x28] = { 0, };
-			char courseName[0x28] = { 0, };
+			char text[0x100] = { 0, 0 };
+			char serverName[0x28] = { 0, 0 };
+			char serverType[0x28] = { 0, 0 };
+			char courseName[0x28] = { 0, 0 };
 			// taskmanager.cpp:12577
 			wsprintfA(text, "\xc3\xd1 \xb0\xb3\xbc\xb3\xb5\xc8 \xb9\xe6 \xb0\xb3\xbc\xf6 %d", roomCount);
 			// taskmanager.cpp:12578
@@ -10244,6 +10815,15 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			}
 		}
 		break;
+#ifdef JP_PAKS
+	// JP 0x9d1a7e (byte table 0x9d7f80 [0x96] -> jump table 0x9d7d70 [87]):
+	// the KR 0x123 on the JP id, same layout (u32 result, the 0x6B-byte
+	// authority block into JP CSharedDoc +0x1070c). The KR body runs: its
+	// messages 0x21F / 0x228 are the ones the port's KR CTaskMain handles
+	// (the JP posts 0x29C, and 0x2A6 with 0x12B to "Lobby" from the lobby
+	// task). The KR 0x123 stays for the offline's KR id.
+	case 0x12b:
+#endif
 	case 0x123:
 		// taskmanager.cpp:12699
 		if (IsLocalContent((localContentType_t)0x56)) {
@@ -10458,6 +11038,548 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 	case 0x19e:
 		PG_BOOT_TODOF(("taskmanager.cpp:13359 empty case %#x (of 0x30, 0x60, 0xff, 0x11e, 0x13b, 0x19e)", (unsigned)(g_iRecvPacketType)));
 		break;
+#ifdef JP_PAKS
+	// JP 0x9d32c0 (jump table 0x9d8320 [5]): the web-page login key, the
+	// server's answer to 0xFB (src/jp/JpWebLoginRequest.cpp).
+	case 0x1ad:
+		CWebPageConnector_OnLoginKeyPacket(packet);
+		break;
+	// JP 0x9d4b1c / 0x9d4bb8 (jump table 0x9d8320 [35] / [36]): the quest
+	// progress list and the player quest list
+	// (src/jp/JpQuestHandler.cpp).
+	// JP 0x9d3354 (jump table 0x9d8320 [6]): the shop data, the answer to
+	// 0xFE (docs/protocol/shop.md): u32 key, u32 n, n bytes of a
+	// CCompressBuffer of 0x11-byte records (meaning not known). The JP
+	// client keeps them in CSharedDoc +0x1147C (n > 0 and key != 0: loaded
+	// by 0xb3cc80; n == 0 and key == 0: cleared), then posts main actor
+	// message 0x75 (not posted here: the KR actors' 0x75 is not the JP
+	// one). The port has no store for them: read and logged.
+	case 0x1b1:
+		{
+			unsigned long key = packet.Decode4();
+			int size = (int)packet.Decode4();
+			if (size > 0) {
+				std::vector<unsigned char> data(size);
+				packet.DecodeBuffer(&data[0], size);
+			}
+			PG_BOOT_TODOF(("JP 0x1b1: shop data key %#lx, %d bytes not kept (JP CSharedDoc +0x1147c)", key, size));
+		}
+		break;
+	case 0x21d:
+		JpQuest_OnQuestProgressListPacket(packet);
+		break;
+	case 0x21e:
+		JpQuest_OnPlayerQuestListPacket(packet);
+		break;
+	// JP 0x9d434a (jump table 0x9d8320 [32]): the item change, sent by the
+	// server before the reply of anything that changes the inventory
+	// (docs/protocol/jp_items.md). u32 the server's time, u32 n, n x a
+	// record (JP reader 0x9bfc90): u8 kind, u32 type id, u32 serial, u32
+	// flag time, i32 count before, i32 count after, i32 the change
+	// (negative: a removal), u16 x 5, a string, u32 x 3, u8; kind 0xCC with
+	// a club set type id adds u16 x 5, u32, u8, u32, u32, kind 0xCD with a
+	// character type id a u32, kind 0xCE with a caddie type id a u8 and a
+	// u32. The JP client applies each record with CSharedDoc 0x633680
+	// (kind 2 -> 0x58c080: a removal by group 0x58bb50, else 0x58be40); its
+	// first refusal is main actor message 0x27 and ends the list, then main
+	// actor message 0x102 (not posted here: the KR actors' 0x102 is not the
+	// JP one). The port applies kind 2 to the KR lists: the entry of that
+	// serial takes the count after and goes at 0 (JP 0x58aea0 for items;
+	// the JP card stack adds the change, 0x58a760, the same total). A new
+	// entry is left to the KR 0x00A8 the server sends before this. Kinds
+	// 0xC9, 0xCB and 0xCD of a character go to the port's character
+	// storage (and 0xCB to the equipped-card list); the club set, part and
+	// caddie kinds are logged; a refusal (the JP codes) is message 0x27 and
+	// ends the list.
+	case 0x216:
+		{
+			packet.Decode4();    // the server's time
+			unsigned long count = packet.Decode4();
+			for (unsigned long i = 0; i < count; i++) {
+				unsigned char kind = packet.Decode1();
+				unsigned long typeId = packet.Decode4();
+				unsigned long serial = packet.Decode4();
+				packet.Decode4();    // flag time
+				packet.Decode4();    // count before
+				int after = (int)packet.Decode4();
+				packet.Decode4();    // the change
+				unsigned short stats[5];    // +0x1c, kind 0xC9: the 5 stat points
+				for (int stat = 0; stat < 5; stat++)
+					stats[stat] = packet.Decode2();
+				std::string text;
+				packet.DecodeStr(text);
+				packet.Decode4();    // +0x44
+				packet.Decode4();    // +0x48
+				uint32_t slotTypeId = static_cast<uint32_t>(packet.Decode4());    // +0x4c, kind 0xCB: the card put into the slot
+				unsigned char slot = packet.Decode1();    // +0x50, kind 0xCB: the card slot (1-12)
+				unsigned char clubSet[23];    // +0x54, kind 0xCC: the club set's extra block
+				memset(clubSet, 0, sizeof(clubSet));
+				if (kind == 0xcc && (typeId & 0xFC000000) == 0x10000000)
+					packet.DecodeBuffer(clubSet, sizeof(clubSet));
+				int32_t masterySlot = 0;    // +0x70, kind 0xCD
+				if (kind == 0xcd && (typeId & 0xFC000000) == 0x04000000)
+					masterySlot = static_cast<int32_t>(packet.Decode4());
+				unsigned char caddieLevel = 0;    // +0x74, kind 0xCE
+				uint32_t caddieExperience = 0;    // +0x78, kind 0xCE
+				if (kind == 0xce && (typeId & 0xFC000000) == 0x1C000000) {
+					caddieLevel = packet.Decode1();
+					caddieExperience = static_cast<uint32_t>(packet.Decode4());
+				}
+				CSharedDoc *doc = CSharedDoc::Instance();
+				if (kind != 2) {
+					// JP 0x58c160 (kind index table 0x58c234, jump table
+					// 0x58c210): 0xC9 0x589ba0, 0xCA refused, 0xCB 0x589bf0,
+					// 0xCC 0x589c60, 0xCD 0x589ca0, 0xCE 0x589cd0; kind 3 and
+					// 0x04-0xC8 do nothing. A character record is found by
+					// its serial (0x588b50, the JP +0x3704 map = KR
+					// m_characterMap); its JP-only fields are port storage
+					// (JpMasterySlot.h, JpMasteryCard.h).
+					unsigned long group = typeId >> 26;
+					const sCharacterInfo *character = NULL;
+					if (group == 1) {
+						std::map<unsigned int, sCharacterInfo>::iterator found = doc->m_characterMap.find(serial);
+						if (found != doc->m_characterMap.end())
+							character = &found->second;
+					}
+					unsigned long refusal = 0;
+					switch (kind) {
+					case 0xc9:
+						// JP 0x589ba0: a character's 5 stat points (0x588ba0,
+						// +0x1c8 = the u16s as bytes) or a club set's stats
+						// (0x588ff0, the +0x3740 map entry)
+						if (group == 1) {
+							if (character == NULL) {
+								refusal = 0x1e8568;
+							} else {
+								int8_t points[5];
+								for (int stat = 0; stat < 5; stat++)
+									points[stat] = static_cast<int8_t>(stats[stat]);
+								JpCharacter_SetMasteryData(character, points, JpCharacter_GetMasterySlotNumber(character));
+							}
+						} else if (group == 4) {
+							refusal = JpClubSet_ApplyItemChange(kind, typeId, serial, stats, slot, slotTypeId, clubSet);
+						} else {
+							refusal = 0x1e854e;
+						}
+						break;
+					case 0xca:
+						refusal = 0x1e854d;
+						break;
+					case 0xcb:
+						// JP 0x589bf0: a card slot, by group: 1 a character
+						// (0x588c00), 2 a part (0x588d60), 4 a club set
+						// (0x589070)
+						if (group == 1) {
+							if (character == NULL) {
+								refusal = 0x1e8569;
+							} else if (slot == 0) {
+								refusal = 0x1e856a;
+							} else {
+								// JP 0x588c00: +0x4c into the character's slot
+								// dword (+0x1cd + 4 x slot = port card type id
+								// slot - 1), then the slot's entry of the
+								// equipped-card list (JP CSharedDoc +0x37ec =
+								// KR m_cardPeriodList[0]) replaced: the entry of
+								// the same character, card kind and slot
+								// (0x5888e0) erased, the new one appended
+								// (0x641350), even for an emptied slot.
+								if (slot <= 12) {
+									uint32_t cardTypeIds[12];
+									for (int i = 0; i < 12; i++)
+										cardTypeIds[i] = JpCharacterData_GetCardTypeId(character, i);
+									cardTypeIds[slot - 1] = slotTypeId;
+									JpCharacterData_SetCardTypeIds(character, cardTypeIds);
+								}
+								sSCardAvilityPeriodInfo info;
+								memset(&info, 0, sizeof(info));
+								info.typeId = slotTypeId;
+								info.partsTypeId = typeId;
+								info.partsId = serial;
+								info.kind = (slotTypeId >> 22) & 0xF;
+								info.slot = slot;
+								IFF_STRUCT::sCard *pCard = ItemManager()->FindCard(slotTypeId);
+								if (pCard) {
+									info.effect = pCard->m_effectType;
+									info.effectValue = pCard->m_effectValue;
+								}
+								std::list<sSCardAvilityPeriodInfo> &periodList = doc->m_cardPeriodList[0];
+								for (std::list<sSCardAvilityPeriodInfo>::iterator it = periodList.begin(); it != periodList.end(); ++it) {
+									if (it->partsId == info.partsId && it->kind == info.kind && it->slot == info.slot) {
+										periodList.erase(it);
+										break;
+									}
+								}
+								periodList.push_back(info);
+							}
+						} else if (group == 2) {
+							refusal = JpPart_SetCardSlot(typeId, serial, slot, slotTypeId);
+						} else if (group == 4) {
+							refusal = JpClubSet_ApplyItemChange(kind, typeId, serial, stats, slot, slotTypeId, clubSet);
+						} else {
+							refusal = 0x1e854f;
+						}
+						break;
+					case 0xcc:
+						// JP 0x589c60: a club set's extra block (0x5891c0)
+						if ((typeId & 0xFC000000) != 0x10000000)
+							refusal = 0x1e8550;
+						else
+							refusal = JpClubSet_ApplyItemChange(kind, typeId, serial, stats, slot, slotTypeId, clubSet);
+						break;
+					case 0xcd:
+						// JP 0x589ca0: a character's open mastery slot number
+						// (0x588d30, +0x1cd = the record's +0x70)
+						if (group != 1) {
+							refusal = 0x1e8567;
+						} else if (character == NULL) {
+							refusal = 0x1e856b;
+						} else {
+							int8_t points[5];
+							for (int stat = 0; stat < 5; stat++)
+								points[stat] = JpCharacter_GetMasteryPoints(character, stat);
+							JpCharacter_SetMasteryData(character, points, masterySlot);
+						}
+						break;
+					case 0xce:
+						// JP 0x589cd0: a caddie's byte and dword (0x589460, the
+						// +0x3714 map entry)
+						if ((typeId & 0xFC000000) != 0x1C000000)
+							refusal = 0x1e856e;
+						else
+							refusal = JpCaddie_ApplyItemChange(serial, caddieLevel, caddieExperience);
+						break;
+					default:
+						break;
+					}
+					if (refusal != 0) {
+						AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x27, refusal, 0, 0, 0, 0));
+						break;
+					}
+					continue;
+				}
+				switch (typeId >> 26) {
+				case 2: {
+					// a part (no count kept): goes at 0
+					if (after > 0)
+						break;
+					for (std::list<sItemInfo>::iterator it = doc->m_myPartsList.begin(); it != doc->m_myPartsList.end(); ++it) {
+						if (it->m_serial == serial) {
+							doc->m_myPartsList.erase(it);
+							break;
+						}
+					}
+					break;
+				}
+				case 4:
+					// a club set (no count kept): goes at 0
+					if (after <= 0)
+						doc->m_myItemMap.erase(serial);
+					break;
+				case 5: {
+					for (std::list<sItemInfo>::iterator it = doc->m_myGearList.begin(); it != doc->m_myGearList.end(); ++it) {
+						if (it->m_serial == serial) {
+							if (after <= 0)
+								doc->m_myGearList.erase(it);
+							else
+								it->m_count = (short)after;
+							break;
+						}
+					}
+					break;
+				}
+				case 6: {
+					for (std::list<sItemInfo>::iterator it = doc->m_itemInfoList.begin(); it != doc->m_itemInfoList.end(); ++it) {
+						if (it->m_serial == serial) {
+							if (after <= 0)
+								doc->m_itemInfoList.erase(it);
+							else
+								it->m_count = (short)after;
+							break;
+						}
+					}
+					break;
+				}
+				case 0x1f: {
+					for (std::list<sCards>::iterator it = doc->m_myCardList.begin(); it != doc->m_myCardList.end(); ++it) {
+						if (it->m_guid == serial) {
+							if (after <= 0)
+								doc->m_myCardList.erase(it);
+							else
+								it->m_count = after;
+							break;
+						}
+					}
+					break;
+				}
+				default:
+					PG_BOOT_TODOF(("JP 0x216: type id %#lx (group %lu) not applied", typeId, typeId >> 26));
+					break;
+				}
+			}
+		}
+		break;
+	// JP 0x9d5116 / 0x9d51a8 / 0x9d523a / 0x9d52cc / 0x9d542f / 0x9d54c1 /
+	// 0x9d5512 (jump table 0x9d8320 [43]-[46], [50]-[52]): the quest
+	// replies, handed to the gateway actor's CQuestHandler as message
+	// 0x753A (key, &packet) after main actor message 2 (not for 0x22D)
+	// and the u32 result (not for 0x22E; non-zero: message 0x27).
+	// Keys: 0x225 2, 0x226 3, 0x227 5, 0x228 6, 0x22C 9, 0x22D 8, 0x22E 10
+	// (refresh_notes/JpGateway.md).
+	case 0x225:
+	case 0x226:
+	case 0x227:
+	case 0x228:
+	case 0x22c:
+	case 0x22d:
+	case 0x22e:
+		{
+			int key;
+			switch (g_iRecvPacketType) {
+			case 0x225: key = 2; break;
+			case 0x226: key = 3; break;
+			case 0x227: key = 5; break;
+			case 0x228: key = 6; break;
+			case 0x22c: key = 9; break;
+			case 0x22d: key = 8; break;
+			default: key = 10; break;
+			}
+			if (g_iRecvPacketType != 0x22d) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			}
+			if (g_iRecvPacketType != 0x22e) {
+				unsigned long result = packet.Decode4();
+				if (result != 0) {
+					AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x27, result, 0, 0, 0, 0));
+					break;
+				}
+			}
+			AfxGetTask()->GetActor(data_aa04ec[3]) << MsgObject(0, 0x753A, key, (intptr_t)&packet, 0, 0, 0);
+		}
+		break;
+	// JP 0x9d6ffc / 0x9d708f / 0x9d7122 / 0x9d71b4 / 0x9d7246 (jump table
+	// 0x9d8320 [93]-[97]): the 2014 Arin event replies, handed to the
+	// gateway actor's CArinBirthDay2014Handler as message 0x753F (key; the
+	// packet for keys 1 and 4) after main actor message 2 and the u32
+	// result (non-zero: message 0x27). Keys: 0x278 3, 0x279 2, 0x27A 1,
+	// 0x27B 4, 0x27C 5 (refresh_notes/JpArinEvent.md).
+	case 0x278:
+	case 0x279:
+	case 0x27a:
+	case 0x27b:
+	case 0x27c:
+		{
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			unsigned long result = packet.Decode4();
+			if (result != 0) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x27, result, 0, 0, 0, 0));
+				break;
+			}
+			int key;
+			intptr_t param = 0;
+			switch (g_iRecvPacketType) {
+			case 0x278: key = 3; break;
+			case 0x279: key = 2; break;
+			case 0x27a: key = 1; param = (intptr_t)&packet; break;
+			case 0x27b: key = 4; param = (intptr_t)&packet; break;
+			default: key = 5; break;
+			}
+			AfxGetTask()->GetActor(data_aa04ec[3]) << MsgObject(0, 0x753F, key, param, 0, 0, 0);
+		}
+		break;
+	// JP 0x9d5aae / 0x9d5be1 (jump table 0x9d8320 [67] / [68]): the
+	// attendance record, the replies to 0x16E / 0x16F
+	// (docs/protocol/lobby.md). The record (reader 0x9b9120) and the flag
+	// byte are locals of the handler's frame, given by address to
+	// CTaskMain's message 0x327 (TaskMain_OnAttendanceMsg). 0x249 also logs
+	// the record (isGift / today / next / round); the port does not.
+	case 0x248:
+	case 0x249:
+		{
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			unsigned long result = packet.Decode4();
+			if (result != 0) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x27, result, 0, 0, 0, 0));
+				break;
+			}
+			sAttendanceInfo info;
+			memset(&info, 0, sizeof(info)); // 0x47cdb0
+			info.status = packet.Decode1() != 0;
+			info.todayItemTypeId = packet.Decode4();
+			info.todayCount = packet.Decode4();
+			info.nextItemTypeId = packet.Decode4();
+			info.nextCount = packet.Decode4();
+			info.days = (int)packet.Decode4();
+			unsigned char flag;
+			if (g_iRecvPacketType == 0x248) {
+				if (!info.status) {
+					AfxGetTask()->SendMsgToMainActor(MsgObject(0, 1, 0, 0, 0, 0, 0));
+					WSendPacket send(0x16f);
+					send.Send(SEND_TO_DEFAULT);
+					break;
+				}
+				flag = 0;
+			} else {
+				flag = 1;
+			}
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x327, (intptr_t)&flag, (intptr_t)&info, 0, 0, 0));
+		}
+		break;
+	// JP 0x9d6bdd / 0x9d6c9d (jump table 0x9d8320 [87] / [88]): the mastery
+	// card replies: u32 result (non-zero: message 0x27), then the card's
+	// type id. With the card dialog open (0x5b87d0), the card notice
+	// (ShowMasteryCardNotice 0x5bb820, attached = true in both) and the
+	// dialog's slots for the equipped character (0x5bbdb0, JP CSharedDoc
+	// +0xa2a); then, with the status page open (0x5bd3d0), its refresh.
+	// JP 0x9d6d5d (jump table 0x9d8320 [89]): 0x273, the card removal
+	// reply, is the same with attached = false (it joins 0x271's code at
+	// 0x9d6c5c after pushing 0).
+	case 0x271:
+	case 0x272:
+	case 0x273:
+		{
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			unsigned long result = packet.Decode4();
+			if (result != 0) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x27, result, 0, 0, 0, 0));
+				break;
+			}
+			uint32_t typeId = packet.Decode4();
+			if (g_charMasteryCardDlg != NULL) {
+				ShowMasteryCardNotice(g_charMasteryCardDlg, typeId, g_iRecvPacketType != 0x273);
+				g_charMasteryCardDlg->SetCharacterUid(CSharedDoc::Instance()->m_myCharacterId);
+			}
+			if (g_charMasteryStatusDlg != NULL) {
+				g_charMasteryStatusDlg->RefreshCardList();
+			}
+		}
+		break;
+	// JP 0x9d535e (jump table 0x9d8320 [47]): the card compose's drawn
+	// card grade, given by address to the main actor as message 0x325
+	// (no message 2 first).
+	case 0x229:
+		{
+			unsigned long grade = packet.Decode4();
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x325, (intptr_t)&grade, 0, 0, 0, 0));
+		}
+		break;
+	// JP 0x9d5391 (jump table 0x9d8320 [48]): the card compose result:
+	// main actor message 2, u32 result (non-zero: message 0x27), then the
+	// new card's type id, given by address as message 0x326.
+	case 0x22a:
+		{
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			unsigned long result = packet.Decode4();
+			if (result != 0) {
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x27, result, 0, 0, 0, 0));
+				break;
+			}
+			unsigned long typeId = packet.Decode4();
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x326, (intptr_t)&typeId, 0, 0, 0, 0));
+		}
+		break;
+	// JP 0x9d6de5 (jump table 0x9d8320 [90]): the Tiki exchange (MP break)
+	// result: main actor message 2, u32 result; 0x5B8D8B shows the table
+	// text 0x18711 (0x540a10) as message 0x23, another non-zero result is
+	// message 0x27; on success u32 mileage, u32 bonus, then messages 0x2E5,
+	// 0x2E6 and 0x2E4 (mileage, bonus).
+	case 0x274:
+		{
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			unsigned long result = packet.Decode4();
+			if (result != 0) {
+				if (result != 0x5B8D8B) {
+					AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x27, result, 0, 0, 0, 0));
+					break;
+				}
+				// The port's table text can be NULL (no text table yet).
+				const char* text = Jp_GetTableText(0x18711);
+				std::string message(text != NULL ? text : "");
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)message.c_str(), 0, 0, 0, 0));
+				break;
+			}
+			unsigned long mileage = packet.Decode4();
+			unsigned long bonus = packet.Decode4();
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E5, 0, 0, 0, 0, 0));
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E6, 0, 0, 0, 0, 0));
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E4, mileage, bonus, 0, 0, 0));
+		}
+		break;
+	// JP 0x9d2fb0 (jump table 0x9d8320 [16]): the point exchange result:
+	// main actor message 2, u32 result; a failure is message 0x2E1 with
+	// the "exchange failed" text (Jp_LookupText 0xb4eb80 of 0xd3fcac) and
+	// 0; on success the u32 Tiki point balance (JP CSharedDoc +0x3860),
+	// message 0x2E1 with the "exchange succeeded" text (0xd3fc8c) and 1,
+	// then message 0x2E2.
+	case 0x1e9:
+		{
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			if (packet.Decode4() != 0) {
+				std::string message(Jp_LookupText("\xc6\xf7\xc0\xce\xc6\xae \xb1\xb3\xc8\xaf\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."));
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E1, (intptr_t)message.c_str(), 0, 0, 0, 0));
+				break;
+			}
+			JpSharedDoc_SetTikiPoints((int)packet.Decode4());
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E1, (intptr_t)Jp_LookupText("\xc6\xf7\xc0\xce\xc6\xae \xb1\xb3\xc8\xaf\xbf\xa1 \xbc\xba\xb0\xf8\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."), 1, 0, 0, 0));
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E2, 0, 0, 0, 0, 0));
+		}
+		break;
+	// JP 0x9d30f2 (jump table 0x9d8320 [17]): the point shop purchase
+	// result: as 0x1E9, the failure text chosen by the result (sub-table
+	// 0x9d859c, results 0x1FC99-0x1FC9E), the success text 0xd3fc00.
+	case 0x1ea:
+		{
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			unsigned long result = packet.Decode4();
+			if (result != 0) {
+				const char* key;
+				switch (result) {
+				case 0x1FC99: // 0xd3fc68: the requested goods are wrong
+					key = "\xbf\xe4\xc3\xbb\xc7\xd1 \xbb\xf3\xc7\xb0\xc1\xa4\xba\xb8\xb0\xa1 \xc0\xdf\xb8\xf8\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.";
+					break;
+				case 0x1FC9A: // 0xd31548: not enough points
+					key = "\xb1\xb8\xb8\xc5\xbf\xa1 \xc7\xca\xbf\xe4\xc7\xd1 \xc6\xf7\xc0\xce\xc6\xae\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.";
+					break;
+				case 0x1FC9B: // 0xd3ae0c: wrong price
+					key = "\xbe\xc6\xc0\xcc\xc5\xdb \xb0\xa1\xb0\xdd\xc0\xcc \xc0\xdf\xb8\xf8\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.";
+					break;
+				case 0x1FC9D: // 0xd3fc40: not a point shop item
+					key = "\xc6\xf7\xc0\xce\xc6\xae\xbc\xa5\xbf\xa1 \xb5\xee\xb7\xcf\xb5\xc8 \xbe\xc6\xc0\xcc\xc5\xdb\xc0\xcc \xbe\xc6\xb4\xd5\xb4\xcf\xb4\xd9.";
+					break;
+				case 0x1FC9E: // 0xd3ae50: wrong quantity
+					key = "\xbe\xc6\xc0\xcc\xc5\xdb \xbc\xf6\xb7\xae\xc0\xcc \xc0\xdf\xb8\xf8\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.";
+					break;
+				default: // 0xd3fc20 (also 0x1FC9C): the purchase failed
+					key = "\xbe\xc6\xc0\xcc\xc5\xdb \xb1\xb8\xb8\xc5\xb8\xa6 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.";
+					break;
+				}
+				std::string message(Jp_LookupText(key));
+				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E1, (intptr_t)message.c_str(), 0, 0, 0, 0));
+				break;
+			}
+			JpSharedDoc_SetTikiPoints((int)packet.Decode4());
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E1, (intptr_t)Jp_LookupText("\xbe\xc6\xc0\xcc\xc5\xdb \xb1\xb8\xb8\xc5\xb8\xa6 \xbc\xba\xb0\xf8\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."), 1, 0, 0, 0));
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x2E2, 0, 0, 0, 0, 0));
+		}
+		break;
+	// JP 0x9d3801 (jump table 0x9d8320 [25]): the reply to 0x140 (enter the
+	// shop): the shop-entry pairs are cleared, message 2 ends the wait; a
+	// non-zero result stops there; else n (u32, u32) pairs (reader 0x9b8fe0)
+	// go to CSharedDoc 0x642990, then message 0xE8 (docs/protocol/shop.md).
+	case 0x20e:
+		{
+			JpSharedDoc_ClearShopEnterPairs();
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 2, 0, 0, 0, 0, 0));
+			if (packet.Decode4() != 0)
+				break;
+			for (unsigned int n = packet.Decode4(); n != 0; --n) {
+				unsigned int first = packet.Decode4();
+				unsigned int second = packet.Decode4();
+				JpSharedDoc_AddShopEnterPair(first, second);
+			}
+			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0xE8, 0, 0, 0, 0, 0));
+		}
+		break;
+#endif
 	default:
 		// taskmanager.cpp:13946
 		return 0;
@@ -10632,6 +11754,11 @@ void CTaskManager::ChangeTask(const char *taskName, const char *param, bool pres
 	if (m_pBackGround) { delete m_pBackGround; m_pBackGround = NULL; }
 	m_pBackGround = new CBackGround(NULL, true);
 	m_backGroundAlpha = 1.0f;
+#ifdef JP_PAKS
+	// Hook 9, JP 0x9b96cf: the Refresh desktop goes with the old task.
+	if (RFSceneManager::Instance() && RFSceneManager::Instance()->GetManager())
+		RFSceneManager::Instance()->GetManager()->DeleteDesktop();
+#endif
 }
 
 // taskmanager.cpp:14180
@@ -10680,6 +11807,10 @@ void CTaskManager::ProcessTask(float dt) {
 	}
 
 	m_currentTask->Process(dt);
+#ifdef JP_PAKS
+	// Hook 4, JP 0x9c0de6.
+	if (RFSceneManager::Instance()) RFSceneManager::Instance()->Update(dt);
+#endif
 }
 
 // taskmanager.cpp:14240
@@ -10689,6 +11820,10 @@ void CTaskManager::DisplayTask(void) const {
 	} else {
 		if (!m_bReservedTask) {
 			m_currentTask->Display();
+#ifdef JP_PAKS
+			// Hook 6, JP 0x9b974a.
+			if (RFSceneManager::Instance()) RFSceneManager::Instance()->Draw();
+#endif
 		}
 	}
 

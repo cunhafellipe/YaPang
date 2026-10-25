@@ -372,14 +372,13 @@ int CGrid::GetColor(float slope) {
 
 // grid.cpp:546
 void CGrid::SetHoleGrid(void) {
-	WVector cup = GOLFDOC()->GetHoleData().m_cupPos;
-	const WVector &ball = GolfBall().m_pos;
-	WVector d(cup.x - ball.x, 0.0f, cup.z - ball.z);
+	WVector d = GetHoleCupPos() - GolfBall().m_pos;
+	d.y = 0.0f;
 
 	float size = (GolfClub().FindName("1PT") ? m_puttExtraSize : 0.0f) + m_blockSize;
 
-	m_cupBlockX = (int)((d.x * m_axisX.x + d.z * m_axisX.z + d.y * m_axisX.y) * (1.0f / size));
-	m_cupBlockZ = (m_gridCountZ + (GolfClub().FindName("1PT") ? m_puttExtraCountZ : 0)) / 2 + (int)floor((1.0f / size) * (d * m_axisZ) - 0.5f);
+	m_cupBlockX = (int)((1.0f / size) * WDotProduct(d, m_axisX));
+	m_cupBlockZ = (m_gridCountZ + (GolfClub().FindName("1PT") ? m_puttExtraCountZ : 0)) / 2 + (int)floor((1.0f / size) * WDotProduct(d, m_axisZ) - 0.5f);
 
 	if (m_cupBlockX > m_gridCountX + (GolfClub().FindName("1PT") ? m_puttExtraCountX : 0) - 2)
 		m_cupBlockX = -1;

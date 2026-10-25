@@ -25,6 +25,10 @@ class FrStatic;
 class FrOptionDlg;
 class FrViewer;
 class FrSubEquipBar;
+#ifdef JP_PAKS
+class FrItemSearchDlg;
+class CPost_ReciveDlg;
+#endif
 class WPoint;
 class WRect;
 class FrGraphicInterface;
@@ -63,6 +67,27 @@ public:
 	virtual void OnLoad(void);
 	virtual void OnInit(void);
 	virtual void OnRestorePreserved(void);
+
+#ifdef JP_PAKS
+	// The JP 983 CTaskMain's members the port's Refresh lobby calls
+	// (src/jp/JpLobbyGlue.h), in KR terms (TaskMain.cpp).
+	// btn_spcard: the JP rewrite of OnOverBar_SpecialCardUp, placed under the
+	// button's screen rect.
+	void OnOverBar_SpecialCardUp(WRect const& buttonRect);  // JP 0x656be0
+	// The key handling the KR OnProcess does after ProcessOverBar.
+	void ProcessLobbyKeys();  // JP 0x65c580
+	// The alchemy dialog's result handler (src/jp/JpAlchemyDlg.cpp).
+	bool OnAlchemyDlgResult(int, FrForm*);  // JP 0x6525a0
+	bool OnCardComposeDlgResult(int, FrForm*);  // JP 0x653ae0 (src/jp/JpCardComposeDlg.cpp)
+	// The postbox form's result handler (TaskMain.cpp): clears m_postDlg.
+	bool OnPostDlgResult(int, FrForm*);  // JP 0x651070
+	// The attendance dialog's result handler (port/refresh/game/JpLobbyTaskGlue.cpp).
+	bool OnAttendanceDlgResult(int, FrForm*);  // JP 0x651270
+	// The item search dialog's result handler and opener (SEARCH key,
+	// src/jp/JpItemSearchDlg.cpp).
+	bool OnItemSearchDlgResult(int, FrForm*);  // JP 0x651060
+	void OpenItemSearchDlg(void);  // JP 0x655d10
+#endif
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];
@@ -117,8 +142,10 @@ PG_PROTECTED:
 	void SetConstantBGM(const char* name, bool bOnce, bool bForce);
 	void OnUnderBar_GameUp(void);
 	void OnUnderBar_ServerUp(void);
+#ifndef JP_PAKS
 	void OnUnderBar_RankingUp(void);
 	void OnUnderBar_NoticeUp(void);
+#endif
 	void OnOverBar_SpecialCardUp(void);
 	void OnBarHoverOff(intptr_t);
 	void SetTimeVariableBGM(void);
@@ -200,7 +227,9 @@ PG_PROTECTED:
 	void OnUnderBar_MagicBoxUp(void);
 	void OnUnderBar_TikiMagicBoxUp(void);
 	void OnUnderBar_ScratchUp(void);
+#ifndef JP_PAKS
 	void OnUnderBar_BongdariShopUp(void);
+#endif
 	void OnUnderBar_MaketUp(void);
 	void OnOverBar_CharInit(intptr_t);
 	void OnOverBar_CaddieInit(intptr_t);
@@ -234,6 +263,17 @@ PG_PROTECTED:
 	virtual void OnUnderBar_MyRoomUp(void);
 	virtual void OnUnderBar_CookieUp(void);
 	virtual void OnUnderBar_GuildUp(void);
+#ifdef JP_PAKS
+	// The JP CTaskMain makes these three virtual (vtable 0xd171c4: [20]
+	// GuildUp +0x50, [21] BongdariShopUp +0x54, [22] RankingUp +0x58, [24]
+	// NoticeUp +0x60), so ntAvatarChatMain's RankingUp override is reached
+	// through the base. The JP-only slot [23] +0x5c (a club page handler)
+	// is not identified and not declared (no port code reads the slots by
+	// offset).
+	virtual void OnUnderBar_BongdariShopUp(void);
+	virtual void OnUnderBar_RankingUp(void);
+	virtual void OnUnderBar_NoticeUp(void);
+#endif
 
 private:
 	void NotifyServerControlMsg(int property);
@@ -392,6 +432,12 @@ private:
 
 PG_PROTECTED:
 	FrSubEquipBar *m_subEquipBar;       // 0x1DC, OpenSubEquipBar creates it ("EQUIPBAR_SUB")
+#ifdef JP_PAKS
+	// JP-only members, appended so the KR layout stays (their JP offsets in
+	// the comments; the JP CTaskMain's layout differs from KR's).
+	FrItemSearchDlg *m_itemSearchDlg;   // JP 0x1ac, OpenItemSearchDlg 0x655d10
+	CPost_ReciveDlg *m_postDlg;         // JP 0x1a0, OnUnderBar_GiftUp 0x658420
+#endif
 };
 CHECK_SIZE(CTaskMain, 0x1E0);
 BEGIN_LAYOUT_CHECK(CTaskMain)

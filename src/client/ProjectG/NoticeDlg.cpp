@@ -314,6 +314,17 @@ void FrNoticeDlg::OnViewBtnDown(void) {
 	WPoint mouse;
 	mouse = g_pFresh->GetManager()->GetMousePos();
 
+#ifdef JP_PAKS
+	// The JP OnViewBtnDown (0xae5170) has no check either: its page list
+	// (CExtraResource +0x98, JpNoticePages.h) came from dl.pangya.jp and was
+	// never empty. The port has no such list, so an empty one closes the
+	// pop-up the way a click on no button does.
+	if (m_images.empty()) {
+		Close(FrNONE, true);
+		return;
+	}
+#endif
+
 	std::list<sNoticeImage::sBn>::iterator it;
 	for (it = m_images[m_page].buttons.begin(); it != m_images[m_page].buttons.end(); ++it) {
 		WPoint pos(m_pView->GetRect().x, m_pView->GetRect().y);
@@ -400,3 +411,24 @@ void FrNoticeDlg::OnNumOwnerDraw(intptr_t param) {
 
 	pGI->Print(pItem->pos, 0, text);
 }
+
+#ifdef JP_PAKS
+// JP 0xae5630: CTaskMain::OnUnderBar_NoticeUp (JP 0x659290) passes the
+// CExtraResource page list (src/jp/JpNoticePages.h). Every
+// non-empty path becomes a page with no buttons, then the page/button part of
+// LoadInitFile runs (JP 0xae4500). The JP page holds the path in a
+// std::string; the KR sNoticeImage keeps 0x1f characters of it.
+void FrNoticeDlg::SetPages(const std::vector<std::string>& pages) {
+	std::vector<std::string>::const_iterator it;
+	for (it = pages.begin(); it != pages.end(); ++it) {
+		if (it->size() > 0) {
+			sNoticeImage image;
+			strncpy(image.name, it->c_str(), sizeof(image.name) - 1);
+			image.name[sizeof(image.name) - 1] = 0;
+			m_images.push_back(image);
+		}
+	}
+
+	LoadInitFile(NULL);
+}
+#endif

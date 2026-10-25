@@ -54,8 +54,8 @@
 // port reaches from outside the class. PG_PORT_CONST: `const` on a reference
 // parameter the original declares non-const (clang and GCC bind temporaries
 // only to const references). PG_ORIG_CONST: `const` the original has and
-// the port drops.
-#ifdef PG_PORT
+// the port drops. The JP game code (PG_JP_GAME, written for the port) takes them too.
+#if defined(PG_PORT) || defined(PG_JP_GAME)
 #define PG_PROTECTED public
 #define PG_PORT_CONST const
 #define PG_ORIG_CONST
@@ -82,10 +82,10 @@ inline void PgVectorFreeStorage(Vector& v) {
 #define PG_VECTOR_FREE_STORAGE(v) PgVectorFreeStorage(v)
 #endif
 
-// cl 13.10 (Visual C++ .NET 2003) has no static_assert, so the layout checks
-// use the negative-array-size idiom. A failing check reads
-// "error C2118: negative subscript" on the line of the check.
-#if PG_ABI32
+// cl 13.10 has no static_assert: the checks use the negative-array-size idiom
+// ("error C2118: negative subscript"). Off for the JP game code (src/jp under VS 2010,
+// PG_JP_GAME): VS 2010's STL resizes the KR classes (std::map 12 -> 8 bytes).
+#if PG_ABI32 && !defined(PG_JP_GAME)
 #define CHECK_SIZE(type, expected_size) \
     typedef char CONCAT(check_size_, __LINE__)[(sizeof(type) == (expected_size)) ? 1 : -1]
 #define CHECK_FIELD(type, field, expected_offset) \

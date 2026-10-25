@@ -45,8 +45,8 @@ extern days_t days[];
 
 // One item of a gift request (packet 0x1F, EncodeBuffer of 0x10 bytes; FrGiftDlg::GiftProgress)
 struct sGiftBuyItem {
-	unsigned long m_serial;      // 0x0, -1
-	unsigned long m_typeId;      // 0x4, the item's type id
+	unsigned int m_serial;       // 0x0, -1 (32-bit fields of the wire record: unsigned long is 8 bytes on LP64)
+	unsigned int m_typeId;       // 0x4, the item's type id
 	unsigned short m_period;     // 0x8, the rental length (days table or sPeriodPrice::altPeriod), 0: none
 	unsigned short m_daysIndex;  // 0xA, the selected period, 0xFFFF: none
 	int m_count;                 // 0xC, the item count
@@ -56,6 +56,26 @@ CHECK_FIELD(sGiftBuyItem, m_typeId, 0x4);
 CHECK_FIELD(sGiftBuyItem, m_period, 0x8);
 CHECK_FIELD(sGiftBuyItem, m_daysIndex, 0xA);
 CHECK_FIELD(sGiftBuyItem, m_count, 0xC);
+
+#ifdef JP_PAKS
+// One 0x25-byte JP gift record, field by field (JP GiftProgress 0xaaf760
+// zeroes 0x25 bytes and pushes EncodeBuffer 0x25; SuperSS-Dev's BuyItem): the
+// KR 0x10 bytes, u32 pang price, u32 cookie price (one of them 0, by the
+// item's cash flag), then 13 bytes the gift leaves zero (a buy's UCC serial
+// and key, JP 0xaa2dd4).
+static void JpEncodeGiftBuyItem(WSendPacket& packet, const sGiftBuyItem& buy, const IFF_ITEM_COMMON* pItem, unsigned int price) {
+	unsigned char ucc[13];
+	memset(ucc, 0, sizeof(ucc));
+	packet.Encode4(buy.m_serial);
+	packet.Encode4(buy.m_typeId);
+	packet.Encode2(buy.m_period);
+	packet.Encode2(buy.m_daysIndex);
+	packet.Encode4((unsigned long)buy.m_count);
+	packet.Encode4((pItem->m_flags0 & 1) ? 0 : price);
+	packet.Encode4((pItem->m_flags0 & 1) ? price : 0);
+	packet.EncodeBuffer(ucc, sizeof(ucc));
+}
+#endif
 
 // giftdlg.cpp:26 (run-time type and factory registration of FrGiftDlg)
 const WRTTI FrGiftDlg::m_RTTI("FrGiftDlg", &FrForm::m_RTTI);
@@ -386,7 +406,11 @@ void FrGiftDlg::GiftProgress(void) {
 			buy.m_typeId = m_item.m_typeId;
 			buy.m_period = m_periods[m_daysIndex].altPeriod;
 			buy.m_daysIndex = (unsigned short)m_daysIndex;
+#ifdef JP_PAKS
+			JpEncodeGiftBuyItem(packet, buy, &m_item, ItemManager()->GetItemSalePrice(buy.m_typeId, 1, buy.m_period));
+#else
 			packet.EncodeBuffer(&buy, sizeof(buy));
+#endif
 			packet.Send(SEND_TO_DEFAULT);
 		}
 		else {
@@ -406,7 +430,11 @@ void FrGiftDlg::GiftProgress(void) {
 				buy.m_period = m_periods[m_daysIndex].altPeriod;
 				buy.m_daysIndex = (unsigned short)m_daysIndex;
 
+#ifdef JP_PAKS
+				JpEncodeGiftBuyItem(packet, buy, pItem, ItemManager()->GetItemSalePrice(buy.m_typeId, num, buy.m_period));
+#else
 				packet.EncodeBuffer(&buy, sizeof(buy));
+#endif
 			}
 
 			packet.Send(SEND_TO_DEFAULT);
@@ -455,7 +483,11 @@ void FrGiftDlg::GiftProgress(void) {
 
 			buy.m_count = num;
 
+#ifdef JP_PAKS
+			JpEncodeGiftBuyItem(packet, buy, pItem, ItemManager()->GetItemSalePrice(buy.m_typeId, num, buy.m_period));
+#else
 			packet.EncodeBuffer(&buy, sizeof(buy));
+#endif
 		}
 
 		packet.Send(SEND_TO_DEFAULT);

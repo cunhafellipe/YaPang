@@ -11,6 +11,13 @@
 #include <string.h>
 #include <windows.h>
 
+#ifdef JP_PAKS
+// The sound manager (ProjectG.cpp creates it): defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+CSoundManager* g_audio = NULL;
+#endif
+
 // soundmanager.cpp:26
 CSoundManager::CSoundManager(void) : m_sfxList(16, 16), m_idleList(16, 16) {
 	Init();

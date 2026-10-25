@@ -24,6 +24,12 @@ static __declspec(thread) void* __rtti_obj;
 template <class T>
 inline T* FrStaticCast(void* p) { return (T*)(p != 0 ? p : (__rtti_obj = p)); }
 
+// The same cast written out at the call site, never inlined away: large
+// callers (CTask::OnPacketCommon) exhaust cl's inline budget, and the
+// original still has the cast in place there. `p` is evaluated twice when
+// null: pass a local, never a call. The name is invented.
+#define FR_STATIC_CAST(T, p) ((T*)((p) != 0 ? (void*)(p) : (__rtti_obj = (void*)(p))))
+
 class CChatMsg;
 class FrEmoticon;
 class FrGraphicInterface;
@@ -52,6 +58,40 @@ enum eFrStyle {
 	FWS_HOVER = 0x400,
 	FWS_NOWHEELEVENT = 0x800
 };
+
+#ifdef JP_PAKS
+// JP 983 only: the black backdrop drawn behind a modal form. In the JP exe it
+// is a polymorphic base of FrWnd at +0x8 (size 0x14, vtable 0xd5e5e4 with only
+// its deleting destructor, so every later FrWnd member sits 0x14 further on);
+// the port keeps the KR layout and holds it as FrWnd's last member. Offsets
+// below are the JP object's. FrForm::_Init gives it the desktop size and the
+// manager's device, FrForm::Open starts it, FrForm draws it.
+class FrModalDim {
+public:
+	// JP 0xbe7be0
+	FrModalDim(void) : m_width(0.0f), m_height(0.0f), m_pDevice(0), m_bActive(false) {}
+
+	void Init(float width, float height, FrGraphicInterface* pDevice) {
+		m_width = width;
+		m_height = height;
+		m_pDevice = pDevice;
+	}
+	void Begin(void);
+	// JP 0xbe7860
+	void End(void) { m_bActive = false; }
+	static void Cancel(void);
+	void Draw(float alpha);
+
+private:
+	// Set by Cancel (game code, before closing a dialog): Begin does not start
+	// and the next Draw ends the backdrop and clears the request.
+	static bool ms_bCancel;               // JP 0xf1aac8
+	float m_width;                        // JP +0x4
+	float m_height;                       // JP +0x8
+	FrGraphicInterface* m_pDevice;        // JP +0xc
+	bool m_bActive;                       // JP +0x10
+};
+#endif
 
 // Base of every Fresh window. Layout, access and vtable from the PDB
 // (size 0xd4; IObject at 0, FrCmdTarget at 4). The virtuals are declared in
@@ -247,6 +287,11 @@ private:
 	std::string m_wndToolTip;             // 0xb4
 	static FrToolTip* m_pToolTip;
 	sToolTipData* m_pToolTipData;         // 0xd0
+#ifdef JP_PAKS
+public:	const std::string& GetWndName(void) const { return m_wndName; } /* JP 0xbe75d0 */ void SetGuiType(int type) { m_guiType = type; } /* JP 0xbe2690 */ int GetGuiType(void) const { return m_guiType; }
+protected:
+	FrModalDim m_modalDim; /* JP +0x8 (a base class there) */ int m_guiType; /* JP +0xc8: the enumGuiType (frelement.h) FrWndManager::DoCreate (JP 0xbe3630) stores from item.m_type; 0 (ctor 0xbe8bf0) for a window made in code */
+#endif
 };
 
 CHECK_SIZE(FrWnd::sToolTipData, 0x10);

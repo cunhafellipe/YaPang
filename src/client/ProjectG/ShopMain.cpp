@@ -502,13 +502,12 @@ bool PartCompare(const void *lhs, const void *rhs) {
 	bool leftHasPeriod = ItemManager()->HasSalePeriod(left->m_typeId, &leftBegin, &leftEnd);
 	bool rightHasPeriod = ItemManager()->HasSalePeriod(right->m_typeId, &rightBegin, &rightEnd);
 
-	if (!leftHasPeriod) {
-		if (rightHasPeriod) {
-			return false;
-		}
-	} else {
+	if (leftHasPeriod || rightHasPeriod) {
 		if (!rightHasPeriod) {
 			return true;
+		}
+		if (!leftHasPeriod) {
+			return false;
 		}
 
 		if ((leftBegin->wYear != 0 || leftEnd->wYear != 0) && rightBegin->wYear == 0 && rightEnd->wYear == 0) {
@@ -557,13 +556,12 @@ bool SpecialHitNewCompare(const void *lhs, const void *rhs) {
 	bool leftHasPeriod = ItemManager()->HasSalePeriod(left->m_typeId, &leftBegin, &leftEnd);
 	bool rightHasPeriod = ItemManager()->HasSalePeriod(right->m_typeId, &rightBegin, &rightEnd);
 
-	if (!leftHasPeriod) {
-		if (rightHasPeriod) {
-			return false;
-		}
-	} else {
+	if (leftHasPeriod || rightHasPeriod) {
 		if (!rightHasPeriod) {
 			return true;
+		}
+		if (!leftHasPeriod) {
+			return false;
 		}
 
 		if ((leftBegin->wYear != 0 || leftEnd->wYear != 0) && rightBegin->wYear == 0 && rightEnd->wYear == 0) {
@@ -684,7 +682,7 @@ void CShopMain::DrawSkinFrame(void) {
 						pGDI->DrawTexture(bmp, src, dst, 0xFFFFFFFF, 0);
 
 						dst.x += dst.w;
-						dst.w = w > right - dst.x ? right - dst.x : w;
+						dst.w = w > rc.Right() - dst.x ? rc.Right() - dst.x : w;
 
 						src.x = 0.0f;
 						src.w = dst.w;
@@ -693,7 +691,7 @@ void CShopMain::DrawSkinFrame(void) {
 					dst.x = rc.x;
 					dst.y += dst.h;
 					dst.w = w - m_sidePos[0];
-					dst.h = h > bottom - dst.y ? bottom - dst.y : h;
+					dst.h = h > rc.Bottom() - dst.y ? rc.Bottom() - dst.y : h;
 
 					src.x = m_sidePos[0];
 					src.w = dst.w;

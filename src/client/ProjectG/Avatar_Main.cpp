@@ -55,6 +55,123 @@
 #include "QuitWindow.h"
 #include "frgraphicinterface.h"
 #include "client/Wangreal/include/wutil.h"
+#ifdef JP_PAKS
+// The JP client's Refresh UI (src/jp, docs/JP_REFRESH_UI.md
+// "Hooks into the KR game code"): only port/CMakeLists.txt defines JP_PAKS.
+// <unistd.h>'s access() mode would replace RFManager.h's R_OK enumerator.
+#undef R_OK
+#include "RFManager.h"
+#include "RFSceneManager.h"
+#include "RFLobbyDesktop.h"
+#include "frgroupbox.h"
+#include "frbutton.h"
+#include "JpAvatarMotionDlg.h"
+// JpTaskPage.cpp (src/jp): the JP 0x9bf6e0, the page opener.
+void TaskManager_9bf6e0(CTaskManager* manager, const char* name, const char* page);
+
+// 0x604320 (RFSceneManager, src/jp/RefreshInputHandler.cpp): a
+// Refresh window other than the desktop is under the screen point.
+bool Jp_RefreshScene_IsOverWindow(float x, float y);
+
+// JP ntAvatarChatMain +0x4c4, +0x4c8: the motion chat button and its open
+// FrAvatarMotionDlg.
+static FrButton* s_jpMotionBtn = NULL;
+static FrAvatarMotionDlg* s_jpMotionDlg = NULL;
+
+// The JP AVATARCHAT_MAIN layout has no Fresh bars (data/ui/avatarchat.xml
+// has no utab_mcr, ubar_mcr or obar_mcr item): the Refresh lobby desktop in
+// avatar-chat mode (hook 8) draws them. The port's FrElement loader adds
+// them back for the KR controls this code keeps; hide them once the layout
+// is open (as CLobbyMain::OnToppage_Finish does for TOPPAGE).
+static void JpHideFreshBars(FrGroupBox* const* bars) {
+	for (int i = 0; i < 3; i++) {
+		if (bars[i] != 0) {
+			bars[i]->SetVisible(false);
+		}
+	}
+}
+
+// JP 0x7afb30: the "on" images of the motion chat button (dialog open).
+void ntAvatarChatMain::SetMotionBtnOnImages(void) {
+	if (s_jpMotionBtn) {
+		s_jpMotionBtn->SetButtonImg("motionchat_btn_on_Normal", FrButton::NORMAL);
+		s_jpMotionBtn->SetButtonImg("motionchat_btn_on_Hover", FrButton::OVER);
+		s_jpMotionBtn->SetButtonImg("motionchat_btn_on_Hover", FrButton::PRESSED);
+	}
+}
+
+// JP 0x7afb70: the "off" images.
+void ntAvatarChatMain::SetMotionBtnOffImages(void) {
+	if (s_jpMotionBtn) {
+		s_jpMotionBtn->SetButtonImg("motionchat_btn_off_Normal", FrButton::NORMAL);
+		s_jpMotionBtn->SetButtonImg("motionchat_btn_off_Hover", FrButton::OVER);
+		s_jpMotionBtn->SetButtonImg("motionchat_btn_off_Hover", FrButton::PRESSED);
+	}
+}
+
+// JP 0x7afbb0: the motion dialog's result.
+bool ntAvatarChatMain::OnMotionDlgResult(int, FrForm*) {
+	if (s_jpMotionBtn) {
+		s_jpMotionBtn->SetStatus(FrButton::NORMAL);
+	}
+	s_jpMotionDlg = NULL;
+	SetMotionBtnOffImages();
+	return true;
+}
+
+// JP 0x7b04a0: the dialog closes itself (its closing state).
+void ntAvatarChatMain::CloseMotionDlg(void) {
+	s_jpMotionDlg->BeginClose();
+}
+
+// JP 0x7b1760: AVATARCHAT_MAIN.motion_btn_start's INIT: the button 48 px
+// from the right edge of the screen. The JP button also gets 0 and 0.1 in
+// two JP-only FrWnd members (+0x104, +0x108), then is hidden (vtable +0x18)
+// when 0x9a3c80 (on the object 0xe47dbc +0x10c24) finds no entry for the
+// player avatar's character type id: not in the port.
+void ntAvatarChatMain::OnMotionBtnInit(PG_MSGARG param) {
+	s_jpMotionBtn = DYNAMIC_CAST(FrButton, param);
+	if (s_jpMotionBtn) {
+		s_jpMotionBtn->MoveWindow(WPoint(g_view->GetWidth() - 48.0, 105.0f));
+	}
+}
+
+// JP 0x7b1860: opens the motion dialog for the player's avatar.
+void ntAvatarChatMain::OpenMotionDlg(void) {
+	if (ntAvatarManager::Instance()->m_pMyAvatar == NULL) {
+		return;
+	}
+	SetMotionBtnOnImages();
+	WPoint pt(g_view->GetWidth() - 80.0, 140.0f);
+	s_jpMotionDlg = CreateAvatarMotionDlg(g_pFresh->GetManager(), this, "motiondlg", NULL);
+	s_jpMotionDlg->EnableDrag(false);
+	s_jpMotionDlg->SetFixed(true);
+	s_jpMotionDlg->SetOpenedFrom(1);
+	int typeId = ntAvatarManager::Instance()->m_pMyAvatar->m_charTypeId & 0x3ffffff;
+	s_jpMotionDlg->SetCharacterTypeId(typeId);
+	s_jpMotionDlg->Open((FRESH_RESULT_CALLBACK)&ntAvatarChatMain::OnMotionDlgResult, pt, 5);
+}
+
+// JP 0x7b1950: AVATARCHAT_MAIN.motion_btn_start's LBUTTONUP toggles the dialog.
+void ntAvatarChatMain::OnMotionBtnUp(void) {
+	if (s_jpMotionDlg) {
+		CloseMotionDlg();
+	} else {
+		OpenMotionDlg();
+	}
+}
+
+// JP 0x7b0d00: the avatar chat's guild (lounge "scratch" pop-up item)
+// handler stops the player's avatar (JP ntAvatarManager +0xa4, Stop
+// 0x7a3ea0), then runs CTaskMain::OnUnderBar_GuildUp (0x658ec0), as the
+// KR overrides of the other under-bar handlers do.
+void ntAvatarChatMain::OnUnderBar_GuildUp(void) {
+	if (ntAvatarManager::Instance()->m_pMyAvatar) {
+		ntAvatarManager::Instance()->m_pMyAvatar->Stop();
+	}
+	CTaskMain::OnUnderBar_GuildUp();
+}
+#endif
 
 // The original's max compiles as `a < b ? b : a` (wutil Max uses >=); its
 // header is unknown, as for river.cpp's MaxOf.
@@ -538,6 +655,9 @@ void ntAvatarChatMain::CheckUIPosition(void) {
 		s_barY = COption::Instance()->gGetBar_Y();
 
 		g_pFresh->OpenLayout("AVATARCHAT_MAIN", this, false);
+#ifdef JP_PAKS
+		JpHideFreshBars(m_barFrame);
+#endif
 
 		if (ntAvatarManager::Instance()->m_pMyAvatar->GetState() & 0x80) {
 			EnableUnderBar(false);
@@ -589,6 +709,13 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 	if (!ntAvatarManager::Instance()->m_pMyAvatar) {
 		return;
 	}
+#ifdef JP_PAKS
+	// JP 0x7aa31f: no lounge input while a Refresh modal form is open.
+	if (RFSceneManager::Instance() != NULL && RFSceneManager::Instance()->GetManager() != NULL
+		&& RFSceneManager::Instance()->GetManager()->IsModalExist()) {
+		return;
+	}
+#endif
 
 	if (g_pFresh->GetManager()->GetDesktop()->m_nFlags.GetFlag(0x8)) {
 		int leftButton = g_input->GetButton(LEFT_BUTTON);
@@ -642,6 +769,15 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 					inRightMenu = true;
 				}
 			}
+#ifdef JP_PAKS
+			// JP 0x7aa5f1: a press on a Refresh window (the lounge bars, the
+			// pop-up menu) belongs to the menu: no pick, no walk, and the JP
+			// jumps past the rest of the block (0x7aac16) as for the right menu.
+			if (leftButton == 1 && RFSceneManager::Instance() != NULL
+				&& Jp_RefreshScene_IsOverWindow(mouse.x, mouse.y)) {
+				inRightMenu = true;
+			}
+#endif
 
 			if (!inRightMenu) {
 				if (leftButton == 1) {
@@ -983,6 +1119,9 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 // avatar_main.cpp:1379
 void ntAvatarChatMain::ProcessCamera(float elapsed) {
 	WMatrix camera;
+	WVector pos;
+	WVector dir;
+	WVector eye;
 
 	if (m_spItemChanged && g_SALoadingState) {
 		m_cameraDistanceGoal = ntAvatarManager::Instance()->m_pMyAvatar->GetMySpItem((eSPAVILITYTYPE)0).getvalue() * 28.800001f;
@@ -1036,12 +1175,11 @@ void ntAvatarChatMain::ProcessCamera(float elapsed) {
 		}
 
 		const WVector &avatarPos = ntAvatarManager::Instance()->m_pMyAvatar->m_position;
-		WVector pos = avatarPos;
+		pos = avatarPos;
 		pos.y += m_cameraHeight;
 
 		// Pull the camera in when the ground or an object is between it and
 		// the avatar, and let it back out slowly.
-		WVector dir;
 		dir = camera.za * m_cameraDistance;
 		dir.Negate();
 		float hit = GetPVS().RayIntersectAll(pos, dir, false);
@@ -1057,7 +1195,6 @@ void ntAvatarChatMain::ProcessCamera(float elapsed) {
 		}
 
 		dir.Normalize();
-		WVector eye;
 		eye = pos + dir * m_cameraClipDistance;
 
 		WVector ground = GetPVS().GetGroundPoint(eye, false, 0, false);
@@ -1201,6 +1338,23 @@ void ntAvatarChatMain::HandleMsg(const MsgObject &msg) {
 	}
 
 	switch (msg.m_msg) {
+#ifdef JP_PAKS
+	// JP 0x7ace2c (ntAvatarChatMain::HandleMsg 0x7acdb0): a page over
+	// AVATARCHAT_MAIN (MakeRealMyRoom 0x65b8a0's "AvatarChat" 0x88,
+	// "CMyRoomWidget"): param1 the widget, param2 the page; the JP opens it
+	// at once (0x9bf6e0) unless param1 is "RFLobbyDesktop", and never hands
+	// 0x88 to HandleMsgCommon (the lobby desktop's 0x88 is a lobby message).
+	case 0x88: {
+		std::string name(msg.m_param1 ? (const char *)msg.m_param1 : "");
+		if (name != "RFLobbyDesktop") {
+			std::string page(msg.m_param2 ? (const char *)msg.m_param2 : "");
+			if (CTaskManager::Instance())
+				TaskManager_9bf6e0(CTaskManager::Instance(), name.c_str(), page.c_str());
+		}
+		break;
+	}
+
+#endif
 	case 0x4E:
 		// avatar_main.cpp:1715: the jukebox button image (param1 == 1: playing).
 		if (m_jukeBoxButton) {
@@ -1755,9 +1909,25 @@ void ntAvatarChatMain::HandleMsg(const MsgObject &msg) {
 	}
 
 	case 0x00:
+#ifdef JP_PAKS
+		// Hook 8, JP 0x7ada9d-0x7adacb: the lobby's Refresh desktop in
+		// avatar-chat mode, created and shown by 0x5fff30 when there is
+		// none; when it already exists the layout is not opened again.
+		RFLobbyDesktop::s_mode = 1;
+		if (RFLobbyDesktop::s_instance)
+			break;
+		{
+			RFLobbyDesktop* desktop = static_cast<RFLobbyDesktop*>(CreateLobbyDesktop(NULL));
+			if (desktop)
+				desktop->ShowLobby(true);
+		}
+#endif
 		// Open the chat room's layout (LobbyTask posts "AVATARCHAT_MAIN").
 		if (g_pFresh) {
 			g_pFresh->OpenLayout((const char *)msg.m_param1, this, false);
+#ifdef JP_PAKS
+			JpHideFreshBars(m_barFrame);
+#endif
 		}
 		break;
 

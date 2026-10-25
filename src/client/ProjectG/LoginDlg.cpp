@@ -896,6 +896,9 @@ bool FrLoginDlg::OnInit(void) {
 	WSingleton<CProjectG>::Instance()->m_loginDlgFlag = false;
 	// "Test phrase"
 	SetMessage("\xC5\xD7\xBD\xBA\xC6\xAE \xB1\xB8\xB9\xAE", false);
+#ifdef JP_PAKS
+	FrModalDim::Cancel();
+#endif
 	return true;
 }
 

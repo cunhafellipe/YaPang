@@ -5,6 +5,9 @@
 #include "client/Wangreal/include/westpak.h"
 #include "client/Wangreal/include/bitmap.h"
 #include "client/Wangreal/include/wutil.h"
+#ifdef JP_PAKS
+#include <malloc.h>
+#endif
 
 void __cdecl CloseCFile(cFile* file);
 
@@ -155,6 +158,43 @@ float WFont::Print(WView* view, float x, float y, const char* text, int type, un
 float WFont::GetTextWidth(WView* view, const char* text) {
 	return PrintOut(view, 0, 0, text, 0, 0, false, NULL);
 }
+
+#ifdef JP_PAKS
+// JP 0xb5dbb0: the wide-text PrintOut. The KR one's frame (GetUnit on the
+// position, the colour, len += PrintInside / GetTextWidthInside, the 640 /
+// view width scale) on wchar_t, without its escape parsing: the JP code has
+// no '\\' colour codes, no '\\<' overlays and no 0x80 lead-byte scan, the
+// whole text goes to the [12] wide PrintInside / [14] GetTextWidthInside.
+float WFont::PrintOut(WView* view, float x, float y, const wchar_t* text, int type, unsigned long diffuse, bool draw, Bitmap* bmp) {
+	float len = 0;
+	unsigned long color;
+
+	if (draw) {
+		if (!bmp) {
+			x = GetUnit(view, x, W_UNIT_XPOS);
+			y = GetUnit(view, y, W_UNIT_YPOS);
+		}
+
+		color = diffuse;
+	}
+
+	if (text && *text) {
+		len += draw ? PrintInside(view, x + len, y, text, type, color, bmp) : GetTextWidthInside(view, text);
+	}
+
+	return (((GetCoordMode() & 0x1000) && view) ? 640.0f / view->GetWidth() : 1.0f) * len;
+}
+
+// JP 0xb5dca0
+float WFont::Print(WView* view, float x, float y, const wchar_t* text, int type, unsigned long diffuse, Bitmap* bmp) {
+	return PrintOut(view, x, y, text, type, diffuse, true, bmp);
+}
+
+// JP 0xb5dce0: [5]
+float WFont::GetTextWidth(WView* view, const wchar_t* text) {
+	return PrintOut(view, 0, 0, text, 0, 0, false, NULL);
+}
+#endif
 
 // wfont.cpp:226
 void WFont::ResetOverlay(void) {
@@ -1015,6 +1055,84 @@ float WFixedFont::PrintInside(WView* view, float x, float y, const char* text, i
 
 	return f->width * GetScale();
 }
+
+#ifdef JP_PAKS
+// JP 0xe42818: the code page the JP wide texts are converted to before they
+// reach the glyph path, initialized to 932 (Shift-JIS). The name is ours.
+unsigned int g_fixedFontCodePage = 932;
+
+// JP 0xb636c0: the wide GetNewPart. A wide text already seen maps to its
+// part through m_wideTextList; a new one is converted to g_fixedFontCodePage
+// (default character "?") and goes through the char path (m_textList,
+// GetTexture, WriteToBitmap), so the glyphs stay keyed by their multibyte
+// codes. The JP copies of AddOutArea (0xb5ee10) and PrintInTex (0xb5ee50)
+// are the KR ones, at the JP offsets.
+WFixedFont::w_fixedtext* WFixedFont::GetNewPart(const wchar_t* text) {
+	if (text == NULL) {
+		return NULL;
+	}
+
+	std::map<std::wstring, w_fixedtext*>::iterator it = m_wideTextList.find(text);
+	w_fixedtext* f;
+	if (it != m_wideTextList.end() && (f = it->second) != NULL) {
+		return f;
+	}
+
+	int px = m_nowX;
+	int py = m_nowY;
+	int len = WideCharToMultiByte(g_fixedFontCodePage, 0, text, -1, NULL, 0, "?", NULL);
+	char* mbText = (char*)_alloca(len);
+	WideCharToMultiByte(g_fixedFontCodePage, 0, text, -1, mbText, len, "?", NULL);
+
+	f = m_textList.Find(mbText);
+	if (f == NULL) {
+		int width = GetTexture(mbText);
+
+		if (WriteToBitmap(width, m_mid) < 0) {
+			return GetNewPart(text);
+		}
+
+		f = (w_fixedtext*)new char[len + sizeof(w_fixedtext)];
+
+		strcpy(f->msg, mbText);
+		f->width = width;
+		f->px = px;
+		f->py = py;
+		m_textList.AddItem(f, f->msg, false);
+	}
+
+	m_wideTextList[text] = f;
+
+	return f;
+}
+
+// JP 0xb63930: [5] the width of the text's part, unscaled (written to the
+// texture pages on the way, as PrintInside does).
+float WFixedFont::GetTextWidth(WView* view, const wchar_t* text) {
+	w_fixedtext* f = GetNewPart(text);
+	if (f) {
+		return f->width;
+	}
+	return 0;
+}
+
+// JP 0xb63950: [12] the char PrintInside on the wide part, scaled by
+// GetFontScale(NULL).
+float WFixedFont::PrintInside(WView* view, float x, float y, const wchar_t* text, int len, unsigned long color, Bitmap* bitmap) {
+	w_fixedtext* f = GetNewPart(text);
+
+	if (bitmap) {
+		PrintInTex(f, x, y, bitmap, len, color);
+	} else {
+		if (m_flush_num + 1 >= sizeof(m_flush_list) / sizeof(m_flush_list[0])) {
+			Flush(view);
+		}
+		AddOutArea(f, x, y, len, color);
+	}
+
+	return f->width * GetFontScale(NULL);
+}
+#endif
 
 // wfont.cpp:1413
 void WFixedFont::PrintInTex(w_fixedtext* f, float x, float y, Bitmap* bmp, int type, unsigned long diffuse) {

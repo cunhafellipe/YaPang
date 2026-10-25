@@ -118,6 +118,13 @@ private:
 	std::list<unsigned long> m_activeCardList;   // 0xD38
 	FrSPCardBuffDlg *m_cardBuffDlg;    // 0xD44
 	bool m_spCardAlarm;                // 0xD48
+
+#ifdef JP_PAKS
+	// The JP card manager's card appliers (port/refresh/game/JpMasteryGlue.cpp)
+	// fill these members from the card IFF record.
+	friend void Jp_CardManager_ApplyCharacterCard(const struct JpCardData* card, int playerIndex);   // JP 0x8093d0
+	friend void Jp_CardManager_ApplyCaddieCard(const struct JpCardData* card, int playerIndex);      // JP 0x809570
+#endif
 };
 BEGIN_LAYOUT_CHECK(CCardManager)
 	CHECK_FIELD(CCardManager, m_playerIndexMap, 0x28);

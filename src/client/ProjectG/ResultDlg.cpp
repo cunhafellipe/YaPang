@@ -1514,17 +1514,18 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		bgIndex = myData.m_team;
 
 	if (m_pRankBgBitmaps[bgIndex]) {
-		float bgX = areaPos.x + 13.0f;
-		float bgY = (11.0f - (float)(m_pRankBgBitmaps[bgIndex]->Height() / 2)) + areaPos.y;
-		WRect bgRect(bgX, bgY, (float)m_pRankBgBitmaps[bgIndex]->Width(), (float)m_pRankBgBitmaps[bgIndex]->Height());
+		WPoint bgPos;
+		bgPos.x = areaPos.x + 13.0f;
+		bgPos.y = (11.0f - (float)(m_pRankBgBitmaps[bgIndex]->Height() / 2)) + areaPos.y;
+		WRect bgRect(bgPos.x, bgPos.y, (float)m_pRankBgBitmaps[bgIndex]->Width(), (float)m_pRankBgBitmaps[bgIndex]->Height());
 
 		gdi->DrawTexture(m_pRankBgBitmaps[bgIndex], bgRect, 0xFFFFFFFF, 0);
 
 		gdi->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
 		gdi->SetTextStyle(1);
 
-		float rankX = (float)(m_pRankBgBitmaps[bgIndex]->Width() / 2) + bgX;
-		bgY += 2.0f;
+		float rankX = (float)(m_pRankBgBitmaps[bgIndex]->Width() / 2) + bgPos.x;
+		bgPos.y += 2.0f;
 
 		unsigned char rank;
 		if (m_resultDlgType == 2)
@@ -1532,7 +1533,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		else
 			rank = myData.m_rank;
 
-		WPoint rankPos(rankX, bgY);
+		WPoint rankPos(rankX, bgPos.y);
 		if (rank < 0xFF)
 			gdi->Print(rankPos, 1, "%d", rank);
 		else
@@ -1541,7 +1542,7 @@ void FrUniteResultDlg::OnMyInfoAreaDraw(PG_MSGARG param) {
 		gdi->SetTextStyle(0);
 		gdi->SetTextColor(0xFF000000, 0xFFFFFFFF);
 
-		lineY = bgY;
+		lineY = bgPos.y;
 	}
 
 	m_pLevelBitmap = g_pFresh->GetBitmap(MakeStr("level_%03d", myData.m_level + 1));

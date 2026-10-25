@@ -1614,6 +1614,36 @@ void FrOptionDlg::mOnMacro8Init(PG_MSGARG param) {
 	m_macroTab.m_pMacroEdits[7] = DYNAMIC_CAST(FrEdit, param);
 }
 
+#ifdef JP_PAKS
+// JP port: the JP 983 "option" form (data/ui/base.xml) has every control this
+// dialog binds, plus a fifth tab ("shader" and its "s_*" controls) and four
+// game-tab rows that only the JP FrOptionDlg (ctor 0x8c9070, 0x7a0 bytes, tabs
+// at +0x778) drives. This dialog never shows or hides them through a tab, so
+// they would stay drawn over the four KR tabs: hide them.
+static bool JpHideUndrivenOptionControl(FrWnd* pWnd, void* /*pParam*/) {
+	static const char* const s_jpOnlyNames[] = {
+		"shader",
+		"g_scenteredpowergauge", "g_centeredpowergauge",
+		"g_sfullyproportionalpowergaugesize", "g_fullyproportionalpowergaugesize",
+		"g_smbindmode", "g_mbindmode",
+		"g_stitle", "g_changetitle",
+	};
+	const std::string& name = pWnd->GetWndName();
+	bool bHide = name.compare(0, 2, "s_") == 0;
+
+	for (unsigned int i = 0; !bHide && i < sizeof(s_jpOnlyNames) / sizeof(s_jpOnlyNames[0]); i++) {
+		bHide = name == s_jpOnlyNames[i];
+	}
+
+	if (bHide) {
+		pWnd->Enable(false);
+		pWnd->SetVisible(false);
+	}
+
+	return true;
+}
+#endif
+
 // optiondlg.cpp:1797
 bool FrOptionDlg::OnInit(void) {
 	SetGameColtrols();
@@ -1634,6 +1664,9 @@ bool FrOptionDlg::OnInit(void) {
 	if (bEffectsTab) {
 		PgEffectsTab::Select(this);
 	}
+#endif
+#ifdef JP_PAKS
+	EnumerateChildWindow(JpHideUndrivenOptionControl, 0);
 #endif
 
 	return FrForm::OnInit();
@@ -1831,10 +1864,15 @@ void FrOptionDlg::InitVideoControls(void) {
 		}
 	}
 
+#ifdef JP_PAKS
+	// JP 0x8cc9f0 fills no TnL combo: the JP "option" form (data/ui/base.xml)
+	// comments v_stnl / v_tnl out (#ifdef _JAPAN_), so m_pTnlCmb stays 0.
+#else
 	if (sOption::sbHwTnlSupport) {
 		const char* text = m_option.vGetTnlText(1);
 		m_videoTab.m_pTnlCmb->AddString(text);
 	}
+#endif
 
 	for (i = 0; i < 3; i++) {
 		const char* text = m_option.vGetTexResText(i);
@@ -1871,8 +1909,11 @@ void FrOptionDlg::SetVideoColtrols(bool bResetOverall) {
 	text = COption::Instance()->vGetScrResText(m_option.m_screenWidth, m_option.m_screenHeight, m_option.m_screenBpp, m_option.m_windowed != 0);
 	m_videoTab.m_pScrResCmb->SetLine(1, text, 0, false, 0);
 
+#ifndef JP_PAKS
+	// JP 0x8ccb00 sets no TnL line (no v_tnl in the JP form).
 	text = m_option.vGetTnlText(m_option.m_tnlLevel);
 	m_videoTab.m_pTnlCmb->SetLine(1, text, 0, false, 0);
+#endif
 
 	text = m_option.vGetTexResText(m_option.m_mipmapLevel);
 	m_videoTab.m_pTexResCmb->SetLine(1, text, 0, false, 0);
@@ -1887,9 +1928,12 @@ void FrOptionDlg::SetVideoColtrols(bool bResetOverall) {
 		m_videoTab.m_pReflectionBtn->SetStatus(m_option.m_reflectionEnabled == 1 ? FrButton::PRESSED : FrButton::NORMAL);
 	}
 
+#ifndef JP_PAKS
+	// JP 0x8ccb00 sets no LOD button: the JP form comments v_slod / v_lod out.
 	if (sOption::IsSupportLod()) {
 		m_videoTab.m_pLodBtn->SetStatus(m_option.m_lodEnabled == 1 ? FrButton::PRESSED : FrButton::NORMAL);
 	}
+#endif
 
 	m_videoTab.m_pNpcBtn->SetStatus(m_option.m_npcEnabled == 1 ? FrButton::PRESSED : FrButton::NORMAL);
 

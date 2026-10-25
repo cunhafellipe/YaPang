@@ -12,6 +12,11 @@
 #include "client/Wangreal/include/woverlay.h"
 #include "client/Wangreal/include/wresrcmng.h"
 #include "client/Wangreal/include/wview.h"
+#ifdef JP_PAKS
+// JP 0xb4eb80 (src/jp/RFTextManager.h, not on the Fresh units'
+// include path): the JP game's text for a Korean source text.
+const char* Jp_LookupText(const char* key);
+#endif
 
 // Initialisers of the guarded function-local separator pointers of the
 // text routines (the original folds the literal into the guarded store).
@@ -365,6 +370,19 @@ int FrEmoticon::GetIconIndex(const char* key) {
 
 	for (int i = 0; i < m_Emoticons.size(); i++) {
 		sEmoticon* emoticon = m_Emoticons[i];
+#ifdef JP_PAKS
+		// JP 0xc08da5/0xc08e60: the names and aliases compared in their JP text
+		const char* name = Jp_LookupText(emoticon->Name.c_str());
+		if (_strcmpi(name, key) == 0 || (key[0] == '-' && _strcmpi(name, key + 1) == 0)) {
+			return i;
+		}
+		for (int j = 0; j < 2; j++) {
+			const char* alias = Jp_LookupText(emoticon->Alias[j].c_str());
+			if (_strcmpi(alias, key) == 0 || (key[0] == '-' && _strcmpi(alias, key + 1) == 0)) {
+				return i;
+			}
+		}
+#else
 		if (_strcmpi(emoticon->Name.c_str(), key) == 0 || (key[0] == '-' && _strcmpi(emoticon->Name.c_str(), key + 1) == 0)) {
 			return i;
 		}
@@ -373,13 +391,19 @@ int FrEmoticon::GetIconIndex(const char* key) {
 				return i;
 			}
 		}
+#endif
 	}
 	return -1;
 }
 
 // fremoticon.cpp:590
 const char* FrEmoticon::GetIconName(int index) {
+#ifdef JP_PAKS
+	// JP 0xc08f60
+	return Jp_LookupText(m_Emoticons[index]->Name.c_str());
+#else
 	return m_Emoticons[index]->Name.c_str();
+#endif
 }
 
 // fremoticon.cpp:600

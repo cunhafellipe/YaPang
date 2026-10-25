@@ -119,6 +119,14 @@ public:
 	virtual void OnInit(void);
 	virtual void OnProcess(float);
 	virtual void HandleMsg(const MsgObject& msg);
+#ifdef JP_PAKS
+	// JP 0x596370 (name ours): the "notice_popup" dialog with
+	// premiumservice.ini (the lobby's premium button).
+	void OnToppage_PremiumUp(void);
+	// JP 0x595f60 (name ours): the "single_mode_start" dialog (the lobby's
+	// single mode button).
+	void OnToppage_SingleModeUp(void);
+#endif
 
 private:
 	void CheckTikiReport(const char* layout);
@@ -485,6 +493,29 @@ protected:
 	void OnToppage_PcbangUp(void);
 	void OnLogin_Init(PG_MSGARG);
 	bool OnPCBangDlgResult(int, FrForm*);
+#ifdef JP_PAKS
+	bool OnPremiumDlgResult(int, FrForm*);  // JP 0xab6780 (name ours): OnToppage_PremiumUp's dialog result
+	bool OnSingleModeStartDlgResult(int result, FrForm* form);  // JP 0xaba930 (name ours): OnToppage_SingleModeUp's result
+	bool OnRoomListDlgResult(int result, FrForm* form);  // JP 0xab6540 (name ours)
+	void OpenRoomTypeForm(int type);                      // JP 0xab6be0 (name ours): message 0x8b (6..0xb)
+	bool OnRoomTypeFormResult(int result, FrForm* form);  // JP 0xab6620 (name ours)
+	bool OnUseTikiReportDlgResult(int result, FrForm* form);  // JP 0xab2ec0 (name ours): the "notify_tiki" form's result
+	// The TOPPAGE motion chat button and its FrAvatarMotionDlg (names ours).
+	void OnToppage_MotionBtnInit(PG_MSGARG);        // JP 0xab7350
+	void OnToppage_MotionBtnUp(void);               // JP 0xab8520
+	void OnToppage_MotionBtnHoverOn(PG_MSGARG);     // JP 0xab7430
+	void OnToppage_MotionBtnHoverOff(PG_MSGARG);    // JP 0xab74b0
+	void SetMotionBtnImages(void);                  // JP 0xab3540
+	void MoveMotionBtn(void);                       // JP 0xab44e0
+	void CloseMotionDlg(void);                      // JP 0xab4420
+	void OpenMotionDlg(void);                       // JP 0xab8350
+	bool OnMotionDlgResult(int, FrForm*);           // JP 0xab7530
+	// The TOPPAGE jukebox button and its FrJukeBoxDlg (names ours).
+	void OnToppage_JukeboxBtnInit(PG_MSGARG);       // JP 0xab75d0
+	void OnToppage_JukeboxBtnUp(void);              // JP 0xab7740 (through 0xab8540)
+	bool OnJukeboxDlgResult(int, FrForm*);          // JP 0xab35c0
+	void MoveJukeboxBtn(void);                      // JP 0xab4540
+#endif
 	void OnRoomList_UserListLBtnUp(void);
 	bool OnRoomExtResQuitDlgResult(int, FrForm*);
 	bool OnRoomExt30sResQuitDlgResult(int, FrForm*);
@@ -795,13 +826,20 @@ private:
 	FrEdit* m_createShirtsEdit;         // 0x94C, OnCreate_ShirtsInit
 	unsigned char m_createShirtsColor;  // 0x950, shirts color index shown in m_createShirtsEdit
 	PADDING(0x951, 0x954);
+#ifdef JP_PAKS
+	// JP only, appended so that the KR layout above stays as it is (the JP
+	// CLobbyMain has it at +0x438; its other offsets are not transcribed).
+	FrNoticeDlg* m_premiumNoticeDlg;    // JP +0x438, OnToppage_PremiumUp, OnPremiumDlgResult
+#endif
 };
 
 // Course order of the map selection (inline in shareddoc.inl, SharedDoc.h).
 unsigned char PrevMap(unsigned char map);
 unsigned char NextMap(unsigned char map, bool);
 
+#ifndef JP_PAKS
 CHECK_SIZE(CLobbyMain, 0x954);
+#endif
 BEGIN_LAYOUT_CHECK(CLobbyMain)
 	CHECK_FIELD(CLobbyMain, m_topPageBtnIndex, 0x1E0);
 	CHECK_FIELD(CLobbyMain, m_toppageKoohBirthdayBtn, 0x228);

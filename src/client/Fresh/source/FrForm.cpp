@@ -8,6 +8,12 @@
 #include "frwndmanager.h"
 #include "client/ProjectG/SoundManager.h"
 #include "client/Wangreal/include/wview.h"
+#ifdef JP_PAKS
+// JP 0xb4eb80 (src/jp/RFTextManager.h, not on the Fresh units'
+// include path): the JP game's text for a Korean source text.
+const char* Jp_LookupText(const char* key);
+#endif
+
 
 // <windows.h> maps GetForm to GetFormA; FrElementDoc::GetForm is declared before it.
 #undef GetForm
@@ -158,6 +164,10 @@ FrForm* FrForm::_Init(FrWndManager* pManager, FrCmdTarget* pCmdDest, const char*
 	FrWnd* pWnd = pManager->DoCreate(pForm->m_bgFrame, pManager, this, this);
 	m_pBaseFrm = DYNAMIC_CAST(FrFrame, pWnd);
 	const char* caption = pForm->m_caption.c_str();
+#ifdef JP_PAKS
+	// JP 0xbe6b09: the form caption through the JP text table
+	caption = Jp_LookupText(caption);
+#endif
 	SetCaption(caption);
 	SetDesc(pForm->m_desc.c_str());
 
@@ -168,6 +178,11 @@ FrForm* FrForm::_Init(FrWndManager* pManager, FrCmdTarget* pCmdDest, const char*
 			SetMessageControlByType((*it)->m_type, pChild);
 		}
 	}
+#ifdef JP_PAKS
+	// JP 0xbe6bcb
+	const WRect& desktopRect = pManager->GetDesktop()->GetRect();
+	m_modalDim.Init(desktopRect.w, desktopRect.h, pManager->GetGDI());
+#endif
 
 	return this;
 }
@@ -193,10 +208,25 @@ bool FrForm::Open(FRESH_RESULT_CALLBACK pfnResult, unsigned long flag) {
 	if (m_flag & 0x200) {
 		ms_bExclusive = true;
 	}
+#ifdef JP_PAKS
+	// JP 0xbe651a: form flag 0x800 sets window flag 0x4000.
+	if (m_flag & 0x800) {
+		m_nFlags.Enable(0x4000);
+	}
+#endif
 
 	if (!(flag & 0x4)) {
 		SetFadeout(false);
 	}
+#ifdef JP_PAKS
+	// JP 0xbe6543
+	m_pWndManager->UpdateModalFormCount();
+
+	// JP 0xbe6548
+	if (!(flag & 0x4) && !(flag & 0x800)) {
+		m_modalDim.Begin();
+	}
+#endif
 
 	return true;
 }
@@ -324,6 +354,12 @@ void FrForm::OnCancel(void) {
 
 // frform.cpp:439
 void FrForm::OnDraw(void) {
+#ifdef JP_PAKS
+	// JP 0xbe61f0: the modal backdrop under the form, unless opened with flag 4.
+	if (!(m_flag & 0x4)) {
+		m_modalDim.Draw(m_wndAlpha2);
+	}
+#endif
 	FrWnd::OnDraw();
 }
 

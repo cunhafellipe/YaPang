@@ -85,7 +85,13 @@ bool _gateway::CGatewayActor::InsertHandler(taskMsg_t msg, CGatewayHandler* pHan
 
 // gatewayactor.cpp:92
 void _gateway::CGatewayActor::QueryHandler(localContentType_t type, taskMsg_t msg) {
+#ifdef JP_PAKS
+	// JP 0x91e850 also accepts the quest document (0xAC, CQuestDocument)
+	// and the 2014 Arin event document (0xB0, CArinBirthDay2014Doc).
+	if ((type < 0x9D || type > 0xA0) && type != 0xAC && type != 0xB0) {
+#else
 	if (type < 0x9D || type > 0xA0) {
+#endif
 		throw WAppException("Passed Unknown doctype!!\nCode[0]");
 	}
 
@@ -108,12 +114,24 @@ void _gateway::CGatewayActor::CreateLobbyHandler(void) {
 	QueryHandler((localContentType_t)0x9D, (taskMsg_t)0x26D);
 	QueryHandler((localContentType_t)0x9E, (taskMsg_t)0x26F);
 	QueryHandler((localContentType_t)0xA0, (taskMsg_t)0x276);
+#ifdef JP_PAKS
+	// JP registry 0x91ecf0: the quest document 0xAC, message 0x753A, task
+	// flags 0x1F (every task; the port wires the lobby and the avatar chat).
+	QueryHandler((localContentType_t)0xAC, (taskMsg_t)0x753A);
+	// The Arin event document 0xB0, message 0x753F, task flags 1: the
+	// lobby task only (ctor 0x91fc40: "CLobbyTask" 1, "CShopTask" 2,
+	// "CRealMyRoomTask" 4, "ntAvatarChatTask" 8, "CGolfTask" 0x10).
+	QueryHandler((localContentType_t)0xB0, (taskMsg_t)0x753F);
+#endif
 }
 
 // gatewayactor.cpp:141
 void _gateway::CGatewayActor::CreateAvatarChatHandler(void) {
 	QueryHandler((localContentType_t)0x9D, (taskMsg_t)0x26D);
 	QueryHandler((localContentType_t)0x9F, (taskMsg_t)0x273);
+#ifdef JP_PAKS
+	QueryHandler((localContentType_t)0xAC, (taskMsg_t)0x753A);
+#endif
 }
 
 // gatewayactor.cpp:149

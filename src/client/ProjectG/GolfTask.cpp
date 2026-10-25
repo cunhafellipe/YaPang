@@ -59,6 +59,33 @@ int IsMassGame(void);
 
 extern int g_iRecvPacketType;
 
+#ifdef JP_PAKS
+// 0xb4eb80 (src/jp/RFTextManager.h, not on this unit's include
+// path in the port: it is not a PG_REFRESH_HOOK_SOURCES unit).
+const char* Jp_LookupText(const char* key);
+#endif
+
+// The chat target labels the Enter shortcuts hand to GolfRule (message 0x37):
+// the JP exe sends Jp_LookupText(<label>) (Process 0x69d394 "to all",
+// 0x69d39b "to team"), the text SharedDoc's InitReservedChatList shows in
+// the target combo; the KR exe sends the Korean label.
+#ifdef JP_PAKS
+#define GOLFTASK_CHAT_TARGET(text) Jp_LookupText(text)
+#else
+#define GOLFTASK_CHAT_TARGET(text) (text)
+#endif
+
+// The other UI texts the JP exe passes through Jp_LookupText (the received
+// team chat's "to team" label 0x6a195b goes through GOLFTASK_CHAT_TARGET):
+// DrawLoadingInfo 0x69eb8c/0x69ebab, the packet handler's pause notices
+// 0x6a122b/0x6a1298/0x6a12f7, report results 0x6a1a72/0x6a1ae8, spectate
+// notices 0x6a1eac/0x6a1efd; the KR exe shows the Korean text.
+#ifdef JP_PAKS
+#define GOLFTASK_TEXT(text) Jp_LookupText(text)
+#else
+#define GOLFTASK_TEXT(text) (text)
+#endif
+
 // File-level actor class and name strings (data 0xa7e3b0..0xa7e3c0; their
 // header of origin is not recovered yet).
 static const char* s_guildActorClass = "CGuildActor";
@@ -250,10 +277,10 @@ void CGolfTask::Process(float dt) {
 			if (!g_pFresh->GetManager()->IsKeyExclusive() && (g_input->GetDown("ENTER", true) || g_input->GetDown("PADENTER", true))) {
 				if ((g_input->Get("LCONTROL", true) || g_input->Get("RCONTROL", true)) && (g_input->Get("LSHIFT", true) || g_input->Get("RSHIFT", true))) {
 					// "\xC6\xC0\xBF\xA1\xB0\xD4": to the team
-					GetActor("GolfRule") << MsgObject(0, 0x37, (intptr_t)"\xC6\xC0\xBF\xA1\xB0\xD4", 0, 0, 0, 0);
+					GetActor("GolfRule") << MsgObject(0, 0x37, (intptr_t)GOLFTASK_CHAT_TARGET("\xC6\xC0\xBF\xA1\xB0\xD4"), 0, 0, 0, 0);
 				} else if (g_input->Get("LSHIFT", true) || g_input->Get("RSHIFT", true)) {
 					// "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4": to everyone
-					GetActor("GolfRule") << MsgObject(0, 0x37, (intptr_t)"\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, 0, 0, 0);
+					GetActor("GolfRule") << MsgObject(0, 0x37, (intptr_t)GOLFTASK_CHAT_TARGET("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"), 0, 0, 0, 0);
 				} else if (g_input->Get("LCONTROL", true) || g_input->Get("RCONTROL", true)) {
 					GetActor("GolfRule") << MsgObject(0, 0x65, 0, 0, 0, 0, 0);
 				}
@@ -296,7 +323,16 @@ void CGolfTask::Process(float dt) {
 			CSharedDoc::Instance()->m_mySlot = 0xFFFF;
 			CProjectG::Instance()->FromGolfToLobbySettings();
 			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+#ifdef JP_PAKS
+			// JP 0x69d5aa-0x69d5fa: the JP data has no ROOMLIST layout; the
+			// lobby stays on TOPPAGE and the room list is a form over it
+			// (CLobbyMain message 0x8b (4, tab), JP case 0xabc986), tab 1
+			// for room modes 20 and 21 (JP +0x109b8, the KR m_roomMode).
+			CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+			CTaskManager::Instance()->PostMsg(0, "Lobby", 0x8B, 4, (unsigned int)(CSharedDoc::Instance()->m_roomInfo.m_roomMode - 20) <= 1 ? 1 : 0, 0, 0);
+#else
 			CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+#endif
 			CTaskManager::Instance()->PostMsg(0, "Lobby", 0x1A, 0, 0, 0, 0);
 
 			switch (CSharedDoc::Instance()->m_leaveReason) {
@@ -391,9 +427,9 @@ void CGolfTask::DrawLoadingInfo(Fresh *pFresh) {
 
 		char *text;
 		if (progress == 10) {
-			text = MakeStr("%s\xb4\xd4\xc0\xba \xb7\xce\xb5\xf9 \xbf\xcf\xb7\xe1 \xc0\xd4\xb4\xcf\xb4\xd9.", player.m_nickname);
+			text = MakeStr(GOLFTASK_TEXT("%s\xb4\xd4\xc0\xba \xb7\xce\xb5\xf9 \xbf\xcf\xb7\xe1 \xc0\xd4\xb4\xcf\xb4\xd9."), player.m_nickname);
 		} else {
-			text = MakeStr("%s\xb4\xd4\xc0\xba \xc7\xf6\xc0\xe7 %d%% \xb7\xce\xb5\xf9 \xc1\xdf \xc0\xd4\xb4\xcf\xb4\xd9.", player.m_nickname, progress * 10);
+			text = MakeStr(GOLFTASK_TEXT("%s\xb4\xd4\xc0\xba \xc7\xf6\xc0\xe7 %d%% \xb7\xce\xb5\xf9 \xc1\xdf \xc0\xd4\xb4\xcf\xb4\xd9."), player.m_nickname, progress * 10);
 		}
 
 		pFresh->GetManager()->PrintText(WPoint(20.0f, y + line * 20), 0, text, -1.0f, 0xFFFFFFFF);
@@ -606,7 +642,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		}
 
 		if (CSharedDoc::Instance()->AreWePlayingTogether(uid)) {
-			memcpy(GOLFDOC()->m_zeroedBytes46E, data, 5);
+			memcpy(&GOLFDOC()->m_shotClock, data, sizeof(GOLFDOC()->m_shotClock));
 			GetActor("GolfRule") << MsgObject(0, 0x7B, 0, 0, 0, 0, 0);
 		}
 		break;
@@ -740,7 +776,9 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 			if (type == 0x8F) {
 				TEAM(0)->m_resetCount = packet.Decode1();
 				TEAM(1)->m_resetCount = packet.Decode1();
-				GOLFDOC()->m_teamGameWinner = (eTeamName)packet.Decode1();
+				unsigned char winner = packet.Decode1();
+
+				GOLFDOC()->m_teamGameWinner = (eTeamName)winner;
 			}
 		}
 
@@ -1033,12 +1071,12 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		int paused = packet.Decode1();
 
 		if (paused != 0) {
-			WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr("%s\xb4\xd4\xc0\xcc \xb0\xd4\xc0\xd3\xc0\xbb \xc0\xe1\xbd\xc3 \xc1\xdf\xc1\xf6\xbd\xc3\xc4\xd7\xbd\xc0\xb4\xcf\xb4\xd9.", CSharedDoc::Instance()->m_roomPlayers[CSharedDoc::Instance()->GetIndex(uid)].m_name), 0xFFFF7878, false, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr(GOLFTASK_TEXT("%s\xb4\xd4\xc0\xcc \xb0\xd4\xc0\xd3\xc0\xbb \xc0\xe1\xbd\xc3 \xc1\xdf\xc1\xf6\xbd\xc3\xc4\xd7\xbd\xc0\xb4\xcf\xb4\xd9."), CSharedDoc::Instance()->m_roomPlayers[CSharedDoc::Instance()->GetIndex(uid)].m_name), 0xFFFF7878, false, false);
 		} else {
-			WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr("%s\xb4\xd4\xc0\xcc \xc1\xdf\xc1\xf6\xb5\xc8 \xb0\xd4\xc0\xd3\xc0\xbb \xc0\xe7\xb0\xb3\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.", CSharedDoc::Instance()->m_roomPlayers[CSharedDoc::Instance()->GetIndex(uid)].m_name), 0xFFFF7878, false, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr(GOLFTASK_TEXT("%s\xb4\xd4\xc0\xcc \xc1\xdf\xc1\xf6\xb5\xc8 \xb0\xd4\xc0\xd3\xc0\xbb \xc0\xe7\xb0\xb3\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9."), CSharedDoc::Instance()->m_roomPlayers[CSharedDoc::Instance()->GetIndex(uid)].m_name), 0xFFFF7878, false, false);
 		}
 
-		GetActor("GolfRule") << MsgObject(0, 0x84, paused, (intptr_t)"\xc7\xf6\xc0\xe7 \xb0\xd4\xc0\xd3\xc0\xcc \xc0\xe1\xbd\xc3 \xc1\xdf\xb4\xdc\xb5\xc8 \xbb\xf3\xc5\xc2\xc0\xd4\xb4\xcf\xb4\xd9.\n\xb0\xd4\xc0\xd3\xc0\xbb \xb0\xe8\xbc\xd3\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd8\xbc\xad\xb4\xc2 \xc8\xae\xc0\xce\xc0\xbb \xb4\xad\xb7\xaf\xc1\xd6\xbc\xbc\xbf\xe4.", 0, 0, 0);
+		GetActor("GolfRule") << MsgObject(0, 0x84, paused, (intptr_t)GOLFTASK_TEXT("\xc7\xf6\xc0\xe7 \xb0\xd4\xc0\xd3\xc0\xcc \xc0\xe1\xbd\xc3 \xc1\xdf\xb4\xdc\xb5\xc8 \xbb\xf3\xc5\xc2\xc0\xd4\xb4\xcf\xb4\xd9.\n\xb0\xd4\xc0\xd3\xc0\xbb \xb0\xe8\xbc\xd3\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd8\xbc\xad\xb4\xc2 \xc8\xae\xc0\xce\xc0\xbb \xb4\xad\xb7\xaf\xc1\xd6\xbc\xbc\xbf\xe4."), 0, 0, 0);
 		break;
 	}
 	case 0x8A: {
@@ -1152,7 +1190,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 				WSingleton<CSharedDoc>::Instance()->m_chatManager.FilteringHack(message.c_str(), false);
 
 				// "<nickname>>to all"
-				text = nickname + ">" + "\xc6\xc0\xbf\xa1\xb0\xd4";
+				text = nickname + ">" + GOLFTASK_CHAT_TARGET("\xc6\xc0\xbf\xa1\xb0\xd4");
 				text += " : \x08";
 				text += message;
 
@@ -1171,7 +1209,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		if (GOLFDOC()->m_reportSent) {
 			// "A report has already been filed for the current game."
 			FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
-			pForm->SetMessage("\xc7\xf6\xc0\xe7 \xb0\xd4\xc0\xd3\xbf\xa1 \xb4\xeb\xc7\xd8\xbc\xad \xc0\xcc\xb9\xcc \xbd\xc5\xb0\xed\xb0\xa1 \xc1\xa2\xbc\xf6\xb5\xc7\xbe\xee \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", false);
+			pForm->SetMessage(GOLFTASK_TEXT("\xc7\xf6\xc0\xe7 \xb0\xd4\xc0\xd3\xbf\xa1 \xb4\xeb\xc7\xd8\xbc\xad \xc0\xcc\xb9\xcc \xbd\xc5\xb0\xed\xb0\xa1 \xc1\xa2\xbc\xf6\xb5\xc7\xbe\xee \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."), false);
 			pForm->Open((FRESH_RESULT_CALLBACK)0, 4);
 
 			GOLFDOC()->SetReport(false);
@@ -1179,7 +1217,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 			// "The report was filed. To block a player's chat, double-click
 			// their info window and pick [block chat]."
 			FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
-			pForm->SetMessage("\xbd\xc5\xb0\xed\xb0\xa1 \xc1\xa4\xbb\xf3\xc0\xfb\xc0\xb8\xb7\xce \xc1\xa2\xbc\xf6 \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.\n\n\xc6\xaf\xc1\xa4 \xbb\xf3\xb4\xeb\xc0\xc7 \xb4\xeb\xc8\xad\xb8\xa6 \xc2\xf7\xb4\xdc \xc7\xcf\xb7\xc1\xb8\xe9 \xbb\xf3\xb4\xeb \xc1\xa4\xba\xb8\xc3\xa2\xc0\xbb \xb8\xb6\xbf\xec\xbd\xba \xb4\xf5\xba\xed \xc5\xac\xb8\xaf \xc8\xc4 \\c0xffff0000\\c[\xb4\xeb\xc8\xad \xc2\xf7\xb4\xdc \xbe\xc6\xc0\xcc\xc4\xdc]\\c0xff000000\\c\xc0\xbb \xbc\xb1\xc5\xc3 \xc7\xcf\xbd\xc3\xb8\xe9 \xb5\xcb\xb4\xcf\xb4\xd9.", false);
+			pForm->SetMessage(GOLFTASK_TEXT("\xbd\xc5\xb0\xed\xb0\xa1 \xc1\xa4\xbb\xf3\xc0\xfb\xc0\xb8\xb7\xce \xc1\xa2\xbc\xf6 \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.\n\n\xc6\xaf\xc1\xa4 \xbb\xf3\xb4\xeb\xc0\xc7 \xb4\xeb\xc8\xad\xb8\xa6 \xc2\xf7\xb4\xdc \xc7\xcf\xb7\xc1\xb8\xe9 \xbb\xf3\xb4\xeb \xc1\xa4\xba\xb8\xc3\xa2\xc0\xbb \xb8\xb6\xbf\xec\xbd\xba \xb4\xf5\xba\xed \xc5\xac\xb8\xaf \xc8\xc4 \\c0xffff0000\\c[\xb4\xeb\xc8\xad \xc2\xf7\xb4\xdc \xbe\xc6\xc0\xcc\xc4\xdc]\\c0xff000000\\c\xc0\xbb \xbc\xb1\xc5\xc3 \xc7\xcf\xbd\xc3\xb8\xe9 \xb5\xcb\xb4\xcf\xb4\xd9."), false);
 			pForm->Open((FRESH_RESULT_CALLBACK)0, 0);
 		}
 		break;
@@ -1265,13 +1303,13 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 
 			if (count == 0x0B) {
 				// "Notice: could not find a game room open to spectators."
-				WSingleton<CChatMsg>::Instance()->AddChatMsg("\xbe\xcb\xb8\xb2 : \xb5\xd1\xb7\xaf\xba\xb8\xb1\xe2\xb0\xa1 \xb0\xa1\xb4\xc9\xc7\xd1 \xb0\xd4\xc0\xd3\xc1\xdf\xc0\xce \xb9\xe6\xc0\xbb \xc3\xa3\xc1\xf6 \xb8\xf8\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.", 0xFFFF7878, false, false);
+				WSingleton<CChatMsg>::Instance()->AddChatMsg(GOLFTASK_TEXT("\xbe\xcb\xb8\xb2 : \xb5\xd1\xb7\xaf\xba\xb8\xb1\xe2\xb0\xa1 \xb0\xa1\xb4\xc9\xc7\xd1 \xb0\xd4\xc0\xd3\xc1\xdf\xc0\xce \xb9\xe6\xc0\xbb \xc3\xa3\xc1\xf6 \xb8\xf8\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9."), 0xFFFF7878, false, false);
 				break;
 			}
 
 			if (count == 0x10) {
 				// "Notice: the game may end before loading finishes."
-				WSingleton<CChatMsg>::Instance()->AddChatMsg("\xbe\xcb\xb8\xb2 : \xb7\xce\xb5\xf9\xb5\xc7\xb1\xe2 \xc0\xfc\xbf\xa1 \xb0\xd4\xc0\xd3\xc0\xcc \xc1\xbe\xb7\xe1\xb5\xc9 \xbf\xec\xb7\xc1\xb0\xa1 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", 0xFFFF7878, false, false);
+				WSingleton<CChatMsg>::Instance()->AddChatMsg(GOLFTASK_TEXT("\xbe\xcb\xb8\xb2 : \xb7\xce\xb5\xf9\xb5\xc7\xb1\xe2 \xc0\xfc\xbf\xa1 \xb0\xd4\xc0\xd3\xc0\xcc \xc1\xbe\xb7\xe1\xb5\xc9 \xbf\xec\xb7\xc1\xb0\xa1 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."), 0xFFFF7878, false, false);
 				break;
 			}
 
@@ -1768,6 +1806,15 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		CSharedDoc::Instance()->m_roomInfo.m_userCount = (unsigned char)players.size();
 		break;
 	}
+#ifdef JP_PAKS
+	// 0x00AA is the JP "items added" (the KR 0xA8, docs/protocol/jp_items.md,
+	// read by OnPacketCommon's JP_PAKS case 0xaa); the JP golf task reads the
+	// chat penalty below as 0xAC (JP 0x6a36b7), an id this KR switch already
+	// gives to case 0xAC, and the offline server never sends it
+	// (docs/protocol/jp_golf.md).
+	case 0xAA:
+		return OnPacketCommon(packet);
+#else
 	case 0xAA: {
 		unsigned long uid = packet.Decode4();
 		unsigned char penalty = packet.Decode1();
@@ -1781,6 +1828,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		}
 		break;
 	}
+#endif
 	case 0xAB: {
 		std::string name;
 		packet.DecodeStr(name);
@@ -1800,7 +1848,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 	}
 	case 0x76: {
 		unsigned long uid = packet.Decode4();
-		unsigned char state = packet.Decode1();
+		int state = packet.Decode1();
 
 		CSharedDoc* pDoc = CSharedDoc::Instance();
 		std::list<sSlotInfo>::iterator it = std::find(pDoc->m_roomPlayerList.begin(), pDoc->m_roomPlayerList.end(), uid);
@@ -1962,7 +2010,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 				}
 			}
 		} else {
-			int mode = packet.Decode2();
+			unsigned short mode = packet.Decode2();
 			if (mode == 0) {
 				GetActor("GolfRule") << MsgObject(0, 0x24D, 0, (intptr_t)"NON CUTIN_MODE", 0, 0, 0);
 			} else {

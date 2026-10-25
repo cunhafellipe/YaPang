@@ -5,6 +5,13 @@
 #include "frdesktop.h"
 #include "frwndmanager.h"
 
+#ifdef JP_PAKS
+// The game's Fresh (JP 0xf022d0; ProjectG.cpp creates it): defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+Fresh* g_pFresh = NULL;
+#endif
+
 // fresh.cpp:19
 Fresh::Fresh(void) : m_pWndManager(NULL), m_bShow(true) {
 }

@@ -360,13 +360,9 @@ void CSpot::Display(void) {
 
 	WVector pos;
 	if (GOLFDOC()->m_target.m_unk10) {
-		switch (GOLFDOC()->m_gameState) {
-		case 2:
-		case 6:
-		case 11:
-		case 10:
-		case 13:
-		case 14: {
+		// A bool, not the bare '||' chain: cl lays the then block first only so.
+		bool flatMarker = GOLFDOC()->m_gameState == 2 || GOLFDOC()->m_gameState == 6 || GOLFDOC()->m_gameState == 11 || GOLFDOC()->m_gameState == 10 || GOLFDOC()->m_gameState == 13 || GOLFDOC()->m_gameState == 14;
+		if (flatMarker) {
 			float size = GOLFDOC()->m_gameState == 2 ? 2.0f : 1.0f;
 
 			for (int i = 0; i < 4; i++) {
@@ -381,9 +377,7 @@ void CSpot::Display(void) {
 			}
 
 			g_view->DrawPolygonFan(m_pVertices, m_hTextured4 & 0x7ff, 0x400, false);
-			break;
-		}
-		default: {
+		} else {
 			WMatrix m;
 			m = RotMat(m_unknownd0, 1);
 			m *= 0.5f;
@@ -394,8 +388,6 @@ void CSpot::Display(void) {
 			GOLFDOC()->m_target.m_cameraTarget->Transform(NULL, 1.0f, 0);
 			GOLFDOC()->m_target.m_cameraTarget->UpdateLightSource(&g_lightset, false, NULL);
 			GOLFDOC()->m_target.m_cameraTarget->Render(g_view, true, 1.0f, false, true, false);
-			break;
-		}
 		}
 	}
 

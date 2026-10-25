@@ -1029,8 +1029,8 @@ void FrBongdariShopDlg::Processing(float dt) {
 				if (m_pPetBonusBall[data_af74c8]) {
 					CExhibition* pBall = m_pPetBonusBall[data_af74c8];
 					float* pSpin = &m_movingData[data_af74c8].m_spin;
-					pBall->GetMatrix() *= RotMat(dt * *pSpin * 8.0f * g_DEGTORAD, 2);
-					pBall->GetMatrix() *= RotMat(dt * *pSpin * 8.0f * g_DEGTORAD, 1);
+					pBall->GetMatrix() *= RotMat(g_DEGTORAD * (dt * *pSpin * 8.0f), 2);
+					pBall->GetMatrix() *= RotMat(g_DEGTORAD * (dt * *pSpin * 8.0f), 1);
 				}
 				break;
 			case 3:
@@ -1894,8 +1894,7 @@ void FrBongdariShopDlg::UpdateListMyItem(sBonusBall* pBall) {
 			sItemInfo item;
 
 			unsigned char unitKind = pBall->m_bUnitCount;
-			short count[5] = { 0 };
-			count[0] = 1;
+			short count[5] = { 1 };
 			if (unitKind == 0) {
 				count[0] = (short)pBall->m_count;
 			} else if (unitKind == 1 || unitKind == 2) {

@@ -516,6 +516,18 @@ CHECK_FIELD(sShotProtocol, club, 0x25);
 CHECK_FIELD(sShotProtocol, randomPower, 0x26);
 CHECK_FIELD(sShotProtocol, spot, 0x2A);
 
+// Another player's shot-clock state, as packet 0x55 carries it (5 bytes,
+// copied whole into CGolfDoc::m_shotClock). Declared here until its original
+// header is known.
+#pragma pack(push, 1)
+struct sShotClock {
+	unsigned char kind;             // 0x0, 1: the clock is held, 2: released with the bar's accuracy
+	float accuracy;                 // 0x1, CGolfDoc::m_bar.m_accuracy and m_prevAccuracy
+};
+#pragma pack(pop)
+CHECK_SIZE(sShotClock, 5);
+CHECK_FIELD(sShotClock, accuracy, 0x1);
+
 // A shore wave of the course (CWaveInfo::Load reads them from a file).
 struct sWave {
 	char m_texture[0x20];   // 0x0, the texture's name
@@ -794,8 +806,8 @@ private:
 	sShotResult m_shotResultMsg[4];                  // 0x3AC
 public:
 	sShotProtocol m_shotProtocol;                    // 0x440, zeroed by the constructor; filled by CGhostPlayer::DoShot, applied by CGolfRule::HandleMsg
+	sShotClock m_shotClock;                          // 0x46E, zeroed by the constructor; GolfTask packet 0x55 fills it, CGolfRule::HandleMsg 0x7B applies it
 private:
-	unsigned char m_zeroedBytes46E[5];               // 0x46E, zeroed by the constructor
 	PADDING(0x473, 0x474);
 	CPartTidList m_partTidList[4];                   // 0x474
 
@@ -885,7 +897,7 @@ BEGIN_LAYOUT_CHECK(CGolfDoc)
 	CHECK_FIELD(CGolfDoc, m_totalPang, 0x1B0);
 	CHECK_FIELD(CGolfDoc, m_winnerPangBonus, 0x1B8);
 	CHECK_FIELD(CGolfDoc, m_roundResults, 0x328);
-	CHECK_FIELD(CGolfDoc, m_zeroedBytes46E, 0x46E);
+	CHECK_FIELD(CGolfDoc, m_shotClock, 0x46E);
 END_LAYOUT_CHECK
 
 // Each macro below is defined empty, before its first include, by the one unit

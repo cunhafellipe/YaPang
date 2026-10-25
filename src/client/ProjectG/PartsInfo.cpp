@@ -512,8 +512,6 @@ bool CPetFrame::Build(const CPartTidList *pTidList, unsigned long *pAuxParts, bo
 
 // partsinfo.cpp:683
 void CPetFrame::SetPartPets(unsigned long mask) {
-	char faceTexName[256];
-	char mpetName[32];
 	int texA[3];
 	int texB[3];
 	int hBaseTex = 0;
@@ -542,6 +540,7 @@ void CPetFrame::SetPartPets(unsigned long mask) {
 		IFF_STRUCT::sPart *pIff = m_partList.GetPart(slot)->m_pIff;
 
 		if (pIff != 0) {
+			char mpetName[32];
 			if ((pIff->m_typeId & 0x1800) == 0x1000) {
 				m_makeupIndex = slot;
 				m_hasMakeup = true;
@@ -733,6 +732,7 @@ void CPetFrame::SetPartPets(unsigned long mask) {
 	}
 
 	if (hasFacePart) {
+		char faceTexName[256];
 		m_makeupIndex = faceSlot;
 		m_hasMakeup = true;
 		if (g_resrcmng != 0 && m_faceTex != 0) {

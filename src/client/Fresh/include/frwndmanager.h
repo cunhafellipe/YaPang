@@ -117,6 +117,28 @@ public:
 	std::list<FrWnd*>& GetTopWndList(void) { return m_topmostList; }      // frwndmanager.h:108
 	void HidePrivacy(bool hide) { m_hidePrivacy = hide; }                 // frwndmanager.h:110
 	bool HidePrivacy(void) { return m_hidePrivacy; }                      // frwndmanager.h:111
+#ifdef JP_PAKS
+	// JP 983 only (the JP FrWndManager is 0xb0 bytes, these at +0xa9,
+	// +0xaa, +0xac). The JP game's Refresh side (RFSceneManager 0x603610 /
+	// 0x603660 / 0x603680 / 0x6036d0) reads and writes the two flags
+	// directly, with no copy of an accessor in the exe; the names are ours.
+	// m_inputSuspended: CheckSystemStatus (JP 0xbe3520) returns at once and
+	// Process (JP 0xbe5b30) leaves the cursor alone.
+	// m_keyInputDisabled: Process skips ProcessHotKey and ProcessKey.
+	bool IsInputSuspended(void) { return m_inputSuspended; }
+	void SetInputSuspended(bool suspended) { m_inputSuspended = suspended; }
+	bool IsKeyInputDisabled(void) { return m_keyInputDisabled; }
+	void SetKeyInputDisabled(bool disabled) { m_keyInputDisabled = disabled; }
+	// JP 0xbe4650: recounts the desktop's open modal forms (GetModalForm's
+	// test) into m_modalFormCount and returns it. The JP FrForm::Open
+	// (0xbe6440, after the fade) and FrWnd::OnProcess (0xbe9550, after a
+	// closed child is deleted) call it; the JP game reads +0xac directly.
+	int UpdateModalFormCount(void);
+	int GetModalFormCount(void) { return m_modalFormCount; }
+	// JP 0xbe47e0: the desktop's form under the point (x, y), or 0. The JP
+	// game's RFFormModalBase::OnModalUpdate (0x477ca0) calls it.
+	FrWnd* GetFormFromPoint(float x, float y);
+#endif
 
 protected:
 	void CheckSystemStatus(void);
@@ -140,9 +162,17 @@ protected:
 	FrEdit* m_pFocusedEdit;               // 0x80
 	WPoint m_caretPos;                    // 0x84
 	bool m_hidePrivacy;                   // 0x8c
+#ifdef JP_PAKS
+	// After the KR layout (JP offsets: +0xa9, +0xaa, +0xac).
+	bool m_inputSuspended;                // JP +0xa9
+	bool m_keyInputDisabled;              // JP +0xaa
+	int m_modalFormCount;                 // JP +0xac
+#endif
 };
 
+#ifndef JP_PAKS
 CHECK_SIZE(FrWndManager, 0x90);
+#endif
 BEGIN_LAYOUT_CHECK(FrWndManager)
 	CHECK_FIELD(FrWndManager, m_pDoc, 0x4);
 	CHECK_FIELD(FrWndManager, m_pDesktop, 0x8);

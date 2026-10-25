@@ -6410,20 +6410,19 @@ void CScore::HandleMsg(const MsgObject& msg) {
 			m_pRankForm->m_rankText[msg.m_param1 - 1]--;
 
 			// scoreboard.cpp:8526
-			unsigned char hole = GOLFDOC()->m_currentHole;
-			if (m_pRankForm->m_boardMessage > 2 && m_pRankForm->m_announcedHole != hole) {
+			if (m_pRankForm->m_boardMessage > 2 && m_pRankForm->m_announcedHole != GOLFDOC()->m_currentHole) {
 				unsigned char maxCount = 0;
 				unsigned char maxHole = 0;
 				for (int i = 0; i < 0x13; i++) {
 					if ((unsigned char)m_pRankForm->m_rankText[i] > maxCount) {
-						maxHole = i + 1;
 						maxCount = m_pRankForm->m_rankText[i];
+						maxHole = i + 1;
 					}
 				}
 
 				// scoreboard.cpp:8541
-				if (GetHoleIndex(maxHole) >= GetHoleIndex(hole) + 5) {
-					m_pRankForm->m_announcedHole = hole;
+				if (GetHoleIndex(maxHole) >= GetHoleIndex(GOLFDOC()->m_currentHole) + 5) {
+					m_pRankForm->m_announcedHole = GOLFDOC()->m_currentHole;
 					m_pRankForm->m_pBoard->SetCaption(MakeStr("%s\xB4\xD4 \xB8\xB9\xC0\xCC \xB5\xDA\xC3\xC4\xC1\xAE \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9. \xBC\xAD\xB5\xCE\xB8\xA3\xBC\xBC\xBF\xE4.",
 						WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().nickname));
 					m_pRankForm->m_boardMessage = 2;

@@ -7,6 +7,32 @@
 
 #include <utility>
 
+#ifdef JP_PAKS
+// JP 983: the daily-quest document (type 0xAC, src/jp/JpQuestForms.h).
+namespace _gateway {
+namespace _questoneday {
+IContentsDataContainer* JpCreateQuestDocument(void);
+} // namespace _questoneday
+// JP 983: the 2014 Arin birthday event document (type 0xB0,
+// src/jp/JpArinEvent.h).
+IContentsDataContainer* JpCreateArinDocument(void);
+} // namespace _gateway
+// JP 983: the lobby data container (type 0xA5, CLobbyContainer,
+// src/jp/JpGameRoomDlg.cpp).
+IContentsDataContainer* JpCreateLobbyContainer(void);
+// JP 983: the tutorial data container (type 0xA4, CTutorialContainer,
+// src/jp/JpTutorialWidget.cpp).
+IContentsDataContainer* JpCreateTutorialContainer(void);
+// JP 983: the creator-vector documents (src/jp/JpChipInContainer.h,
+// JpContentsGatewayDocs.h): 0xaa CHoleInOneGameDoc (0x579370), 0xad
+// CControllerDoc (0x4baa50), 0xae CWorkShop2013Doc (0x9202c0), 0xaf
+// CGrandPrixDocument (0x559c00).
+IContentsDataContainer* JpCreateChipInContainer(void);
+IContentsDataContainer* JpCreateControllerDoc(void);
+IContentsDataContainer* JpCreateWorkShop2013Doc(void);
+IContentsDataContainer* JpCreateGrandPrixDocument(void);
+#endif
+
 // icontentsdoc.cpp:17
 CContentsDoc::CContentsDoc(void) : m_allInserted(TRUE) {
 }
@@ -43,6 +69,32 @@ bool CContentsDoc::Initialize(void) {
 	InsertContainer((localContentType_t)0xa3, new CGimmickContainer, false);
 
 	InsertContainer((localContentType_t)0xa0, new _gateway::CSpecialBoxDoc, false);
+
+#ifdef JP_PAKS
+	// JP 0x915f9f: `new CTutorialContainer` as type 0xA4 through
+	// 0x913c70(0xa4, container, false). The KR local-contents bitset
+	// (Localize.cpp, 164 bits) cannot hold 0xA4: forced here.
+	InsertContainer((localContentType_t)0xa4, JpCreateTutorialContainer(), true);
+	// JP 0x915fe1: the last direct insert, `new CLobbyContainer` as type
+	// 0xA5 through 0x913c70(0xa5, container, false). The KR local-contents
+	// bitset (Localize.cpp, 164 bits) cannot hold 0xA5: forced here.
+	InsertContainer((localContentType_t)0xa5, JpCreateLobbyContainer(), true);
+	// The creator 0x579370 (registered by 0x579540): new
+	// CHoleInOneGameDoc(0xAA).
+	InsertContainer((localContentType_t)0xaa, JpCreateChipInContainer(), true);
+	// The creators 0x4baa50, 0x9202c0, 0x559c00: CControllerDoc(0xAD),
+	// CWorkShop2013Doc(0xAE), CGrandPrixDocument(0xAF).
+	InsertContainer((localContentType_t)0xad, JpCreateControllerDoc(), true);
+	InsertContainer((localContentType_t)0xae, JpCreateWorkShop2013Doc(), true);
+	InsertContainer((localContentType_t)0xaf, JpCreateGrandPrixDocument(), true);
+	// JP CContentsDoc::Initialize 0x915da0 ends by running the registered
+	// creators (vector 0xe7e140; 0x5ee040 = new CQuestDocument(0xAC)) through
+	// 0x913d10, which inserts without the IsLocalContent test: forced here.
+	InsertContainer((localContentType_t)0xac, _gateway::_questoneday::JpCreateQuestDocument(), true);
+	// The creator 0x920be0 (registered by 0x920c70): new
+	// CArinBirthDay2014Doc(0xB0).
+	InsertContainer((localContentType_t)0xb0, _gateway::JpCreateArinDocument(), true);
+#endif
 
 	return m_allInserted == TRUE ? true : false;
 }
