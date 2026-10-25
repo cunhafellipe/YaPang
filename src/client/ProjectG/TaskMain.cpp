@@ -3825,14 +3825,16 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 	//   desktop's own senders use are never forwarded raw.
 	// - forwarded: 0x55 / 0x88 (the page openers' "Lobby" messages: the JP
 	//   0x65f9b0 / 0x65b8a0 bodies above post them to the lobby's main
-	//   actor) and 0x180 (ntLobbyBg 0xab285e sends it to the main actor when
-	//   the bar state's camera move ends).
+	//   actor), 0x58 (the JP pages' "AvatarChat" message when they close:
+	//   the avatar manager is active again; the KR 0x58 goes to "Lobby",
+	//   which consumes it) and 0x180 (ntLobbyBg 0xab285e sends it to the
+	//   main actor when the bar state's camera move ends).
 	if (RFLobbyDesktop::s_instance) {
 		MsgObject jpMsg = msg;
 		bool forward = true;
 		switch (msg.m_msg) {
 		case 0x53: case 0x54: case 0x56: case 0x57:
-		case 0x58: case 0x59:
+		case 0x59:
 		case 0xCA: case 0xCB: case 0xCC: case 0xCD: case 0xCE:
 		case 0xCF: case 0xD0: case 0xD1:
 		case 0x106:

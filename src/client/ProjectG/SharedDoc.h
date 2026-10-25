@@ -1805,6 +1805,7 @@ public:
 	friend class CMyRoomWidget;     // port JpMyRoomWidget.cpp: reads m_flag50F4 (JP +0x110c8, the storage flag)
 	friend class FrMassTypeRoomDlg; // port JpRoomTypeDlgs.cpp: lists the guild match pairings m_vector4524
 	friend class CTutorialWidget;   // port JpTutorialWidget.cpp: reads m_flag50F6 (JP +0x110ca)
+	friend class JpRealMyRoomMain;  // port JpRealMyRoomMain.cpp: BuildDisplayStand (JP 0x61af80) lists m_mySpecialTrophies and m_questList
 #endif
 };
 #pragma pack(pop)

@@ -38,6 +38,7 @@
 #include "TaskMain.h"
 #include "LobbyMain.h"
 #include "avatar_main.h"
+#include "avatar_avatar.h"
 #include "actor.h"
 #include "wresrcmng.h"
 #include "SharedDoc.h"
@@ -90,9 +91,6 @@ extern const char g_jpTextKeyServerName2Label[];    // 0xd13838 (pic_server_name
 // it is up. HandleMsg calls the created dialog's [34] Open.
 RFWnd* CreateLoadingWaitingDialog(RFWnd* parent);
 extern RFLoadingProgressDlg* g_loadingWaitingDialog;
-// 0xe73e10 (an unidentified game object): HandleMsg(0x58) sets its byte
-// +0xb0 when no Refresh modal window is up.
-extern char* g_jpObjectE73e10;
 // 0x540a10 (id in ecx): a text of the game's string table by id ("" when
 // missing; the table is 0xe75114). Not identified: declared only.
 const char* Jp_GetTableText(int id);
@@ -205,8 +203,6 @@ const char g_jpTextKeyServerNameLabel[] = "\xc1\xa2\xbc\xd3\xbc\xad\xb9\xf6:";  
 const char g_jpTextKeyServerName2Label[] = "\xc1\xa2\xbc\xd3\xc3\xa4\xb3\xce:";  // "접속채널:"
 // 0xe781a4
 RFLoadingProgressDlg* g_loadingWaitingDialog = NULL;
-// 0xe73e10
-char* g_jpObjectE73e10 = NULL;
 // 0xe781d0
 RFServerNoticeDlg* g_serverNoticeDlg = NULL;
 // 0xe781c0
@@ -566,11 +562,11 @@ void RFLobbyDesktop::HandleMsg(const MsgObject& msg) {
 		}
 		break;
 	case 0x58:
-		if (g_jpObjectE73e10 != NULL) {
+		if (WSingleton<ntAvatarManager>::Instance() != NULL) {
 			RFSceneManager* scene = RFSceneManager::Instance();
 			RFManager* manager = scene == NULL ? NULL : scene->GetManager();  // 0x477bc0
 			if (!manager->IsModalExist()) {
-				g_jpObjectE73e10[0xb0] = 1;
+				WSingleton<ntAvatarManager>::Instance()->SetActive(true);
 			}
 		}
 		break;
