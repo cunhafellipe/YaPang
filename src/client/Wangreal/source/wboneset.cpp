@@ -119,8 +119,15 @@ void WBoneSet::Blend(WBoneSet *a, WBoneSet *b, float fraction) {
 
 // wboneset.cpp:158
 WBoneSet *__cdecl BlendBoneSet(WBoneSet *a, WBoneSet *b, float t) {
+#ifdef JP_PAKS
+	// Per thread, each set with its own keys, as GetFreeBoneSetList
+	// (wpuppet.cpp): the JP GetBones (0xb86c10) blends sets it owns.
+	static thread_local WBoneSet boneSetList[4];
+	static thread_local unsigned char boneSetPos = 0;
+#else
 	static WBoneSet boneSetList[4] = { false };
 	static unsigned char boneSetPos = 0;
+#endif
 
 	WBoneSet *pSet = &boneSetList[boneSetPos++ & 3];
 

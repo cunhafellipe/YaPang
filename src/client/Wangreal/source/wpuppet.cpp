@@ -461,6 +461,30 @@ WVector WPuppet::GetDeltaVec(char* actionName, float p1, float p2) {
 
 // wpuppet.cpp:717
 WBoneSet* WPuppet::GetFreeBoneSetList(bool lock) {
+#ifdef JP_PAKS
+	// The JP GetBones (0xb86c10) fills a WBoneSet its caller owns (a local of
+	// CalcBound 0xb871b0, of GetBones itself), each set holding its own keys
+	// (the JP WBoneSet's vector, 0xb4f4a0): the avatar loaders on CAnotherHand
+	// threads (CPetFrame::CalcBVolume) and the main thread never share a set.
+	// One shared ring here let two threads link the same WList node twice
+	// (a self-looping hash chain: WList::Find spun forever on leaving a
+	// lounge). So the ring is per thread and its sets own their keys.
+	static thread_local WBoneSet boneSetList[8];
+	static thread_local unsigned char boneSetPos = 0;
+
+	boneSetPos = (boneSetPos + 1) & 7;
+	if (boneSetPos == ms_lockedBoneSetPos) {
+		boneSetPos = (boneSetPos + 1) & 7;
+	}
+
+	if (lock) {
+		ms_lockedBoneSetPos = boneSetPos;
+	}
+
+	boneSetList[boneSetPos].Clear();
+
+	return &boneSetList[boneSetPos];
+#else
 	static WBoneSet boneSetList[8] = { false };
 
 	ms_boneSetPos = (ms_boneSetPos + 1) & 7;
@@ -475,6 +499,7 @@ WBoneSet* WPuppet::GetFreeBoneSetList(bool lock) {
 	boneSetList[ms_boneSetPos].Clear();
 
 	return &boneSetList[ms_boneSetPos];
+#endif
 }
 
 // wpuppet.cpp:740
