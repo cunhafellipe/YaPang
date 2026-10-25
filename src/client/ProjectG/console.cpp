@@ -1092,7 +1092,7 @@ void CConsole::Command(const char *line) {
 					BadArgument(21);
 					return;
 				}
-				GetPVS().m_slopeFactor = slope;
+				GetPVS().SetSlopeFactor(slope);
 				return;
 			}
 			// console.cpp:1624
@@ -1125,7 +1125,7 @@ void CConsole::Command(const char *line) {
 				}
 
 				Wind().SetIntensity(floorf(intensity));
-				Wind().SetDirection(count == 2 ? direction * 0.017453292f : direction);
+				Wind().SetDirection(count == 2 ? direction * g_DEGTORAD : direction);
 				GOLFDOC()->m_pPolySoup->UpdateBgFxWind();
 				if (WSingleton<CSceneManager>::Instance()->m_pWeather != NULL) {
 					WSingleton<CSceneManager>::Instance()->m_pWeather->UpdateWind();
@@ -1193,7 +1193,7 @@ void CConsole::Command(const char *line) {
 						sprintf(text, "%d : -", player);
 					} else {
 						WVector &ball = GOLFDOC()->GetPlayer(player)->m_ballPos;
-						WVector cup(GetHoleCupPos().p);
+						WVector cup = GetHoleCupPos();
 						float dist = sqrtf((cup.x - ball.x) * (cup.x - ball.x) + (cup.z - ball.z) * (cup.z - ball.z));
 						sprintf(text, "%d : %.2fy(%.2f)", player, dist * 0.3125f, dist);
 					}
@@ -1265,7 +1265,7 @@ void CConsole::Command(const char *line) {
 						if (course >= ItemManager()->GetCourseNum()) {
 							continue;
 						}
-						char text[64];
+						char text[60];
 						int number = (course > 0x7F && course != 0xFD) ? course - 0x80 : course;
 						IFF_STRUCT::sCourse *info = ItemManager()->FindCourse(0x28000000 | number);
 						sprintf(text, "%d:%s", course, info->m_name);
@@ -1405,7 +1405,7 @@ void CConsole::Command(const char *line) {
 				sscanf(line + len + 1, "%d", &fov);
 
 				if (fov >= 10 && fov <= 120) {
-					g_view->SetFOV(fov * 0.017453292f);
+					g_view->SetFOV(fov * g_DEGTORAD);
 					return;
 				}
 				BadArgument(12);
@@ -1517,20 +1517,22 @@ void CConsole::Command(const char *line) {
 					unsigned long typeId = strtoul(arg, 0, 10);
 					CPartTidList &tids = GOLFDOC()->GetPartTidList(GOLFDOC()->m_myPlayerIndex);
 					CItemManager *items = ItemManager();
+					const std::map<unsigned int, IFF_STRUCT::sAuxPart> &auxParts = items->m_auxPartMap;
 
 					std::map<unsigned int, IFF_STRUCT::sPart>::const_iterator part;
 					for (part = items->m_partMap.begin(); part != items->m_partMap.end(); part++) {
 						if (part->second.m_typeId == typeId) {
-							if (((part->second.m_typeId >> 18) & 0xFF) == (tids.m_tidChar & 0x3FFFFFF)) {
+							if ((((part->second.m_typeId >> 18) & 0xFF) ^ tids.m_tidChar) & 0x3FFFFFF) {
+								AddText(MakeStr("wrong character's typeid : %d", typeId));
+							} else {
 								CTaskManager::Instance()->PostMsg(0, "Player", 0x117, part->second.m_typeId, 0, 0, 0);
 								return;
 							}
-							AddText(MakeStr("wrong character's typeid : %d", typeId));
 						}
 					}
 
 					std::map<unsigned int, IFF_STRUCT::sAuxPart>::const_iterator aux;
-					for (aux = items->m_auxPartMap.begin(); aux != items->m_auxPartMap.end(); aux++) {
+					for (aux = auxParts.begin(); aux != auxParts.end(); aux++) {
 						if (aux->second.m_typeId == typeId) {
 							CTaskManager::Instance()->PostMsg(0, "Player", 0x117, aux->second.m_typeId, 0, 0, 0);
 							return;

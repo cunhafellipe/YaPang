@@ -1909,17 +1909,19 @@ void CHoleInfo::Reset(void) {
 
 // fontinfo.cpp:2178
 void CHoleInfo::Fix(void) {
-	m_fAlpha[0] = 255.0f;
-	m_fAlpha[1] = 255.0f;
-	m_items[0].fixY = m_items[0].curY;
-	m_items[0].fixX = m_items[0].curX;
-	m_items[1].fixY = m_items[1].curY;
-	m_items[1].fixX = m_items[1].curX;
-	m_items[2].fixX = m_items[2].curX;
 	m_fTime = 0.0f;
 	m_nState = 3;
+	m_fAlpha[0] = 255.0f;
+	m_fAlpha[1] = 255.0f;
+
+	m_items[0].fixX = m_items[0].curX;
+	m_items[0].fixY = m_items[0].curY;
 	m_items[0].scale = 0.5f;
+
+	m_items[1].fixX = m_items[1].curX;
+	m_items[1].fixY = m_items[1].curY;
 	m_items[1].scale = 0.6f;
+	m_items[2].fixX = m_items[2].curX;
 	m_items[2].fixY = m_items[2].curY;
 	m_items[2].scale = 0.6f;
 }
@@ -3295,7 +3297,7 @@ void CPangInfo::PreCalcMatchHoleInBonus(void) {
 	}
 
 	int nHoleDiff = PLAYER(MyIndex())->m_ghostResult - PLAYER(1 - MyIndex())->m_ghostResult;
-	int nRemain = CSharedDoc::Instance()->m_holes - GetHoleIndex(GOLFDOC()->m_currentHole);
+	int nRemain = GetHoles() - GetHoleIndex(GOLFDOC()->m_currentHole);
 	bool bDormie = false;
 	bool bLost = false;
 
@@ -3521,10 +3523,8 @@ void CPangInfo::PreCalcTeamHoleInBonus(void) {
 		Record(MyIndex(), m_pangs);
 	}
 
-	__int64 otherPangs[2];
-	otherPangs[1] = 0;
+	__int64 otherPangs[2] = { 0, 0 };
 
-	otherPangs[0] = 0;
 	if (TEAM(1 - myTeam)->m_holeInKind != 0 && !(TEAM(myTeam)->m_holes[GOLFDOC()->m_currentHole - 1] < TEAM(1 - myTeam)->m_holes[GOLFDOC()->m_currentHole - 1])) {
 		int nScore = (unsigned char)TEAM(1 - myTeam)->m_holes[GOLFDOC()->m_currentHole - 1];
 		int nPar = GOLFDOC()->GetHoleData().m_par;
@@ -4177,9 +4177,9 @@ void CPangInfo::LongDrive(void) {
 	if (m_flags & 4) {
 
 		if (m_fDriveDistance > m_fLongestDrive && !GolfBall().m_landed)
-			m_cases[0].SetState(0x10);
+			MakeDecision(0, true);
 		else
-			m_cases[0].SetState(0x40);
+			MakeDecision(0, false);
 	}
 }
 
@@ -4238,7 +4238,7 @@ void CPangInfo::LongChipIn(void) {
 			dir.y = 0.0f;
 			dir.Normalize();
 
-			if (WDotProduct(dir, m_aimDir) > cos(0.017453292f * 20.0) && m_fToPin < 30.0f)
+			if (WDotProduct(dir, m_aimDir) > cos(0.017453292f * 20.0f) && m_fToPin < 30.0f)
 				Insert(4);
 		} else {
 			int bClassic = S5::CLASSICSRV::IsClassicServer(S5::UTIL::GetServerProperty());

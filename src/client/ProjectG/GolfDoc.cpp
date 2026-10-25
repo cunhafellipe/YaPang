@@ -121,7 +121,7 @@ CGolfDoc::CGolfDoc(void) : m_pPolySoup(NULL), m_pSky(NULL), m_pAutoTarget(NULL),
 	memset(m_roundResults, 0, sizeof(m_roundResults));
 	memset(m_shotResultMsg, 0, sizeof(m_shotResultMsg));
 	memset(&m_shotProtocol, 0, sizeof(m_shotProtocol));
-	memset(m_zeroedBytes46E, 0, sizeof(m_zeroedBytes46E));
+	memset(&m_shotClock, 0, sizeof(m_shotClock));
 
 	m_statUpdated = true;
 

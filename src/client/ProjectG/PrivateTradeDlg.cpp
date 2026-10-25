@@ -269,9 +269,9 @@ void DrawPartsCardSlot(_sPrivateTradeItemSingle* pItem, const WRect& rect, float
 		return;
 	}
 
-	const Bitmap* pBitmap = 0;
-	float bottom = rect.y + rect.h;
+	float bottom = rect.Bottom();
 	float x = 5.0f;
+	const Bitmap* pBitmap = 0;
 	for (int i = 0; i < pPart->m_charCardSlots; i++) {
 		bool bEmpty = true;
 		for (int j = 0; j < 8; j++) {

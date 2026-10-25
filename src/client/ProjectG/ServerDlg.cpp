@@ -253,7 +253,7 @@ void FrAutoConnect::OnProc(const float dt) {
 
 		WSendPacket send(GCT_CONNECT);
 		send.EncodeStr(id);
-		send.Encode4(WSingleton<CSharedDoc>::Instance()->m_myUID);
+		send.Encode4(MyUID());
 		send.Encode4(CLoginInfo::Instance()->AuthUid());
 		send.Encode2(0x6696);
 		send.EncodeStr(WSingleton<CSharedDoc>::Instance()->GetLoginAuthKey());

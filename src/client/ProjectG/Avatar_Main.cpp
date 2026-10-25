@@ -983,6 +983,9 @@ void ntAvatarChatMain::OnProcess(float elapsed) {
 // avatar_main.cpp:1379
 void ntAvatarChatMain::ProcessCamera(float elapsed) {
 	WMatrix camera;
+	WVector pos;
+	WVector dir;
+	WVector eye;
 
 	if (m_spItemChanged && g_SALoadingState) {
 		m_cameraDistanceGoal = ntAvatarManager::Instance()->m_pMyAvatar->GetMySpItem((eSPAVILITYTYPE)0).getvalue() * 28.800001f;
@@ -1036,12 +1039,11 @@ void ntAvatarChatMain::ProcessCamera(float elapsed) {
 		}
 
 		const WVector &avatarPos = ntAvatarManager::Instance()->m_pMyAvatar->m_position;
-		WVector pos = avatarPos;
+		pos = avatarPos;
 		pos.y += m_cameraHeight;
 
 		// Pull the camera in when the ground or an object is between it and
 		// the avatar, and let it back out slowly.
-		WVector dir;
 		dir = camera.za * m_cameraDistance;
 		dir.Negate();
 		float hit = GetPVS().RayIntersectAll(pos, dir, false);
@@ -1057,7 +1059,6 @@ void ntAvatarChatMain::ProcessCamera(float elapsed) {
 		}
 
 		dir.Normalize();
-		WVector eye;
 		eye = pos + dir * m_cameraClipDistance;
 
 		WVector ground = GetPVS().GetGroundPoint(eye, false, 0, false);

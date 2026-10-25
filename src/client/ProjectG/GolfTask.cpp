@@ -606,7 +606,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 		}
 
 		if (CSharedDoc::Instance()->AreWePlayingTogether(uid)) {
-			memcpy(GOLFDOC()->m_zeroedBytes46E, data, 5);
+			memcpy(&GOLFDOC()->m_shotClock, data, sizeof(GOLFDOC()->m_shotClock));
 			GetActor("GolfRule") << MsgObject(0, 0x7B, 0, 0, 0, 0, 0);
 		}
 		break;
@@ -740,7 +740,9 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 			if (type == 0x8F) {
 				TEAM(0)->m_resetCount = packet.Decode1();
 				TEAM(1)->m_resetCount = packet.Decode1();
-				GOLFDOC()->m_teamGameWinner = (eTeamName)packet.Decode1();
+				unsigned char winner = packet.Decode1();
+
+				GOLFDOC()->m_teamGameWinner = (eTeamName)winner;
 			}
 		}
 
@@ -1800,7 +1802,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 	}
 	case 0x76: {
 		unsigned long uid = packet.Decode4();
-		unsigned char state = packet.Decode1();
+		int state = packet.Decode1();
 
 		CSharedDoc* pDoc = CSharedDoc::Instance();
 		std::list<sSlotInfo>::iterator it = std::find(pDoc->m_roomPlayerList.begin(), pDoc->m_roomPlayerList.end(), uid);
@@ -1962,7 +1964,7 @@ int CGolfTask::OnPacket(WReceivedPacket &packet) {
 				}
 			}
 		} else {
-			int mode = packet.Decode2();
+			unsigned short mode = packet.Decode2();
 			if (mode == 0) {
 				GetActor("GolfRule") << MsgObject(0, 0x24D, 0, (intptr_t)"NON CUTIN_MODE", 0, 0, 0);
 			} else {

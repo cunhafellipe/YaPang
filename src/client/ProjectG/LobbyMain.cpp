@@ -3471,12 +3471,11 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		// lobbymain.cpp:3138, add a lobby user (hidden administrators
 		// only show to themselves or to administrators)
 		sBriefUserInfo* info = (sBriefUserInfo*)msg.m_param1;
-		CSharedDoc* doc = CSharedDoc::Instance();
-		if (doc->m_userInfo.guid == info->uid && doc->m_userInfo.identityBits.administrator) {
+		if (info->uid == MyGuid(false) && CSharedDoc::Instance()->m_userInfo.identityBits.administrator) {
 			if (info->stayInLobby)
 				break;
 		}
-		if (doc->m_userInfo.guid != info->uid && !doc->m_userInfo.IsIdentity(4)
+		if (info->uid != MyGuid(false) && !CSharedDoc::Instance()->m_userInfo.IsIdentity(4)
 			&& (info->identity & 0x14)) {
 			if (!info->invisible)
 				break;
@@ -3495,7 +3494,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 	case 0x0C: {
 		// lobbymain.cpp:3174, remove a lobby user
 		sBriefUserInfo* info = (sBriefUserInfo*)msg.m_param1;
-		if (info->uid == CSharedDoc::Instance()->m_userInfo.guid && CSharedDoc::Instance()->m_userInfo.identityBits.administrator) {
+		if (info->uid == MyGuid(false) && CSharedDoc::Instance()->m_userInfo.identityBits.administrator) {
 			if (info->stayInLobby)
 				break;
 		}
@@ -3588,7 +3587,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 	case 0x07: {
 		// lobbymain.cpp:3293, a player entered the game room
 		if (CSharedDoc::Instance()->m_roomInfo.m_gameType == 5 || CSharedDoc::Instance()->m_roomInfo.m_gameType == 6) {
-			if (CSharedDoc::Instance()->m_gameOver) {
+			if (IsGameOver()) {
 				sSlotInfo* slot = (sSlotInfo*)msg.m_param1;
 				if ((slot->m_attribute & 3) == 0)
 					m_slotList1.push_back(slot);
@@ -3654,7 +3653,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		// lobbymain.cpp:3396, a player left the game room
 		unsigned long uid = msg.m_param2;
 		if (CSharedDoc::Instance()->m_roomInfo.m_gameType == 5 || CSharedDoc::Instance()->m_roomInfo.m_gameType == 6) {
-			if (CSharedDoc::Instance()->m_gameOver) {
+			if (IsGameOver()) {
 				std::list<sSlotInfo*>::iterator it;
 				if (msg.m_param3 == 0) {
 					for (it = m_slotList1.begin(); it != m_slotList1.end(); ++it) {
@@ -3760,7 +3759,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		std::list<sSlotInfo>& players = pDoc->m_roomPlayerList;
 		bool isMaster = false;
 		if (AdminMode()) {
-			m_roomMasterUid = pDoc->m_userInfo.guid;
+			m_roomMasterUid = MyGuid(false);
 			isMaster = true;
 		} else {
 			std::list<sSlotInfo>::iterator it = pDoc->m_roomPlayerList2.begin();
@@ -3774,14 +3773,14 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 				} while (it != pDoc->m_roomPlayerList2.end());
 
 				m_roomMasterUid = player.m_uid;
-				if (m_roomMasterUid == WSingleton<CSharedDoc>::Instance()->m_userInfo.guid)
+				if (m_roomMasterUid == MyGuid(false))
 					isMaster = true;
 			}
 
 			for (it = players.begin(); it != players.end(); ++it) {
 				if (it->m_attribute & 0x18) {
 					m_roomMasterUid = it->m_uid;
-					if (it->m_uid == WSingleton<CSharedDoc>::Instance()->m_userInfo.guid)
+					if (it->m_uid == MyGuid(false))
 						isMaster = true;
 					break;
 				}
@@ -3994,7 +3993,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 			if (m_matchingDlg == NULL && CSharedDoc::Instance()->m_mySlot == 0xFFFF && COption::Instance()->gIsInvitationAllowed()) {
 				m_matchingDlg = CreateForm<FrInviteDlg>(g_pFresh->GetManager(), this, "invite", NULL);
 
-				m_matchingDlg->SetInvaiteInfo(msg.m_param1, (unsigned char)msg.m_param2, (unsigned short)msg.m_param3, msg.m_param4, CSharedDoc::Instance()->m_myUID);
+				m_matchingDlg->SetInvaiteInfo(msg.m_param1, (unsigned char)msg.m_param2, (unsigned short)msg.m_param3, msg.m_param4, MyUID());
 
 				// lobbymain.cpp:3859
 				m_matchingDlg->SetMessage(MakeStr("(%s)\xB4\xD4\xB2\xB2\xBC\xAD \xB4\xE7\xBD\xC5\xC0\xBB \xC3\xCA\xB4\xEB\xC7\xCF\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9.\n\xC3\xCA\xB4\xEB\xBF\xA1 \xC0\xC0\xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?", ((std::string*)msg.m_param5)->c_str(), 0), false);
@@ -4058,7 +4057,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 			break;
 		}
 
-		if (uid == WSingleton<CSharedDoc>::Instance()->m_userInfo.guid || uid == 0xFFFFFFFF) {
+		if (uid == MyGuid(false) || uid == 0xFFFFFFFF) {
 			m_roomOptionB = false;
 			m_roomOptionA = state == 0;
 			m_tipBlinking = state == 1;
@@ -4090,7 +4089,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		bool isMaster = false;
 		for (it = players.begin(); it != players.end(); ++it) {
 			if (it->m_attribute & 0x18) {
-				if (it->m_uid == WSingleton<CSharedDoc>::Instance()->m_userInfo.guid)
+				if (it->m_uid == MyGuid(false))
 					isMaster = true;
 				break;
 			}
@@ -4260,7 +4259,7 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 		// lobbymain.cpp:4192, the game is over: show the results (the
 		// tournament (4) hides the room's rank controls first; game type 10
 		// only renumbers the room's players)
-		if (!CSharedDoc::Instance()->m_gameOver)
+		if (!IsGameOver())
 			break;
 
 		switch (CSharedDoc::Instance()->m_roomInfo.m_gameType) {
@@ -4669,7 +4668,8 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 	case 0x5C: {
 		// lobbymain.cpp:4705, end the caddie contract in the open caddie
 		// info dialog
-		FrCaddieInfoDlg* pDlg = FrStaticCast<FrCaddieInfoDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("caddie_info"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("caddie_info");
+		FrCaddieInfoDlg* pDlg = FR_STATIC_CAST(FrCaddieInfoDlg, pWnd);
 		if (pDlg == NULL)
 			break;
 
@@ -8786,7 +8786,8 @@ void CLobbyMain::OnRoomList_RoomListDClick(void) {
 
 		EnableRoomEnterControls(false);
 
-		if ((WSingleton<CSharedDoc>::Instance()->m_userInfo.identity & 0xE) == 0xE) {
+		int bObserver = (WSingleton<CSharedDoc>::Instance()->m_userInfo.identity & 0xE) == 0xE;
+		if (bObserver) {
 			EnableRoomEnterControls(false);
 			WSendPacket packet((enumClientPacket)0x3E);
 			packet.Encode2(static_cast<sRoomInfo*>(m_selectedRoomData)->m_roomNumber);
@@ -11697,7 +11698,7 @@ void CLobbyMain::OnGameRoom_ClubSelOwnerDraw(PG_MSGARG) {
 			if (!usable) {
 				g_view->DrawLine2D(WPoint(itemX, y + 19.0f - 1.0f), WPoint(itemX + 38.0f - 1.0f, y + 19.0f - 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
 				g_view->DrawLine2D(WPoint(itemX, y + 19.0f), WPoint(itemX + 38.0f - 1.0f, y + 19.0f), 0xFFFF0000, 0xFFFF0000, 0);
-				g_view->DrawLine2D(WPoint(itemX, y + 19.0f + 1.0f), WPoint(itemX + 38.0f - 1.0f, y + 19.0f + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
+				g_view->DrawLine2D(WPoint(itemX, (y + 19.0f) + 1.0f), WPoint(itemX + 38.0f - 1.0f, (y + 19.0f) + 1.0f), 0xFFFF0000, 0xFFFF0000, 0);
 			}
 
 			if (WRect(itemX, y, 38.0f, 38.0f).IsInRect(g_input->GetMousePoint().x, g_input->GetMousePoint().y)) {

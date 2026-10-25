@@ -1464,12 +1464,12 @@ int CRealMyRoomTask::OnPacket(WReceivedPacket &packet) {
 			for (int i = 0; i < count; ++i) {
 				--it->m_count;
 
-				if (it->m_count <= 0)
+				if (it->m_count <= 0) {
+					WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
+					GetActor("RealMyRoom") << MsgObject(0, 0xDD, 0, 0, 0, 0, 0);
 					break;
+				}
 			}
-
-			WSingleton<CSharedDoc>::Instance()->m_itemInfoList.erase(it);
-			GetActor("RealMyRoom") << MsgObject(0, 0xDD, 0, 0, 0, 0, 0);
 
 			for (int j = 0; j < count; ++j) {
 				sCaddieReportData report;

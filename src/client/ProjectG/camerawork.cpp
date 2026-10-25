@@ -1145,20 +1145,20 @@ void CCameraWork::InitCtrlPoints(int type) {
 	dir.y = 0.0f;
 	dir.Normalize();
 
+	WVector vel;
+	WVector side;
 	switch (type) {
 	case 0: {
 		m_bezierPoints[0] = m_baseMatrix.pivot;
 
-		WVector half;
-		half = ball.PreData(0)->m_velocity * 0.5f;
+		vel = ball.PreData(0)->m_velocity * 0.5f;
 		const CGolfBall::sExpected *pMid = ball.PreData(midIndex);
 		if (pMid)
-			m_bezierPoints[1] = half + pMid->m_pos;
+			m_bezierPoints[1] = vel + pMid->m_pos;
 		else
-			m_bezierPoints[1] = WVector(half.x, half.y + 1.0f, half.z);
+			m_bezierPoints[1] = WVector(vel.x, vel.y + 1.0f, vel.z);
 
-		WVector side;
-		side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), half).Normalize() * 30.0f;
+		side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), vel).Normalize() * 30.0f;
 		const CGolfBall::sExpected *pSpin = ball.PreData(spinIndex);
 		if (pSpin)
 			m_bezierPoints[2] = pSpin->m_pos + WVector(0.0f, 25.0f, 0.0f) + side;
@@ -1167,22 +1167,21 @@ void CCameraWork::InitCtrlPoints(int type) {
 
 		WVector back;
 		back = ball.PreData(0)->m_pos - ball.PreData(ball.m_preDataCount)->m_pos;
-		WVector offset;
 		if (dir * WVector(back.x, 0.0f, back.z) > 0.0f)
-			offset = back.Normalize() * 15.0f;
+			dir = dir.Normalize() * 15.0f;
 		else
-			offset = back.Normalize() * -15.0f;
-		offset.y += 5.0f;
+			dir = dir.Normalize() * -15.0f;
+		dir.y += 5.0f;
 
-		const CGolfBall::sExpected *pLand = ball.PreData(landIndex);
+		const CGolfBall::sExpected *pLand = ball.PreData(ball.m_preDataCount);
 		if (pLand)
-			m_bezierPoints[3] = pLand->m_pos + offset * 5.0f;
+			m_bezierPoints[3] = pLand->m_pos + dir * 5.0f;
 		else
-			m_bezierPoints[3] = m_bezierPoints[2] + offset * 5.0f;
+			m_bezierPoints[3] = m_bezierPoints[2] + dir * 5.0f;
 		break;
 	}
 	case 1: {
-		WVector vel = ball.PreData(startIndex)->m_velocity;
+		vel = ball.PreData(startIndex)->m_velocity;
 		m_bezierPoints[0] = vel * 0.8f + ball.PreData(startIndex)->m_pos;
 		vel = ball.PreData(midIndex)->m_velocity;
 		m_bezierPoints[1] = ball.PreData(midIndex)->m_pos + WVector(0.0f, 50.0f, 0.0f) + vel * 2.0f;
@@ -1192,8 +1191,7 @@ void CCameraWork::InitCtrlPoints(int type) {
 		break;
 	}
 	case 2: {
-		WVector vel = ball.PreData(0)->m_velocity;
-		WVector side;
+		vel = ball.PreData(0)->m_velocity;
 		side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), vel).Normalize() * 25.0f;
 		m_bezierPoints[0] = side + ball.PreData(startIndex)->m_pos;
 		vel = ball.PreData(midIndex)->m_velocity;
@@ -1208,17 +1206,17 @@ void CCameraWork::InitCtrlPoints(int type) {
 	}
 	case 4:
 	case 11:
-		m_bezierPoints[0] = ball.PreData(midIndex)->m_pos;
-		m_bezierPoints[1] = ball.PreData(midIndex - float2int((ball.m_preDataCount - midIndex) * -0.5f))->m_pos;
-		m_bezierPoints[2] = ball.PreData(midIndex - float2int((ball.m_preDataCount - midIndex) * -0.75f))->m_pos;
+		m_bezierPoints[0] = ball.PreData(landIndex)->m_pos;
+		m_bezierPoints[1] = ball.PreData(landIndex - float2int((ball.m_preDataCount - landIndex) * -0.5f))->m_pos;
+		m_bezierPoints[2] = ball.PreData(landIndex - float2int((ball.m_preDataCount - landIndex) * -0.75f))->m_pos;
 		m_bezierPoints[3] = ball.PreData(float2int(m_phase2Time))->m_pos + WVector(0.0f, 3.0f, 0.0f);
 		break;
 	case 8: {
 		m_bezierPoints[0] = m_baseMatrix.pivot;
-		WVector vel = ball.PreData(0)->m_velocity;
-		WVector side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), vel).Normalize() * 30.0f;
+		vel = ball.PreData(0)->m_velocity;
+		side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), vel).Normalize() * 30.0f;
 		m_bezierPoints[1] = ball.PreData(midIndex)->m_pos + WVector(0.0f, 25.0f, 0.0f) + vel * 2.5f + side;
-		vel = ball.PreData(spinIndex)->m_velocity;
+		vel = ball.PreData(midIndex)->m_velocity;
 		m_bezierPoints[2] = vel * 1.5f + ball.PreData(spinIndex)->m_pos + side;
 		if (ball.m_landed) {
 			m_bezierPoints[3] = ball.PreData(ball.m_preDataCount)->m_pos + WVector(0.0f, 10.0f, 0.0f) + dir * 40.0f;
@@ -1236,10 +1234,10 @@ void CCameraWork::InitCtrlPoints(int type) {
 	case 12: {
 		m_bezierPoints[0] = m_sourceCamera;
 		m_bezierPoints[1] = WVector((m_fixedCameraIndex % 2 ? 1.0f : -1.0f) * 10.0f, 100.0f, (m_fixedCameraIndex % 2 ? 1.0f : -1.0f) * 10.0f) + ball.PreData(midIndex)->m_pos;
-		WVector side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), dir).Normalize() * 15.0f;
+		side = WCrossProduct(WVector(0.0f, m_fixedCameraIndex % 2 ? 1.0f : -1.0f, 0.0f), dir).Normalize() * 15.0f;
 		m_bezierPoints[2] = WVector((m_fixedCameraIndex % 2 ? 1.0f : -1.0f) * 10.0f, 50.0f, (m_fixedCameraIndex % 2 ? 1.0f : -1.0f) * 10.0f) + ball.PreData(spinIndex)->m_pos + side;
-		dir = dir * -15.0f;
-		dir = dir + side * 0.3f;
+		dir *= -15.0f;
+		dir += side * 0.3f;
 		dir.y += 3.0f;
 		if (ball.m_landed)
 			m_bezierPoints[3] = dir * 5.0f + ball.PreData(ball.m_preDataCount)->m_pos;
@@ -1249,7 +1247,6 @@ void CCameraWork::InitCtrlPoints(int type) {
 	}
 	case 18: {
 		m_bezierPoints[0] = m_sourceCamera;
-		WVector side;
 		side = WCrossProduct(WVector::UNIT_POS_Y, ball.PreData(0)->m_velocity).Normalize() * 100.0f;
 		m_bezierPoints[1] = ball.PreData(midIndex)->m_pos + WVector(0.0f, 100.0f, 0.0f) - side;
 		m_bezierPoints[2] = ball.PreData(spinIndex)->m_pos + WVector(0.0f, 50.0f, 0.0f) + side;

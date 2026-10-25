@@ -350,11 +350,6 @@ void SetGameOver(bool gameOver) {
 	WSingleton<CSharedDoc>::Instance()->m_gameOver = gameOver;
 }
 
-// shareddoc.inl:421
-bool IsGameOver(void) {
-	return WSingleton<CSharedDoc>::Instance()->m_gameOver;
-}
-
 // shareddoc.inl:540
 int IsObserver(unsigned long identity) {
 	if (identity == 0xFFFFFFFF)
@@ -3191,7 +3186,7 @@ void CGolfRule::DoPlayerPreview(float elapsed) {
 		}
 
 		CSharedDoc *pDoc = CSharedDoc::Instance();
-		unsigned char roomType = pDoc->m_roomType;
+		unsigned char roomType = GetGameType();
 		if ((roomType != 10 && IsMassGame()) || (!m_continueDlgOpen && !m_netMsgWaitSend && m_goStopDlg == 0)) {
 			if (roomType == 10)
 				pDoc->m_gameStartTime = g_CurrentTime;
@@ -3394,8 +3389,7 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 		break;
 
 	case 0x69:
-		switch (GOLFDOC()->GameMode()) {
-		case 0x1000: {
+		if (GOLFDOC()->GameMode() == 0x1000) {
 			WCrypticValue<unsigned char> *pScore;
 			if (WSingleton<CSharedDoc>::Instance()->m_roomType != 1)
 				pScore = &PLAYER(GOLFDOC()->m_myPlayerIndex)->m_holes[GOLFDOC()->m_currentHole - 1];
@@ -3407,17 +3401,12 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 				SetConstantBGM("bgm_under_par.mp3", true, true);
 			else
 				SetConstantBGM("bgm_over_par.mp3", true, true);
-			break;
-		}
-		case 0x2000:
+		} else if (GOLFDOC()->GameMode() == 0x2000) {
 			SetConstantBGM("bgm_scoreboard.mp3", false, true);
-			break;
-		case 0x20000:
+		} else if (GOLFDOC()->GameMode() == 0x20000) {
 			SetConstantBGM("bgm_scoreboard.mp3", true, true);
-			break;
-		default:
+		} else {
 			PlayBGM();
-			break;
 		}
 		break;
 
@@ -3559,7 +3548,13 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 		break;
 
 	case 0x8A:
-		*(WPoint *)msg.m_param1 = WPoint(GOLFDOC()->GetBar().m_prevAccuracy, COption::Instance()->gGetBar_Y());
+		{
+			sBar &bar = GOLFDOC()->GetBar();
+			float barY = COption::Instance()->gGetBar_Y();
+			WPoint *pt = (WPoint *)msg.m_param1;
+			pt->x = bar.m_prevAccuracy;
+			pt->y = barY;
+		}
 		break;
 
 	case 0xA2:
@@ -3701,7 +3696,32 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 		break;
 	}
 
-	// TODO case 0x7B (golfrule.cpp:5032)
+	case 0x7B:
+		if (GOLFDOC()->GameMode() == 0x200000)
+			break;
+
+		switch (GOLFDOC()->m_shotClock.kind) {
+		case 1: {
+			g_audio->StopSfx("\xC5\xB8\xC0\xD3");	// "time"
+
+			GOLFDOC()->m_clockHold = 1;
+
+			unsigned long mode = GOLFDOC()->GameMode();
+			ChangeGameMode(0x20);
+			GOLFDOC()->GameMode() = mode;
+			break;
+		}
+
+		case 2:
+			if (GOLFDOC()->m_clockHold == 1) {
+				m_shotReady = true;
+				GOLFDOC()->m_bar.m_accuracy = GOLFDOC()->m_shotClock.accuracy;
+				GOLFDOC()->m_bar.m_prevAccuracy = GOLFDOC()->m_shotClock.accuracy;
+			}
+			break;
+		}
+		break;
+
 	case 0x74:
 		m_point258 = *(const WVector *)msg.m_param1;
 		break;
@@ -4024,7 +4044,63 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 		GOLFDOC()->m_clearedFlag15A = !GOLFDOC()->m_clearedFlag15A;
 		break;
 
-	// TODO case 0x82 (golfrule.cpp:5561)
+	case 0x82:
+		if (!GOLFDOC()->IsNetGameEnd()) {
+			PLAYER(WSingleton<CSharedDoc>::Instance()->GetIndex(msg.m_param1))->m_state = 3;
+
+			if (WSingleton<CSharedDoc>::Instance()->m_roomType == 1) {
+				bool teamOut = true;
+				unsigned char team = PLAYER(WSingleton<CSharedDoc>::Instance()->GetIndex(msg.m_param1))->m_attribute;
+
+				for (int i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
+					if (PLAYER(i)->m_attribute == team && PLAYER(i)->m_state != 3)
+						teamOut = false;
+				}
+
+				if (teamOut)
+					TEAM(team)->m_state = 3;
+			}
+
+			GOLFDOC()->RefreshPlayerNum();
+			PLAYER(WSingleton<CSharedDoc>::Instance()->GetIndex(msg.m_param1))->m_joinState = PLAYER(WSingleton<CSharedDoc>::Instance()->GetIndex(msg.m_param1))->m_turnOrder = GOLFDOC()->GetCurrentPlayerNum() + 1;
+
+			ResetRank();
+
+			if (WSingleton<CSharedDoc>::Instance()->m_roomType == 0) {
+				GOLFDOC()->m_maxGrade = 0;
+
+				for (int i = 0; i < GOLFDOC()->GetPlayerNum(); i++) {
+					if (PLAYER(i)->m_state == 3)
+						continue;
+
+					unsigned char grade;
+					if (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_level < 6)
+						grade = 1;
+					else
+						grade = (WSingleton<CSharedDoc>::Instance()->m_roomPlayers[i].m_level - 1) / 5 + 1;
+
+					if (GOLFDOC()->m_maxGrade < grade)
+						GOLFDOC()->m_maxGrade = grade;
+				}
+			}
+			else if (WSingleton<CSharedDoc>::Instance()->m_roomType == 7) {
+				int index = WSingleton<CSharedDoc>::Instance()->GetIndex(msg.m_param1);
+				int hole = GOLFDOC()->m_approachMode ? GetEndHole() : GOLFDOC()->m_currentHole;
+
+				__int64 pang = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[index].m_pang < GOLFDOC()->m_maxPangPerLoser ? WSingleton<CSharedDoc>::Instance()->m_roomPlayers[index].m_pang : GOLFDOC()->m_maxPangPerLoser;
+				PLAYER(index)->m_holeRecord2[hole - 1] -= (int)pang;
+				PLAYER(index)->m_roundPang -= pang;
+
+				if (PLAYER(index)->m_roundPang > 0)
+					PLAYER(index)->m_roundPang = 0;
+
+				PLAYER(index)->m_itemPang = PLAYER(index)->m_roundPang;
+				GOLFDOC()->m_winnerPangBonus += pang;
+				PLAYER(index)->m_holes[hole - 1] = 0xFF;
+			}
+		}
+		break;
+
 	case 0x83:
 		if (m_replaying)
 			Skip();
@@ -4074,12 +4150,29 @@ void CGolfRule::HandleMsg(const MsgObject &msg) {
 		}
 		break;
 
-	// TODO case 0x90 (golfrule.cpp:5703)
+	case 0x90: {
+		sUserInfo &info = WSingleton<CSharedDoc>::Instance()->m_roomPlayers[(unsigned char)msg.m_param1];
+
+		if (info.m_identity & 1) {
+			info.m_identity &= ~1;
+			SendMsg(this, "Letter", 0x18C, (intptr_t)"AI", 0, 0, 0);
+		} else {
+			info.m_identity |= 1;
+			SendMsg(this, "Letter", 0x18D, (intptr_t)"AI", 0, 0, 0);
+			ChangeGameMode(8);
+			SetEnvironmentVariableA();
+		}
+		break;
+	}
+
 	case 0x91:
 		m_pendingPowerFlags |= msg.m_param1;
 		break;
 
-	// TODO case 0x92 (golfrule.cpp:5725)
+	case 0x92:
+		memcpy(m_backUp.m_equipItem, WSingleton<CSharedDoc>::Instance()->m_roomPlayers[0].m_equipItem, sizeof(m_backUp.m_equipItem));
+		break;
+
 	case 0x93:
 		SendShotResult();
 		break;
@@ -5535,7 +5628,7 @@ void CGolfRule::ChangeGameMode(unsigned long mode) {
 								if (CSharedDoc::Instance()->m_roomPlayers[PLAYER(GOLFDOC()->m_myPlayerIndex)->m_partnerIndex].m_statistics.level < 6)
 									level += 1;
 								else
-									level += (CSharedDoc::Instance()->m_roomPlayers[PLAYER(GOLFDOC()->m_myPlayerIndex)->m_partnerIndex].m_statistics.level - 1) / 5 + 1;
+									level += (CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_statistics.level - 1) / 5 + 1; // the original reads its own level here, not the partner's
 
 								level >>= 1; // DRAFT: shr byte ptr [mem], 1; `level /= 2` may also give it
 							}
@@ -6775,10 +6868,10 @@ bool CGolfRule::SetHoleInPose_Skins(void) {
 		else
 			SetConstantBGM("skins_lose.mp3", true, true);
 
-		const WVector &cup = m_point258;
-		SendMsg(this, "Player", 0x122, (intptr_t)&cup, (intptr_t)playerMotion, noItemPose, 0);
-		SendMsg(this, "Caddie", 0x121, (intptr_t)&GetPVS().GetGroundPoint(WVector(cup.x + 10.0f, cup.y, cup.z + 10.0f), false, NULL, false), (intptr_t)caddieMotion, 0, 0);
+		SendMsg(this, "Player", 0x122, (intptr_t)&m_point258, (intptr_t)playerMotion, noItemPose, 0);
+		SendMsg(this, "Caddie", 0x121, (intptr_t)&GetPVS().GetGroundPoint(WVector(m_point258.x + 10.0f, m_point258.y, m_point258.z + 10.0f), false, NULL, false), (intptr_t)caddieMotion, 0, 0);
 
+		const WVector &cup = m_point258;
 		m_gameOverDelay = CCameraWork::Instance()->LoadCamera((CCameraWork::eCamMode)0, cameraName, cup);
 
 		if (m_gameOverDelay < 0.0f) {
@@ -8317,7 +8410,9 @@ bool CGolfRule::GetBarCondition(void) {
 		g_audio->PlaySfx(g_plSound[4], 0, 0, 0, 0, 0.5f, 200.0f);
 	}
 
-	if (GOLFDOC()->GetBar().m_accuracyGrade == 4 || GOLFDOC()->GetBar().m_accuracyGrade == 3 || GOLFDOC()->GetBar().m_accuracyGrade == 2)
+	bool good = GOLFDOC()->GetBar().m_accuracyGrade == 4 || GOLFDOC()->GetBar().m_accuracyGrade == 3
+		|| GOLFDOC()->GetBar().m_accuracyGrade == 2;
+	if (good)
 		return true;
 	else
 		return false;
@@ -8602,7 +8697,7 @@ void CGolfRule::DriveGauge(float elapsed, bool click) {
 			// DRAFT: the failing test jumps straight to the epilogue (the
 			// `return` below has no mark); `!(Min(...) > m_accuracy)` and
 			// `<=` give the same x87 test.
-			if (GOLFDOC()->GetBar().m_state == -1 && Min(GOLFDOC()->GetBar().m_power, 240.0f) > GOLFDOC()->GetBar().m_accuracy) {
+			if (GOLFDOC()->GetBar().m_state == -1 && GOLFDOC()->GetBar().m_accuracy < Min(GOLFDOC()->GetBar().m_power, 240.0f)) {
 				GOLFDOC()->m_clockHold++;
 
 				if (IsLocalContent((localContentType_t)0x50)) {
@@ -9256,8 +9351,9 @@ void CGolfRule::DoToDefaultCamera(float elapsed) {
 		ball.m_pos = ball.PreData(0)->m_pos;
 		ball.m_groundArea = GetPVS().GetMeshIndex(ball.m_pos, false);
 
-		if (GOLFDOC()->m_gameState == 2 || GOLFDOC()->m_gameState == 6 || GOLFDOC()->m_gameState == 4
-			|| GOLFDOC()->m_gameState == 10) {
+		bool resetCamera = GOLFDOC()->m_gameState == 2 || GOLFDOC()->m_gameState == 6
+			|| GOLFDOC()->m_gameState == 4 || GOLFDOC()->m_gameState == 10;
+		if (resetCamera) {
 			SendMsg(this, "Screen", 0x1A3, 0, 0, 0, 0);
 			GOLFDOC()->m_cameraData.m_yaw = m_shotYaw;
 			GolfClub().SetPowerShot(0);
@@ -12067,31 +12163,30 @@ void CGolfRule::AddSomeInfo(WSendPacket &packet) {
 			packet.EncodeData(countOffset, (char *)&count, 4);
 
 		if (IsLocalContent((localContentType_t)0x87)) {
-			int value;
 			if (Wind().IsGlobalWind_Compare() == true) {
 				if (PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000006
 					|| PLAYER(GOLFDOC()->m_myPlayerIndex)->m_shotItemTypeId == 0x18000020) {
 					packet.Encode1(1);
-					value = 1;
+					packet.Encode4(1);
 				} else {
 					unsigned long intensity = (int)Wind().GetGlobalIntensity();
 
 					if (Wind().IsActiveSpecialWind()) {
 						packet.Encode1(2);
-						value = intensity;
+						packet.Encode4(intensity);
 					} else {
 						packet.Encode1(0);
 						float level = intensity - 1.0f;
 
-						if (!(level < 1.0f))
-							intensity--;
-						value = intensity;
+						if (level < 1.0f)
+							packet.Encode4(intensity);
+						else
+							packet.Encode4(intensity - 1);
 					}
 				}
 			} else {
-				value = 0;
+				packet.Encode4(0);
 			}
-			packet.Encode4(value);
 		} else {
 			packet.Encode4((int)Wind().GetGlobalIntensity());
 		}

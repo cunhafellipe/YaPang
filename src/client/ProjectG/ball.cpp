@@ -64,8 +64,8 @@ void CBall::OnPreLoadInit(void) {
 
 	m_shadowPolygon[0] = &m_shadowVertices[0];
 	m_shadowPolygon[1] = &m_shadowVertices[1];
-	m_shadowPolygon[2] = &m_shadowVertices[2];
-	m_shadowPolygon[3] = &m_shadowVertices[3];
+	m_shadowPolygon[2] = &m_shadowVertices[3];
+	m_shadowPolygon[3] = &m_shadowVertices[2];
 	m_shadowPolygon[4] = NULL;
 	m_light.type = LightSet::W_LIGHT_DIRECTIONAL;
 	m_hShadowTexture = g_resrcmng->LoadTexture("[ball_shadow.jpg", 0, 0, NULL);

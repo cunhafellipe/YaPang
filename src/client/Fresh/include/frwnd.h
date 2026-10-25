@@ -24,6 +24,12 @@ static __declspec(thread) void* __rtti_obj;
 template <class T>
 inline T* FrStaticCast(void* p) { return (T*)(p != 0 ? p : (__rtti_obj = p)); }
 
+// The same cast written out at the call site, never inlined away: large
+// callers (CTask::OnPacketCommon) exhaust cl's inline budget, and the
+// original still has the cast in place there. `p` is evaluated twice when
+// null: pass a local, never a call. The name is invented.
+#define FR_STATIC_CAST(T, p) ((T*)((p) != 0 ? (void*)(p) : (__rtti_obj = (void*)(p))))
+
 class CChatMsg;
 class FrEmoticon;
 class FrGraphicInterface;

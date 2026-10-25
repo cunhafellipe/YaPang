@@ -1446,15 +1446,9 @@ void FrScratchResultDlg::SetResultItem(sBonusBall* pItems, int count) {
 		slot = *(const sStatBonus5*)pPart->m_slotStat;
 		break;
 	}
-	case 7: {
-		IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(m_resultItem[0].m_typeId);
-
-		if (!pCaddie)
-			return;
-
-		base = *(const sStatBonus5*)pCaddie->m_levels;
-		break;
-	}
+	// Case 8 is written before case 7 although the line marks put case 7
+	// first (1573 vs 1585): only this order makes cl tail-merge case 8 into
+	// case 7's copy, as the original does. Accepted by the user.
 	case 8: {
 		IFF_STRUCT::sCadItem* pCadItem = ItemManager()->FindCadItem(m_resultItem[0].m_typeId);
 
@@ -1462,6 +1456,15 @@ void FrScratchResultDlg::SetResultItem(sBonusBall* pItems, int count) {
 			return;
 
 		base = *(const sStatBonus5*)pCadItem->m_levels;
+		break;
+	}
+	case 7: {
+		IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(m_resultItem[0].m_typeId);
+
+		if (!pCaddie)
+			return;
+
+		base = *(const sStatBonus5*)pCaddie->m_levels;
 		break;
 	}
 	default:

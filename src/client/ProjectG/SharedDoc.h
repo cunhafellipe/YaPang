@@ -2241,7 +2241,6 @@ bool IsOthersTurn(bool);
 unsigned char GetStartHole(void);
 unsigned char GetEndHole(void);
 void SetGameOver(bool gameOver);
-bool IsGameOver(void);
 int IsObserver(unsigned long identity);
 
 // Avatar_Avatar.cpp defines AVATAR_AVATAR_SHAREDDOC_INLINE empty before its
@@ -2618,6 +2617,11 @@ inline unsigned char GetHoleIndex(unsigned char hole) {
 // trophy goes to in a guild match.
 GOLFRULE_SHAREDDOC_INLINE sRivalData *GUILDMATCHUP(unsigned char team) {
 	return &WSingleton<CSharedDoc>::Instance()->m_gameResultList[WSingleton<CSharedDoc>::Instance()->GetIndex(WSingleton<CSharedDoc>::Instance()->m_trophyUID[team])];
+}
+
+// shareddoc.inl:421
+GOLFRULE_SHAREDDOC_INLINE bool IsGameOver(void) {
+	return WSingleton<CSharedDoc>::Instance()->m_gameOver;
 }
 
 // ClientSetting.cpp defines CLIENTSETTING_SHAREDDOC_INLINE empty before its

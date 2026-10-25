@@ -756,33 +756,38 @@ bool CFxSpray::Process(float fDelta) {
 		// m_keys[0]: the direction and t0, m_keys[1]: the amplitude at t0 and
 		// t1, m_keys[2]: the amplitude at t1 and the shake interval,
 		// m_fLastTime: the time of the last shake.
-		float t0 = (float)quake->m_keys[0].t;
+		// The key times are read once: the shake below takes t1 - t0 from the
+		// values the tests loaded.
+		int k0 = quake->m_keys[0].t;
+		float t0 = (float)k0;
 		if (m_fTime < t0) {
 			quake->m_fLastTime = m_fTime;
 		}
-		else if ((float)quake->m_keys[1].t >= m_fTime) {
-			bQuake = true;
-			if (m_fTime - quake->m_fLastTime >= (float)quake->m_keys[2].t) {
-				quake->m_fLastTime = m_fTime;
+		else {
+			int k1 = quake->m_keys[1].t;
+			if ((float)k1 >= m_fTime) {
+				bQuake = true;
+				if (m_fTime - quake->m_fLastTime >= (float)quake->m_keys[2].t) {
+					quake->m_fLastTime = m_fTime;
 
-				// TODO: fxspray.h's sQuake::sKey should hold a WVector (p) instead of
-				// p0..p2; the original reads the keys as WVector lvalues.
-				int dt = quake->m_keys[1].t - quake->m_keys[0].t;
-				WVector amp = dt > 0
-					? (*(const WVector*)&quake->m_keys[2].p0 - *(const WVector*)&quake->m_keys[1].p0) * (m_fTime - t0) / (float)dt
-						+ *(const WVector*)&quake->m_keys[1].p0
-					: *(const WVector*)&quake->m_keys[1].p0;
+					// TODO: fxspray.h's sQuake::sKey should hold a WVector (p) instead of
+					// p0..p2; the original reads the keys as WVector lvalues.
+					WVector amp = k1 - k0 > 0
+						? (*(const WVector*)&quake->m_keys[2].p0 - *(const WVector*)&quake->m_keys[1].p0) * (m_fTime - t0) / (float)(k1 - k0)
+							+ *(const WVector*)&quake->m_keys[1].p0
+						: *(const WVector*)&quake->m_keys[1].p0;
 
-				m_outputDir.Reset();
-				m_outputDir.x += (float)(rand() % 20001 - 10000) * amp.x * 0.00005f;
-				m_outputDir.y += (float)(rand() % 20001 - 10000) * amp.y * 0.00005f;
-				m_outputDir.z += (float)(rand() % 20001 - 10000) * amp.z * 0.00005f;
+					m_outputDir.Reset();
+					m_outputDir.x += (float)(rand() % 20001 - 10000) * amp.x * 0.00005f;
+					m_outputDir.y += (float)(rand() % 20001 - 10000) * amp.y * 0.00005f;
+					m_outputDir.z += (float)(rand() % 20001 - 10000) * amp.z * 0.00005f;
 
-				m_outputPos.x += amp.x * quake->m_keys[0].p0;
-				m_outputPos.y += amp.y * quake->m_keys[0].p1;
-				m_outputPos.z += amp.z * quake->m_keys[0].p2;
+					m_outputPos.x += amp.x * quake->m_keys[0].p0;
+					m_outputPos.y += amp.y * quake->m_keys[0].p1;
+					m_outputPos.z += amp.z * quake->m_keys[0].p2;
 
-				ampSum += amp;
+					ampSum += amp;
+				}
 			}
 		}
 	}
@@ -932,10 +937,10 @@ bool CFxSpray::Process(float fDelta) {
 			// Rotation keys (m_v: t0, speed at t0, t1, speed at t1).
 			for (std::list<sRot>::iterator r = m_param.m_rots.begin(); r != m_param.m_rots.end(); ++r) {
 				if (fAge >= r->m_v[0] && fAge <= r->m_v[2]) {
-					float range = r->m_v[2] - r->m_v[0];
-					float speed = range > 0.0f
-						? (r->m_v[3] - r->m_v[1]) * (fAge - r->m_v[0]) / range + r->m_v[1]
-						: r->m_v[1];
+					const sRot& key = *r;
+					float speed = key.m_v[2] - key.m_v[0] > 0.0f
+						? (key.m_v[3] - key.m_v[1]) * (fAge - key.m_v[0]) / (key.m_v[2] - key.m_v[0]) + key.m_v[1]
+						: key.m_v[1];
 					particle->m_rotation += fScale * particle->m_rotSpeed * speed * 0.01f;
 				}
 			}
@@ -943,10 +948,10 @@ bool CFxSpray::Process(float fDelta) {
 			// Size keys (m_v: t0, size at t0, t1, size at t1, in percent).
 			for (std::list<sSize>::iterator size = m_param.m_sizes.begin(); size != m_param.m_sizes.end(); ++size) {
 				if (fAge >= size->m_v[0] && fAge <= size->m_v[2]) {
-					float range = size->m_v[2] - size->m_v[0];
-					float scale = range > 0.0f
-						? (size->m_v[3] - size->m_v[1]) * (fAge - size->m_v[0]) / range + size->m_v[1]
-						: size->m_v[1];
+					const sSize& key = *size;
+					float scale = key.m_v[2] - key.m_v[0] > 0.0f
+						? (key.m_v[3] - key.m_v[1]) * (fAge - key.m_v[0]) / (key.m_v[2] - key.m_v[0]) + key.m_v[1]
+						: key.m_v[1];
 					particle->m_fSize = scale * particle->m_fBaseSize * 0.01f;
 				}
 			}
@@ -1063,7 +1068,7 @@ bool CFxSpray::Process(float fDelta) {
 
 			for (std::list<sBubble>::iterator bubble = m_param.m_bubbles.begin(); bubble != m_param.m_bubbles.end(); ++bubble) {
 				if (phase == particle->m_points.end()) {
-					particle->m_points.insert(phase, WVector((float)(rand() % 1001) * 0.0062831859f,
+					particle->m_points.push_back(WVector((float)(rand() % 1001) * 0.0062831859f,
 						(float)(rand() % 1001) * 0.0062831859f, (float)(rand() % 1001) * 0.0062831859f));
 					--phase;
 				}
@@ -1266,12 +1271,12 @@ void CFxSpray::RevoluteGrand(float fTime, float fScale) {
 bool CFxSpray::Generate(float fTime) {
 	float fSpeed = 100.0f;
 	for (std::list<sVel>::iterator vel = m_param.m_vels.begin(); vel != m_param.m_vels.end(); ++vel) {
-		if (fTime >= (float)vel->t0 && (float)vel->t1 >= fTime) {
-			int dt = vel->t1 - vel->t0;
-			if (dt > 0)
-				fSpeed = (vel->v1 - vel->v0) * (fTime - (float)vel->t0) / dt + vel->v0;
+		const sVel& v = *vel;
+		if (fTime >= (float)v.t0 && (float)v.t1 >= fTime) {
+			if (v.t1 - v.t0 > 0)
+				fSpeed = (v.v1 - v.v0) * (fTime - (float)v.t0) / (v.t1 - v.t0) + v.v0;
 			else
-				fSpeed = vel->v0;
+				fSpeed = v.v0;
 		}
 	}
 
@@ -1351,8 +1356,8 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 		else if (m_param.m_bSphereKind2) {
 			// A ring about the x axis: radius max.x, length max.z, the
 			// particles spread evenly over all the generation keys.
-			float radius = m_param.m_area.max.x;
 			float angle = m_fSphereAngle;
+			float radius = m_param.m_area.max.x;
 			int total = 0;
 			for (std::list<sGen>::iterator gen = m_param.m_gens.begin(); gen != m_param.m_gens.end(); ++gen)
 				total += gen->count;
@@ -1398,11 +1403,13 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 			pParticle->m_dir = pParticle->m_dir * rot;
 		}
 		else {
-			WVector angles(0.0f, 0.0f, 0.0f);
+			WVector angles;
+			WVector up;
+			WVector v;
+			angles.x = angles.y = angles.z = 0.0f;
 
 			if (m_param.m_extOrientation & 1) {
-				WVector up = WVector::UNIT_POS_Y;
-				WVector v;
+				up = WVector::UNIT_POS_Y;
 				v = up * rot;
 				v.x = 0.0f;
 				angles.x = GetAngle(up, v);
@@ -1411,8 +1418,7 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 			}
 
 			if (m_param.m_extOrientation & 2) {
-				WVector up = WVector::UNIT_POS_Z;
-				WVector v;
+				up = WVector::UNIT_POS_Z;
 				v = up * rot;
 				v.y = 0.0f;
 				angles.y = GetAngle(up, v);
@@ -1421,8 +1427,7 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 			}
 
 			if (m_param.m_extOrientation & 4) {
-				WVector up = WVector::UNIT_POS_X;
-				WVector v;
+				up = WVector::UNIT_POS_X;
 				v = up * rot;
 				v.z = 0.0f;
 				angles.z = GetAngle(up, v);
@@ -1473,6 +1478,7 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 				WVector(lo.x, lo.y, hi.z), WVector(hi.x, lo.y, lo.z)
 			};
 
+			bool bFirst = true;
 			int faces = 0;
 			if (g.x > 0.0001f)
 				faces = 0x10;
@@ -1487,7 +1493,6 @@ bool CFxSpray::InitParticle(bool bSpawn, CFxParticle* pParticle, float fSpeed, f
 			else if (g.y < -0.0001f)
 				faces |= 8;
 
-			bool bFirst = true;
 			for (int i = 0; i < 6; i++) {
 				if (!(faces & (1 << i)))
 					continue;

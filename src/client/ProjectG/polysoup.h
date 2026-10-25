@@ -196,8 +196,8 @@ public:
 		short *m_pList2;              // 0x0C, the object indices of the quad (QuadTree reads them as shorts)
 	};
 
-	// A model placed in the soup. Its constructor (polysoup.h:191) is emitted
-	// by realmyroomdata.cpp; the size is not known yet (at least 0x10C).
+	// A model placed in the soup. Its constructor (polysoup.h:191) is defined
+	// after the class; the size is not known yet (at least 0x10C).
 	struct sModel {
 		sModel();
 
@@ -454,6 +454,27 @@ public:
 	int m_holecupTexture;                 // 0x4970, holecup.dds, loaded by DigHolecup (zeroed by the constructor)
 	std::map<int, std::vector<sTriangle*> > m_triArrays;    // 0x4974, GetTriArray
 };
+
+// RealMyRoomData.cpp defines REALMYROOMDATA_POLYSOUP_INLINE empty before its
+// first include, so its object emits the out-of-line copy of the constructor
+// (0x584ea0), as the original's did.
+#ifndef REALMYROOMDATA_POLYSOUP_INLINE
+#define REALMYROOMDATA_POLYSOUP_INLINE inline
+#endif
+
+// polysoup.h:191
+REALMYROOMDATA_POLYSOUP_INLINE WPolySoup::sModel::sModel() {
+	m_pQuads = NULL;
+	m_pTriangles = NULL;
+	m_pPuppet = NULL;
+	m_windFactor = 1.0f;
+	m_reservedByte = 0;
+	m_alpha = 0;
+	m_hitCount = 0;
+	m_name[0] = '\0';
+	m_baseName[0] = '\0';
+	m_objIndex = 0;
+}
 
 CHECK_FIELD(WPolySoup::sModel, m_subOrder, 0x00);
 CHECK_FIELD(WPolySoup::sModel, m_order, 0x01);
