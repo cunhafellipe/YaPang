@@ -230,7 +230,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		WSingleton<CSharedDoc>::Instance()->m_chatManager.FilteringHack(message.c_str(), false);
 
 		if (own) {
-			text = WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname;
+			text = MyNick();
 			text += ">";
 			text += nickname;
 		} else {
@@ -246,7 +246,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 			GetActor("Lobby") << MsgObject(0, 0x3F, (intptr_t)&notify, 0, 0, 0, 0);
 			GetActor("Lobby") << MsgObject(0, 0x38, (intptr_t)nickname.c_str(), 0, 0, 0, 0);
 
-			text = nickname + ">" + WSingleton<CSharedDoc>::Instance()->m_userInfo.nickname;
+			text = nickname + ">" + MyNick();
 		}
 
 		text += " : \x08'";
@@ -332,7 +332,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 				WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomMode,
 				WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_course, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_holeCount,
 				WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_userLimit, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber,
-				WSingleton<CSharedDoc>::Instance()->m_userInfo.guid);
+				MyGuid(false));
 		}
 
 		// The lobby answers through refresh; 0 (or a game room layout) shows the room.
@@ -380,7 +380,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 			WSingleton<CSharedDoc>::Instance()->m_mySlot = WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber;
 
 			std::map<unsigned long, sUserInfoTime>::iterator info;
-			if (WSingleton<CSharedDoc>::Instance()->FindUserInfoTimeGUID(WSingleton<CSharedDoc>::Instance()->m_userInfo.guid, info)) {
+			if (WSingleton<CSharedDoc>::Instance()->FindUserInfoTimeGUID(MyGuid(false), info)) {
 				info->second.m_userInfo.m_slot = WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber;
 			}
 
@@ -446,7 +446,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		unsigned long uid = packet.Decode4();
 
 		if (uid != 0xFFFFFFFF) {
-			if (uid == WSingleton<CSharedDoc>::Instance()->m_userInfo.guid) {
+			if (uid == MyGuid(false)) {
 				AfxPostMsg(0, "Lobby", 2, 0, 0, 0, 0);
 				AfxPostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
 			} else {
@@ -877,10 +877,9 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		packet.DecodeStr(id);
 		if (stricmp(id.c_str(), MyId())) {
 			GetActor("Lobby") << MsgObject(0, 0x1E, 0xC, 0, 0, 0, 0);
-			break;
+		} else {
+			_GGC_SendUserID(MyId());
 		}
-
-		_GGC_SendUserID(MyId());
 		break;
 	}
 	case 0x2: {
@@ -1333,7 +1332,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		}
 
 		std::list<sSlotInfo> &players = WSingleton<CSharedDoc>::Instance()->m_roomPlayerList;
-		std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), WSingleton<CSharedDoc>::Instance()->m_userInfo.guid);
+		std::list<sSlotInfo>::iterator it = std::find(players.begin(), players.end(), MyGuid(false));
 		if (it == players.end()) {
 			break;
 		}

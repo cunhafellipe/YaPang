@@ -1,4 +1,5 @@
 // Original: d:\build\custom\temp\code\client\projectg\realmyroomdata.cpp
+#define REALMYROOMDATA_POLYSOUP_INLINE
 #include "NetworkSystem.h"
 #include <stdio.h>
 #include "RealMyRoomData.h"
@@ -33,19 +34,8 @@ float RayIntersectAABB(const Waabb &aabb, const WVector &pos, const WVector &mov
 // Wangreal (wmath), declared by no header transcribed yet.
 int WisZero(const float &f, float eps);
 
-// polysoup.h:191
-WPolySoup::sModel::sModel() {
-	m_pQuads = NULL;
-	m_pTriangles = NULL;
-	m_pPuppet = NULL;
-	m_windFactor = 1.0f;
-	m_reservedByte = 0;
-	m_alpha = 0;
-	m_hitCount = 0;
-	m_name[0] = '\0';
-	m_baseName[0] = '\0';
-	m_objIndex = 0;
-}
+// polysoup.h:191 WPolySoup::sModel::sModel: defined in polysoup.h
+// (REALMYROOMDATA_POLYSOUP_INLINE).
 
 // realmyroomdata.cpp:39
 CRealMyRoomData::CRealMyRoomData(void) : m_modelList(16, 16) {

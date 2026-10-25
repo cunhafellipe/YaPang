@@ -5214,10 +5214,10 @@ void CRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 
 	case 0x12: {
 		// realmyroommainui.cpp:6373
-		unsigned long trophyTypeId = ((sSpecialTrophy *)pData)->m_typeId;
+		typeId = ((sSpecialTrophy *)pData)->m_typeId;
 		// realmyroommainui.cpp:6376
-		typeId = trophyTypeId & ~0xF;
-		int medal = trophyTypeId & 0xF;
+		int medal = typeId & 0xF;
+		typeId &= ~0xF;
 		IFF_STRUCT::sMatch *pMatch = ItemManager()->FindMatch(typeId);
 		// realmyroommainui.cpp:6377
 		if (pMatch) {
@@ -5444,7 +5444,7 @@ void CRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 	// realmyroommainui.cpp:6601
 	if (periodKind >= 2 && typeId != 0x1A000042 && periodKind != 6)
 		// realmyroommainui.cpp:6603
-		pGDI->DrawTexture(m_itemListArea[5].over, m_itemListArea[5].rect + iconPos, 0xFFFFFFFF, 0);
+		pGDI->DrawTexture(m_itemListArea[5].normal, m_itemListArea[5].rect + iconPos, 0xFFFFFFFF, 0);
 
 	// realmyroommainui.cpp:6608
 	if (caddieRest) {
@@ -5472,14 +5472,14 @@ void CRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 		while (pBreak) {
 			// realmyroommainui.cpp:6629
 			*pBreak = 0;
-			pGDI->Print11(WPoint(pItem->pos.x + 182.0f, line * 15.0f + 7.0f + pItem->pos.y), 2, pLine);
+			pGDI->Print11(pItem->pos + WPoint(182.0f, line * 15.0f + 7.0f), 2, pLine);
 			// realmyroommainui.cpp:6631
 			line++;
 			pLine = pBreak + 1;
 			pBreak = strstr(pLine, "\n");
 		}
 		// realmyroommainui.cpp:6633
-		pGDI->Print11(WPoint(pItem->pos.x + 182.0f, line * 15.0f + 7.0f + pItem->pos.y), 2, pLine);
+		pGDI->Print11(pItem->pos + WPoint(182.0f, line * 15.0f + 7.0f), 2, pLine);
 		// realmyroommainui.cpp:6635
 		sprintf(text, "%d", count);
 		// realmyroommainui.cpp:6636
@@ -5487,7 +5487,7 @@ void CRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 		// realmyroommainui.cpp:6641
 	} else {
 		// realmyroommainui.cpp:6643
-		pGDI->Print11(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 7.0f), 2, "%s", pName);
+		pGDI->Print11(pItem->pos + WPoint(182.0f, 7.0f) + WPoint(0.0f, 0.0f), 2, "%s", pName);
 	}
 
 	// realmyroommainui.cpp:6646
@@ -5907,17 +5907,17 @@ void CRealMyRoomMain::OnItemListOwnerDraw(intptr_t param) {
 			// realmyroommainui.cpp:7068
 			if (pCourse)
 				// realmyroommainui.cpp:7069
-				pGDI->Print11(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 22.0f), 2, pCourse->m_name);
+				pGDI->Print11(pItem->pos + WPoint(182.0f, 22.0f) + WPoint(0.0f, 0.0f), 2, pCourse->m_name);
 			// realmyroommainui.cpp:7084
 			char date[50] = { 0 };
 			char time[50] = { 0 };
 			wsprintfA(date, "%d\xB3\xE2%02d\xBF\xF9%02d\xC0\xCF", replayTime.wYear, replayTime.wMonth, replayTime.wDay);
 			// realmyroommainui.cpp:7085
-			pGDI->Print11(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 33.0f), 2, date);
+			pGDI->Print11(pItem->pos + WPoint(182.0f, 33.0f) + WPoint(0.0f, 0.0f), 2, date);
 			// realmyroommainui.cpp:7088
 			wsprintfA(time, "%02d\xBD\xC3%02d\xBA\xD0", replayTime.wHour, replayTime.wMinute);
 			// realmyroommainui.cpp:7089
-			pGDI->Print11(WPoint(pItem->pos.x + 182.0f, pItem->pos.y + 44.0f), 2, time);
+			pGDI->Print11(pItem->pos + WPoint(182.0f, 44.0f) + WPoint(0.0f, 0.0f), 2, time);
 			return;
 		}
 		// realmyroommainui.cpp:7093
@@ -7217,21 +7217,25 @@ void CRealMyRoomMain::BuildDisplayStand(subTab_t tab) {
 						continue;
 					// realmyroommainui.cpp:8757
 					int slot = (pInfo->m_typeId >> 13) & 0x1F;
+					bool bFound = false;
 					// realmyroommainui.cpp:8758
 					if (cit->second.partIds[slot] == 0) {
 						// realmyroommainui.cpp:8760
-						if (pInfo->m_typeId != m_pCharParts[i])
-							continue;
+						if (pInfo->m_typeId == m_pCharParts[i])
+							bFound = true;
 					} else {
 						// realmyroommainui.cpp:8765
-						if (pInfo->m_typeId != m_pCharParts[i] || pInfo->m_serial != m_localContentData[i])
-							// realmyroommainui.cpp:8776
-							continue;
+						if (pInfo->m_typeId == m_pCharParts[i] && pInfo->m_serial == m_localContentData[i])
+							bFound = true;
 					}
-					// realmyroommainui.cpp:8772
-					m_pUccCopyHideWnd->SelectItem(pItem, false);
-					// realmyroommainui.cpp:8773
-					break;
+					if (bFound) {
+						// realmyroommainui.cpp:8772
+						m_pUccCopyHideWnd->SelectItem(pItem, false);
+						// realmyroommainui.cpp:8773
+						break;
+					}
+					// realmyroommainui.cpp:8776
+					continue;
 				}
 				// realmyroommainui.cpp:8778
 				if (pInfo->m_typeId == m_pCharParts[i]) {
@@ -7364,21 +7368,25 @@ void CRealMyRoomMain::BuildDisplayStand(subTab_t tab) {
 							continue;
 						// realmyroommainui.cpp:8898
 						int slot = (pInfo->m_typeId >> 13) & 0x1F;
+						bool bFound = false;
 						// realmyroommainui.cpp:8899
 						if (cit->second.partIds[slot] == 0) {
 							// realmyroommainui.cpp:8901
-							if (pInfo->m_typeId != m_pCharParts[i])
-								continue;
+							if (pInfo->m_typeId == m_pCharParts[i])
+								bFound = true;
 						} else {
 							// realmyroommainui.cpp:8906
-							if (pInfo->m_typeId != m_pCharParts[i] || pInfo->m_serial != m_localContentData[i])
-								// realmyroommainui.cpp:8917
-								continue;
+							if (pInfo->m_typeId == m_pCharParts[i] && pInfo->m_serial == m_localContentData[i])
+								bFound = true;
 						}
-						// realmyroommainui.cpp:8913
-						m_pUccCopyHideWnd->SelectItem(pItem, false);
-						// realmyroommainui.cpp:8914
-						break;
+						if (bFound) {
+							// realmyroommainui.cpp:8913
+							m_pUccCopyHideWnd->SelectItem(pItem, false);
+							// realmyroommainui.cpp:8914
+							break;
+						}
+						// realmyroommainui.cpp:8917
+						continue;
 					}
 					// realmyroommainui.cpp:8919
 					if (pInfo->m_typeId == m_pCharParts[i]) {
@@ -7547,13 +7555,14 @@ void CRealMyRoomMain::BuildDisplayStand(subTab_t tab) {
 				// realmyroommainui.cpp:9081
 				for (int k = 0; k < 10; k++) {
 					// realmyroommainui.cpp:9083
+					unsigned long *pEquip = &WSingleton<CSharedDoc>::Instance()->m_equipItem[k];
 					if (k < slotCount)
 						// realmyroommainui.cpp:9084
-						m_pItemSlotList->AddItem(&WSingleton<CSharedDoc>::Instance()->m_equipItem[k]);
+						m_pItemSlotList->AddItem(pEquip);
 					// realmyroommainui.cpp:9085
 					else
 						// realmyroommainui.cpp:9091
-						UnequipItem(&WSingleton<CSharedDoc>::Instance()->m_equipItem[k]);
+						UnequipItem(pEquip);
 				}
 
 				// realmyroommainui.cpp:9096
@@ -7617,12 +7626,13 @@ void CRealMyRoomMain::BuildDisplayStand(subTab_t tab) {
 		if (IsLocalContent((localContentType_t)0x14)) {
 			// realmyroommainui.cpp:9180
 			for (std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
+				sItemInfo *pInfo = &*it;
 				// realmyroommainui.cpp:9184
-				if (it->m_typeId & 0x2000000) {
+				if (pInfo->m_typeId & 0x2000000) {
 					// realmyroommainui.cpp:9186
-					if (it->m_typeId == 0x1A000042) {
+					if (pInfo->m_typeId == 0x1A000042) {
 						// realmyroommainui.cpp:9188
-						FrListItem *pItem = m_pUccCopyHideWnd->AddItem(&*it);
+						FrListItem *pItem = m_pUccCopyHideWnd->AddItem(pInfo);
 						// realmyroommainui.cpp:9189
 						pItem->AddNoRBtnIdx(0);
 					}
@@ -7764,18 +7774,20 @@ void CRealMyRoomMain::BuildDisplayStand(subTab_t tab) {
 		// realmyroommainui.cpp:9328
 		sTrophyStatistics &oldTrophy = WSingleton<CSharedDoc>::Instance()->m_oldSeasonTrophy;
 		// realmyroommainui.cpp:9330
-		for (int course = 0; course < 13; course++) {
+		for (int course = 0; course <= 12; course++) {
 			// realmyroommainui.cpp:9332
 			for (int medal = 2; medal >= 0; medal--) {
 				// realmyroommainui.cpp:9333
 				if (trophy.m_medals[course][medal] > 0 || oldTrophy.m_medals[course][medal] > 0) {
-					sSpecialTrophy special;
 					// realmyroommainui.cpp:9336
 					unsigned short oldCount = oldTrophy.m_medals[course][medal];
 					// realmyroommainui.cpp:9337
-					special.m_typeId = ((course | 0x2C00) << 16) | medal;
+					unsigned long typeId = ((course | 0x2C00) << 16) | medal;
 					// realmyroommainui.cpp:9340
+					sSpecialTrophy special;
 					special.m_count = trophy.m_medals[course][medal] + oldCount;
+					special.m_typeId = typeId;
+					special.m_id = 0;
 					m_initList.push_back(special);
 				}
 			}
@@ -7802,10 +7814,11 @@ void CRealMyRoomMain::BuildDisplayStand(subTab_t tab) {
 	case 0x13:
 		// realmyroommainui.cpp:9363
 		for (std::list<sItemInfo>::iterator it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
+			sItemInfo *pInfo = &*it;
 			// realmyroommainui.cpp:9365
-			if (ItemManager()->GetCouponKind(it->m_typeId))
+			if (ItemManager()->GetCouponKind(pInfo->m_typeId))
 				// realmyroommainui.cpp:9366
-				m_pUccCopyHideWnd->AddItem(&*it);
+				m_pUccCopyHideWnd->AddItem(pInfo);
 		}
 		// realmyroommainui.cpp:9370
 		break;
@@ -10146,9 +10159,9 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 		switch (typeId >> 26) {
 		case 6:
 			// realmyroommainui.cpp:12542
-			count = ((const sBoughtItem *)msg.m_param5)->count;
 			period = msg.m_param3;
 			kind = (unsigned char)msg.m_param4;
+			count = ((const sBoughtItem *)msg.m_param5)->count;
 			// realmyroommainui.cpp:12544
 			pList = &WSingleton<CSharedDoc>::Instance()->m_itemInfoList;
 			// realmyroommainui.cpp:12546
@@ -10156,9 +10169,9 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 
 		case 5:
 			// realmyroommainui.cpp:12553
-			count = ((const sBoughtItem *)msg.m_param5)->count;
 			period = msg.m_param3;
 			kind = (unsigned char)msg.m_param4;
+			count = ((const sBoughtItem *)msg.m_param5)->count;
 			// realmyroommainui.cpp:12555
 			pList = &WSingleton<CSharedDoc>::Instance()->m_myGearList;
 			// realmyroommainui.cpp:12557
@@ -11105,7 +11118,8 @@ void CRealMyRoomMain::HandleMsg(const MsgObject &msg) {
 				// realmyroommainui.cpp:13722
 				m_pReportDlg->EnableDrag(false);
 				// realmyroommainui.cpp:13723
-				m_pReportDlg->SetTikiReportState(time);
+				SYSTEMTIME reportTime = time;
+				m_pReportDlg->SetTikiReportState(reportTime);
 				// realmyroommainui.cpp:13724
 				m_pReportDlg->Open((FRESH_RESULT_CALLBACK)&CRealMyRoomMain::OnResultDlg_Report, WPoint(68.0f, 48.0f), 1);
 			}

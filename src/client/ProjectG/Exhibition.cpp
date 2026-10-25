@@ -287,7 +287,7 @@ void CExhibition::Process(float dt, bool b) {
 		// fall through
 	case 2:
 		if (m_exhibitType == 2 || m_exhibitType == 3 || m_exhibitType == 4 || m_exhibitType == 5) {
-			m_matrix = m_matrix * RotMat(dt * -1.0471976f, 1);
+			m_matrix *= RotMat(dt * -1.0471976f, 1);
 		}
 		break;
 	case 1:

@@ -765,10 +765,6 @@ void FrCardBoxDlg::SetPackVisibleInBox(void) {
 	}
 }
 
-// Draws the named Fresh bitmap at (x, y) in its own size, when it exists
-// (one source line per bitmap in the original).
-#define DRAW_BG_BITMAP(pGDI, name, x, y) { const Bitmap* pBitmap = g_pFresh->GetBitmap(name); if (pBitmap) (pGDI)->DrawTexture(pBitmap, WRect((x), (y), (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0); }
-
 // cardboxdlg.cpp:763
 void FrCardBoxDlg::Display2DBg(void) {
 	FrGraphicInterface* pGDI = g_pFresh->GetManager()->GetGDI();
@@ -776,16 +772,16 @@ void FrCardBoxDlg::Display2DBg(void) {
 
 	float x = m_rcBg.x;
 	float y = m_rcBg.y;
+	const Bitmap* pBitmap;
 
 
 
 
 
-
-	DRAW_BG_BITMAP(pGDI, "bg_cardcenter_0", x, y - 28.0f);
-	DRAW_BG_BITMAP(pGDI, "bg_cardcenter_1", x + 256.0f, y - 28.0f);
-	DRAW_BG_BITMAP(pGDI, "bg_cardcenter_2", x, y + 256.0f - 28.0f);
-	DRAW_BG_BITMAP(pGDI, "bg_cardcenter_3", x + 256.0f, y + 256.0f - 28.0f);
+	pBitmap = g_pFresh->GetBitmap("bg_cardcenter_0"); if (pBitmap) pGDI->DrawTexture(pBitmap, WRect(x, y - 28.0f, (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0);
+	pBitmap = g_pFresh->GetBitmap("bg_cardcenter_1"); if (pBitmap) pGDI->DrawTexture(pBitmap, WRect(x + 256.0f, y - 28.0f, (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0);
+	pBitmap = g_pFresh->GetBitmap("bg_cardcenter_2"); if (pBitmap) pGDI->DrawTexture(pBitmap, WRect(x, y + 256.0f - 28.0f, (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0);
+	pBitmap = g_pFresh->GetBitmap("bg_cardcenter_3"); if (pBitmap) pGDI->DrawTexture(pBitmap, WRect(x + 256.0f, y + 256.0f - 28.0f, (float)pBitmap->Width(), (float)pBitmap->Height()), 0xFFFFFFFF, 0);
 
 
 	if (m_pParticle)

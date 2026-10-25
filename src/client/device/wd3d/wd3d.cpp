@@ -612,7 +612,7 @@ void WDirect3D::DrawIndexedTriangles(WTVertex* p, int pnum, unsigned short* flis
 			t[1] = &p[flist[i++]];
 			t[2] = &p[flist[i++]];
 
-			Buffering(iType, iType2, 3, dwVertexTypeDesc, ModifyVertices(t, 3, dwVertexTypeDesc, true), D3DPT_TRIANGLEFAN, ((iType & 0x300000) == 0x300000 || (iType & 0x300000) == 0x100000) ? 0.0f : (t[0]->vz + t[1]->vz + t[2]->vz) * (1.0f / 3.0f));
+			Buffering(iType, iType2, 3, dwVertexTypeDesc, ModifyVertices(t, 3, dwVertexTypeDesc, true), D3DPT_TRIANGLEFAN, ((iType & 0x300000) == 0x300000 || (iType & 0x300000) == 0x100000) ? 0.0f : ((t[0]->vz + t[1]->vz) + t[2]->vz) * (1.0f / 3.0f));
 		}
 	} else if (!(iType & 0x4000000)) {
 		DrawPrimitiveIndexed(iType, dwVertexTypeDesc, ModifyVertices(p, pnum, dwVertexTypeDesc, false), pnum, flist, fnum, iType2);

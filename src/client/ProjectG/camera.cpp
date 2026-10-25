@@ -604,10 +604,11 @@ void CCamera::Translate(float dt) {
 
 	m_unk60 = true; m_startHeightRate = GetHeightRate(ground + GOLFDOC()->GetCameraData().m_groundOffset);
 
-	WVector before = g_camera.pivot - GOLFDOC()->GetCameraData().m_matrix.pivot - move;
-	WVector after = g_camera.pivot - GOLFDOC()->GetCameraData().m_matrix.pivot;
+	sCameraData &cam = GOLFDOC()->GetCameraData();
+	WVector before = g_camera.pivot - cam.m_matrix.pivot - move;
+	WVector after = g_camera.pivot - cam.m_matrix.pivot;
 
-	if (GOLFDOC()->GameMode() == 0x100 && WDotProduct(after, GOLFDOC()->GetCameraData().m_matrix.za) * WDotProduct(before, GOLFDOC()->GetCameraData().m_matrix.za) < 0.0f && Abs(g_camera.pivot.y - GOLFDOC()->GetCameraData().m_matrix.pivot.y) < 3.2f) {
+	if (GOLFDOC()->GameMode() == 0x100 && WDotProduct(after, cam.m_matrix.za) * WDotProduct(before, cam.m_matrix.za) < 0.0f && Abs(g_camera.pivot.y - GOLFDOC()->GetCameraData().m_matrix.pivot.y) < 3.2f) {
 		m_pos = GOLFDOC()->GetCameraData().m_matrix.pivot;
 		m_at = GOLFDOC()->GetCameraData().m_matrix.pivot + GOLFDOC()->GetCameraData().m_matrix.za;
 		m_at.y += tan(GOLFDOC()->GetCameraData().m_pitch);

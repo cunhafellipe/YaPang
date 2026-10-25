@@ -1831,15 +1831,16 @@ void CGolfPlayer::HandleMsg(const MsgObject &msg) {
 		*(int *)msg.m_param1 = m_comboRunning;
 		*(float *)msg.m_param2 = m_comboTime;
 		break;
-	case 0x1F8:
-		if (msg.m_param1 < GOLFDOC()->GetPlayerNum()) {
+	case 0x1F8: {
+		int playerIndex = msg.m_param1; if (playerIndex < GOLFDOC()->GetPlayerNum()) {
 			CFxSequence *pSeq = CFx::Instance()->OpenSequence("Talk_Room.seq", true);
 			if (pSeq) {
-				const WVector &pivot = m_pPetInfos[msg.m_param1].m_worldMatrix.pivot;
+				const WVector &pivot = m_pPetInfos[playerIndex].m_worldMatrix.pivot;
 				pSeq->m_pos = WVector(pivot.x, pivot.y + 5.0f, pivot.z);
 			}
 		}
 		break;
+	}
 	case 0x157:
 		if (msg.m_param1 != -1) {
 			PLAYER(0)->m_power = msg.m_param1;

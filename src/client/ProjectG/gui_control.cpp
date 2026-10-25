@@ -321,7 +321,7 @@ void CScreen::OnLoad(void) {
 	m_pSimpleUI220 = new CSimpleUI("[icon01.jpg");
 	m_pSimpleUI220->Add("\xc7\xf6\xc0\xe7\xc5\xac\xb7\xb4", WRect(288.0f, 0.0f, 48.0f, 48.0f), false);
 
-	if (WSingleton<CSharedDoc>::Instance()->m_pGolfDoc->m_gameState < 15) {
+	if (GOLFDOC()->m_gameState < 15) {
 		CSimpleUI** ppTutorialUI = m_pTutorialUIs;
 
 		bool wideTitle[12] = { true, true, false, true, true, true, false, false, false, true, false, false };
@@ -427,7 +427,10 @@ void CScreen::OnLoad(void) {
 	m_pFont = WSingleton<CChatMsg>::Instance()->GetMaskedFont();
 
 	for (int i = 0; i < 15; i++) {
-		m_missionMarkShown[i] = i < GOLFDOC()->m_gameState;
+		if (i < GOLFDOC()->m_gameState)
+			m_missionMarkShown[i] = true;
+		else
+			m_missionMarkShown[i] = false;
 	}
 
 	if (GOLFDOC()->m_gameState < 15) {
@@ -938,9 +941,8 @@ void CScreen::OnDisplay(void) {
 				float width = m_pFont->GetTextWidth(g_view, title.c_str());
 				m_pFont->Print(g_view, (g_view->GetWidth() - width) * 0.5f - 25.0f, g_view->GetHeight() - 16.0f, title.c_str(), 0, 0xFFFFFFFF, 0);
 
-				unsigned long endTime = WSingleton<CSharedDoc>::Instance()->m_gameTimeLimit + WSingleton<CSharedDoc>::Instance()->m_gameStartTime;
-				if (endTime > g_CurrentTime) {
-					unsigned long sec = (WSingleton<CSharedDoc>::Instance()->m_gameTimeLimit - g_CurrentTime + WSingleton<CSharedDoc>::Instance()->m_gameStartTime) / 1000;
+				if (GetGameTimeLimit() + WSingleton<CSharedDoc>::Instance()->m_gameStartTime > g_CurrentTime) {
+					unsigned long sec = (GetGameTimeLimit() - g_CurrentTime + WSingleton<CSharedDoc>::Instance()->m_gameStartTime) / 1000;
 					m_pFont->Print(g_view, g_view->GetWidth() * 0.5f + 39.0f, g_view->GetHeight() - 16.0f, MakeStr("%02d:%02d", sec / 60, sec % 60), 0, sec < 180 ? 0xFFFF0000 : 0xFFFFFFFF, 0);
 				}
 				else {

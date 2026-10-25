@@ -41,12 +41,12 @@ CRain::~CRain(void) {
 // rain.cpp:52
 void CRain::Process(float fDelta) {
 	Waabb area;
-	area.min = g_camera.pivot - m_area * 0.5f;
-	area.max = m_area * 0.5f + g_camera.pivot;
+	area.min = g_camera.pivot - 0.5f * m_area;
+	area.max = 0.5f * m_area + g_camera.pivot;
 
 	for (int i = 0; i < 500; i++) {
 		m_frags[i].pos += m_wind * 10.0f * fDelta;
-		m_frags[i].visible = (m_frags[i].pos - g_camera.pivot).Magnitude() < m_height || (m_wind + m_frags[i].pos - g_camera.pivot).Magnitude() < m_height ? true : false;
+		m_frags[i].visible = (m_frags[i].pos - g_camera.pivot).Magnitude() < m_height || (m_frags[i].pos + m_wind - g_camera.pivot).Magnitude() < m_height ? true : false;
 
 		for (int j = 0; j < 3; j++) {
 			if (m_frags[i].pos.p[j] > area.max.p[j]) {
@@ -65,7 +65,7 @@ void CRain::Display(void) {
 
 	for (int i = 0; i < 500; i++) {
 		if (m_frags[i].visible) {
-			sphere.pos = m_wind * 0.5f + m_frags[i].pos;
+			sphere.pos = 0.5f * m_wind + m_frags[i].pos;
 
 			if (g_view->InFrustum(sphere)) {
 				g_view->DrawLine(m_frags[i].pos, 0xA0E0E0E0, m_frags[i].pos + m_wind, 0xA0E0E0E0, 0);

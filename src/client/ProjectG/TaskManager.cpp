@@ -1221,7 +1221,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:1632
 		SendMessage(g_hwnd, 0xADB3, 0, 0);
 		// taskmanager.cpp:1640
-		FrBongdariShopDlg* pDlg = FrStaticCast<FrBongdariShopDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop");
+		FrBongdariShopDlg* pDlg = FR_STATIC_CAST(FrBongdariShopDlg, pWnd);
 		// taskmanager.cpp:1642
 		if (pDlg) {
 			// taskmanager.cpp:1646
@@ -3208,7 +3209,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					}
 				}
 				// taskmanager.cpp:3797
-				GetActor("RealMyRoom") << MsgObject(0, 0x21A, 0, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x21A, 0, 0, 0, 0, 0);
 			} else if (result == 1) {
 				// taskmanager.cpp:3806
 				AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x25, (intptr_t)"\xc4\xab\xb5\xe5 \xc1\xa4\xba\xb8\xb8\xa6 \xb9\xde\xb4\xc2\xb5\xa5 \xbd\xc7\xc6\xd0 \xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9", 0, 0, 0, 0));
@@ -3253,8 +3254,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				}
 			}
 			// taskmanager.cpp:3866
-			MsgObject msg(0, 2, 0, 0, 0, 0, 0);
-			GetActor("RealMyRoom") << msg;
+			GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
 		}
 		break;
 	case 0x158:
@@ -3522,6 +3522,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:4249
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xc4\xab\xb5\xe5\xc0\xc7 \xb1\xe2\xb0\xa3\xc1\xa6 \xc6\xaf\xbc\xf6\xb4\xc9\xb7\xc2 \xbb\xe8\xc1\xa6\xbf\xa1 \xbd\xc7\xc6\xd0 \xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9", 0, 0, 0, 0));
 		}
+		// taskmanager.cpp:4252
+		GetActor("RealMyRoom") << MsgObject(0, 2, 0, 0, 0, 0, 0);
 		break;
 	}
 	case 0x14c: {
@@ -4377,7 +4379,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:5196
 			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 				// taskmanager.cpp:5197
-				GetActor("Lobby") << MsgObject(0, 3, (intptr_t)text, 0xFFFF7878, 0, 0, 0);
+				AfxGetTask()->GetActor("Lobby") << MsgObject(0, 3, (intptr_t)text, 0xFFFF7878, 0, 0, 0);
 			} else {
 				// taskmanager.cpp:5199
 				CChatMsg::Instance()->AddChatMsg(text, 0xFFFF7878, false, false);
@@ -4945,10 +4947,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:6048
 		int result = packet.Decode4();
 		// taskmanager.cpp:6051
-		FrBongdariShopDlg* pDlg = FrStaticCast<FrBongdariShopDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop");
+		// taskmanager.cpp:6052
+		FrBongdariShopDlg* pDlg = 0;
 		// taskmanager.cpp:6054
-		if (pDlg) {
+		if (FR_STATIC_CAST(FrBongdariShopDlg, pWnd)) {
 			// taskmanager.cpp:6058
+			pDlg = (FrBongdariShopDlg*)pWnd;
 			pDlg->EnableExitButton(true);
 		}
 		// taskmanager.cpp:6061
@@ -4988,8 +4993,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				pDlg->SetDataFee(0);
 			}
 			// taskmanager.cpp:6102
-			MsgObject msg(0, 0xE1, 0, 0, 0, 0, 0);
-			AfxGetTask()->GetActor("RealMyRoom") << msg;
+			AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xE1, 0, 0, 0, 0, 0);
 			break;
 		}
 		case 2:
@@ -5010,7 +5014,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		CSharedDoc::Instance()->SetBsUsableBonusTimes((short)packet.Decode4());
 		{
 			// taskmanager.cpp:6139
-			FrBongdariShopDlg* pDlg = FrStaticCast<FrBongdariShopDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop"));
+			FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("bongdari_shop");
+			FrBongdariShopDlg* pDlg = FR_STATIC_CAST(FrBongdariShopDlg, pWnd);
 			// taskmanager.cpp:6142
 			if (pDlg == 0)
 				break;
@@ -6089,7 +6094,6 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:7961
 		// taskmanager.cpp:7962
 		if (packet.Decode4() != 0) {
-	case 0x94:
 			// taskmanager.cpp:7965
 			CSharedDoc::Instance()->m_myBonusCash = packet.Decode8();
 			// taskmanager.cpp:7966
@@ -6098,6 +6102,10 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:7974
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xba\xb8\xc0\xaf\xc7\xcf\xb0\xed \xc0\xd6\xb4\xc2 \xc4\xed\xc5\xb0\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
 		}
+		break;
+	case 0x94:
+		CSharedDoc::Instance()->m_myBonusCash = packet.Decode8();
+		CSharedDoc::Instance()->RefreshAllCookie();
 		break;
 	case 0xc8:
 		// taskmanager.cpp:7983
@@ -6225,9 +6233,17 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:8150
 		int result = packet.Decode4();
 		// taskmanager.cpp:8153
-		FrScratchDlg* pDlg = FrStaticCast<FrScratchDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("scratchdlg"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("scratchdlg");
+		// taskmanager.cpp:8154
+		FrScratchDlg* pDlg = 0;
+		// taskmanager.cpp:8156
+		if (FR_STATIC_CAST(FrScratchDlg, pWnd)) {
+			// taskmanager.cpp:8158
+			pDlg = (FrScratchDlg*)pWnd;
+		}
 		// taskmanager.cpp:8161
-		if (result == 0) {
+		switch (result) {
+		case 0: {
 			// taskmanager.cpp:8165
 			int count = packet.Decode4();
 			// taskmanager.cpp:8167
@@ -6251,12 +6267,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8183
 				AfxPostMsg(0, "RealMyRoom", 0xE1, 0, 0, 0, 0);
 			}
-		} else if (result == 0x1B) {
+			break;
+		}
+		case 0x1B:
 			// taskmanager.cpp:8190
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xbd\xba\xc5\xa9\xb7\xa1\xc4\xa1\xb8\xa6 \xc0\xcc\xbf\xeb\xc7\xcf\xbd\xc3\xb4\xc2\xb5\xa5 \xba\xd2\xc6\xed\xc0\xbb \xb5\xe5\xb7\xc1 \xc1\xcb\xbc\xdb\xc7\xd5\xb4\xcf\xb4\xd9. \xc0\xe7\xb7\xce\xb1\xd7\xc0\xce\xc7\xcf\xbd\xc3\xb8\xe9 \xc1\xa4\xbb\xf3\xc0\xfb\xc0\xb8\xb7\xce \xc0\xcc\xbf\xeb\xc7\xcf\xbd\xc7 \xbc\xf6 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
-		} else {
+			break;
+		default:
 			// taskmanager.cpp:8195
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)"\xbd\xba\xc5\xa9\xb7\xa1\xc4\xa1 \xc0\xcc\xbf\xeb \xbf\xc0\xb7\xf9\xb0\xa1 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0));
+			break;
 		}
 		break;
 	}
@@ -6264,10 +6284,13 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 		// taskmanager.cpp:8203
 		int result = packet.Decode4();
 		// taskmanager.cpp:8206
-		FrScratchDlg* pDlg = FrStaticCast<FrScratchDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("scratchdlg"));
+		FrWnd* pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("scratchdlg");
+		// taskmanager.cpp:8207
+		FrScratchDlg* pDlg = 0;
 		// taskmanager.cpp:8209
-		if (pDlg) {
+		if (FR_STATIC_CAST(FrScratchDlg, pWnd)) {
 			// taskmanager.cpp:8212
+			pDlg = (FrScratchDlg*)pWnd;
 			pDlg->EnableScratchSerialNumber(true);
 		}
 		// taskmanager.cpp:8215
@@ -6446,7 +6469,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8421
 				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
 				// taskmanager.cpp:8422
-				if (FrStaticCast<COfflineShopVisitorDlg>(pWnd)) {
+				if (FR_STATIC_CAST(COfflineShopVisitorDlg, pWnd)) {
 					break;
 				}
 				// taskmanager.cpp:8424
@@ -6504,44 +6527,45 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				}
 				// taskmanager.cpp:8479
 				std::list<sStall>::iterator it = pStallList->begin();
-				if (it == pStallList->end()) {
+				if (it != pStallList->end()) {
+					// taskmanager.cpp:8481
+					if (it->ownerUID != stallOwnerUID) {
+						break;
+					}
+					// taskmanager.cpp:8483
+					if (it->open <= 0) {
+						break;
+					}
+					// taskmanager.cpp:8485
+					if (it->slots[0].used != slot) {
+						break;
+					}
+					// taskmanager.cpp:8487
+					memset(&it->slots[0].item, 0, sizeof(sTradeItem));
+				} else {
 					break;
 				}
-				// taskmanager.cpp:8481
-				if (it->ownerUID != stallOwnerUID) {
-					break;
-				}
-				// taskmanager.cpp:8483
-				if (it->open <= 0) {
-					break;
-				}
-				// taskmanager.cpp:8485
-				if (it->slots[0].used != slot) {
-					break;
-				}
-				// taskmanager.cpp:8487
-				memset(&it->slots[0].item, 0, sizeof(sTradeItem));
 			}
 			// taskmanager.cpp:8502
 			if (MyUID() == CSharedDoc::Instance()->m_myRoomOwnerUID) {
 				// taskmanager.cpp:8505
 				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
 				// taskmanager.cpp:8508
-				COfflineShopEditDlg *pEditDlg = FrStaticCast<COfflineShopEditDlg>(pWnd);
+				COfflineShopEditDlg *pEditDlg = FR_STATIC_CAST(COfflineShopEditDlg, pWnd);
 				if (pEditDlg)
 					// taskmanager.cpp:8516
 					pEditDlg->SetListTradeItem();
 				// taskmanager.cpp:8520
 				pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
 				// taskmanager.cpp:8522
-				FrOfflineTradeFinishEditDlg *pFinishDlg = FrStaticCast<FrOfflineTradeFinishEditDlg>(pWnd);
+				FrOfflineTradeFinishEditDlg *pFinishDlg = FR_STATIC_CAST(FrOfflineTradeFinishEditDlg, pWnd);
 				if (pFinishDlg)
 					// taskmanager.cpp:8526
 					pFinishDlg->SetListTradeItem((std::list<sTradeItem> *)0);
 				// taskmanager.cpp:8530
 				pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
 				// taskmanager.cpp:8532
-				COfflineShopDlg *pShopDlg = FrStaticCast<COfflineShopDlg>(pWnd);
+				COfflineShopDlg *pShopDlg = FR_STATIC_CAST(COfflineShopDlg, pWnd);
 				if (pShopDlg == 0) {
 					break;
 				}
@@ -6553,14 +6577,14 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8542
 				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
 				// taskmanager.cpp:8544
-				FrOfflineTradeFinishEditDlg *pFinishDlg = FrStaticCast<FrOfflineTradeFinishEditDlg>(pWnd);
+				FrOfflineTradeFinishEditDlg *pFinishDlg = FR_STATIC_CAST(FrOfflineTradeFinishEditDlg, pWnd);
 				if (pFinishDlg)
 					// taskmanager.cpp:8548
 					pFinishDlg->Close(true);
 				// taskmanager.cpp:8551
 				pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
 				// taskmanager.cpp:8553
-				COfflineShopVisitorDlg *pVisitorDlg = FrStaticCast<COfflineShopVisitorDlg>(pWnd);
+				COfflineShopVisitorDlg *pVisitorDlg = FR_STATIC_CAST(COfflineShopVisitorDlg, pWnd);
 				if (pVisitorDlg == 0) {
 					break;
 				}
@@ -6683,21 +6707,24 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8617
 				if (MyUID() == CSharedDoc::Instance()->m_myRoomOwnerUID) {
 					// taskmanager.cpp:8620
-					FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+					FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+					FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 					// taskmanager.cpp:8623
 					if (pEditDlg) {
 						// taskmanager.cpp:8630
 						pEditDlg->Close(true);
 					}
 					// taskmanager.cpp:8634
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:8636
 					if (pBuyDlg) {
 						pBuyDlg->Close(true);
 					}
 				} else {
 					// taskmanager.cpp:8662
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:8664
 					if (pBuyDlg) {
 						// taskmanager.cpp:8668
@@ -6705,7 +6732,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					}
 				}
 				// taskmanager.cpp:8671
-				FrWnd *pShopDlg = FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg"));
+				FrWnd *pShopWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
+				FrWnd *pShopDlg = FR_STATIC_CAST(FrWnd, pShopWnd);
 				// taskmanager.cpp:8674
 				if (pShopDlg) {
 					// taskmanager.cpp:8678
@@ -6748,7 +6776,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					CSharedDoc::Instance()->AddMaketListItem(s_saleItem);
 				}
 				// taskmanager.cpp:8727
-				COfflineTradeDlg *pDlg = FrStaticCast<COfflineTradeDlg>(pWnd);
+				COfflineTradeDlg *pDlg = FR_STATIC_CAST(COfflineTradeDlg, pWnd);
 				if (pDlg) {
 					// taskmanager.cpp:8745
 					pDlg->SetListItem();
@@ -6761,7 +6789,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8755
 				CSharedDoc::Instance()->ClearMaketList();
 				// taskmanager.cpp:8756
-				COfflineTradeDlg *pDlg = FrStaticCast<COfflineTradeDlg>(pWnd);
+				COfflineTradeDlg *pDlg = FR_STATIC_CAST(COfflineTradeDlg, pWnd);
 				if (pDlg) {
 					// taskmanager.cpp:8762
 					pDlg->SetListItem();
@@ -6879,21 +6907,24 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:8820
 				if (MyUID() == CSharedDoc::Instance()->m_myRoomOwnerUID) {
 					// taskmanager.cpp:8823
-					FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+					FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+					FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 					// taskmanager.cpp:8826
 					if (pEditDlg) {
 						// taskmanager.cpp:8833
 						pEditDlg->Close(true);
 					}
 					// taskmanager.cpp:8837
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:8839
 					if (pBuyDlg) {
 						pBuyDlg->Close(true);
 					}
 				} else {
 					// taskmanager.cpp:8865
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:8867
 					if (pBuyDlg) {
 						// taskmanager.cpp:8871
@@ -6901,7 +6932,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					}
 				}
 				// taskmanager.cpp:8874
-				FrWnd *pShopDlg = FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg"));
+				FrWnd *pShopWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
+				FrWnd *pShopDlg = FR_STATIC_CAST(FrWnd, pShopWnd);
 				// taskmanager.cpp:8876
 				if (pShopDlg) {
 					// taskmanager.cpp:8880
@@ -6960,7 +6992,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:8962
 			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
 			// taskmanager.cpp:8965
-			COfflineShopEditDlg *pEditDlg = FrStaticCast<COfflineShopEditDlg>(pWnd);
+			COfflineShopEditDlg *pEditDlg = FR_STATIC_CAST(COfflineShopEditDlg, pWnd);
 			if (pEditDlg) {
 				// taskmanager.cpp:8969
 				pEditDlg->m_closing = 1;
@@ -6983,14 +7015,14 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:8996
 			pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
 			// taskmanager.cpp:8998
-			FrOfflineTradeFinishEditDlg *pFinishDlg = FrStaticCast<FrOfflineTradeFinishEditDlg>(pWnd);
+			FrOfflineTradeFinishEditDlg *pFinishDlg = FR_STATIC_CAST(FrOfflineTradeFinishEditDlg, pWnd);
 			if (pFinishDlg)
 				// taskmanager.cpp:9002
 				pFinishDlg->SetListTradeItem((std::list<sTradeItem> *)0);
 			// taskmanager.cpp:9006
 			pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("offlinetradedlg");
 			// taskmanager.cpp:9008
-			COfflineShopDlg *pShopDlg = FrStaticCast<COfflineShopDlg>(pWnd);
+			COfflineShopDlg *pShopDlg = FR_STATIC_CAST(COfflineShopDlg, pWnd);
 			if (pShopDlg == 0) {
 				break;
 			}
@@ -7041,7 +7073,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:9054
 					CSharedDoc::Instance()->InitTradeData();
 					// taskmanager.cpp:9056
-					FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+					FrWnd *pTradeWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+					FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pTradeWnd);
 					// taskmanager.cpp:9058
 					if (pTradeDlg) {
 						// taskmanager.cpp:9064
@@ -7050,7 +7083,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:9069
 					if (strcmp(nick.c_str(), MyNick()) == 0) {
 						// taskmanager.cpp:9071
-						FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+						FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+						FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 						// taskmanager.cpp:9073
 						if (pEditDlg) {
 							// taskmanager.cpp:9079
@@ -7062,7 +7096,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						result = 3;
 						CSharedDoc::Instance()->InitTradeData();
 						// taskmanager.cpp:9089
-						FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+						FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+						FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 						// taskmanager.cpp:9091
 						if (pBuyDlg) {
 							// taskmanager.cpp:9097
@@ -7101,14 +7136,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:9130
 					CSharedDoc::Instance()->SetStateTrade(STATE_TRADE_READY);
 					// taskmanager.cpp:9132
-					FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+					FrWnd *pTradeWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+					FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pTradeWnd);
 					// taskmanager.cpp:9134
 					if (pTradeDlg) {
 						// taskmanager.cpp:9138
 						pTradeDlg->Close(true);
 					}
 					// taskmanager.cpp:9141
-					FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+					FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+					FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 					// taskmanager.cpp:9143
 					if (!pEditDlg) {
 						// taskmanager.cpp:9145
@@ -7128,14 +7165,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 					// taskmanager.cpp:9158
 					CSharedDoc::Instance()->InitTradeData();
 					// taskmanager.cpp:9160
-					FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+					FrWnd *pTradeWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+					FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pTradeWnd);
 					// taskmanager.cpp:9162
 					if (pTradeDlg) {
 						// taskmanager.cpp:9166
 						pTradeDlg->Close(true);
 					}
 					// taskmanager.cpp:9169
-					FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg"));
+					FrWnd *pBuyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
+					FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pBuyWnd);
 					// taskmanager.cpp:9171
 					if (pBuyDlg) {
 						// taskmanager.cpp:9175
@@ -7198,7 +7237,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9235
 			SetTradeResultCode(result, 0xE4, 0);
 			// taskmanager.cpp:9237
-			FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+			FrTradeDlg *pDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 			// taskmanager.cpp:9240
 			if (!pDlg) {
 				// taskmanager.cpp:9246
@@ -7271,14 +7311,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 						// taskmanager.cpp:9312
 						CSharedDoc::Instance()->SetTradeTitle(title);
 						// taskmanager.cpp:9314
-						FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+						FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+						FrTradeDlg *pDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 						// taskmanager.cpp:9317
 						if (pDlg) {
 							// taskmanager.cpp:9321
 							pDlg->UpdateTradeTitle();
 						}
 						// taskmanager.cpp:9324
-						FrTradeEditDlg *pEditDlg = FrStaticCast<FrTradeEditDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+						FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+						FrTradeEditDlg *pEditDlg = FR_STATIC_CAST(FrTradeEditDlg, pEditWnd);
 						// taskmanager.cpp:9326
 						if (pEditDlg) {
 							// taskmanager.cpp:9330
@@ -7311,7 +7353,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9355
 			SetTradeResultCode(result, 0xE7, 0);
 			// taskmanager.cpp:9357
-			FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+			FrTradeDlg *pDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 			// taskmanager.cpp:9359
 			if (pDlg == 0)
 				break;
@@ -7378,14 +7421,16 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			if (result != 1)
 				break;
 			// taskmanager.cpp:9429
-			FrWnd *pEditDlg = FrStaticCast<FrWnd>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg"));
+			FrWnd *pEditWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradeeditdlg");
+			FrWnd *pEditDlg = FR_STATIC_CAST(FrWnd, pEditWnd);
 			// taskmanager.cpp:9431
 			if (pEditDlg) {
 				// taskmanager.cpp:9435
 				pEditDlg->Close(true);
 			}
 			// taskmanager.cpp:9438
-			FrTradeDlg *pDlg = FrStaticCast<FrTradeDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg"));
+			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
+			FrTradeDlg *pDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 			// taskmanager.cpp:9440
 			if (pDlg)
 				break;
@@ -7411,7 +7456,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9464
 			if (!IS_SUCCESSFUL(err)) {
 				// taskmanager.cpp:9466
-				GetActor(data_aa04ec[3]) << MsgObject(0, 0x273, 0, err, 0, 0, 0);
+				MsgObject msg(0, 0x273, 0, err, 0, 0, 0);
+				GetActor(data_aa04ec[3]) << msg;
 				return 1;
 			}
 			// Leaves no code; the original's only trace is the xtAlways<0>::Get
@@ -7449,7 +7495,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9492
 			if (!IS_SUCCESSFUL(err)) {
 				// taskmanager.cpp:9494
-				GetActor(data_aa04ec[3]) << MsgObject(0, 0x273, 0, err, 0, 0, 0);
+				MsgObject msg(0, 0x273, 0, err, 0, 0, 0);
+				GetActor(data_aa04ec[3]) << msg;
 				return 1;
 			}
 			// taskmanager.cpp:9498
@@ -7486,7 +7533,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9521
 			if (!IS_SUCCESSFUL(err)) {
 				// taskmanager.cpp:9523
-				GetActor(data_aa04ec[3]) << MsgObject(0, 0x273, 0, err, 0, 0, 0);
+				MsgObject msg(0, 0x273, 0, err, 0, 0, 0);
+				GetActor(data_aa04ec[3]) << msg;
 				return 1;
 			}
 			// taskmanager.cpp:9527
@@ -7837,7 +7885,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:9910
 			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
 			// taskmanager.cpp:9912
-			FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(pWnd);
+			FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pWnd);
 			if (pTradeDlg)
 				// taskmanager.cpp:9916
 				pTradeDlg->EnableSendingServer(false);
@@ -7903,7 +7951,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:9973
 				FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradebuydlg");
 				// taskmanager.cpp:9975
-				FrTradeBuyDlg *pBuyDlg = FrStaticCast<FrTradeBuyDlg>(pWnd);
+				FrTradeBuyDlg *pBuyDlg = FR_STATIC_CAST(FrTradeBuyDlg, pWnd);
 				if (pBuyDlg) {
 					// taskmanager.cpp:9980
 					if (!pBuyDlg->IsClosing()) {
@@ -7931,7 +7979,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 								// taskmanager.cpp:10000
 								FrWnd *pNotifyWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("notify_okcancel");
 								// taskmanager.cpp:10002
-								FrForm *pNotify = FrStaticCast<FrForm>(pNotifyWnd);
+								FrForm *pNotify = FR_STATIC_CAST(FrForm, pNotifyWnd);
 								if (pNotify)
 									// taskmanager.cpp:10006
 									pNotify->Close(true);
@@ -7942,7 +7990,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				// taskmanager.cpp:10014
 				FrWnd *pTradeWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("tradedlg");
 				// taskmanager.cpp:10017
-				FrTradeDlg *pTradeDlg = FrStaticCast<FrTradeDlg>(pTradeWnd);
+				FrTradeDlg *pTradeDlg = FR_STATIC_CAST(FrTradeDlg, pTradeWnd);
 				if (pTradeDlg)
 					// taskmanager.cpp:10024
 					pTradeDlg->SetListTradeItem(true);
@@ -8059,7 +8107,8 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 				break;
 			}
 			// taskmanager.cpp:10182
-			FrRecycleDlg *pDlg = FrStaticCast<FrRecycleDlg>(g_pFresh->GetManager()->GetDesktop()->FindChildByName("recycledlg"));
+			FrWnd *pWnd = g_pFresh->GetManager()->GetDesktop()->FindChildByName("recycledlg");
+			FrRecycleDlg *pDlg = FR_STATIC_CAST(FrRecycleDlg, pWnd);
 			// taskmanager.cpp:10183
 			if (pDlg) {
 				// taskmanager.cpp:10187
@@ -8724,7 +8773,7 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:10880
 			if (type == 2 && ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false))
 				// taskmanager.cpp:10882
-				GetActor("RealMyRoom") << MsgObject(0, 0x67, 0, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x67, 0, 0, 0, 0, 0);
 		}
 		break;
 	case 0xc3:
@@ -9073,15 +9122,15 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:11237
 			if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CGolfTask::m_RTTI) : false) {
 				// taskmanager.cpp:11239
-				GetActor("Score") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("Score") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
 			// taskmanager.cpp:11241
 			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CLobbyTask::m_RTTI) : false) {
 				// taskmanager.cpp:11243
-				GetActor("Lobby") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("Lobby") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
 			// taskmanager.cpp:11247
 			} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject *)__rtti_obj)->IsKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 				// taskmanager.cpp:11249
-				GetActor("RealMyRoom") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
+				AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0x12D, (intptr_t)&levelUp, 0, 0, 0, 0);
 			}
 		}
 		break;
@@ -10099,10 +10148,10 @@ int CTask::OnPacketCommon(WReceivedPacket &packet) {
 			// taskmanager.cpp:12570
 			unsigned short filter = packet.Decode2();
 			// taskmanager.cpp:12572
-			char text[0x100] = { 0, };
-			char serverName[0x28] = { 0, };
-			char serverType[0x28] = { 0, };
-			char courseName[0x28] = { 0, };
+			char text[0x100] = { 0, 0 };
+			char serverName[0x28] = { 0, 0 };
+			char serverType[0x28] = { 0, 0 };
+			char courseName[0x28] = { 0, 0 };
 			// taskmanager.cpp:12577
 			wsprintfA(text, "\xc3\xd1 \xb0\xb3\xbc\xb3\xb5\xc8 \xb9\xe6 \xb0\xb3\xbc\xf6 %d", roomCount);
 			// taskmanager.cpp:12578

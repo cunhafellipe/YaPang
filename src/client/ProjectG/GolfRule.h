@@ -320,7 +320,7 @@ private:
 		__int64 m_ghostAward;       // 0x18
 		__int64 m_extraPang;        // 0x20
 		__int64 m_holeRecord;       // 0x28, PLAYER(0)->m_holeRecord of the hole
-		UNKNOWN(0x30, 0x58);
+		unsigned long m_equipItem[10]; // 0x30, the first player's equipped item type ids (HandleMsg 0x92)
 		char m_clubName[4];         // 0x58
 		unsigned char m_holeScore;  // 0x5C, PLAYER(0)->m_holes of the hole
 		unsigned char m_rivalLevel; // 0x5D
@@ -539,6 +539,8 @@ BEGIN_LAYOUT_CHECK(CGolfRule)
 	CHECK_FIELD(CGolfRule, m_shotCountKey, 0x360);
 	CHECK_FIELD(CGolfRule, m_ghostAward, 0x364);
 	CHECK_FIELD(CGolfRule, m_extraPang, 0x368);
+	CHECK_SIZE(CGolfRule::sBackUp, 0x60);
+	CHECK_FIELD(CGolfRule::sBackUp, m_equipItem, 0x30);
 	CHECK_SIZE(CGolfRule::sShotData, 0x88);
 	CHECK_FIELD(CGolfRule::sShotData, m_wind, 0x4);
 	CHECK_FIELD(CGolfRule::sShotData, m_shotNumber, 0x11);
