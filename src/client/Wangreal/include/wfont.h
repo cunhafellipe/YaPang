@@ -5,6 +5,10 @@
 #include "defines.h"
 #include "client/Wangreal/include/wlist.h"
 #include "client/Wangreal/include/woverlay.h"
+#ifdef JP_PAKS
+#include <map>
+#include <string>
+#endif
 
 class Bitmap;
 class WView;
@@ -35,6 +39,13 @@ public:
 	void SetSpace(int space) { m_space = space; }
 	// wfont.h:16
 	virtual void SetCoordMode(int mode) { WOverlay::SetCoordMode(mode | 0x400); }
+#ifdef JP_PAKS
+	// The JP 983 WFont has wide-text twins of the text virtuals, each in the
+	// slot before its char one: [5] this GetTextWidth (JP 0xb5dce0), [6] the
+	// char GetTextWidth; [12]/[13] PrintInside, [14]/[15] GetTextWidthInside.
+	// The port calls them by name; the slot order is not reproduced.
+	virtual float GetTextWidth(WView* view, const wchar_t* text);
+#endif
 	virtual float GetTextWidth(WView* view, const char* text);
 	// wfont.h:27
 	void SetMode(eFontStyle type) { m_eType = type; }
@@ -53,12 +64,32 @@ public:
 	virtual void Reset(void) {}
 
 	float Print(WView* view, float x, float y, const char* text, int type, unsigned long diffuse, Bitmap* bmp);
+#ifdef JP_PAKS
+	// The JP 983 Wangreal's wide-text Print (RFTextDraw::DrawFontText): like
+	// the char one, forwards to the JP PrintOut 0xb5dbb0 with useOverlay = 1.
+	// The JP WFont vtable also has one more slot after [5] GetTextWidth than
+	// the KR one (GetFontHeight [9], Flush [10]): the wide GetTextWidth [5].
+	float Print(WView* view, float x, float y, const wchar_t* text, int type, unsigned long diffuse, Bitmap* bmp); // JP 0xb5dca0
+#endif
 
 protected:
+#ifdef JP_PAKS
+	// JP [12] 0xb610f0 and [14] 0xb61100: the wide twins are not pure in the
+	// JP base, they draw and measure nothing (header inlines of the JP
+	// wfont.h run 0xb610a0-0xb61100); the JP WFixedFont overrides [12].
+	virtual float PrintInside(WView* view, float x, float y, const wchar_t* text, int len, unsigned long color, Bitmap* bitmap) { return 0; }
+#endif
 	virtual float PrintInside(WView* view, float x, float y, const char* text, int len, unsigned long color, Bitmap* bitmap) = 0;
+#ifdef JP_PAKS
+	virtual float GetTextWidthInside(WView* view, const wchar_t* text) { return 0; }
+#endif
 	virtual float GetTextWidthInside(WView* view, const char* text) = 0;
 
 	float PrintOut(WView* view, float x, float y, const char* text, int len, unsigned long color, bool useOverlay, Bitmap* bitmap);
+#ifdef JP_PAKS
+	// JP 0xb5dbb0: the wide-text PrintOut.
+	float PrintOut(WView* view, float x, float y, const wchar_t* text, int len, unsigned long color, bool useOverlay, Bitmap* bitmap);
+#endif
 	float GetFontScale(WView* view);
 
 	eFontStyle m_eType;                 // 0x58
@@ -132,13 +163,13 @@ public:
 	void Erase(void);
 	// wfont.h:97
 	tagWTITLEFONT* GetFontInfo(void) { return &m_info; }
-	float PutChar(WView* view, float x, float y, const int nChar, int type, unsigned long diffuse);
-	float GetCharWidthA(WView* view, const int nChar);
-
+	float PutChar(WView* view, float x, float y, const int nChar, int type, unsigned long diffuse); float GetCharWidthA(WView* view, const int nChar);
+#ifdef JP_PAKS
+	virtual int GetFontHeight(void) { return m_info.fonth; }  // JP [9] 0xb61e50: the JP WTitleFont returns m_info.fonth (KR keeps WFont's 0)
+#endif
 protected:
 	virtual float PrintInside(WView* view, float x, float y, const char* text, int len, unsigned long color, Bitmap* bitmap);
 	virtual float GetTextWidthInside(WView* view, const char* text);
-
 private:
 	tagWTITLEFONT m_info;           // 0xb0
 	int* m_iTexIndex;               // 0xd0
@@ -256,8 +287,19 @@ public:
 	virtual void Reset(void);
 	// wfont.h:209
 	virtual int GetFontHeight(void) { return m_iFontHeight; }
+#ifdef JP_PAKS
+	// JP [5] 0xb63930: the wide GetTextWidth, overridden (the KR WFixedFont
+	// has no such override; the JP one measures through the wide text cache).
+	using WFont::GetTextWidth;
+	virtual float GetTextWidth(WView* view, const wchar_t* text);
+#endif
 
 protected:
+#ifdef JP_PAKS
+	// JP [12] 0xb63950: the wide PrintInside. The JP WFixedFont does not
+	// override the wide GetTextWidthInside [14] (WFont's returns 0).
+	virtual float PrintInside(WView* view, float x, float y, const wchar_t* text, int len, unsigned long color, Bitmap* bitmap);
+#endif
 	virtual float PrintInside(WView* view, float x, float y, const char* text, int len, unsigned long color, Bitmap* bitmap);
 	virtual float GetTextWidthInside(WView* view, const char* text);
 
@@ -266,6 +308,10 @@ private:
 	unsigned char* GetFontAddr(unsigned short code, int* width);
 	int GetTexture(const char* text);
 	w_fixedtext* GetNewPart(const char* text);
+#ifdef JP_PAKS
+	// JP 0xb636c0: the wide GetNewPart, through m_wideTextList.
+	w_fixedtext* GetNewPart(const wchar_t* text);
+#endif
 	void AddOutArea(w_fixedtext* tex, float x, float y, int type, unsigned long diffuse);
 	int WriteToBitmap(int width, unsigned char* mid);
 	void Write2Buffer(unsigned char* font, unsigned char* buff, int len);
@@ -274,6 +320,15 @@ private:
 	void CreateBitmap(int i);
 
 	WList<w_fixedtext*> m_textList;         // 0xb0
+#ifdef JP_PAKS
+	// JP 0xd0: the wide texts already written to the texture pages, each
+	// mapped to the w_fixedtext of its code-page conversion in m_textList
+	// (map nodes: key at +0xc, value at +0x28, VS 2010). Every KR member
+	// after it sits 0x10 higher in the JP WFixedFont (m_flush_list 0xe0,
+	// m_flush_num 0xae0, m_bitmap 0xaf4, m_iFontHeight 0xb04, m_nowX 0xb0c,
+	// m_nowY 0xb10), so the KR layout checks below are KR only.
+	std::map<std::wstring, w_fixedtext*> m_wideTextList;
+#endif
 	w_flush_area m_flush_list[128];         // 0xd0
 	int m_flush_num;                        // 0xad0
 	bool m_update_flag;                     // 0xad4
@@ -297,6 +352,7 @@ private:
 CHECK_SIZE(WFixedFont::w_fixedtext, 0x10);
 CHECK_SIZE(WFixedFont::w_flush_area, 0x14);
 CHECK_SIZE(WFixedFont::w_temp_pair, 0xc);
+#ifndef JP_PAKS
 CHECK_SIZE(WFixedFont, 0xb0c);
 BEGIN_LAYOUT_CHECK(WFixedFont)
 	CHECK_FIELD(WFixedFont, m_textList, 0xb0);
@@ -319,5 +375,6 @@ BEGIN_LAYOUT_CHECK(WFixedFont)
 	CHECK_FIELD(WFixedFont, m_bytePerChar, 0xb04);
 	CHECK_FIELD(WFixedFont, m_clone, 0xb08);
 END_LAYOUT_CHECK
+#endif
 
 #endif // PG_CLIENT_WANGREAL_INCLUDE_WFONT_H

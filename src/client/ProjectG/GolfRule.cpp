@@ -139,6 +139,36 @@ extern "C" { static float data_00af1c38; }
 extern "C" { static int data_a7df58 = -1; }
 extern "C" { static const int data_9e8f98[20] = { 20, 50, 55, 80, 65, 24, 50, 70, 40, 55, 40, 20, 0, 80, 20, 20, 40, 40, 0, 40 }; }
 
+#ifdef JP_PAKS
+// 0xb4eb80 (src/jp/RFTextManager.h, not on this unit's include
+// path in the port: it is not a PG_REFRESH_HOOK_SOURCES unit).
+const char* Jp_LookupText(const char* key);
+#endif
+
+// The chat target labels ("to all", "to guild") and the whisper-fail notice:
+// the JP exe sets and compares the target with Jp_LookupText(<label>), the
+// text SharedDoc's InitReservedChatList shows in the target combo
+// (OnChatTargetEnterKey 0x66e27c, OnChatInputEnterKey 0x6854eb, 0x685503,
+// 0x6855ea, OnProcess 0x69c0e3, 0x69c14b); the KR exe uses the Korean text.
+#ifdef JP_PAKS
+#define GOLFRULE_CHAT_TEXT(text) Jp_LookupText(text)
+#else
+#define GOLFRULE_CHAT_TEXT(text) (text)
+#endif
+
+// The other UI texts (notices, dialog messages, message formats) the JP exe
+// passes through Jp_LookupText: OnReportBtnUp 0x67856e/0x6785d2, CaptureProcess
+// 0x67a3af/0x67a3bd/0x67a676/0x67a684, DoGameOver 0x67f39b, 0x6819dd,
+// OnOnelineBtnUp 0x681ad2, AddExtPrize 0x6845e6, OnChatInputEnterKey 0x685448/0x685733,
+// SaveShot 0x688455, ReplayTapeCheckAndUse 0x688bc6/0x688bef/0x688ce6/
+// 0x688dad/0x688dda, ChangeGameMode 0x68c4ac, OnProcess 0x69c2fd/0x69c391/
+// 0x69c7cb/0x69ca6e/0x69caf3; the KR exe uses the Korean text.
+#ifdef JP_PAKS
+#define GOLFRULE_TEXT(text) Jp_LookupText(text)
+#else
+#define GOLFRULE_TEXT(text) (text)
+#endif
+
 // The original's max (wutil Max uses >= and gives the other branch).
 template <class T> T MaxOf(T a, T b) { return a < b ? b : a; }
 // The IME input device (public ?g_ime@@3PAVWInputDev@@A).
@@ -881,7 +911,7 @@ void CGolfRule::OnReportBtnUp(void) {
 	if (GOLFDOC()->m_reportSent) {
 		FrForm *form = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 		// "A report on the current game has already been received."
-		form->SetMessage("\xC7\xF6\xC0\xE7 \xB0\xD4\xC0\xD3\xBF\xA1 \xB4\xEB\xC7\xD8\xBC\xAD \xC0\xCC\xB9\xCC \xBD\xC5\xB0\xED\xB0\xA1 \xC1\xA2\xBC\xF6\xB5\xC7\xBE\xEE \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9.", false);
+		form->SetMessage(GOLFRULE_TEXT("\xC7\xF6\xC0\xE7 \xB0\xD4\xC0\xD3\xBF\xA1 \xB4\xEB\xC7\xD8\xBC\xAD \xC0\xCC\xB9\xCC \xBD\xC5\xB0\xED\xB0\xA1 \xC1\xA2\xBC\xF6\xB5\xC7\xBE\xEE \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9."), false);
 		form->Open((FRESH_RESULT_CALLBACK)0, 0);
 		return;
 	}
@@ -890,7 +920,7 @@ void CGolfRule::OnReportBtnUp(void) {
 		m_reportDlg = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify_yesno", 0);
 
 		// "Reporting sends the whole chat of the current game to the operators..."
-		m_reportDlg->SetMessage("\xBD\xC5\xB0\xED\xB8\xA6 \xC7\xCF\xBD\xC3\xB8\xE9 \xC7\xF6\xC0\xE7\xB0\xD4\xC0\xD3\xC0\xC7 \xB4\xEB\xC8\xAD \xB3\xBB\xBF\xEB\xC0\xCC \xB8\xF0\xB5\xCE \xBF\xEE\xBF\xB5\xC0\xDA\xBF\xA1\xB0\xD4 \xBD\xC5\xB0\xED\xB0\xA1 \xB5\xCB\xB4\xCF\xB4\xD9.\n\n\xB4\xEB\xC8\xAD \xB3\xBB\xBF\xEB \xC1\xDF \xC3\xB3\xB9\xFA\xC7\xD8\xB4\xE7\xBB\xE7\xC7\xD7\xC0\xCC \xC0\xD6\xB4\xC2 \\c0xffff0000\\c\xB8\xF0\xB5\xE7 \xBE\xC6\xC0\xCC\xB5\xF0\\c0xff000000\\c\xB4\xC2 \xBA\xED\xB7\xB0 \xC3\xB3\xB8\xAE\xB8\xA6 \xB4\xE7\xC7\xCF\xB0\xD4 \xB5\xCB\xB4\xCF\xB4\xD9.\n\n\xBD\xC5\xB0\xED \xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?", false);
+		m_reportDlg->SetMessage(GOLFRULE_TEXT("\xBD\xC5\xB0\xED\xB8\xA6 \xC7\xCF\xBD\xC3\xB8\xE9 \xC7\xF6\xC0\xE7\xB0\xD4\xC0\xD3\xC0\xC7 \xB4\xEB\xC8\xAD \xB3\xBB\xBF\xEB\xC0\xCC \xB8\xF0\xB5\xCE \xBF\xEE\xBF\xB5\xC0\xDA\xBF\xA1\xB0\xD4 \xBD\xC5\xB0\xED\xB0\xA1 \xB5\xCB\xB4\xCF\xB4\xD9.\n\n\xB4\xEB\xC8\xAD \xB3\xBB\xBF\xEB \xC1\xDF \xC3\xB3\xB9\xFA\xC7\xD8\xB4\xE7\xBB\xE7\xC7\xD7\xC0\xCC \xC0\xD6\xB4\xC2 \\c0xffff0000\\c\xB8\xF0\xB5\xE7 \xBE\xC6\xC0\xCC\xB5\xF0\\c0xff000000\\c\xB4\xC2 \xBA\xED\xB7\xB0 \xC3\xB3\xB8\xAE\xB8\xA6 \xB4\xE7\xC7\xCF\xB0\xD4 \xB5\xCB\xB4\xCF\xB4\xD9.\n\n\xBD\xC5\xB0\xED \xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?"), false);
 		m_reportDlg->Open((FRESH_RESULT_CALLBACK)&CGolfRule::OnReportResult, 0);
 	}
 }
@@ -921,7 +951,7 @@ void CGolfRule::OnChatTargetBtnDown(PG_MSGARG) {
 // golfrule.cpp:1138
 bool CGolfRule::OnChatTargetEnterKey(PG_MSGARG) {
 	if (m_chatEdit && strlen(m_chatEdit->GetLine(1, false)) == 0)
-		m_chatEdit->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0);
+		m_chatEdit->SetLine(1, GOLFRULE_CHAT_TEXT("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"), 0, false, 0);
 
 	if (m_chatInput)
 		m_chatInput->SetKeyFocus(true);
@@ -949,15 +979,15 @@ bool CGolfRule::OnChatInputEnterKey(PG_MSGARG param) {
 	if (strlen(text)) {
 		if (!GOLFDOC()->IsShowChat()) {
 			// "the chat window is hidden" (CP949)
-			CChatMsg::Instance()->AddChatMsg("\xC1\xF6\xB1\xDD\xC0\xBA \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xBC\xFB\xB1\xE4 \xBB\xF3\xC5\xC2\xC0\xD4\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+			CChatMsg::Instance()->AddChatMsg(GOLFRULE_TEXT("\xC1\xF6\xB1\xDD\xC0\xBA \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xBC\xFB\xB1\xE4 \xBB\xF3\xC5\xC2\xC0\xD4\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 			return true;
 		}
 
 		if (!CSharedDoc::Instance()->UTIL_SendChatMessage(m_chatEdit, text, false)) {
 			// "to everyone" (CP949)
-			m_chatEdit->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0);
+			m_chatEdit->SetLine(1, GOLFRULE_CHAT_TEXT("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"), 0, false, 0);
 			// "wrong whisper target, switched to \"to everyone\"" (CP949)
-			CChatMsg::Instance()->AddChatMsg("\xB1\xD3\xB8\xBB \xBB\xF3\xB4\xEB\xB0\xA1 \xC0\xDF\xB8\xF8\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9. \"\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4\"\xB7\xCE \xBA\xAF\xB0\xE6\xC7\xD5\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+			CChatMsg::Instance()->AddChatMsg(GOLFRULE_CHAT_TEXT("\xB1\xD3\xB8\xBB \xBB\xF3\xB4\xEB\xB0\xA1 \xC0\xDF\xB8\xF8\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9. \"\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4\"\xB7\xCE \xBA\xAF\xB0\xE6\xC7\xD5\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 		}
 
 		if (OnlinePlay()) {
@@ -966,7 +996,7 @@ bool CGolfRule::OnChatInputEnterKey(PG_MSGARG param) {
 		}
 
 		std::string target = m_chatEdit->GetLine(1, false);
-		if (target == "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4") {
+		if (target == GOLFRULE_CHAT_TEXT("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4")) {
 			std::string msg = CSharedDoc::Instance()->m_roomPlayers[GOLFDOC()->m_myPlayerIndex].m_name;
 			msg += " : \x08";
 			msg += text;
@@ -976,7 +1006,7 @@ bool CGolfRule::OnChatInputEnterKey(PG_MSGARG param) {
 				strncpy(filtered, text, strlen(text) < 0x400 ? strlen(text) : 0x3FF);
 				if (CSharedDoc::Instance()->m_chatManager.Filtering(filtered)) {
 					// "(notice) swearing is not allowed" (CP949)
-					CChatMsg::Instance()->AddChatMsg(std::string("(\xBE\xCB\xB8\xB2)\xBF\xE5\xBC\xB3\xC0\xBA \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF8000, false, false);
+					CChatMsg::Instance()->AddChatMsg(std::string(GOLFRULE_TEXT("(\xBE\xCB\xB8\xB2)\xBF\xE5\xBC\xB3\xC0\xBA \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.")), 0xFFFF8000, false, false);
 				} else {
 					CChatMsg::Instance()->AddChatMsg(msg, 0xFFFFCC00, false, false);
 				}
@@ -1195,7 +1225,7 @@ bool CGolfRule::OnOnelineReqDlgResult(int result, FrForm *form) {
 		if (WSingleton<CSharedDoc>::Instance()->m_chatManager.Filtering(text)) {
 			// "contains an inappropriate word" (CP949)
 			FrForm *notify = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
-			notify->SetMessage("\xC0\xFB\xB4\xE7\xC7\xCF\xC1\xF6\xBE\xCA\xC0\xBA \xB4\xDC\xBE\xEE\xB0\xA1 \xC6\xF7\xC7\xD4\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9.", false);
+			notify->SetMessage(GOLFRULE_TEXT("\xC0\xFB\xB4\xE7\xC7\xCF\xC1\xF6\xBE\xCA\xC0\xBA \xB4\xDC\xBE\xEE\xB0\xA1 \xC6\xF7\xC7\xD4\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9."), false);
 			notify->Open(0, 3);
 			m_onelineReqDlg = NULL;
 			return true;
@@ -1225,7 +1255,7 @@ bool CGolfRule::OnOnelineReqDlgResult(int result, FrForm *form) {
 void CGolfRule::OnOnelineBtnUp(void) {
 	if (WSingleton<CSharedDoc>::Instance()->IsControlServerService(0x20000)) {
 		// "the one-line board is under maintenance" (CP949)
-		this << MsgObject(this, 0x23, (intptr_t)"\xC0\xFC\xB1\xA4\xC6\xC7 \xB0\xFC\xB7\xC3 \xBA\xCE\xBA\xD0 \xC1\xA1\xB0\xCB\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
+		this << MsgObject(this, 0x23, (intptr_t)GOLFRULE_TEXT("\xC0\xFC\xB1\xA4\xC6\xC7 \xB0\xFC\xB7\xC3 \xBA\xCE\xBA\xD0 \xC1\xA1\xB0\xCB\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9."), 0, 0, 0, 0);
 		return;
 	}
 
@@ -2144,9 +2174,9 @@ void CGolfRule::OnProcess(float elapsed) {
 				}
 
 				// "to all", "to guild", else a whisper.
-				if (strlen(m_chatEdit->GetLine(1, false)) == 0 || strcmp(m_chatEdit->GetLine(1, false), "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4") == 0)
+				if (strlen(m_chatEdit->GetLine(1, false)) == 0 || strcmp(m_chatEdit->GetLine(1, false), GOLFRULE_CHAT_TEXT("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4")) == 0)
 					m_chatInput->SetFontColor(0xFFFFFFFF);
-				else if (strlen(m_chatEdit->GetLine(1, false)) == 0 || strcmp(m_chatEdit->GetLine(1, false), "\xB1\xE6\xB5\xE5\xBF\xA1\xB0\xD4") == 0)
+				else if (strlen(m_chatEdit->GetLine(1, false)) == 0 || strcmp(m_chatEdit->GetLine(1, false), GOLFRULE_CHAT_TEXT("\xB1\xE6\xB5\xE5\xBF\xA1\xB0\xD4")) == 0)
 					m_chatInput->SetFontColor(0xFF5BFFB0);
 				else
 					m_chatInput->SetFontColor(0xFFCF67FF);
@@ -2175,7 +2205,7 @@ void CGolfRule::OnProcess(float elapsed) {
 
 				FrForm *form = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 				// "The connection to the server was lost."
-				form->SetMessage("\xBC\xAD\xB9\xF6\xBF\xCD\xC0\xC7 \xBF\xAC\xB0\xE1\xC0\xCC \xB2\xF7\xB0\xE5\xBD\xC0\xB4\xCF\xB4\xD9.", false);
+				form->SetMessage(GOLFRULE_TEXT("\xBC\xAD\xB9\xF6\xBF\xCD\xC0\xC7 \xBF\xAC\xB0\xE1\xC0\xCC \xB2\xF7\xB0\xE5\xBD\xC0\xB4\xCF\xB4\xD9."), false);
 				form->Open((FRESH_RESULT_CALLBACK)&CGolfRule::ReturnToLobbyDlgResult, 0x203);
 			}
 		}
@@ -2187,7 +2217,7 @@ void CGolfRule::OnProcess(float elapsed) {
 
 		FrForm *form = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 		// "The file is damaged."
-		form->SetMessage("\xC6\xC4\xC0\xCF\xC0\xCC \xBC\xD5\xBB\xF3\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9", false);
+		form->SetMessage(GOLFRULE_TEXT("\xC6\xC4\xC0\xCF\xC0\xCC \xBC\xD5\xBB\xF3\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9"), false);
 		form->Open((FRESH_RESULT_CALLBACK)&CGolfRule::ReturnToLobbyDlgResult, 3);
 	}
 
@@ -2287,7 +2317,7 @@ void CGolfRule::OnProcess(float elapsed) {
 		m_goStopTime += elapsed;
 		char text[50];
 		// "Leaving the game automatically in %d seconds. %d seconds"
-		sprintf(text, "%d\xC3\xCA \xC8\xC4\xBF\xA1 \xC0\xDA\xB5\xBF\xC0\xB8\xB7\xCE \xB0\xD4\xC0\xD3\xBF\xA1\xBC\xAD \xB3\xAA\xB0\xA9\xB4\xCF\xB4\xD9. %d\xC3\xCA", 10.0, (int)m_goStopTime);
+		sprintf(text, GOLFRULE_TEXT("%d\xC3\xCA \xC8\xC4\xBF\xA1 \xC0\xDA\xB5\xBF\xC0\xB8\xB7\xCE \xB0\xD4\xC0\xD3\xBF\xA1\xBC\xAD \xB3\xAA\xB0\xA9\xB4\xCF\xB4\xD9. %d\xC3\xCA"), 10.0, (int)m_goStopTime);
 		m_goStopDlg->SetDesc(text);
 	}
 
@@ -2319,11 +2349,11 @@ void CGolfRule::OnProcess(float elapsed) {
 	if ((g_input->Get("LCONTROL", false) || g_input->Get("RCONTROL", false)) && g_input->GetDown("CANCEL", false)) {
 		if (GOLFDOC()->m_showChat) {
 			// "The in-game chat window is hidden."
-			CChatMsg::Instance()->AddChatMsg("\xB0\xD4\xC0\xD3\xB3\xBB \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xBC\xFB\xB1\xE9\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+			CChatMsg::Instance()->AddChatMsg(GOLFRULE_TEXT("\xB0\xD4\xC0\xD3\xB3\xBB \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xBC\xFB\xB1\xE9\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 			GOLFDOC()->m_showChat = false;
 		} else {
 			// "The in-game chat window is activated."
-			CChatMsg::Instance()->AddChatMsg("\xB0\xD4\xC0\xD3\xB3\xBB \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xC8\xB0\xBC\xBA\xC8\xAD\xC7\xD5\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+			CChatMsg::Instance()->AddChatMsg(GOLFRULE_TEXT("\xB0\xD4\xC0\xD3\xB3\xBB \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xC8\xB0\xBC\xBA\xC8\xAD\xC7\xD5\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 			GOLFDOC()->m_showChat = true;
 		}
 	}
@@ -2549,7 +2579,7 @@ void CGolfRule::DoGameOver(float elapsed) {
 					FrForm *form = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify_yesno", 0);
 					form->Open((FRESH_RESULT_CALLBACK)&CGolfRule::ContinueDlgResult, 0);
 					// "Continue practising?"
-					form->SetMessage("\xBF\xAC\xBD\xC0\xC0\xBB \xB0\xE8\xBC\xD3 \xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?", false);
+					form->SetMessage(GOLFRULE_TEXT("\xBF\xAC\xBD\xC0\xC0\xBB \xB0\xE8\xBC\xD3 \xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?"), false);
 					form->EnableDrag(false);
 					break;
 				}
@@ -4473,7 +4503,7 @@ void CGolfRule::ChangeGameMode(unsigned long mode) {
 				m_dropDlg = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify_yesno", 0);
 				m_dropDlg->Open((FRESH_RESULT_CALLBACK)&CGolfRule::CancelDropDlgResult, 0);
 				// "Cancel the ball moving mode."
-				m_dropDlg->SetMessage("\xB0\xF8 \xBF\xC5\xB1\xE2\xB1\xE2 \xB8\xF0\xB5\xE5\xB8\xA6 \xC3\xEB\xBC\xD2\xC7\xD5\xB4\xCF\xB4\xD9.", false);
+				m_dropDlg->SetMessage(GOLFRULE_TEXT("\xB0\xF8 \xBF\xC5\xB1\xE2\xB1\xE2 \xB8\xF0\xB5\xE5\xB8\xA6 \xC3\xEB\xBC\xD2\xC7\xD5\xB4\xCF\xB4\xD9."), false);
 				m_dropDlg->EnableDrag(false);
 			}
 
@@ -7716,7 +7746,7 @@ void CGolfRule::CaptureProcess(void) {
 			}
 		} else {
 			// "%s screenshot failed." / "Warning"
-			MessageBoxA(0, MakeStr("%s \xBD\xBA\xC5\xA9\xB8\xB0 \xC4\xB8\xC3\xC4\xBF\xA1 \xBD\xC7\xC6\xD0\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9.", strrchr(fileName, '/')), "\xB0\xE6\xB0\xED", 0);
+			MessageBoxA(0, MakeStr(GOLFRULE_TEXT("%s \xBD\xBA\xC5\xA9\xB8\xB0 \xC4\xB8\xC3\xC4\xBF\xA1 \xBD\xC7\xC6\xD0\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9."), strrchr(fileName, '/')), GOLFRULE_TEXT("\xB0\xE6\xB0\xED"), 0);
 		}
 
 		if (finished) {
@@ -7769,7 +7799,7 @@ void CGolfRule::CaptureProcess(void) {
 				finished = true;
 		} else {
 			// "%s screenshot failed." / "Warning"
-			MessageBoxA(0, MakeStr("%s \xBD\xBA\xC5\xA9\xB8\xB0 \xC4\xB8\xC3\xC4\xBF\xA1 \xBD\xC7\xC6\xD0\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9.", strrchr(fileName, '/')), "\xB0\xE6\xB0\xED", 0);
+			MessageBoxA(0, MakeStr(GOLFRULE_TEXT("%s \xBD\xBA\xC5\xA9\xB8\xB0 \xC4\xB8\xC3\xC4\xBF\xA1 \xBD\xC7\xC6\xD0\xC7\xDF\xBD\xC0\xB4\xCF\xB4\xD9."), strrchr(fileName, '/')), GOLFRULE_TEXT("\xB0\xE6\xB0\xED"), 0);
 			finished = true;
 		}
 
@@ -10360,7 +10390,7 @@ void CGolfRule::SaveShot(const char *fileName) {
 
 	fclose(fp);
 
-	WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr("%s\xB4\xD4\xC0\xC7 %d\xC8\xA6 %d\xB9\xF8\xC2\xB0 \xBC\xA6 \xC1\xA4\xBA\xB8\xB0\xA1 '\xB1\xE2\xB7\xCF\xB5\xC8 \xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC\xC5\xD7\xC0\xCC\xC7\xC1'\xBF\xA1 \xC0\xFA\xC0\xE5\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9.", MyNick(), m_hole, m_shotNumber), 0xFFFF7878, true, false);
+	WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr(GOLFRULE_TEXT("%s\xB4\xD4\xC0\xC7 %d\xC8\xA6 %d\xB9\xF8\xC2\xB0 \xBC\xA6 \xC1\xA4\xBA\xB8\xB0\xA1 '\xB1\xE2\xB7\xCF\xB5\xC8 \xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC\xC5\xD7\xC0\xCC\xC7\xC1'\xBF\xA1 \xC0\xFA\xC0\xE5\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9."), MyNick(), m_hole, m_shotNumber), 0xFFFF7878, true, false);
 }
 
 // golfrule.cpp:14251
@@ -11142,7 +11172,7 @@ void CGolfRule::AddExtPrize(void) {
 					sprintf(text, "%s", item->m_name);
 
 				// "Congratulations! %s obtained"
-				CChatMsg::Instance()->AddChatMsg(MakeStr("\xC3\xE0! %s \xC8\xB9\xB5\xE6", text), 0xFFFF7878, false, false);
+				CChatMsg::Instance()->AddChatMsg(MakeStr(GOLFRULE_TEXT("\xC3\xE0! %s \xC8\xB9\xB5\xE6"), text), 0xFFFF7878, false, false);
 			}
 		}
 	}
@@ -11230,9 +11260,83 @@ void CGolfRule::ReturnLobby(bool roomList) {
 
 		CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
 
+#ifdef JP_PAKS
+		// JP 0x67cd1c-0x67cd36: the JP data has neither a ROOMLIST nor a
+		// GAMEROOM layout; the lobby stays on TOPPAGE in both branches and
+		// the room list or the room is a form over it (CLobbyMain message
+		// 0x8b, JP switch 0xabc7d4).
+		CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+#endif
 		if (roomList) {
+#ifdef JP_PAKS
+			// JP 0x67cd3b-0x67cd74: the room list form, 0x8b (4, tab) (JP
+			// case 0xabc986), tab 1 for room modes 20 and 21 (JP +0x109b8,
+			// the KR m_roomMode).
+			CTaskManager::Instance()->PostMsg(0, "Lobby", 0x8B, 4, (unsigned int)(CSharedDoc::Instance()->m_roomInfo.m_roomMode - 20) <= 1 ? 1 : 0, 0, 0);
+#else
 			PostMsg(this, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+#endif
 		} else {
+#ifdef JP_PAKS
+			// JP 0x67cd7e-0x67ce52: reopen the room as a form, 0x8b (n),
+			// chosen from the room type (JP +0x10594, the KR m_roomType;
+			// jump table 0x67d044, byte index 0x67d04c) and the room mode
+			// (JP +0x109b8). JP 0xabc7d4 passes n to the room opener
+			// 0xab6be0 (JpRoomTypeDlgs.h): 6 -> 3 stroke, 7 -> 4 and
+			// 9 -> 8 mass, 0xa -> 6 GP, 0xb -> 7 single. The case list is
+			// the JP's inlined mass-game test (4, 5, 6, 9, 10, 11; the KR
+			// IsMassGame has 14 instead of 11), so it is spelled out.
+			switch (CSharedDoc::Instance()->m_roomType) {
+			case 4:
+			case 5:
+			case 6:
+			case 9:
+			case 10:
+			case 11:
+				if (CSharedDoc::Instance()->m_roomType == 10) {
+					PostMsg(0, "Lobby", 0x8B, 7, 0, 0, 0);
+				} else {
+					switch (CSharedDoc::Instance()->m_roomInfo.m_roomMode) {
+					case 12:
+					case 14:
+					case 19:
+						// JP 0x67cdca-0x67cdf5. The JP then posts its 0x2e
+						// (JP 0x67cde5-0x67ce52, the KR 0x2d): not ported.
+						PostMsg(0, "Lobby", 0x8B, 0xB, 0, 0, 0);
+						break;
+					case 20:
+					case 21:
+						// JP 0x67ce07-0x67ce2a. The JP then posts its 0x2e
+						// (JP 0x67ce1a-0x67ce52, the KR 0x2d): not ported.
+						PostMsg(0, "Lobby", 0x8B, 0xA, 0, 0, 0);
+						break;
+					default:
+						PostMsg(0, "Lobby", 0x8B, 9, 0, 0, 0);
+						break;
+					}
+				}
+				break;
+			default:
+				PostMsg(0, "Lobby", 0x8B, 6, 0, 0, 0);
+				break;
+			}
+
+			// JP 0x67ce57-0x67cec5: the JP lobby's 0x30, 0xf, 0xe and, for
+			// room type 6 with game statistics (JP +0x10012, the KR
+			// m_gameStatistics[0].exp != 0xFFFFFFFF), 0x2e, all with zero
+			// parameters. The JP lobby forwards them to the room form at
+			// CLobbyMain +0x780 (0x30 -> 0x507380, 0xf -> 0x50c760, 0xe ->
+			// 0x50eb20 and 0x50c760, 0x2e -> 0x5070c0). The port's senders
+			// use the KR ids and its CLobbyMain forwards those to the JP
+			// room form, so these are the KR 0x2f, 0xf, 0xe and 0x2d.
+			PostMsg(this, "Lobby", 0x2F, 0, 0, 0, 0);
+			PostMsg(this, "Lobby", 0xF, 0, 0, 0, 0);
+			PostMsg(this, "Lobby", 0xE, 0, 0, 0, 0);
+
+			if (CSharedDoc::Instance()->m_roomType == 6 && CSharedDoc::Instance()->m_gameStatistics[0].exp != 0xFFFFFFFF) {
+				PostMsg(this, "Lobby", 0x2D, 0, 0, 0, 0);
+			}
+#else
 			if (IsMassGame()) {
 				if (CSharedDoc::Instance()->m_roomType == 10) {
 					PostMsg(this, "Lobby", 0, (intptr_t)"GAMEROOM_EXT", 0, 0, 0);
@@ -11252,6 +11356,7 @@ void CGolfRule::ReturnLobby(bool roomList) {
 					PostMsg(this, "Lobby", 0x2D, 0, 0, 0, 0);
 				}
 			}
+#endif
 		}
 
 		PostMsg(this, "Lobby", 0x1A, 0, 0, 0, 0);
@@ -12012,17 +12117,17 @@ void CGolfRule::ReplayTapeCheckAndUse(void) {
 		if (IsLocalContent((localContentType_t)0x4F)) {
 			if (typeId == 0x1A00004F) {
 				WSingleton<CSharedDoc>::Instance()->m_replayPlayType = 0;
-				WSingleton<CChatMsg>::Instance()->AddChatMsg("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB0\xA1 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+				WSingleton<CChatMsg>::Instance()->AddChatMsg(GOLFRULE_TEXT("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB0\xA1 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 			} else if (typeId == 0x1A000000) {
 				WSingleton<CSharedDoc>::Instance()->m_replayPlayType = 0;
-				WSingleton<CChatMsg>::Instance()->AddChatMsg("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB0\xA1 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+				WSingleton<CChatMsg>::Instance()->AddChatMsg(GOLFRULE_TEXT("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB0\xA1 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 			}
 		} else {
-			WSingleton<CChatMsg>::Instance()->AddChatMsg("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB0\xA1 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(GOLFRULE_TEXT("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB0\xA1 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 		}
 	} else if (IsLocalContent((localContentType_t)0x4F) && WSingleton<CSharedDoc>::Instance()->m_replayFileList.size() >= 10) {
 		WSingleton<CSharedDoc>::Instance()->m_replayPlayType = 0;
-		WSingleton<CChatMsg>::Instance()->AddChatMsg("\xB1\xE2\xB7\xCF\xB5\xC8 \xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB8\xA6 10\xB0\xB3 \xB3\xD1\xB0\xD4 \xBB\xFD\xBC\xBA \xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+		WSingleton<CChatMsg>::Instance()->AddChatMsg(GOLFRULE_TEXT("\xB1\xE2\xB7\xCF\xB5\xC8 \xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC5\xD7\xC0\xCC\xC7\xC1\xB8\xA6 10\xB0\xB3 \xB3\xD1\xB0\xD4 \xBB\xFD\xBC\xBA \xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 	} else if (OnlinePlay()) {
 		if (IsLocalContent((localContentType_t)0x4F)) {
 			int result;
@@ -12046,9 +12151,9 @@ void CGolfRule::ReplayTapeCheckAndUse(void) {
 				packet.Encode4(typeId);
 				packet.Send(SEND_TO_DEFAULT);
 			} else if (result == -1) {
-				WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC6\xC4\xC0\xCF\xC0\xCC 100\xB0\xB3\xB8\xA6 \xC3\xCA\xB0\xFA\xC7\xCF\xBF\xA9 \xC0\xFA\xC0\xE5\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9. \xBB\xE8\xC1\xA6 \xC8\xC4 \xB4\xD9\xBD\xC3 \xBD\xC3\xB5\xB5\xC7\xCF\xBF\xA9 \xC1\xD6\xBD\xC3\xB1\xE2 \xB9\xD9\xB6\xF8\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
+				WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr(GOLFRULE_TEXT("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC \xC6\xC4\xC0\xCF\xC0\xCC 100\xB0\xB3\xB8\xA6 \xC3\xCA\xB0\xFA\xC7\xCF\xBF\xA9 \xC0\xFA\xC0\xE5\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9. \xBB\xE8\xC1\xA6 \xC8\xC4 \xB4\xD9\xBD\xC3 \xBD\xC3\xB5\xB5\xC7\xCF\xBF\xA9 \xC1\xD6\xBD\xC3\xB1\xE2 \xB9\xD9\xB6\xF8\xB4\xCF\xB4\xD9.")), 0xFFFF7878, true, false);
 			} else if (result == 0) {
-				WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC\xB8\xA6 \xC0\xFA\xC0\xE5\xC7\xCF\xB4\xC2 \xB5\xB5\xC1\xDF \xB9\xAE\xC1\xA6\xB0\xA1 \xBF\xC0\xB7\xF9\xB0\xA1 \xB9\xDF\xBB\xFD \xC7\xCF\xBF\xB4\xBD\xC0\xB4\xCF\xB4\xD9. \xB4\xD9\xBD\xC3 \xBD\xC3\xB5\xB5\xC7\xCF\xBF\xA9 \xC1\xD6\xBD\xC3\xB1\xE2 \xB9\xD9\xB6\xF8\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
+				WSingleton<CChatMsg>::Instance()->AddChatMsg(MakeStr(GOLFRULE_TEXT("\xB8\xAE\xC7\xC3\xB7\xB9\xC0\xCC\xB8\xA6 \xC0\xFA\xC0\xE5\xC7\xCF\xB4\xC2 \xB5\xB5\xC1\xDF \xB9\xAE\xC1\xA6\xB0\xA1 \xBF\xC0\xB7\xF9\xB0\xA1 \xB9\xDF\xBB\xFD \xC7\xCF\xBF\xB4\xBD\xC0\xB4\xCF\xB4\xD9. \xB4\xD9\xBD\xC3 \xBD\xC3\xB5\xB5\xC7\xCF\xBF\xA9 \xC1\xD6\xBD\xC3\xB1\xE2 \xB9\xD9\xB6\xF8\xB4\xCF\xB4\xD9.")), 0xFFFF7878, true, false);
 			}
 		} else {
 			WSendPacket packet((enumClientPacket)0x4A);

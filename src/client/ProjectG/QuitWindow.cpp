@@ -307,7 +307,15 @@ bool FrQuitForm::OnToLobbyConfirmResult(int ret, FrForm* pForm) {
 
 				CProjectG::Instance()->FromGolfToLobbySettings();
 				CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+#ifdef JP_PAKS
+				// JP 0x6f00de-0x6f0113: the JP data has no ROOMLIST layout; the
+				// lobby stays on TOPPAGE and the room list is a form over it
+				// (CLobbyMain message 0x8b (4, tab 0), JP case 0xabc986).
+				CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+				CTaskManager::Instance()->PostMsg(0, "Lobby", 0x8B, 4, 0, 0, 0);
+#else
 				CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+#endif
 				CTaskManager::Instance()->PostMsg(0, "Lobby", 0x1A, 0, 0, 0, 0);
 			}
 		} else {
@@ -376,6 +384,9 @@ void CQuitWindow::Process(void) {
 			m_pQuitForm->Open((FRESH_RESULT_CALLBACK)&CQuitWindow::OnQuitFormResult, 1);
 			m_pQuitForm->MoveCursor("tolobby");
 			COption::Instance()->SetQuitWindowed(true);
+#ifdef JP_PAKS
+			FrModalDim::Cancel();
+#endif
 
 			if (GOLFDOC()->m_gameState < 15) {
 				m_cursorActive = CMouseCursor::Instance()->IsActive();

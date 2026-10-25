@@ -39,6 +39,18 @@
 extern WInputDev* g_mouse;
 extern WInputDev* g_ime;
 
+// The JP exe passes the messenger notices' Korean texts through Jp_LookupText
+// 0xb4eb80 (korea.dat / japan.dat pairs; JP CMessengerInfo::Open 0x905170);
+// the KR exe uses them as they are.
+#ifdef JP_PAKS
+// src/jp/RFTextManager.h, not on this unit's include path in the
+// port (it is not a PG_REFRESH_HOOK_SOURCES unit).
+const char* Jp_LookupText(const char* key);
+#define MESSENGER_TEXT(text) Jp_LookupText(text)
+#else
+#define MESSENGER_TEXT(text) (text)
+#endif
+
 // messengerdlg.cpp:48
 bool FriendCompare(const void* a, const void* b) {
 	const sFriend* pA = (const sFriend*)a;
@@ -831,6 +843,9 @@ void FrMessengerDlg::OnNoteToFriend(void) {
 	m_pNoteDlg->SetNick(pFriend->nick, 0);
 	m_pNoteDlg->SetFixed(true);
 	m_pNoteDlg->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnNoteDlgResult, pt, 1);
+#ifdef JP_PAKS
+	FrModalDim::Cancel();
+#endif
 
 	WRect rect = m_pNoteDlg->GetRect();
 	m_pNoteDlg->Adjust(rect);
@@ -910,6 +925,9 @@ void FrMessengerDlg::OnRemoveFriend(void) {
 	pForm->SetMessage(MakeStr("\\c0xffff0000\\c%s\xB4\xD4\\c0xff000000\\c\xC0\xBB \xC4\xA3\xB1\xB8 \xB8\xAE\xBD\xBA\xC6\xAE\xBF\xA1\xBC\xAD \\c0xffff0000\\c\xBB\xE8\xC1\xA6\\c0xff000000\\c\xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?", pFriend->nick), false);
 	pForm->SetFixed(true);
 	pForm->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnRemoveFriendDlgResult, pt, 0);
+#ifdef JP_PAKS
+	FrModalDim::Cancel();
+#endif
 
 	WRect rect = pForm->GetRect();
 	pForm->Adjust(rect);
@@ -931,6 +949,9 @@ void FrMessengerDlg::OnBlockFriend(void) {
 	pForm->SetMessage(MakeStr("\\c0xffff0000\\c%s\xB4\xD4\\c0xff000000\\c\xC0\xBB \xC4\xA3\xB1\xB8 \xB8\xAE\xBD\xBA\xC6\xAE\xBF\xA1\xBC\xAD \\c0xffff0000\\c\xC2\xF7\xB4\xDC\\c0xff000000\\c\xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?", pFriend->nick), false);
 	pForm->SetFixed(true);
 	pForm->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnBlockFriendDlgResult, pt, 0);
+#ifdef JP_PAKS
+	FrModalDim::Cancel();
+#endif
 
 	WRect rect = pForm->GetRect();
 	pForm->Adjust(rect);
@@ -952,6 +973,9 @@ void FrMessengerDlg::OnBlockCancelFriend(void) {
 	pForm->SetMessage(MakeStr("\\c0xffff0000\\c%s\xB4\xD4\\c0xff000000\\c\xC0\xC7 \xC2\xF7\xB4\xDC\xC0\xBB \\c0xffff0000\\c\xC7\xD8\xC1\xA6\\c0xff00000\\c\xC7\xCF\xBD\xC3\xB0\xDA\xBD\xC0\xB4\xCF\xB1\xEE?", pFriend->nick), false);
 	pForm->SetFixed(true);
 	pForm->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnBlockCancelFriendDlgResult, pt, 0);
+#ifdef JP_PAKS
+	FrModalDim::Cancel();
+#endif
 
 	WRect rect = pForm->GetRect();
 	pForm->Adjust(rect);
@@ -976,6 +1000,9 @@ void FrMessengerDlg::OnAliasToFriend(void) {
 
 	m_pMemoDlg->SetFixed(true);
 	m_pMemoDlg->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnMemoDlgResult, pt, 1);
+#ifdef JP_PAKS
+	FrModalDim::Cancel();
+#endif
 
 	WRect rect = m_pMemoDlg->GetRect();
 	m_pMemoDlg->Adjust(rect);
@@ -1306,6 +1333,9 @@ void FrMessengerDlg::OnMessenger_GuildNoticeLBtnDown(void) {
 		CMessengerInfo::Instance()->m_pGuildNoticeDlg->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnGuildNoticeDlgResult, pt, 1);
 		CMessengerInfo::Instance()->m_pGuildNoticeDlg->SetTopmost(true);
 		CMessengerInfo::Instance()->m_pGuildNoticeDlg->FindNextTopFocus(false);
+#ifdef JP_PAKS
+		FrModalDim::Cancel();
+#endif
 
 		WRect rect = CMessengerInfo::Instance()->m_pGuildNoticeDlg->GetRect();
 		CMessengerInfo::Instance()->m_pGuildNoticeDlg->Adjust(rect);
@@ -1337,6 +1367,9 @@ void FrMessengerDlg::OnMessenger_FindLBtnDown(void) {
 
 	m_pAddFriendDlg->SetFixed(true);
 	m_pAddFriendDlg->Open((FRESH_RESULT_CALLBACK)&FrMessengerDlg::OnAddFriendDlgResult, pt, 1);
+#ifdef JP_PAKS
+	FrModalDim::Cancel();
+#endif
 
 	WRect rect = m_pAddFriendDlg->GetRect();
 	m_pAddFriendDlg->Adjust(rect);
@@ -1619,7 +1652,7 @@ extern "C" int data_af7798;
 void CMessengerInfo::Open(bool) {
 	if (WNetworkSystem::Instance()->GetSocket(WNetworkSystem::NET_UNIT_MSN)->m_bConnected == 0 || !WNetworkSystem::Instance()->IsConnectionComplete(WNetworkSystem::NET_UNIT_MSN)) {
 		// "Connecting to the messenger server...."
-		Notify2("�޽��������� ������....");
+		Notify2(MESSENGER_TEXT("\xb8\xde\xbd\xc5\xc0\xfa\xbc\xad\xb9\xf6\xbf\xa1 \xc1\xa2\xbc\xd3\xc1\xdf...."));
 
 		unsigned long now = GetTickCount();
 
@@ -1629,7 +1662,7 @@ void CMessengerInfo::Open(bool) {
 				data_af7784[0] = 0;
 			} else {
 				// "Please try again later."
-				Notify2("��� �Ŀ� �̿��� �ֽʽÿ�.");
+				Notify2(MESSENGER_TEXT("\xc0\xe1\xbd\xc3 \xc8\xc4\xbf\xa1 \xc0\xcc\xbf\xeb\xc7\xd8 \xc1\xd6\xbd\xca\xbd\xc3\xbf\xc0."));
 				return;
 			}
 		}

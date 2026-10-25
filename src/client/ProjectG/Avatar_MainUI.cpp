@@ -40,6 +40,14 @@
 #include <algorithm>
 #include "TradeDlg.h"
 #include "TaskManager.h"
+#ifdef JP_PAKS
+// JP 0xb4eb80 (src/jp/RFTextManager.h, not on this unit's include
+// path in the port: it is not a PG_REFRESH_HOOK_SOURCES unit). The JP chat
+// handlers pass their Korean texts through it (korea.dat / japan.dat pairs),
+// so the "to all" label matches the translated target combo (SharedDoc
+// InitReservedChatList).
+const char* Jp_LookupText(const char* key);
+#endif
 
 // The gateway actor's name (nameless data at 0xa82e1c).
 extern "C" const char* data_a82e1c;
@@ -79,6 +87,12 @@ sFRESH_ENTRY ntAvatarChatMain::_MsgEntries[] = {
 	{ "AVATARCHAT_MAIN.portrait_chatlogbtn", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&ntAvatarChatMain::OnPortraitChatLogButtonBtnUp },
 	{ "AVATARCHAT_MAIN.userlistbtn", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&ntAvatarChatMain::OnAvatarUserListButtonInit },
 	{ "AVATARCHAT_MAIN.userlistbtn", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&ntAvatarChatMain::OnAvatarUserListButtonBtnUp },
+#ifdef JP_PAKS
+	// JP rows 0xe19b20 and 0xe19b40 (handlers stored by the initializer
+	// 0xcd6620): the motion chat button.
+	{ "AVATARCHAT_MAIN.motion_btn_start", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&ntAvatarChatMain::OnMotionBtnInit },
+	{ "AVATARCHAT_MAIN.motion_btn_start", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&ntAvatarChatMain::OnMotionBtnUp },
+#endif
 	{ "AVATARCHAT_MAIN.chatframe", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&ntAvatarChatMain::OnChatFrameInit },
 	{ "AVATARCHAT_MAIN.chatview", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&ntAvatarChatMain::OnChatViewInit },
 	{ "AVATARCHAT_MAIN.emoticon", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&ntAvatarChatMain::OnEmoticonInit },
@@ -570,7 +584,12 @@ void ntAvatarChatMain::OnChatTargetBtnDown(PG_MSGARG) {
 // avatar_mainui.cpp:648
 bool ntAvatarChatMain::OnChatTargetEnterKey(PG_MSGARG) {
 	if (m_chatTarget && strlen(m_chatTarget->GetLine(1, false)) == 0) {
+#ifdef JP_PAKS
+		// JP 0x7afc41
+		m_chatTarget->SetLine(1, Jp_LookupText("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"), 0, false, 0);
+#else
 		m_chatTarget->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0); // "to everyone"
+#endif
 	}
 
 	if (m_chatInput) {
@@ -596,13 +615,28 @@ bool ntAvatarChatMain::OnChatInputEnterKey(intptr_t param) {
 	const char* msg = (const char*)param;
 	if (msg && *msg) {
 		if (!GOLFDOC()->IsShowChat()) {
+#ifdef JP_PAKS
+			// JP 0x7b268b
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(Jp_LookupText("\xC1\xF6\xB1\xDD\xC0\xBA \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xBC\xFB\xB1\xE4 \xBB\xF3\xC5\xC2\xC0\xD4\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
+#else
 			WSingleton<CChatMsg>::Instance()->AddChatMsg("\xC1\xF6\xB1\xDD\xC0\xBA \xB4\xEB\xC8\xAD\xC3\xA2\xC0\xBB \xBC\xFB\xB1\xE4 \xBB\xF3\xC5\xC2\xC0\xD4\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false); // "The chat window is hidden."
+#endif
 			return true;
 		}
 
 		if (!WSingleton<CSharedDoc>::Instance()->UTIL_SendChatMessage(m_chatTarget, msg, false)) {
+#ifdef JP_PAKS
+			// JP 0x7b2711
+			m_chatTarget->SetLine(1, Jp_LookupText("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"), 0, false, 0);
+#else
 			m_chatTarget->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0); // "to everyone"
+#endif
+#ifdef JP_PAKS
+			// JP 0x7b2729
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(Jp_LookupText("\xB1\xD3\xB8\xBB \xBB\xF3\xB4\xEB\xB0\xA1 \xC0\xDF\xB8\xF8\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9. \"\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4\"\xB7\xCE \xBA\xAF\xB0\xE6\xC7\xD5\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
+#else
 			WSingleton<CChatMsg>::Instance()->AddChatMsg("\xB1\xD3\xB8\xBB \xBB\xF3\xB4\xEB\xB0\xA1 \xC0\xDF\xB8\xF8\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9. \"\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4\"\xB7\xCE \xBA\xAF\xB0\xE6\xC7\xD5\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false); // "Wrong whisper target. Changed to "to everyone"."
+#endif
 		}
 
 		if (!OnlinePlay()) {

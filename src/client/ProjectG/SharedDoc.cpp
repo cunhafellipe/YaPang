@@ -42,6 +42,9 @@
 #include "client/Wangreal/include/westpak.h"
 #include "client/Wangreal/include/wresrcmng.h"
 #include "partsinfo.h"
+#ifdef JP_PAKS
+#include "RFTextManager.h" // Jp_LookupText 0xb4eb80 (src/jp)
+#endif
 
 void __fastcall LineParse(const char *line, std::vector<std::string> &tokens);
 
@@ -57,6 +60,33 @@ static const char *const s_titleVs = "\xc6\xce\xbe\xdf~ \xc6\xce\xbe\xdf!"; // �
 static const char *const s_titleMass = "\xc8\xa6\xc0\xce\xbf\xf8\xc0\xbb \xb3\xbb \xc7\xb0\xbe\xc8\xbf\xa1"; // 홀인원을 내 품안에
 static const char *const s_titleOneRound = "\xbd\xac\xbe\xee\xb0\xa1\xb4\xc2 \xc7\xd1 \xc6\xc7!"; // 쉬어가는 한 판!
 static const char *const s_titleChat = "\xbc\xd2\xb3\xe2, \xbc\xd2\xb3\xe0\xb8\xa6 \xb8\xb8\xb3\xaa\xb4\xd9"; // 소년, 소녀를 만나다
+
+// The JP exe's initializers of the title arrays (0xcd36d0-0xcd38a0) store
+// Jp_LookupText(<Korean title>), the Japanese text korea.dat/japan.dat pair
+// with it; the KR exe stores the Korean title.
+#ifdef JP_PAKS
+#define SHAREDDOC_TITLE(text) Jp_LookupText(text)
+#else
+#define SHAREDDOC_TITLE(text) (text)
+#endif
+
+// The chat target labels ("to all", "to team", "to guild") are both shown in
+// the target combo box and compared as identifiers: the JP exe passes every
+// one through Jp_LookupText, in the combo fill (InitReservedChatList
+// 0x645bc0) and in every compare (AddWhisperPartner 0x645420,
+// UTIL_SendChatMessage 0x6456b0), so the shown and the compared text agree.
+#ifdef JP_PAKS
+#define SHAREDDOC_CHAT_TARGET(text) Jp_LookupText(text)
+#else
+#define SHAREDDOC_CHAT_TARGET(text) (text)
+#endif
+
+#ifdef JP_PAKS
+// The CSharedDoc instance (JP 0xe47dbc): defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+template <> CSharedDoc* WSingleton<CSharedDoc>::m_pInstance = NULL;
+#endif
 
 // shareddoc.cpp:52
 const char *defaultTitles_vs[] = {
@@ -419,6 +449,9 @@ void CSharedDoc::ClearCommonVars(void) {
 	m_value506C = 0;
 	IsLocalContent((localContentType_t)0x39);
 	m_value5D08 = 0;
+#ifdef JP_PAKS
+	m_treasureAlarmState = 0;
+#endif
 	m_flag50F4 = false;
 	m_flag50F6 = false;
 	m_flag5BDC = false;
@@ -596,6 +629,9 @@ void CSharedDoc::ClearLobbyStateVars(void) {
 	m_3DBackgroundOff = false;
 	m_lobbyStateFlag = false;
 	m_lobbyStateFlag2 = false;
+#ifdef JP_PAKS
+	m_lobbyCameraEnabled = true;
+#endif
 
 	memset(&m_roomInfo, 0, sizeof(m_roomInfo));
 
@@ -706,6 +742,14 @@ void CSharedDoc::InitGameType(void) {
 	m_gameTypeNames[14].defaultPlayers = 30;
 	m_gameTypeNames[14].defaultHoles = 18;
 	m_gameTypeNames[14].name = "\xBA\xD2\xB0\xA1\xBB\xE7\xC0\xC7\xC7\xD1 \xC8\xA5\xB5\xB7";
+#ifdef JP_PAKS
+	// JP 0x62b3d0 stores every name through Jp_LookupText 0xb4eb80: the room
+	// title line, the room list and SetGameType's m_roomName show the
+	// Japanese game type names.
+	for (int i = 0; i < 15; i++) {
+		m_gameTypeNames[i].name = Jp_LookupText(m_gameTypeNames[i].name);
+	}
+#endif
 }
 
 // shareddoc.cpp:827
@@ -1762,23 +1806,23 @@ const char *CSharedDoc::GetDefaultTitle(unsigned char gameType) {
 	switch (gameType) {
 	case 0:
 	case 1:
-		return defaultTitles_vs[rand() % 9];
+		return SHAREDDOC_TITLE(defaultTitles_vs[rand() % 9]);
 
 	case 4:
 	case 5:
 	case 6:
 	case 0xE:
-		return defaultTitles_mass[rand() % 6];
+		return SHAREDDOC_TITLE(defaultTitles_mass[rand() % 6]);
 
 	case 7:
-		return defaultTitles_battle[rand() % 4];
+		return SHAREDDOC_TITLE(defaultTitles_battle[rand() % 4]);
 
 	case 0xA:
-		return defaultTitles_approach[rand() % 3];
+		return SHAREDDOC_TITLE(defaultTitles_approach[rand() % 3]);
 
 	case 2:
 	case 8:
-		return defaultTitles_chat[rand() % 7];
+		return SHAREDDOC_TITLE(defaultTitles_chat[rand() % 7]);
 
 	default:
 		return "No Title!";
@@ -1895,22 +1939,22 @@ bool CSharedDoc::InitReservedChatList(FrComboBox *pComboBox, eReservedChatPartne
 	}
 
 	if (partner & RESERVED_CHAT_PARTNER_TEAM) {
-		m_list4CD8.push_back("\xC6\xC0\xBF\xA1\xB0\xD4");
-	} else if (strcmpi(m_string4CE8.c_str(), "\xC6\xC0\xBF\xA1\xB0\xD4") == 0) {
-		m_string4CE8 = "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4";
-		pComboBox->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0);
+		m_list4CD8.push_back(SHAREDDOC_CHAT_TARGET("\xC6\xC0\xBF\xA1\xB0\xD4"));
+	} else if (strcmpi(m_string4CE8.c_str(), SHAREDDOC_CHAT_TARGET("\xC6\xC0\xBF\xA1\xB0\xD4")) == 0) {
+		m_string4CE8 = SHAREDDOC_CHAT_TARGET("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4");
+		pComboBox->SetLine(1, SHAREDDOC_CHAT_TARGET("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"), 0, false, 0);
 	}
 
 	if (partner & RESERVED_CHAT_PARTNER_GUILD) {
-		m_list4CD8.push_back("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4");
+		m_list4CD8.push_back(SHAREDDOC_CHAT_TARGET("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"));
 	}
 
 	if (WSingleton<CSharedDoc>::Instance()->m_userInfo.guildUID != 0) {
-		m_list4CD8.push_back("\xB1\xE6\xB5\xE5\xBF\xA1\xB0\xD4");
+		m_list4CD8.push_back(SHAREDDOC_CHAT_TARGET("\xB1\xE6\xB5\xE5\xBF\xA1\xB0\xD4"));
 	}
 
 	if (strlen(pComboBox->GetLine(1, false)) == 0) {
-		pComboBox->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0);
+		pComboBox->SetLine(1, SHAREDDOC_CHAT_TARGET("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"), 0, false, 0);
 	}
 
 	return UpdateChatTarget(pComboBox);
@@ -1952,7 +1996,7 @@ bool CSharedDoc::AddWhisperPartner(FrComboBox *pComboBox, const char *name) {
 		return true;
 	}
 
-	if (strcmpi("\xC6\xC0\xBF\xA1\xB0\xD4", name) == 0) {
+	if (strcmpi(SHAREDDOC_CHAT_TARGET("\xC6\xC0\xBF\xA1\xB0\xD4"), name) == 0) {
 		return false;
 	}
 
@@ -2016,7 +2060,7 @@ bool CSharedDoc::UTIL_SendChatMessage(FrComboBox *pComboBox, const char *message
 	}
 
 	if (strlen(pComboBox->GetLine(1, false)) == 0) {
-		pComboBox->SetLine(1, "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4", 0, false, 0);
+		pComboBox->SetLine(1, SHAREDDOC_CHAT_TARGET("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4"), 0, false, 0);
 	}
 
 	if (!AddWhisperPartner(pComboBox, 0)) {
@@ -2025,9 +2069,9 @@ bool CSharedDoc::UTIL_SendChatMessage(FrComboBox *pComboBox, const char *message
 
 	const char *target = 0;
 	bool team = false;
-	if (strcmpi(pComboBox->GetLine(1, false), "\xC6\xC0\xBF\xA1\xB0\xD4") == 0) {
+	if (strcmpi(pComboBox->GetLine(1, false), SHAREDDOC_CHAT_TARGET("\xC6\xC0\xBF\xA1\xB0\xD4")) == 0) {
 		team = true;
-	} else if (strcmpi(pComboBox->GetLine(1, false), "\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4") != 0 && strcmpi(pComboBox->GetLine(1, false), "\xC6\xC0\xBF\xA1\xB0\xD4") != 0) {
+	} else if (strcmpi(pComboBox->GetLine(1, false), SHAREDDOC_CHAT_TARGET("\xB8\xF0\xB5\xCE\xBF\xA1\xB0\xD4")) != 0 && strcmpi(pComboBox->GetLine(1, false), SHAREDDOC_CHAT_TARGET("\xC6\xC0\xBF\xA1\xB0\xD4")) != 0) {
 		target = pComboBox->GetLine(1, false);
 	}
 

@@ -1791,10 +1791,27 @@ protected:
 public:
 	bool m_loginDlgCreated;                          // 0x5D28, set by FrLoginDlg's constructor
 	PADDING(0x5D29, 0x5D30);
+#ifdef JP_PAKS
+	// JP 983 only, after the KR layout (the JP offsets in the comments).
+	// Whether the lobby's camera and fade run (JP +0x10b27): 1 after ClearLobbyStateVars, set by RFLobbyDesktop::OnDestroy
+	// (0x5f7080), cleared by 0x566390; CLobbyMain 0xab5b00 updates the lobby camera only when !m_3DBackgroundOff and this.
+	bool m_lobbyCameraEnabled;                       // JP +0x10b27
+	// The treasure alarm state 0..3 (JP +0x11038), cleared by ClearCommonVars: CTaskManager::OnPacket (0x9cfab3) stores
+	// 0..2 from a packet byte, CTaskMain::OnTreasureAlarmUp (0x656fe0) 3; NotifyMessenger (0x5fc520) tests 3.
+	int m_treasureAlarmState;                        // JP +0x11038
+	friend void JpAttendance_ResetLoginData(void);   // port JpLobbyGlue.cpp (JP 0x47d770): m_japanState, m_string188, m_string168
+	friend class FrGameRoomDlg;                      // port JpGameRoomDlg.cpp: OpenNewRecordForm (JP 0x5033b0) reads m_value4D7E (JP +0x10d42)
+	friend class CShopWidget;  // port JpShopWidget.cpp: OnPacket 0x5e0ff0 writes m_myBonusCash, reads m_lastGiftReceiverUID
+	friend class CMyRoomWidget;     // port JpMyRoomWidget.cpp: reads m_flag50F4 (JP +0x110c8, the storage flag)
+	friend class FrMassTypeRoomDlg; // port JpRoomTypeDlgs.cpp: lists the guild match pairings m_vector4524
+	friend class CTutorialWidget;   // port JpTutorialWidget.cpp: reads m_flag50F6 (JP +0x110ca)
+#endif
 };
 #pragma pack(pop)
 
+#ifndef JP_PAKS
 CHECK_SIZE(CSharedDoc, 0x5D30);
+#endif
 BEGIN_LAYOUT_CHECK(CSharedDoc)
 	CHECK_FIELD(CSharedDoc, m_myMapStatistics, 0x694);
 	CHECK_FIELD(CSharedDoc, m_equipSkin, 0x678);

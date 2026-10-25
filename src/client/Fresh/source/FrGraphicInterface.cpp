@@ -385,6 +385,18 @@ float FrGraphicInterface::GetTextExtend11(const char* lpszText) {
 	return m_pFont11->GetTextWidth(m_pView, lpszText);
 }
 
+#ifdef JP_PAKS
+// JP 0xbec3e0: the JP WFont's [5] GetTextWidth on m_pFont12, wide text.
+float FrGraphicInterface::GetTextExtend(const wchar_t* text) {
+	return m_pFont12->GetTextWidth(m_pView, text);
+}
+
+// JP 0xbec400: the same on m_pFont11.
+float FrGraphicInterface::GetTextExtend11(const wchar_t* text) {
+	return m_pFont11->GetTextWidth(m_pView, text);
+}
+#endif
+
 // frgraphicinterface.cpp:502
 int FrGraphicInterface::GetFontHeight(void) {
 	return m_pFont12->GetFontHeight();

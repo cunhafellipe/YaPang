@@ -17,6 +17,14 @@ const char *aliasList[11] = {
 	"PAD_1", "CALIPERS_RIGHT", "CALIPERS_LEFT"
 };
 
+#ifdef JP_PAKS
+// The input manager (JP 0xf00510; ProjectG.cpp creates it): defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+CInputManager *g_input = NULL;
+template <> CInputManager* WSingleton<CInputManager>::m_pInstance = NULL;
+#endif
+
 // inputmanager.cpp:22
 CInputManager::~CInputManager(void) {
 	EraseAllList();

@@ -9,6 +9,12 @@
 #include "ObjectFactory.h"
 #include "client/ProjectG/commonutil.h"
 #include "client/Wangreal/include/bitmap.h"
+#ifdef JP_PAKS
+// JP 0xb4eb80 (src/jp/RFTextManager.h, not on the Fresh units'
+// include path): the JP game's text for a Korean source text.
+const char* Jp_LookupText(const char* key);
+#endif
+
 
 #ifndef max
 #define max(a, b) (((a) > (b)) ? (a) : (b))
@@ -66,6 +72,11 @@ void FrFrame::Init(FrGuiItem& item, FrWndManager* pManager, FrWnd* pParent) {
 	std::map<std::string, std::string>& param = item.m_param;
 	if (param.find("description") != param.end())
 		m_desc = param["description"];
+#ifdef JP_PAKS
+	// JP 0xc067b1: a non-empty description through the JP text table
+	if (m_desc != "")
+		m_desc = Jp_LookupText(m_desc.c_str());
+#endif
 
 	std::string filename = pFrame->m_bfrmName;
 	if (param.find("bgimg") != param.end())

@@ -42,6 +42,36 @@ extern int g_iRecvPacketType;
 // of adjacent pointers of unnamed data: [0]/[1] guild, [3]/[4] gateway).
 extern "C" const char *data_ab2c78[];
 
+#ifdef JP_PAKS
+// 0xb4eb80 (src/jp/RFTextManager.h, not on this unit's include
+// path in the port: it is not a PG_REFRESH_HOOK_SOURCES unit).
+const char* Jp_LookupText(const char* key);
+// 0x62bf90 (JpLobbyGlue.h): the JP lobby mode (CSharedDoc +0x11638), the
+// open room form's type (CLobbyMain::OpenRoomTypeForm sets it).
+int JpSharedDoc_GetLobbyMode(void);
+// JpLobbyGlue.h: the room mode (JP CSharedDoc +0x109b8).
+int JpSharedDoc_GetRoomGameMode(void);
+#endif
+
+// The received team chat's "to team" label: the JP exe shows
+// Jp_LookupText(<label>) (OnPacket 0xac0a5f), the text SharedDoc's
+// InitReservedChatList shows in the target combo; the KR exe the Korean one.
+#ifdef JP_PAKS
+#define LOBBYTASK_CHAT_TARGET(text) Jp_LookupText(text)
+#else
+#define LOBBYTASK_CHAT_TARGET(text) (text)
+#endif
+
+// OnPacket's notices and dialog texts (character / nickname setup, game
+// start failures, kick vote, spectating, invitations, matching, the room
+// master reward) go through Jp_LookupText in the JP exe (OnPacket 0xac1e6e
+// .. 0xac506b); the KR exe shows the Korean text.
+#ifdef JP_PAKS
+#define LOBBYTASK_TEXT(text) Jp_LookupText(text)
+#else
+#define LOBBYTASK_TEXT(text) (text)
+#endif
+
 // clientsetting.h:418
 void COption::mSetMacroText(int index, const char* text) {
 	strcpy(m_option.m_macroText[index], text);
@@ -109,6 +139,46 @@ void CLobbyTask::Init(const char *backGround) {
 }
 
 // lobbytask.cpp:84
+#ifdef JP_PAKS
+// JP 0xabfcc0: the JP lobby is a 3D terrace where the player's character,
+// caddie and mascot stand ("LobbyAvatar", "LobbyCaddie", "LobbyMascot",
+// before "LobbyBg"); My Room is the same scene under the CMyRoomWidget
+// page, so the lobby also hosts "ItemBuff" (KR RealMyRoomTask). The guild
+// actor (KR data_ab2c78[0]/[1]) is gone; the gateway actor stays (JP
+// 0xe36c9c / 0xe36ca0, "CGatewayActor" / "Gateway"). An actor class the
+// port does not have yet makes AddActor return NULL.
+//
+// Port only (G11): "LobbyPlayer", "LobbyCaddie" and "LobbyMascot"
+// (src/jp/JpLobbyPlayer.cpp, JpLobbyCaddie.cpp,
+// JpLobbyMascot.cpp) are created by name through their static registrars,
+// which the static pg_refresh_game archive would drop unless something
+// references their objects; this table does. The JP links them directly.
+IObject* LobbyPlayerMakeInstance(void);
+IObject* LobbyCaddieMakeInstance(void);
+IObject* LobbyMascotMakeInstance(void);
+extern IObject* (*const g_jpLobbyActorMakers[3])(void);
+IObject* (*const g_jpLobbyActorMakers[3])(void) = {
+	LobbyPlayerMakeInstance,
+	LobbyCaddieMakeInstance,
+	LobbyMascotMakeInstance,
+};
+
+void CLobbyTask::Register(void) {
+	SetMainActor(AddActor("CLobbyMain", "Lobby", 0, ""));
+
+	AddActor("LobbyPlayer", "LobbyAvatar", 0, "");
+	AddActor("LobbyCaddie", "LobbyCaddie", 0, "");
+	AddActor("LobbyMascot", "LobbyMascot", 0, "");
+
+	AddActor("ntLobbyBg", "LobbyBg", 0, "");
+	AddActor("CItemBuff", "ItemBuff", 0, "");
+	GOLFDOC()->m_currentHole = 0x13;
+
+	AddActor("CNPC", "NPC", 0, "");
+
+	AddActor(data_ab2c78[3], data_ab2c78[4], 0, GetRTTI()->GetName());
+}
+#else
 void CLobbyTask::Register(void) {
 	SetMainActor(AddActor("CLobbyMain", "Lobby", 0, ""));
 
@@ -121,6 +191,7 @@ void CLobbyTask::Register(void) {
 
 	AddActor(data_ab2c78[3], data_ab2c78[4], 0, GetRTTI()->GetName());
 }
+#endif
 
 // lobbytask.cpp:118
 void CLobbyTask::Load(void) {
@@ -286,7 +357,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		WSingleton<CSharedDoc>::Instance()->m_chatManager.FilteringHack(message.c_str(), false);
 
 		// "<nickname>>to the team : <message>"
-		text = nickname + ">" + "\xC6\xC0\xBF\xA1\xB0\xD4";
+		text = nickname + ">" + LOBBYTASK_CHAT_TARGET("\xC6\xC0\xBF\xA1\xB0\xD4");
 		text += " : ";
 		text += message;
 
@@ -338,7 +409,16 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		// The lobby answers through refresh; 0 (or a game room layout) shows the room.
 		int refresh;
 		GetActor("Lobby") << MsgObject(0, 0x17, (intptr_t)&refresh, 0, 0, 0, 0);
+#ifdef JP_PAKS
+		// JP 0xac0f0c-0xac103a: no game room layout in the JP data; the
+		// lobby mode of an open stroke (3), mass (4) or single (7) room form
+		// stands for it. The JP's last message is its 0x30 (room form
+		// 0x507380, the team controls), the KR lobby's 0x2f below.
+		int lobbyMode = JpSharedDoc_GetLobbyMode();
+		if (lobbyMode == 3 || lobbyMode == 4 || lobbyMode == 7 || refresh == 0) {
+#else
 		if (g_pFresh->IsCurrentLayout("GAMEROOM") || g_pFresh->IsCurrentLayout("GAMEROOM_EXT") || refresh == 0) {
+#endif
 			GetActor("Lobby") << MsgObject(0, 2, 0, 0, 0, 0, 0);
 			GetActor("Lobby") << MsgObject(0, 0x10, 0, 0, 0, 0, 0);
 			GetActor("Lobby") << MsgObject(0, 0x11, WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_course, 0, 0, 0, 0);
@@ -384,6 +464,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 				info->second.m_userInfo.m_slot = WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomNumber;
 			}
 
+#ifndef JP_PAKS
 			const char *layout;
 			if (IsMassGame(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType)) {
 				GetActor("Lobby") << MsgObject(0, 0x2E, 0, 0, 0, 0, 0);
@@ -391,6 +472,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 			} else {
 				layout = "GAMEROOM";
 			}
+#endif
 
 			WSingleton<CSharedDoc>::Instance()->m_chatLineList.clear();
 
@@ -417,7 +499,13 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 				return 1;
 			}
 
+#ifdef JP_PAKS
+			// JP 0xac1319: the ticket is spent for the special shuffle
+			// course, room mode 0x12 (JP 14 is Grand Zodiac practice).
+			if (WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomMode == 0x12 && WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_masterUID == WSingleton<CSharedDoc>::Instance()->m_myUID) {
+#else
 			if (WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_roomMode == 14 && WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_masterUID == WSingleton<CSharedDoc>::Instance()->m_myUID) {
+#endif
 				// The room's owner spends one of the items that open this mode.
 				std::list<sItemInfo>::iterator it;
 				for (it = WSingleton<CSharedDoc>::Instance()->m_itemInfoList.begin(); it != WSingleton<CSharedDoc>::Instance()->m_itemInfoList.end(); ++it) {
@@ -431,7 +519,34 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 				}
 			}
 
+#ifdef JP_PAKS
+			// JP 0xac137c-0xac1424: no layout change (the JP 0xac11bc goes
+			// from the user record straight to the chat lines, no 0x2e
+			// either): the lobby opens the room form, 0x8b (n) (CLobbyMain
+			// 0xabcb62: 6 stroke, 7 mass, 0xa GP, 0xb single). A mass game
+			// (0x500480) of room mode 0xc, 0xe or 0x13 (0x500200) is the
+			// single room, then the JP lobby's 0x2f (the room form's
+			// 0x4ff290 (0), the KR lobby's 0x2e: the chat window flag);
+			// modes 0x14 / 0x15 (0x46e6d0) the GP room.
+			{
+				int mode = JpSharedDoc_GetRoomGameMode();
+				int form = 6;
+				bool single = false;
+				if (IsMassGame(WSingleton<CSharedDoc>::Instance()->m_roomInfo.m_gameType)) {
+					if (mode == 0xC || mode == 0xE || mode == 0x13) {
+						form = 0xB;
+						single = true;
+					} else {
+						form = (mode == 0x14 || mode == 0x15) ? 0xA : 7;
+					}
+				}
+				GetActor("Lobby") << MsgObject(0, 0x8B, form, 0, 0, 0, 0);
+				if (single)
+					GetActor("Lobby") << MsgObject(0, 0x2E, 0, 0, 0, 0, 0);
+			}
+#else
 			GetActor("Lobby") << MsgObject(0, 0, (intptr_t)layout, 0, 0, 0, 0);
+#endif
 		} else {
 			GetActor("Lobby") << MsgObject(0, 0x3B, result, 0, 0, 0, 0);
 		}
@@ -448,7 +563,15 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		if (uid != 0xFFFFFFFF) {
 			if (uid == MyGuid(false)) {
 				AfxPostMsg(0, "Lobby", 2, 0, 0, 0, 0);
+#ifdef JP_PAKS
+				// JP 0xac148f-0xac14e4: the JP data has no ROOMLIST layout; the
+				// lobby stays on TOPPAGE and the room list is a form over it
+				// (CLobbyMain message 0x8b (4, tab 0), JP case 0xabc986).
+				AfxPostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+				AfxPostMsg(0, "Lobby", 0x8B, 4, 0, 0, 0);
+#else
 				AfxPostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+#endif
 			} else {
 				it = std::find(players.begin(), players.end(), uid);
 				if (it != players.end()) {
@@ -828,7 +951,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 	case 0x11:
 		if (packet.Decode1()) {
 			// "Character setup failed. Please reconnect."
-			GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xc4\xb3\xb8\xaf\xc5\xcd \xbc\xb3\xc1\xa4\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9. \xc0\xe7\xc1\xa2\xbc\xd3\xc7\xcf\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+			GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xc4\xb3\xb8\xaf\xc5\xcd \xbc\xb3\xc1\xa4\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9. \xc0\xe7\xc1\xa2\xbc\xd3\xc7\xcf\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 		}
 		break;
 	case 0x1CD: {
@@ -944,9 +1067,9 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 
 				if (pItem) {
 					// "PC bang attendance event: <count> times, <item> received"
-					sprintf(message, " PC\xb9\xe6 \xc3\xe2\xbc\xae \xc0\xcc\xba\xa5\xc6\xae\n\n \\cT\\c\\c0xffff0000\\c%d \\c0xff000000\\c\xb9\xf8 \xc0\xc0\xb8\xf0\n \\cT\\c\\c0xffff0000\\c%s \\c0xff000000\\c\xbe\xc6\xc0\xcc\xc5\xdb \xc1\xf6\xb1\xde", count, pItem->m_name);
+					sprintf(message, LOBBYTASK_TEXT(" PC\xb9\xe6 \xc3\xe2\xbc\xae \xc0\xcc\xba\xa5\xc6\xae\n\n \\cT\\c\\c0xffff0000\\c%d \\c0xff000000\\c\xb9\xf8 \xc0\xc0\xb8\xf0\n \\cT\\c\\c0xffff0000\\c%s \\c0xff000000\\c\xbe\xc6\xc0\xcc\xc5\xdb \xc1\xf6\xb1\xde"), count, pItem->m_name);
 				} else {
-					sprintf(message, " PC\xb9\xe6 \xc3\xe2\xbc\xae \xc0\xcc\xba\xa5\xc6\xae\n\n \\cT\\c\\c0xffff0000\\c%d \\c0xff000000\\c\xb9\xf8 \xc0\xc0\xb8\xf0\n \\cT\\c\\c0xffff0000\\c\xbe\xc6\xc0\xcc\xc5\xdb \\c0xff000000\\c \xc1\xf6\xb1\xde", count);
+					sprintf(message, LOBBYTASK_TEXT(" PC\xb9\xe6 \xc3\xe2\xbc\xae \xc0\xcc\xba\xa5\xc6\xae\n\n \\cT\\c\\c0xffff0000\\c%d \\c0xff000000\\c\xb9\xf8 \xc0\xc0\xb8\xf0\n \\cT\\c\\c0xffff0000\\c\xbe\xc6\xc0\xcc\xc5\xdb \\c0xff000000\\c \xc1\xf6\xb1\xde"), count);
 				}
 
 				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)message, 0, 0, 0, 0);
@@ -990,31 +1113,31 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		}
 		case 1:
 			// "An error occurred while setting the nickname."
-			message = "\xb4\xeb\xc8\xad\xb8\xed \xbc\xb3\xc1\xa4\xc7\xcf\xb4\xc2 \xb0\xfa\xc1\xa4\xbf\xa1\xbc\xad \xbf\xc0\xb7\xf9\xb0\xa1 \xb9\xdf\xbb\xfd\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xb4\xeb\xc8\xad\xb8\xed \xbc\xb3\xc1\xa4\xc7\xcf\xb4\xc2 \xb0\xfa\xc1\xa4\xbf\xa1\xbc\xad \xbf\xc0\xb7\xf9\xb0\xa1 \xb9\xdf\xbb\xfd\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		case 2:
 			// "This nickname is already in use."
-			message = "\xc0\xcc\xb9\xcc \xbb\xe7\xbf\xeb\xc7\xcf\xb0\xed \xc0\xd6\xb4\xc2 \xb4\xeb\xc8\xad\xb8\xed\xc0\xd4\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xc0\xcc\xb9\xcc \xbb\xe7\xbf\xeb\xc7\xcf\xb0\xed \xc0\xd6\xb4\xc2 \xb4\xeb\xc8\xad\xb8\xed\xc0\xd4\xb4\xcf\xb4\xd9.");
 			break;
 		case 3:
 			// "The length or format is not valid."
-			message = "\xb1\xe6\xc0\xcc \xb6\xc7\xb4\xc2 \xc7\xfc\xbd\xc4\xc0\xcc \xb8\xc2\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xb1\xe6\xc0\xcc \xb6\xc7\xb4\xc2 \xc7\xfc\xbd\xc4\xc0\xcc \xb8\xc2\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		case 4:
 			// "Not enough cookies."
-			message = "\xba\xb8\xc0\xaf\xc7\xcf\xb0\xed \xc0\xd6\xb4\xc2 \xc4\xed\xc5\xb0\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xba\xb8\xc0\xaf\xc7\xcf\xb0\xed \xc0\xd6\xb4\xc2 \xc4\xed\xc5\xb0\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.");
 			break;
 		case 5:
 			// "It contains a forbidden word."
-			message = "\xbb\xe7\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xb4\xc2 \xb4\xdc\xbe\xee\xb0\xa1 \xc6\xf7\xc7\xd4\xb5\xc7\xbe\xee \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9..";
+			message = LOBBYTASK_TEXT("\xbb\xe7\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xb4\xc2 \xb4\xdc\xbe\xee\xb0\xa1 \xc6\xf7\xc7\xd4\xb5\xc7\xbe\xee \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9..");
 			break;
 		case 6:
 			// "The database has a problem right now."
-			message = "\xc7\xf6\xc0\xe7 DB\xbf\xa1 \xb9\xae\xc1\xa6\xb0\xa1 \xb9\xdf\xbb\xfd\xc7\xcf\xb0\xed \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xc7\xf6\xc0\xe7 DB\xbf\xa1 \xb9\xae\xc1\xa6\xb0\xa1 \xb9\xdf\xbb\xfd\xc7\xcf\xb0\xed \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		case 10:
 			// "The nickname differs from the one already checked. Please check again."
-			message = "\xb5\xee\xb7\xcf\xc7\xcf\xb7\xc1\xb4\xc2 \xb4\xd0\xb3\xd7\xc0\xd3\xc0\xcc \xc0\xcc\xb9\xcc \xc3\xbc\xc5\xa9\xc7\xd1 \xb4\xd0\xb3\xd7\xc0\xd3\xb0\xfa \xb5\xbf\xc0\xcf\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9. \xb4\xd9\xbd\xc3 \xc8\xae\xc0\xce\xc7\xd8 \xc1\xd6\xbc\xbc\xbf\xe4.";
+			message = LOBBYTASK_TEXT("\xb5\xee\xb7\xcf\xc7\xcf\xb7\xc1\xb4\xc2 \xb4\xd0\xb3\xd7\xc0\xd3\xc0\xcc \xc0\xcc\xb9\xcc \xc3\xbc\xc5\xa9\xc7\xd1 \xb4\xd0\xb3\xd7\xc0\xd3\xb0\xfa \xb5\xbf\xc0\xcf\xc7\xcf\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9. \xb4\xd9\xbd\xc3 \xc8\xae\xc0\xce\xc7\xd8 \xc1\xd6\xbc\xbc\xbf\xe4.");
 			break;
 		default: {
 			// "The change failed for an unknown reason. - Code : <result>"
@@ -1046,7 +1169,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 				GetActor("Lobby") << MsgObject(0, 0x6E, 0, 0, 0, 0, 0);
 			}
 			// "This nickname can be used."
-			message = "\xbb\xe7\xbf\xeb \xb0\xa1\xb4\xc9\xc7\xd1 \xb4\xeb\xc8\xad\xb8\xed\xc0\xd4\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xbb\xe7\xbf\xeb \xb0\xa1\xb4\xc9\xc7\xd1 \xb4\xeb\xc8\xad\xb8\xed\xc0\xd4\xb4\xcf\xb4\xd9.");
 			break;
 		}
 		case 1:
@@ -1054,7 +1177,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 			message = "\xb4\xeb\xc8\xad\xb8\xed\xc0\xbb \xb0\xcb\xbb\xe7\xc7\xcf\xb4\xc2 \xb0\xfa\xc1\xa4\xbf\xa1\xbc\xad \xbf\xc0\xb7\xf9\xb0\xa1 \xb9\xdf\xbb\xfd\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.";
 			break;
 		case 2:
-			message = "\xc0\xcc\xb9\xcc \xbb\xe7\xbf\xeb\xc7\xcf\xb0\xed \xc0\xd6\xb4\xc2 \xb4\xeb\xc8\xad\xb8\xed\xc0\xd4\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xc0\xcc\xb9\xcc \xbb\xe7\xbf\xeb\xc7\xcf\xb0\xed \xc0\xd6\xb4\xc2 \xb4\xeb\xc8\xad\xb8\xed\xc0\xd4\xb4\xcf\xb4\xd9.");
 			break;
 		case 3:
 			message = "\xb1\xe6\xc0\xcc \xb6\xc7\xb4\xc2 \xc7\xfc\xbd\xc4\xc0\xcc \xb8\xc2\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.";
@@ -1072,7 +1195,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 			if (IsLocalContent((localContentType_t)0x81)) {
 				GetActor("Lobby") << MsgObject(0, 0x6E, 0, 8, 0, 0, 0);
 				// "The same nickname is used as it is."
-				message = "\xb5\xbf\xc0\xcf\xc7\xd1 \xb4\xd0\xb3\xd7\xc0\xd3\xc0\xbb \xb1\xd7\xb4\xeb\xb7\xce \xbb\xe7\xbf\xeb\xc7\xd5\xb4\xcf\xb4\xd9.";
+				message = LOBBYTASK_TEXT("\xb5\xbf\xc0\xcf\xc7\xd1 \xb4\xd0\xb3\xd7\xc0\xd3\xc0\xbb \xb1\xd7\xb4\xeb\xb7\xce \xbb\xe7\xbf\xeb\xc7\xd5\xb4\xcf\xb4\xd9.");
 			}
 			break;
 		}
@@ -1294,40 +1417,40 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		switch (reason) {
 		case 1:
 			// "Not enough players to start the game."
-			message = "\xb0\xd4\xc0\xd3\xc0\xbb \xbd\xc3\xc0\xdb\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd8 \xc7\xca\xbf\xe4\xc7\xd1 \xc0\xaf\xc0\xfa\xc0\xc7 \xbc\xf6\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xb0\xd4\xc0\xd3\xc0\xbb \xbd\xc3\xc0\xdb\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd8 \xc7\xca\xbf\xe4\xc7\xd1 \xc0\xaf\xc0\xfa\xc0\xc7 \xbc\xf6\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.");
 			break;
 		case 2:
 			// "The teams do not have the same number of players."
-			message = "\xc6\xc0\xc0\xc7 \xc0\xce\xbf\xf8\xbc\xf6\xb0\xa1 \xbc\xad\xb7\xce \xb8\xc2\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xc6\xc0\xc0\xc7 \xc0\xce\xbf\xf8\xbc\xf6\xb0\xa1 \xbc\xad\xb7\xce \xb8\xc2\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		case 3:
 			// "Not enough Ready players to start the game."
-			message = "\xb0\xd4\xc0\xd3\xc0\xbb \xbd\xc3\xc0\xdb\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd8 \xc7\xca\xbf\xe4\xc7\xd1 Ready\xb5\xc8 \xc0\xaf\xc0\xfa\xc0\xc7 \xbc\xf6\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xb0\xd4\xc0\xd3\xc0\xbb \xbd\xc3\xc0\xdb\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd8 \xc7\xca\xbf\xe4\xc7\xd1 Ready\xb5\xc8 \xc0\xaf\xc0\xfa\xc0\xc7 \xbc\xf6\xb0\xa1 \xba\xce\xc1\xb7\xc7\xd5\xb4\xcf\xb4\xd9.");
 			break;
 		case 4:
 			// "Too many players to start the game."
-			message = "\xb0\xd4\xc0\xd3\xc0\xbb \xbd\xc3\xc0\xdb\xc7\xcf\xb1\xe2\xbf\xa1 \xc0\xce\xbf\xf8\xc0\xcc \xb3\xca\xb9\xab \xb8\xb9\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xb0\xd4\xc0\xd3\xc0\xbb \xbd\xc3\xc0\xdb\xc7\xcf\xb1\xe2\xbf\xa1 \xc0\xce\xbf\xf8\xc0\xcc \xb3\xca\xb9\xab \xb8\xb9\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		case 6:
 			// "No player has been chosen for the first gallery."
-			message = "\xc3\xb3\xc0\xbd\xbf\xa1 \xb0\xb6\xb7\xaf\xb8\xae\xc7\xd2 \xc0\xaf\xc0\xfa\xb0\xa1 \xbc\xb1\xc5\xc3\xb5\xc7\xbe\xee \xc0\xd6\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xc3\xb3\xc0\xbd\xbf\xa1 \xb0\xb6\xb7\xaf\xb8\xae\xc7\xd2 \xc0\xaf\xc0\xfa\xb0\xa1 \xbc\xb1\xc5\xc3\xb5\xc7\xbe\xee \xc0\xd6\xc1\xf6 \xbe\xca\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		case 7:
 		case 8:
 			// "Failed to start the game."
-			message = "\xb0\xd4\xc0\xd3 \xbd\xba\xc5\xb8\xc6\xae\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xb0\xd4\xc0\xd3 \xbd\xba\xc5\xb8\xc6\xae\xbf\xa1 \xbd\xc7\xc6\xd0\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		case 9:
 			// "An update to the latest version is required."
-			message = "\xc3\xd6\xbd\xc5 \xb9\xf6\xc1\xaf\xc0\xb8\xb7\xce \xbe\xf7\xb5\xa5\xc0\xcc\xc6\xae\xb0\xa1 \xc7\xca\xbf\xe4\xc7\xd5\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xc3\xd6\xbd\xc5 \xb9\xf6\xc1\xaf\xc0\xb8\xb7\xce \xbe\xf7\xb5\xa5\xc0\xcc\xc6\xae\xb0\xa1 \xc7\xca\xbf\xe4\xc7\xd5\xb4\xcf\xb4\xd9.");
 			break;
 		case 12:
 			// "You cannot play any more match games with the other player."
-			message = "\xbb\xf3\xb4\xeb \xc7\xc3\xb7\xb9\xc0\xcc\xbe\xee\xbf\xcd \xb8\xc5\xc4\xa1 \xc7\xc3\xb7\xb9\xc0\xcc\xb8\xa6 \xb4\xf5 \xc0\xcc\xbb\xf3 \xc7\xd2\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xbb\xf3\xb4\xeb \xc7\xc3\xb7\xb9\xc0\xcc\xbe\xee\xbf\xcd \xb8\xc5\xc4\xa1 \xc7\xc3\xb7\xb9\xc0\xcc\xb8\xa6 \xb4\xf5 \xc0\xcc\xbb\xf3 \xc7\xd2\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		case 13:
 			// "A player lacks the pang needed to start the game."
-			message = "\xb0\xd4\xc0\xd3\xc0\xbb \xbd\xc3\xc0\xdb\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd8\xbc\xad \xc7\xca\xbf\xe4\xc7\xd1 \xc6\xce\xc0\xcc \xba\xce\xc1\xb7\xc7\xd1 \xc0\xaf\xc0\xfa\xb0\xa1 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.";
+			message = LOBBYTASK_TEXT("\xb0\xd4\xc0\xd3\xc0\xbb \xbd\xc3\xc0\xdb\xc7\xcf\xb1\xe2 \xc0\xa7\xc7\xd8\xbc\xad \xc7\xca\xbf\xe4\xc7\xd1 \xc6\xce\xc0\xcc \xba\xce\xc1\xb7\xc7\xd1 \xc0\xaf\xc0\xfa\xb0\xa1 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.");
 			break;
 		}
 
@@ -1352,7 +1475,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		std::string nickName;
 		packet.DecodeStr(nickName);
 		// "<nick>: you are about to force this player out.\nDo you agree?"
-		nickName += "\xb4\xd4\xc0\xbb \xb0\xad\xc1\xa6 \xc5\xf0\xc0\xe5\xbd\xc3\xc5\xb0\xb7\xc1 \xc7\xd5\xb4\xcf\xb4\xd9.\n\xc2\xf9\xbc\xba\xc7\xcf\xbd\xca\xb4\xcf\xb1\xee?";
+		nickName += LOBBYTASK_TEXT("\xb4\xd4\xc0\xbb \xb0\xad\xc1\xa6 \xc5\xf0\xc0\xe5\xbd\xc3\xc5\xb0\xb7\xc1 \xc7\xd5\xb4\xcf\xb4\xd9.\n\xc2\xf9\xbc\xba\xc7\xcf\xbd\xca\xb4\xcf\xb1\xee?");
 		GetActor("Lobby") << MsgObject(0, 0x31, (intptr_t)nickName.c_str(), packet.Decode4(), 0, 0, 0);
 		break;
 	}
@@ -1496,13 +1619,13 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 
 		if (result == 0xB) {
 			// "Notice: no room in play that can be watched was found."
-			GetActor("Lobby") << MsgObject(0, 3, (intptr_t)"\xbe\xcb\xb8\xb2 : \xb5\xd1\xb7\xaf\xba\xb8\xb1\xe2\xb0\xa1 \xb0\xa1\xb4\xc9\xc7\xd1 \xb0\xd4\xc0\xd3\xc1\xdf\xc0\xce \xb9\xe6\xc0\xbb \xc3\xa3\xc1\xf6 \xb8\xf8\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9.", 0xFFFF7878, 0, 0, 0);
+			GetActor("Lobby") << MsgObject(0, 3, (intptr_t)LOBBYTASK_TEXT("\xbe\xcb\xb8\xb2 : \xb5\xd1\xb7\xaf\xba\xb8\xb1\xe2\xb0\xa1 \xb0\xa1\xb4\xc9\xc7\xd1 \xb0\xd4\xc0\xd3\xc1\xdf\xc0\xce \xb9\xe6\xc0\xbb \xc3\xa3\xc1\xf6 \xb8\xf8\xc7\xdf\xbd\xc0\xb4\xcf\xb4\xd9."), 0xFFFF7878, 0, 0, 0);
 			break;
 		}
 
 		if (result == 0x10) {
 			// "Notice: the game may end before loading completes."
-			WSingleton<CChatMsg>::Instance()->AddChatMsg(std::string("\xbe\xcb\xb8\xb2 : \xb7\xce\xb5\xf9\xb5\xc7\xb1\xe2 \xc0\xfc\xbf\xa1 \xb0\xd4\xc0\xd3\xc0\xcc \xc1\xbe\xb7\xe1\xb5\xc9 \xbf\xec\xb7\xc1\xb0\xa1 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."), 0xFFFF7878, false, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(std::string(LOBBYTASK_TEXT("\xbe\xcb\xb8\xb2 : \xb7\xce\xb5\xf9\xb5\xc7\xb1\xe2 \xc0\xfc\xbf\xa1 \xb0\xd4\xc0\xd3\xc0\xcc \xc1\xbe\xb7\xe1\xb5\xc9 \xbf\xec\xb7\xc1\xb0\xa1 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.")), 0xFFFF7878, false, false);
 			break;
 		}
 
@@ -1700,31 +1823,31 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 
 			if (result == 6) {
 				// "Already in a game room."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xc0\xcc\xb9\xcc \xb0\xd4\xc0\xd3\xb9\xe6\xbf\xa1\xc0\xd4\xc0\xe5\xb5\xc7\xbe\xee \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xc0\xcc\xb9\xcc \xb0\xd4\xc0\xd3\xb9\xe6\xbf\xa1\xc0\xd4\xc0\xe5\xb5\xc7\xbe\xee \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			} else if (result == 0x14) {
 				// "That player cannot be invited."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xc7\xd8\xb4\xe7 \xc0\xaf\xc0\xfa\xb4\xc2 \xc3\xca\xb4\xeb\xc7\xd2\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xc7\xd8\xb4\xe7 \xc0\xaf\xc0\xfa\xb4\xc2 \xc3\xca\xb4\xeb\xc7\xd2\xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			} else if (result == 0x15) {
 				// "That player has not joined a guild."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xc7\xd8\xb4\xe7 \xc0\xaf\xc0\xfa\xb4\xc2 \xb1\xe6\xb5\xe5 \xb0\xa1\xc0\xd4\xc0\xbb \xc7\xcf\xc1\xf6 \xbe\xca\xc0\xb8\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xc7\xd8\xb4\xe7 \xc0\xaf\xc0\xfa\xb4\xc2 \xb1\xe6\xb5\xe5 \xb0\xa1\xc0\xd4\xc0\xbb \xc7\xcf\xc1\xf6 \xbe\xca\xc0\xb8\xbc\xcc\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			} else if (result == 0x16) {
 				// "Only rookie level may enter."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xb7\xe7\xc5\xb0\xb7\xb9\xba\xa7\xb8\xb8 \xc0\xd4\xc0\xe5\xc0\xcc \xb0\xa1\xb4\xc9\xc7\xd5\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xb7\xe7\xc5\xb0\xb7\xb9\xba\xa7\xb8\xb8 \xc0\xd4\xc0\xe5\xc0\xcc \xb0\xa1\xb4\xc9\xc7\xd5\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			} else if (result == 0x17) {
 				// "That player is not where they can be invited."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xc7\xd8\xb4\xe7 \xc0\xaf\xc0\xfa\xb4\xc2 \xc3\xca\xb4\xeb\xc7\xd2\xbc\xf6 \xc0\xd6\xb4\xc2 \xc0\xa7\xc4\xa1\xbf\xa1 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xc7\xd8\xb4\xe7 \xc0\xaf\xc0\xfa\xb4\xc2 \xc3\xca\xb4\xeb\xc7\xd2\xbc\xf6 \xc0\xd6\xb4\xc2 \xc0\xa7\xc4\xa1\xbf\xa1 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			} else if (result == 2) {
 				// "The room is full."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xb9\xe6\xbf\xa1 \xc0\xce\xbf\xf8\xc0\xcc \xb2\xcb\xc3\xa1\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xb9\xe6\xbf\xa1 \xc0\xce\xbf\xf8\xc0\xcc \xb2\xcb\xc3\xa1\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			} else if (result == 0x18) {
 				// "The channel is over capacity; cannot invite."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xc3\xa4\xb3\xce\xc0\xc7 \xc1\xa4\xbf\xf8\xbc\xf6\xb0\xa1 \xc3\xca\xb0\xfa\xb5\xc7\xbe\xee \xc3\xca\xb4\xeb\xc7\xd2\xbc\xf6\xb0\xa1 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xc3\xa4\xb3\xce\xc0\xc7 \xc1\xa4\xbf\xf8\xbc\xf6\xb0\xa1 \xc3\xca\xb0\xfa\xb5\xc7\xbe\xee \xc3\xca\xb4\xeb\xc7\xd2\xbc\xf6\xb0\xa1 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			} else if (result == 0x19) {
 				// "The invitee's level cannot enter the channel."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xc3\xca\xb4\xeb \xb4\xeb\xbb\xf3\xc0\xba \xc3\xa4\xb3\xce\xbf\xa1 \xc0\xd4\xc0\xe5\xc7\xd2\xbc\xf6 \xbe\xf8\xb4\xc2 \xb7\xb9\xba\xa7\xc0\xd4\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xc3\xca\xb4\xeb \xb4\xeb\xbb\xf3\xc0\xba \xc3\xa4\xb3\xce\xbf\xa1 \xc0\xd4\xc0\xe5\xc7\xd2\xbc\xf6 \xbe\xf8\xb4\xc2 \xb7\xb9\xba\xa7\xc0\xd4\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			} else {
 				// "The invitation failed."
-				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)"\xc3\xca\xb4\xeb\xc7\xcf\xb1\xe2\xb8\xa6 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.", 0, 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x23, (intptr_t)LOBBYTASK_TEXT("\xc3\xca\xb4\xeb\xc7\xcf\xb1\xe2\xb8\xa6 \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0, 0);
 			}
 
 			WSingleton<CSharedDoc>::Instance()->m_inviteMode = 0;
@@ -1793,27 +1916,27 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 				break;
 			case 2:
 				// "No one to match with. Please try again shortly."
-				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr("\xb8\xc5\xc4\xaa \xb4\xeb\xbb\xf3\xc0\xcc \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.\n\xc0\xe1\xbd\xc3\xc8\xc4 \xb4\xd9\xbd\xc3 \xbd\xc3\xb5\xb5\xc7\xd8 \xc1\xd6\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9."), 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr(LOBBYTASK_TEXT("\xb8\xc5\xc4\xaa \xb4\xeb\xbb\xf3\xc0\xcc \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.\n\xc0\xe1\xbd\xc3\xc8\xc4 \xb4\xd9\xbd\xc3 \xbd\xc3\xb5\xb5\xc7\xd8 \xc1\xd6\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9.")), 0, 0, 0);
 				break;
 			case 3:
 				// "The other player refused the match."
-				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr("\xb4\xeb\xbb\xf3\xc0\xcc \xb8\xc5\xc4\xaa\xc0\xbb \xb0\xc5\xc0\xfd\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr(LOBBYTASK_TEXT("\xb4\xeb\xbb\xf3\xc0\xcc \xb8\xc5\xc4\xaa\xc0\xbb \xb0\xc5\xc0\xfd\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.")), 0, 0, 0);
 				break;
 			case 1:
 				// "Every player refused; the match failed. Please try again shortly."
-				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr("\xb8\xf0\xb5\xe7 \xb4\xeb\xbb\xf3\xc0\xcc \xb8\xc5\xc4\xaa\xc0\xbb \xb0\xc5\xc0\xfd\xc7\xcf\xbf\xa9 \xb8\xc5\xc4\xaa\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.\n \xc0\xe1\xbd\xc3\xc8\xc4 \xb4\xd9\xbd\xc3 \xbd\xc3\xb5\xb5\xc7\xd8 \xc1\xd6\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9."), 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr(LOBBYTASK_TEXT("\xb8\xf0\xb5\xe7 \xb4\xeb\xbb\xf3\xc0\xcc \xb8\xc5\xc4\xaa\xc0\xbb \xb0\xc5\xc0\xfd\xc7\xcf\xbf\xa9 \xb8\xc5\xc4\xaa\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.\n \xc0\xe1\xbd\xc3\xc8\xc4 \xb4\xd9\xbd\xc3 \xbd\xc3\xb5\xb5\xc7\xd8 \xc1\xd6\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9.")), 0, 0, 0);
 				break;
 			case 4:
 				// "No matching on Fantasy Island."
-				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr("\xc8\xaf\xbb\xf3\xc0\xc7 \xc6\xce\xbe\xdf\xbc\xb6\xbf\xa1\xbc\xad\xb4\xc2 \xb8\xc5\xc4\xaa\xc0\xcc \xba\xd2\xb0\xa1\xb4\xc9\xc7\xd5\xb4\xcf\xb4\xd9."), 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr(LOBBYTASK_TEXT("\xc8\xaf\xbb\xf3\xc0\xc7 \xc6\xce\xbe\xdf\xbc\xb6\xbf\xa1\xbc\xad\xb4\xc2 \xb8\xc5\xc4\xaa\xc0\xcc \xba\xd2\xb0\xa1\xb4\xc9\xc7\xd5\xb4\xcf\xb4\xd9.")), 0, 0, 0);
 				break;
 			case 6:
 				// "The match failed."
-				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr("\xb8\xc5\xc4\xaa\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr(LOBBYTASK_TEXT("\xb8\xc5\xc4\xaa\xc0\xbb \xbd\xc7\xc6\xd0\xc7\xcf\xbf\xb4\xbd\xc0\xb4\xcf\xb4\xd9.")), 0, 0, 0);
 				break;
 			case 5:
 				// "The requested player is not where a match is possible."
-				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr("\xb8\xc5\xc4\xaa\xc0\xbb \xbf\xe4\xc3\xbb\xc7\xd1 \xbb\xf3\xb4\xeb\xb9\xe6\xc0\xcc \xb8\xc5\xc4\xaa \xb0\xa1\xb4\xc9\xc7\xd1 \xc0\xa7\xc4\xa1\xbf\xa1 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), 0, 0, 0);
+				GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr(LOBBYTASK_TEXT("\xb8\xc5\xc4\xaa\xc0\xbb \xbf\xe4\xc3\xbb\xc7\xd1 \xbb\xf3\xb4\xeb\xb9\xe6\xc0\xcc \xb8\xc5\xc4\xaa \xb0\xa1\xb4\xc9\xc7\xd1 \xc0\xa7\xc4\xa1\xbf\xa1 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.")), 0, 0, 0);
 				break;
 			}
 		}
@@ -1849,7 +1972,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 	case 0x136:
 		if (IsLocalContent((localContentType_t)0x59)) {
 			// "The match was cancelled. Please try again shortly."
-			GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr("\xb8\xc5\xc4\xaa\xc0\xcc \xc3\xeb\xbc\xd2\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9. \xc0\xe1\xbd\xc3\xc8\xc4 \xb4\xd9\xbd\xc3 \xbd\xc3\xb5\xb5\xc7\xd8 \xc1\xd6\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9."), 0, 0, 0);
+			GetActor("Lobby") << MsgObject(0, 0x21D, 0, (intptr_t)MakeStr(LOBBYTASK_TEXT("\xb8\xc5\xc4\xaa\xc0\xcc \xc3\xeb\xbc\xd2\xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9. \xc0\xe1\xbd\xc3\xc8\xc4 \xb4\xd9\xbd\xc3 \xbd\xc3\xb5\xb5\xc7\xd8 \xc1\xd6\xbd\xc3\xb1\xe2 \xb9\xd9\xb6\xf8\xb4\xcf\xb4\xd9.")), 0, 0, 0);
 		}
 		break;
 	case 0x137: {
@@ -2098,7 +2221,7 @@ int CLobbyTask::OnPacket(WReceivedPacket &packet) {
 		if (typeId) {
 			char szMsg[256] = {0,};
 			// "<item>(<count>) was given as a reward." (the reward notice)
-			sprintf(szMsg, "\xb9\xe6\xc0\xe5\xbf\xa1 \xb4\xeb\xc7\xd1 \xba\xb8\xbb\xf3\xc0\xb8\xb7\xce \\c0xffff0000\\c%s(%d)\\c0xff000000\\c\xc0\xcc \xc1\xf6\xb1\xde \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9.", ItemManager()->GetItemName(typeId), count);
+			sprintf(szMsg, LOBBYTASK_TEXT("\xb9\xe6\xc0\xe5\xbf\xa1 \xb4\xeb\xc7\xd1 \xba\xb8\xbb\xf3\xc0\xb8\xb7\xce \\c0xffff0000\\c%s(%d)\\c0xff000000\\c\xc0\xcc \xc1\xf6\xb1\xde \xb5\xc7\xbe\xfa\xbd\xc0\xb4\xcf\xb4\xd9."), ItemManager()->GetItemName(typeId), count);
 			AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x26, (intptr_t)szMsg, typeId, 0, 0, 0));
 		}
 		break;

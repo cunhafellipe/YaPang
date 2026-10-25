@@ -38,6 +38,38 @@ extern unsigned long g_CurrentTime;
 
 const char* GetCharsTillSpace(const char* pSrc, char* pDest); // commonutil.cpp
 
+#ifdef JP_PAKS
+// 0xb4eb80 (src/jp/RFTextManager.h, not on this unit's include
+// path in the port: it is not a PG_REFRESH_HOOK_SOURCES unit).
+const char* Jp_LookupText(const char* key);
+#endif
+
+// The chat target labels ("to guild" ...) are compared as identifiers: the JP
+// exe compares the target with Jp_LookupText(<label>) (SendChatMessage
+// 0x9a566f, SendChatMessage2 0x9a6011), the text SharedDoc's
+// InitReservedChatList shows in the target combo; the KR exe compares the
+// Korean label.
+#ifdef JP_PAKS
+#define CHATMANAGER_CHAT_TARGET(text) Jp_LookupText(text)
+#else
+#define CHATMANAGER_CHAT_TARGET(text) (text)
+#endif
+
+// The chat notices (chat banned, flood and swearing penalties, no guild
+// chat) are shown through Jp_LookupText in the JP exe (SendChatMessage
+// 0x9a4fe8, 0x9a5242, 0x9a528b, 0x9a52f4, 0x9a534c, 0x9a54a4, 0x9a54ed,
+// 0x9a576b; SendChatMessage2 0x9a59d8, 0x9a5b28, 0x9a5ba8, 0x9a5c91,
+// 0x9a5cd8, 0x9a5e0c, 0x9a5eab, 0x9a610f), as are FilteringEmoticon's
+// refusals (0x9a402c, 0x9a41c0) and the tournament record's room master line
+// (RecordTournament 0x9a468b) and the "saved to" / item drop command notices
+// (RecordTournament 0x9a4767, SaveChatHistory 0x9a4c86, CheckChatCommand
+// 0x9a48ca, 0x9a48fe); the KR exe shows the Korean text.
+#ifdef JP_PAKS
+#define CHATMANAGER_TEXT(text) Jp_LookupText(text)
+#else
+#define CHATMANAGER_TEXT(text) (text)
+#endif
+
 // The emoticon words, three faces of 12 words each.
 extern const char *FacialTextTable[][12];
 
@@ -453,7 +485,7 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 	char lastMessage[0x400];
 
 	if (WSingleton<CSharedDoc>::Instance()->GetFlagBlock() & 8) {
-		WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)\xC3\xA4\xC6\xC3 \xC0\xCC\xBF\xEB \xC1\xA6\xC0\xE7 \xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xC3\xA4\xC6\xC3\xC0\xBB \xC0\xCC\xBF\xEB\xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+		WSingleton<CChatMsg>::Instance()->AddChatMsg(CHATMANAGER_TEXT("(\xBE\xCB\xB8\xB2)\xC3\xA4\xC6\xC3 \xC0\xCC\xBF\xEB \xC1\xA6\xC0\xE7 \xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xC3\xA4\xC6\xC3\xC0\xBB \xC0\xCC\xBF\xEB\xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 		return;
 	}
 
@@ -481,7 +513,7 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 			m_floodPenalty = false;
 			m_floodCount = 0;
 		} else {
-			WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3 \xB1\xDD\xC1\xF6\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9", 0xFFFF7878, true, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(CHATMANAGER_TEXT("(\xBE\xCB\xB8\xB2)1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3 \xB1\xDD\xC1\xF6\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9"), 0xFFFF7878, true, false);
 			return;
 		}
 	}
@@ -491,7 +523,7 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 			m_repeatPenalty = false;
 			m_repeatCount = 0;
 		} else {
-			WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3 \xB1\xDD\xC1\xF6\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9", 0xFFFF7878, true, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(CHATMANAGER_TEXT("(\xBE\xCB\xB8\xB2)1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3 \xB1\xDD\xC1\xF6\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9"), 0xFFFF7878, true, false);
 			return;
 		}
 	}
@@ -500,8 +532,8 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 		&& (elapsed < 1000 || (elapsed < 10000 && stricmp(text, lastMessage) == 0))) {
 		m_repeatCount++;
 		if (m_repeatCount == 3) {
-			WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)\xC3\xA4\xC6\xC3\xB5\xB5\xB9\xE8 \xB9\xFA\xC4\xA2\xBF\xA1 \xB0\xC9\xB8\xAE\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
-			WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3\xB1\xDD\xC1\xF6\xC0\xD4\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(CHATMANAGER_TEXT("(\xBE\xCB\xB8\xB2)\xC3\xA4\xC6\xC3\xB5\xB5\xB9\xE8 \xB9\xFA\xC4\xA2\xBF\xA1 \xB0\xC9\xB8\xAE\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(CHATMANAGER_TEXT("(\xBE\xCB\xB8\xB2)1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3\xB1\xDD\xC1\xF6\xC0\xD4\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 			m_lastChatTime = g_CurrentTime;
 			m_repeatPenalty = true;
 
@@ -527,8 +559,8 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 	if (!AdminMode() && Filtering(message)) {
 		m_floodCount++;
 		if (m_floodCount == 5) {
-			WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)5\xC8\xB8\xC0\xCC\xBB\xF3 \xBF\xE5\xBC\xB3\xB4\xDC\xBE\xEE\xB8\xA6 \xBB\xE7\xBF\xEB\xC7\xCF\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
-			WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3\xB1\xDD\xC1\xF6\xC0\xD4\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(CHATMANAGER_TEXT("(\xBE\xCB\xB8\xB2)5\xC8\xB8\xC0\xCC\xBB\xF3 \xBF\xE5\xBC\xB3\xB4\xDC\xBE\xEE\xB8\xA6 \xBB\xE7\xBF\xEB\xC7\xCF\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
+			WSingleton<CChatMsg>::Instance()->AddChatMsg(CHATMANAGER_TEXT("(\xBE\xCB\xB8\xB2)1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3\xB1\xDD\xC1\xF6\xC0\xD4\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 			m_lastChatTime = g_CurrentTime;
 			m_floodPenalty = true;
 
@@ -551,7 +583,7 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 		packet.EncodeStr(std::string(message));
 		packet.Send(SEND_TO_DEFAULT);
 	} else if (target) {
-		if (strcmp(target, "\xB1\xE6\xB5\xE5\xBF\xA1\xB0\xD4") == 0) {
+		if (strcmp(target, CHATMANAGER_CHAT_TARGET("\xB1\xE6\xB5\xE5\xBF\xA1\xB0\xD4")) == 0) {
 			if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)
 				&& WSingleton<CMessengerInfo>::Instance()->m_serverListRequest == 4) {
 				std::string line(message);
@@ -560,7 +592,7 @@ void ChatManager::SendChatMessage(const char *text, const char *target, bool bro
 				packet.EncodeStr(line.c_str());
 				packet.Send(SEND_TO_MSN);
 			} else {
-				MsgObject msg(0, 3, (intptr_t)"\xC1\xF6\xB1\xDD\xC0\xBA \xB1\xE6\xB5\xE5 \xB4\xEB\xC8\xAD\xB8\xA6 \xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFFCC00, 0, 0, 0);
+				MsgObject msg(0, 3, (intptr_t)CHATMANAGER_TEXT("\xC1\xF6\xB1\xDD\xC0\xBA \xB1\xE6\xB5\xE5 \xB4\xEB\xC8\xAD\xB8\xA6 \xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFFCC00, 0, 0, 0);
 				AfxGetTask()->GetActor("Lobby") << msg;
 			}
 		} else {
@@ -803,7 +835,7 @@ const char *ChatManager::FilteringEmoticon(unsigned short *text) {
 	WideCharToMultiByte(0, 0, text, -1, name, 256, 0, 0);
 
 	if (strstr(name, "-"))
-		return "\xBF\xAA\xC0\xA7 \xC0\xCC\xB8\xF0\xC6\xBC\xC4\xDC\xC0\xBA \xB4\xD0\xB3\xD7\xC0\xD3\xBF\xA1 \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9";
+		return CHATMANAGER_TEXT("\xBF\xAA\xC0\xA7 \xC0\xCC\xB8\xF0\xC6\xBC\xC4\xDC\xC0\xBA \xB4\xD0\xB3\xD7\xC0\xD3\xBF\xA1 \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9");
 
 	for (int i = 0; i < count; i++) {
 		if (strcmp(name, emoticon->GetIconName(i)) == 0)
@@ -811,10 +843,10 @@ const char *ChatManager::FilteringEmoticon(unsigned short *text) {
 
 		emoticon->GetAlias(&alias, i);
 		if (alias[0] == name)
-			return "\xC0\xD4\xB7\xC2\xC7\xCF\xBD\xC5 \xC0\xCC\xB8\xF0\xC6\xBC\xC4\xDC \xC1\xF6\xBD\xC3\xBE\xEE\xB4\xC2 \xB4\xD0\xB3\xD7\xC0\xD3\xBF\xA1 \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9";
+			return CHATMANAGER_TEXT("\xC0\xD4\xB7\xC2\xC7\xCF\xBD\xC5 \xC0\xCC\xB8\xF0\xC6\xBC\xC4\xDC \xC1\xF6\xBD\xC3\xBE\xEE\xB4\xC2 \xB4\xD0\xB3\xD7\xC0\xD3\xBF\xA1 \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9");
 
 		if (alias[1] == name)
-			return "\xC0\xD4\xB7\xC2\xC7\xCF\xBD\xC5 \xC0\xCC\xB8\xF0\xC6\xBC\xC4\xDC \xC1\xF6\xBD\xC3\xBE\xEE\xB4\xC2 \xB4\xD0\xB3\xD7\xC0\xD3\xBF\xA1 \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9";
+			return CHATMANAGER_TEXT("\xC0\xD4\xB7\xC2\xC7\xCF\xBD\xC5 \xC0\xCC\xB8\xF0\xC6\xBC\xC4\xDC \xC1\xF6\xBD\xC3\xBE\xEE\xB4\xC2 \xB4\xD0\xB3\xD7\xC0\xD3\xBF\xA1 \xBB\xE7\xBF\xEB\xC7\xD2 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9");
 	}
 
 	return 0;
@@ -841,7 +873,7 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 		return;
 
 	if (WSingleton<CSharedDoc>::Instance()->GetFlagBlock() & 8) {
-		WSingleton<CChatMsg>::Instance()->AddChatMsg("(\xBE\xCB\xB8\xB2)\xC3\xA4\xC6\xC3 \xC0\xCC\xBF\xEB \xC1\xA6\xC0\xE7 \xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xC3\xA4\xC6\xC3\xC0\xBB \xC0\xCC\xBF\xEB\xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFF7878, true, false);
+		WSingleton<CChatMsg>::Instance()->AddChatMsg(CHATMANAGER_TEXT("(\xBE\xCB\xB8\xB2)\xC3\xA4\xC6\xC3 \xC0\xCC\xBF\xEB \xC1\xA6\xC0\xE7 \xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xC3\xA4\xC6\xC3\xC0\xBB \xC0\xCC\xBF\xEB\xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFF7878, true, false);
 		return;
 	}
 
@@ -866,7 +898,7 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 			m_floodPenalty = false;
 			m_floodCount = 0;
 		} else {
-			std::string notice("\xBE\xCB\xB8\xB2 : 1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3 \xB1\xDD\xC1\xF6\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9");
+			std::string notice(CHATMANAGER_TEXT("\xBE\xCB\xB8\xB2 : 1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3 \xB1\xDD\xC1\xF6\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9"));
 			AfxGetTask()->GetActor("Lobby") << MsgObject(0, 3, (intptr_t)notice.c_str(), 0xFFFF7878, 0, 0, 0);
 			return;
 		}
@@ -877,7 +909,7 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 			m_repeatPenalty = false;
 			m_repeatCount = 0;
 		} else {
-			std::string notice("\xBE\xCB\xB8\xB2 : 1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3 \xB1\xDD\xC1\xF6\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9");
+			std::string notice(CHATMANAGER_TEXT("\xBE\xCB\xB8\xB2 : 1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3 \xB1\xDD\xC1\xF6\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9"));
 			AfxGetTask()->GetActor("Lobby") << MsgObject(0, 3, (intptr_t)notice.c_str(), 0xFFFF7878, 0, 0, 0);
 			return;
 		}
@@ -887,10 +919,10 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 		&& (elapsed < 1000 || (elapsed < 10000 && stricmp(text, lastMessage) == 0))) {
 		m_repeatCount++;
 		if (m_repeatCount == 3) {
-			std::string notice("\xBE\xCB\xB8\xB2 : \xC3\xA4\xC6\xC3\xB5\xB5\xB9\xE8 \xB9\xFA\xC4\xA2\xBF\xA1 \xB0\xC9\xB8\xAE\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9.");
+			std::string notice(CHATMANAGER_TEXT("\xBE\xCB\xB8\xB2 : \xC3\xA4\xC6\xC3\xB5\xB5\xB9\xE8 \xB9\xFA\xC4\xA2\xBF\xA1 \xB0\xC9\xB8\xAE\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9."));
 			AfxGetTask()->GetActor("Lobby") << MsgObject(0, 3, (intptr_t)notice.c_str(), 0xFFFF7878, 0, 0, 0);
 
-			notice = "\xBE\xCB\xB8\xB2 : 1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3\xB1\xDD\xC1\xF6\xC0\xD4\xB4\xCF\xB4\xD9.";
+			notice = CHATMANAGER_TEXT("\xBE\xCB\xB8\xB2 : 1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3\xB1\xDD\xC1\xF6\xC0\xD4\xB4\xCF\xB4\xD9.");
 			AfxGetTask()->GetActor("Lobby") << MsgObject(0, 3, (intptr_t)notice.c_str(), 0xFFFF7878, 0, 0, 0);
 
 			m_lastChatTime = g_CurrentTime;
@@ -907,10 +939,10 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 	if (!AdminMode() && Filtering(message)) {
 		m_floodCount++;
 		if (m_floodCount == 5) {
-			std::string notice("\xBE\xCB\xB8\xB2 : 5\xC8\xB8\xC0\xCC\xBB\xF3 \xBF\xE5\xBC\xB3\xB4\xDC\xBE\xEE\xB8\xA6 \xBB\xE7\xBF\xEB\xC7\xCF\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9.");
+			std::string notice(CHATMANAGER_TEXT("\xBE\xCB\xB8\xB2 : 5\xC8\xB8\xC0\xCC\xBB\xF3 \xBF\xE5\xBC\xB3\xB4\xDC\xBE\xEE\xB8\xA6 \xBB\xE7\xBF\xEB\xC7\xCF\xBC\xCC\xBD\xC0\xB4\xCF\xB4\xD9."));
 			AfxGetTask()->GetActor("Lobby") << MsgObject(0, 3, (intptr_t)notice.c_str(), 0xFFFF7878, 0, 0, 0);
 
-			notice = "\xBE\xCB\xB8\xB2 : 1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3\xB1\xDD\xC1\xF6\xC0\xD4\xB4\xCF\xB4\xD9.";
+			notice = CHATMANAGER_TEXT("\xBE\xCB\xB8\xB2 : 1\xBA\xD0\xB0\xA3 \xC3\xA4\xC6\xC3\xB1\xDD\xC1\xF6\xC0\xD4\xB4\xCF\xB4\xD9.");
 			AfxGetTask()->GetActor("Lobby") << MsgObject(0, 3, (intptr_t)notice.c_str(), 0xFFFF7878, 0, 0, 0);
 
 			m_lastChatTime = g_CurrentTime;
@@ -924,7 +956,7 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 		packet.EncodeStr(std::string(message));
 		packet.Send(SEND_TO_DEFAULT);
 	} else if (target) {
-		if (strcmp(target, "\xB1\xE6\xB5\xE5\xBF\xA1\xB0\xD4") == 0) {
+		if (strcmp(target, CHATMANAGER_CHAT_TARGET("\xB1\xE6\xB5\xE5\xBF\xA1\xB0\xD4")) == 0) {
 			if (WSingleton<WNetworkSystem>::Instance()->IsConnected(WNetworkSystem::NET_UNIT_MSN)
 				&& WSingleton<CMessengerInfo>::Instance()->m_serverListRequest == 4) {
 				std::string line(message);
@@ -933,7 +965,7 @@ void ChatManager::SendChatMessage2(const char *text, const char *target, bool br
 				packet.EncodeStr(line.c_str());
 				packet.Send(SEND_TO_MSN);
 			} else {
-				MsgObject msg(0, 3, (intptr_t)"\xC1\xF6\xB1\xDD\xC0\xBA \xB1\xE6\xB5\xE5 \xB4\xEB\xC8\xAD\xB8\xA6 \xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9.", 0xFFFFCC00, 0, 0, 0);
+				MsgObject msg(0, 3, (intptr_t)CHATMANAGER_TEXT("\xC1\xF6\xB1\xDD\xC0\xBA \xB1\xE6\xB5\xE5 \xB4\xEB\xC8\xAD\xB8\xA6 \xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), 0xFFFFCC00, 0, 0, 0);
 				AfxGetTask()->GetActor("Lobby") << msg;
 			}
 		} else {
@@ -1038,7 +1070,7 @@ int ChatManager::CheckChatCommand(const char *text, int type) {
 					}
 					case 2:
 						if (rate < 100) {
-							Display("\xBE\xC6\xC0\xCC\xC5\xDB\xB5\xE5\xB7\xD3 \xC8\xAE\xB7\xFC\xC0\xCC \xB1\xE2\xBA\xBB(100%)\xBA\xB8\xB4\xD9 \xC0\xDB\xBD\xC0\xB4\xCF\xB4\xD9. \xB4\xD9\xBD\xC3 \xBC\xB3\xC1\xA4\xC7\xD8 \xC1\xD6\xBC\xBC\xBF\xE4.", type);
+							Display(CHATMANAGER_TEXT("\xBE\xC6\xC0\xCC\xC5\xDB\xB5\xE5\xB7\xD3 \xC8\xAE\xB7\xFC\xC0\xCC \xB1\xE2\xBA\xBB(100%)\xBA\xB8\xB4\xD9 \xC0\xDB\xBD\xC0\xB4\xCF\xB4\xD9. \xB4\xD9\xBD\xC3 \xBC\xB3\xC1\xA4\xC7\xD8 \xC1\xD6\xBC\xBC\xBF\xE4."), type);
 						} else {
 							WSendPacket packet(GCT_SET_SYSTEM);
 							packet.Encode4(3);
@@ -1048,7 +1080,7 @@ int ChatManager::CheckChatCommand(const char *text, int type) {
 						}
 						break;
 					default:
-						Display(MakeStr("\xB4\xD9\xBD\xC3 \xC0\xD4\xB7\xC2\xC7\xD8 \xC1\xD6\xBC\xBC\xBF\xE4. \xBF\xB9)/itemdrop \xB9\xE8\xC0\xB2"), type);
+						Display(MakeStr(CHATMANAGER_TEXT("\xB4\xD9\xBD\xC3 \xC0\xD4\xB7\xC2\xC7\xD8 \xC1\xD6\xBC\xBC\xBF\xE4. \xBF\xB9)/itemdrop \xB9\xE8\xC0\xB2")), type);
 						break;
 					}
 				}
@@ -1098,7 +1130,7 @@ int ChatManager::SaveChatHistory(int index, int type) {
 
 	fclose(fp);
 
-	Display(MakeStr("\xC3\xA4\xC6\xC3 \xB3\xBB\xBF\xEB\xC0\xCC %s\xBF\xA1 \xC0\xFA\xC0\xE5\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9.", fileName), type);
+	Display(MakeStr(CHATMANAGER_TEXT("\xC3\xA4\xC6\xC3 \xB3\xBB\xBF\xEB\xC0\xCC %s\xBF\xA1 \xC0\xFA\xC0\xE5\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9."), fileName), type);
 
 	return index;
 }
@@ -1140,7 +1172,7 @@ void ChatManager::RecordTournament(void) {
 	if (fp == 0)
 		return;
 
-	fprintf(fp, "\xB9\xE6\xC0\xE5 : %s\n\n", WSingleton<CSharedDoc>::Instance()->m_gameResultList[0].m_nickname);
+	fprintf(fp, CHATMANAGER_TEXT("\xB9\xE6\xC0\xE5 : %s\n\n"), WSingleton<CSharedDoc>::Instance()->m_gameResultList[0].m_nickname);
 	fprintf(fp, "\xBC\xF8\xC0\xA7     \xB7\xB9  \xBA\xA7           \xB4\xEB \xC8\xAD \xB8\xED       \xBD\xBA\xC4\xDA\xBE\xEE   \xC6\xCE\n");
 	fprintf(fp, "--------------------------------------------------------\n");
 
@@ -1152,7 +1184,7 @@ void ChatManager::RecordTournament(void) {
 
 	fclose(fp);
 
-	Display(MakeStr("30\xC0\xCE\xB4\xEB\xC8\xB8 \xB0\xE1\xB0\xFA\xB0\xA1 %s\xBF\xA1 \xC0\xFA\xC0\xE5\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9.", path), 0);
+	Display(MakeStr(CHATMANAGER_TEXT("30\xC0\xCE\xB4\xEB\xC8\xB8 \xB0\xE1\xB0\xFA\xB0\xA1 %s\xBF\xA1 \xC0\xFA\xC0\xE5\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9."), path), 0);
 }
 
 // The ring of GetAlignedString's results.

@@ -9,6 +9,12 @@
 #include "wresrcmng.h"
 #include "client/ProjectG/commonutil.h"
 #include "client/ProjectG/tinyxml.h"
+#ifdef JP_PAKS
+// JP 0xb4eb80 (src/jp/RFTextManager.h, not on the Fresh units'
+// include path): the JP game's text for a Korean source text.
+const char* Jp_LookupText(const char* key);
+#endif
+
 
 // <windows.h> maps GetForm to GetFormA; FrElementDoc::GetForm is declared before it.
 #ifdef GetForm
@@ -111,6 +117,11 @@ void FrGuiItem::Init(const TiXmlNode* pSrc) {
 	m_resource = pElement->Attribute("resource");
 	m_name = pElement->Attribute("name");
 	m_caption = pElement->Attribute("caption");
+#ifdef JP_PAKS
+	// JP 0xc1775d: a non-empty caption through the JP text table
+	if (m_caption != "")
+		m_caption = Jp_LookupText(m_caption.c_str());
+#endif
 
 	pElement->Attribute("flag", (int*)&m_flag);
 
@@ -249,6 +260,11 @@ void FrElementLayout::Init(const TiXmlNode* pSrc) {
 void FrElementForm::Init(const TiXmlNode* pSrc) {
 	m_caption = pSrc->ToElement()->Attribute("caption");
 	m_desc = pSrc->ToElement()->Attribute("description");
+#ifdef JP_PAKS
+	// JP 0xc17d9c: a non-empty description through the JP text table
+	if (m_desc != "")
+		m_desc = Jp_LookupText(m_desc.c_str());
+#endif
 
 	std::string bgSize = pSrc->ToElement()->Attribute("size");
 	sscanf(bgSize.c_str(), "%d %d", &m_bgSize.w, &m_bgSize.h);

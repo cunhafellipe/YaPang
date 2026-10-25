@@ -7,6 +7,11 @@
 #include "frgraphicinterface.h"
 #include "frwndmanager.h"
 #include "client/ProjectG/binstr.h"
+#ifdef JP_PAKS
+// JP 0xb4eb80 (src/jp/RFTextManager.h, not on the Fresh units'
+// include path): the JP game's text for a Korean source text.
+const char* Jp_LookupText(const char* key);
+#endif
 
 // frtextbutton.cpp:16 (run-time type and factory registration of FrTextButton)
 const WRTTI FrTextButton::m_RTTI("FrTextButton", &FrWnd::m_RTTI);
@@ -94,7 +99,11 @@ void FrTextButton::SetCaption(const char* caption) {
 	token.Init(caption, strlen(caption));
 
 	float offset = 0.0f;
+#ifdef JP_PAKS
+	static const char* pSep = Jp_LookupText("|"); // JP 0xbf42dd
+#else
 	static const char* pSep = (0, "|");
+#endif
 	m_sepWidth = GDI()->GetTextExtend(pSep);
 
 	for (;;) {
@@ -230,7 +239,11 @@ void FrTextButton::OnDraw(void) {
 		if (it == m_tBtnList.end())
 			break;
 
+#ifdef JP_PAKS
+		static const char* pSep = Jp_LookupText("|"); // JP 0xbf383c
+#else
 		static const char* pSep = (0, "|");
+#endif
 		GDI()->Print(right, 0, pSep);
 	}
 

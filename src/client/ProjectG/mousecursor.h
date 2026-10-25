@@ -40,7 +40,16 @@ BEGIN_LAYOUT_CHECK(CGroundPropt)
 	CHECK_FIELD(CGroundPropt, m_pGroundTip, 0x10);
 END_LAYOUT_CHECK
 
-// One cursor image of CMouseCursor (array of 12, 0x14 bytes each).
+// Cursor images of CMouseCursor: 12 in KR, 15 in JP (the JP constructor
+// 0x893b40 adds "_caret", "_context" and "_rotate2").
+#ifdef JP_PAKS
+const int MOUSECURSOR_IMAGE_COUNT = 15;
+#else
+const int MOUSECURSOR_IMAGE_COUNT = 12;
+#endif
+
+// One cursor image of CMouseCursor (array of MOUSECURSOR_IMAGE_COUNT, 0x14
+// bytes each).
 struct sCursorImage {
 	WOverlay* m_pOverlay;    // 0x0, released through g_resrcmng
 	float m_width;           // 0x4, texture width (all frames side by side)
@@ -70,6 +79,13 @@ public:
 	void SetBoundArea(WRect* rect);
 	int GetCursor();
 	void SetCursor(int cursor);
+#ifdef JP_PAKS
+	// JP 0x891020 (name ours): SetCursor(int) behind the lock and the owner.
+	void SetCursor(int cursor, int owner);
+	// JP only, inlined by every JP caller (they read and write +0x138).
+	bool IsLocked(void) { return m_locked; }
+	void SetLocked(bool locked) { m_locked = locked; }
+#endif
 	void ForceMove(float x, float y, float factor);
 	void Reset(bool all);
 	void SetActive(bool active);
@@ -192,10 +208,19 @@ protected:
 	PADDING(0x129, 0x12C);
 	float m_groundTipTime;  // 0x12C, Process selects the ground tip after 0.2 s
 	void* m_pTextTip;       // 0x130, nulled by the constructor (type not known yet)
+#ifdef JP_PAKS
+	// JP only, appended so that the KR layout above stays as it is (the JP
+	// class has them at +0x138 and +0x13c; its other offsets are shifted by
+	// JP-only members not transcribed here, the override flag is JP +0x126).
+	bool m_locked;          // JP +0x138, SetCursor(int, int) does nothing while set
+	int m_owner;            // JP +0x13c, owner of the current cursor (SetCursor(int, int))
+#endif
 
 	LAYOUT_CHECK_FRIEND;
 };
+#ifndef JP_PAKS
 CHECK_SIZE(CMouseCursor, 0x134);
+#endif
 BEGIN_LAYOUT_CHECK(CMouseCursor)
 	CHECK_FIELD(CMouseCursor, m_pointer, 0x28);
 	CHECK_FIELD(CMouseCursor, m_storedPointer, 0x30);

@@ -64,6 +64,9 @@ public:
 	virtual void OnRestorePreserved(void);
 	virtual void CloseAllDialogs(void);
 	virtual void HandleMsg(const MsgObject &msg);
+#ifdef JP_PAKS
+	virtual void OnUnderBar_GuildUp(void);          // JP 0x7b0d00
+#endif
 
 private:
 	static sFRESH_ENTRY _MsgEntries[];
@@ -89,6 +92,16 @@ protected:
 	void ResetFrWndPointers(void);
 	void OnAvatarChatMainInit(PG_MSGARG);
 	void OnAvatarChatMainFinish(void);
+#ifdef JP_PAKS
+	// AVATARCHAT_MAIN.motion_btn_start and its FrAvatarMotionDlg (names ours).
+	void SetMotionBtnOnImages(void);                // JP 0x7afb30
+	void SetMotionBtnOffImages(void);               // JP 0x7afb70
+	bool OnMotionDlgResult(int, FrForm*);           // JP 0x7afbb0
+	void CloseMotionDlg(void);                      // JP 0x7b04a0
+	void OnMotionBtnInit(PG_MSGARG);                // JP 0x7b1760
+	void OpenMotionDlg(void);                       // JP 0x7b1860
+	void OnMotionBtnUp(void);                       // JP 0x7b1950
+#endif
 	bool OnAvatarTipDlgResult(int, FrForm*);
 	bool OnJukeBoxDlgResult(int, FrForm*);
 	bool OnAvatarChatLogDlgResult(int, FrForm*);

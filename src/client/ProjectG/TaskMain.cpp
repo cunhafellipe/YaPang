@@ -100,6 +100,43 @@ extern "C" __declspec(dllimport) BOOL __stdcall InternetSetCookieA(LPCSTR lpszUr
 #include "InitDelegate.h"
 #include "UccManager.h"
 #include "client/Fresh/include/frdesktop.h"
+#ifdef JP_PAKS
+// The JP client's Refresh UI (src/jp, docs/JP_REFRESH_UI.md
+// "Hooks into the KR game code"): only port/CMakeLists.txt defines JP_PAKS.
+// <unistd.h>'s access() mode would replace RFManager.h's R_OK enumerator.
+#undef R_OK
+#include "RFLobbyDesktop.h"
+#include "JpItemSearchDlg.h"
+#include "JpRoomListSelector.h"
+#include "JpAttendanceDlg.h"
+#include "Post_ReciveDlg.h"
+// JP 0xb4eb80: the KR text key's JP translation (src/jp).
+const char* Jp_LookupText(const char* key);
+// JP 0x4dbb40: the CExtraResource notice page list
+// (src/jp/JpNoticePages.cpp).
+const std::vector<std::string>& JpExtraResource_GetNoticeList(void);
+// JP 0x9bd4f0: whether the task's widget form is the named layout
+// (src/jp/JpTaskPage.cpp).
+bool Task_IsLayoutOpen(CTask* task, const char* layout);
+// JP 0x659490: opens the card compose dialog
+// (src/jp/JpCardComposeDlg.cpp).
+void TaskMain_OpenCardComposeDlg(CTaskMain* task);
+// JP 0x65f357 / 0x65f383: the compose answer on the open card compose
+// dialog (src/jp/JpCardComposeDlg.cpp).
+void TaskMain_SetCardComposeResultSeq(CTaskMain* task, int grade);
+void TaskMain_OnCardComposeResult(CTaskMain* task, unsigned int cardId);
+// JP 0x65f259 / 0x65f27b / 0x651080: the alchemy break answer on the open
+// alchemy dialog (src/jp/JpAlchemyDlg.cpp).
+void TaskMain_OnAlchemyBreakResult(CTaskMain* task, int mp, int bonus);
+void TaskMain_StartAlchemyBreak(CTaskMain* task);
+void TaskMain_ResetAlchemyDlg(CTaskMain* task);
+// JP 0x65f2a3: the point shop result popup
+// (src/jp/JpPointShopDlg.cpp).
+void TaskMain_OpenPointShopMessageDlg(CTaskMain* task, const char* text, int success);
+// JP 0x5b14d0, a JP CPost_ReciveDlg member: Enable (JP FrWnd vtable +0x18)
+// on the post list (JP +0x124, KR m_pPostList +0x120) when there is one.
+void Post_ReciveDlg_EnablePostList(CPost_ReciveDlg* dlg, bool enable);
+#endif
 
 // The kind of BGM playing: 0 none, 1 random (SetRandomBGM), 3 constant
 // (SetConstantBGM). File-local, no symbol.
@@ -261,7 +298,16 @@ int IsMassGame(unsigned char gameType) {
 	case 6:
 	case 9:
 	case 10:
+#ifdef JP_PAKS
+	// JP 0x500480 (byte table 0x5004ac, index gameType - 4 up to 14, the
+	// same table in the copies inlined in CLobbyMain::HandleMsg 0x508a50):
+	// 4, 5, 6, 9, 10, 11, 18. The JP IsMassGame(void) 0x502f20
+	// (m_roomType) is 4, 5, 6, 9, 10, 11.
+	case 11:
+	case 18:
+#else
 	case 14:
+#endif
 		return 1;
 	}
 
@@ -420,7 +466,12 @@ void CTaskMain::OnProcess(float dt) {
 			if (m_serverDlg == NULL) {
 				if (m_waitDlg == NULL) {
 					m_waitDlg = CreateForm<FrForm>(g_pFresh->GetManager(), this, "wait", 0);
+#ifdef JP_PAKS
+					// The JP looks the KR key up in its text table (G9).
+					m_waitDlg->SetMessage(Jp_LookupText("\xbc\xad\xb9\xf6\xc0\xc7 \xc0\xc0\xb4\xe4\xc0\xbb \xb1\xe2\xb4\xd9\xb8\xae\xb0\xed \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."), false);
+#else
 					m_waitDlg->SetMessage("\xbc\xad\xb9\xf6\xc0\xc7 \xc0\xc0\xb4\xe4\xc0\xbb \xb1\xe2\xb4\xd9\xb8\xae\xb0\xed \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", false);
+#endif
 					m_waitDlg->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnWaitDlgResult, 0);
 
 					FrButton *cancel = DYNAMIC_CAST(FrButton, m_waitDlg->FindChildByName("cancel"));
@@ -440,6 +491,63 @@ void CTaskMain::OnProcess(float dt) {
 		}
 	}
 }
+
+#ifdef JP_PAKS
+// JP 0x65c580 (the JP CTaskMain's key handling, called per frame by the
+// port's lobby desktop): the KR OnProcess keys above, with the JP changes.
+void CTaskMain::ProcessLobbyKeys() {
+	if (g_input->GetDown("FUNC_12", true)) {
+		if (m_kbdManualDlg)
+			m_kbdManualDlg->Close(true);
+		else {
+			m_kbdManualDlg = CreateForm<FrKbdManualDlg>(g_pFresh->GetManager(), this, "kbd_manual", 0);
+			if (m_kbdManualDlg) {
+				m_kbdManualDlg->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnKbdManualDlgResult, 1);
+				m_kbdManualDlg->EnableDrag(false);
+			}
+		}
+	}
+
+	if (g_input->GetDown("ESCAPE", true) == 1 && !g_pFresh->GetManager()->HasEscKeyWindow()) {
+		// The JP result screens keep ESCAPE (and skip the SEARCH key below).
+		FrWnd *holeInOneResult = g_pFresh->GetManager()->GetDesktop()->FindChildByName("holeinoneresult");
+		FrWnd *uniteResult = g_pFresh->GetManager()->GetDesktop()->FindChildByName("uniteresult");
+		if (holeInOneResult || uniteResult)
+			return;
+
+		// ESCAPE first closes the messenger (JP 0x902650 IsVisible, 0x905710
+		// Close on the singleton 0xe73de8), except in the avatar chat.
+		if (MESSENGER()->IsVisible()
+			&& !((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false)) {
+			MESSENGER()->Close(false);
+			return;
+		}
+
+		// Then the open under tab bar (JP +0x1d4, +0x88: the KR members
+		// shifted by 8), JP 0xbe7aa0 then 0x65a100.
+		if (m_underBarEnabled && m_underBar->IsViewFocused()) {
+			OnUnderBar_TabBtnUp();
+			return;
+		}
+
+		if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CGolfTask::m_RTTI) : false)
+			&& !((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false)
+			&& !(RFLobbyDesktop::s_instance && RFLobbyDesktop::s_instance->IsBusy()))
+			OnUnderBar_BackUp();  // JP 0x65c0d0
+	}
+
+	// SEARCH opens "ItemSearchDlg" (JP 0x655d10) in my room and the shop.
+	if (g_input->GetDown("SEARCH", true)) {
+		FrForm *form = AfxGetTask()->GetWidgetForm();  // JP 0x9b7810
+		if (form) {
+			std::string layout;
+			form->GetWindowName(layout);  // JP 0xbe75d0 returns the name by reference
+			if (layout == "realmyroom" || layout == "shopmain")
+				OpenItemSearchDlg();
+		}
+	}
+}
+#endif
 
 // taskmain.cpp:227
 void CTaskMain::OnDestroy(void) {
@@ -529,6 +637,10 @@ void CTaskMain::InitControls(void) {
 	m_quitDlg = NULL;
 	m_specialCardForm = NULL;
 	m_subEquipBar = NULL;
+#ifdef JP_PAKS
+	m_itemSearchDlg = NULL;
+	m_postDlg = NULL;
+#endif
 
 	m_maketListDlg = NULL;
 
@@ -778,6 +890,34 @@ void CTaskMain::OnUnderBar_ShopInit(intptr_t param) {
 
 // taskmain.cpp:733
 void CTaskMain::OnUnderBar_ShopUp(void) {
+#ifdef JP_PAKS
+	// JP 0x65f9b0: the JP shop is the CShopWidget page over TOPPAGE (the JP
+	// data has no SHOPMAIN layout and CShopTask is never entered), asked
+	// for with packet 0x140; message 1 resets the main actor's wait time.
+	WSendPacket shopPacket(0x140);
+	shopPacket.Send(SEND_TO_DEFAULT);
+	AfxGetTask()->SendMsgToMainActor(MsgObject(0, 1, 0, 0, 0, 0, 0));
+
+	if (!Task_IsLayoutOpen(AfxGetTask(), "shopmain")) {
+		if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false) {
+			WSingleton<CProjectG>::Instance()->FromGolfToLobbySettings();
+			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0x88, (intptr_t)"CShopWidget", (intptr_t)"TOPPAGE", 0, 0);
+
+			WSingleton<ntAvatarManager>::Instance()->SetActive(false);
+		} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CLobbyTask::m_RTTI) : false) {
+			int lobbyParam1 = 0;
+			int lobbyParam2 = 0;
+			SendMsg(NULL, "Lobby", 0xE5, (intptr_t)&lobbyParam1, (intptr_t)&lobbyParam2, 0, 0);
+			SendMsg(NULL, "Lobby", 0x88, (intptr_t)"CShopWidget", (intptr_t)"TOPPAGE", 0, 0);
+		} else if (Task_IsLayoutOpen(AfxGetTask(), "tutorialmain")) {
+			HandleMsgCommon(MsgObject(0, 0x88, (intptr_t)"CShopWidget", (intptr_t)"TOPPAGE", 0, 0, 0));
+		}
+	}
+
+	OnBarHoverOff(0);
+	return;
+#endif
 	int slot;
 	int param;
 
@@ -833,6 +973,15 @@ void CTaskMain::OnUnderBar_MyRoomInit(intptr_t param) {
 
 // taskmain.cpp:816
 void CTaskMain::OnUnderBar_MyRoomUp(void) {
+#ifdef JP_PAKS
+	// JP 0x65c290: no content test, always the room-mode path (JP CSharedDoc
+	// +0x11214 = 1, +0x10708 = the uid +0x8cb), then OnBarHoverOff(0).
+	WSingleton<CSharedDoc>::Instance()->SetRmrMode(1);
+	WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID = WSingleton<CSharedDoc>::Instance()->m_myUID;
+	MakeRealMyRoom();
+	OnBarHoverOff(0);
+	return;
+#endif
 	if (IsLocalContent((localContentType_t)0x56) && IsLocalContent((localContentType_t)0x61)) {
 		WSingleton<CSharedDoc>::Instance()->SetRmrMode(1);
 		WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID = WSingleton<CSharedDoc>::Instance()->m_myUID;
@@ -925,6 +1074,23 @@ void CTaskMain::OnUnderBar_GiftInit(intptr_t param) {
 
 // taskmain.cpp:919
 void CTaskMain::OnUnderBar_GiftUp(void) {
+#ifdef JP_PAKS
+	// JP 0x658420: the postbox form (CPost_ReciveDlg) over the lobby, not
+	// the KR my-room mail mode (the JP data has no REALMYROOM layout).
+	if (WSingleton<CSharedDoc>::Instance()->IsControlServerService(0x40000)) {
+		// "the mail box is under partial maintenance" (CP949 key, JP 0xd1518c)
+		this << MsgObject(this, 0x23, (intptr_t)Jp_LookupText("\xBF\xEC\xC6\xED\xC7\xD4 \xB1\xE2\xB4\xC9\xC0\xC7 \xBA\xCE\xBA\xD0 \xC1\xA1\xB0\xCB\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9."), 0, 0, 0, 0);
+		return;
+	}
+
+	if (m_postDlg == NULL) {
+		m_postDlg = CreateForm<CPost_ReciveDlg>(g_pFresh->GetManager(), this, "postbox", 0);
+		m_postDlg->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnPostDlgResult, 0x81);
+	}
+
+	OnBarHoverOff(0);
+	return;
+#endif
 	if (IsLocalContent((localContentType_t)0x56) && IsLocalContent((localContentType_t)0x61)) {
 		if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CRealMyRoomTask::m_RTTI) : false) {
 			m_itemStorageOpen = true;
@@ -1046,6 +1212,17 @@ void CTaskMain::OnUnderBar_GameInit(intptr_t param) {
 // taskmain.cpp:1110
 void CTaskMain::OnUnderBar_GameUp(void) {
 	if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false)) {
+#ifdef JP_PAKS
+		// JP 0x658742-0x658791: with the shared doc's +0x10d3c bit 11 set
+		// (the KR m_serverProperty: JP ClearCommonVars 0x63d7e0 clears
+		// +0x10d3c where the KR one clears m_serverProperty), the button
+		// opens the lobby kind selector (0x654490) instead, through its
+		// FrForm vtable slot 0x64, Open(no callback, 1).
+		if (CSharedDoc::Instance()->m_serverProperty.GetFlag(0x800)) {
+			FrForm *selector = CreateRoomListSelector(g_pFresh->GetManager(), NULL, "roomlistselector", NULL);
+			selector->Open(NULL, 1);
+		} else
+#endif
 		if (!CSharedDoc::Instance()->m_lobbyStateFlag) {
 			WSendPacket packet(GCT_ENTER_LOBBY);
 			packet.Send(SEND_TO_DEFAULT);
@@ -1054,7 +1231,14 @@ void CTaskMain::OnUnderBar_GameUp(void) {
 			if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CLobbyTask::m_RTTI) : false))
 				CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
 
+#ifdef JP_PAKS
+			// JP 0x658856-0x65886b: the JP data has no ROOMLIST layout; the
+			// lobby stays on TOPPAGE and the room list is a form over it
+			// (CLobbyMain message 0x8b (4, tab), JP case 0xabc986).
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+#else
 			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+#endif
 		}
 	}
 
@@ -1079,6 +1263,26 @@ void CTaskMain::OnUnderBar_ServerInit(intptr_t param) {
 
 // taskmain.cpp:1155
 void CTaskMain::OnUnderBar_ServerUp(void) {
+#ifdef JP_PAKS
+	// JP 0x658890: message 0x75 to the main actor in place of the KR 0x68 to
+	// "RealMyRoom", the dialog only while m_serverDlg is NULL, Open without
+	// a point and no SetIconRect (the Refresh bottom bar leaves
+	// m_barButton[8] NULL), then OnBarHoverOff(0).
+	if (!(((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false)
+		|| ((__rtti_obj = CTaskManager::Instance()->GetPreservedTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false))) {
+		AfxGetTask()->SendMsgToMainActor(MsgObject(this, 0x75, 0, 0, 0, 0, 0));
+
+		CloseAllDialogs();
+
+		WSendPacket packet(GCT_REQUEST_SERVER_LIST);
+		packet.Send(SEND_TO_DEFAULT);
+
+		if (m_serverDlg == NULL) {
+			m_serverDlg = CreateForm<FrServerDlg>(g_pFresh->GetManager(), this, "server", 0);
+			m_serverDlg->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnServerDlgResult, 0x11);
+		}
+	}
+#else
 	if (!(((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsKindOf(&ntAvatarChatTask::m_RTTI) : false)
 		|| ((__rtti_obj = CTaskManager::Instance()->GetPreservedTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false))) {
 		IActor *room = AfxGetTask()->GetActor("RealMyRoom");
@@ -1094,6 +1298,7 @@ void CTaskMain::OnUnderBar_ServerUp(void) {
 		m_serverDlg->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnServerDlgResult, WPoint(m_serverDlg->GetRect().x, 50.0f), 0x11);
 		m_serverDlg->SetIconRect(m_barButton[8]->GetRect());
 	}
+#endif
 
 	__rtti_obj = 0; m_hoverButton = NULL;
 	CIconToolTip::GetInstance()->ClearToolTip();
@@ -1340,7 +1545,14 @@ void CTaskMain::OnUnderBar_BongdariShopUp(void) {
 		if (!m_bongdariShop[1]) {
 			FrWnd *shop = FrStaticCast<FrWnd>(g_pFresh->GetDesktop()->FindChildByName("bongdari_shop"));
 			if (shop == NULL) {
+#ifdef JP_PAKS
+				// JP 0x658ee0 sends 0x98 here (the JP id of KR 0x95, reply
+				// 0x10B read in CTask::OnPacketCommon); the rest of its body is
+				// this one (m_pointEventState is JP CSharedDoc +0x11028).
+				WSendPacket packet(0x98);
+#else
 				WSendPacket packet(GCT_REQ_PLAYTIME_UPDATE);
+#endif
 				packet.Send(SEND_TO_DEFAULT);
 
 				WSingleton<CSharedDoc>::Instance()->m_pointEventState = 1;
@@ -1461,6 +1673,14 @@ void CTaskMain::OnUnderBar_GuildInit(intptr_t param) {
 
 // taskmain.cpp:1802
 void CTaskMain::OnUnderBar_GuildUp(void) {
+#ifdef JP_PAKS
+	// JP 0x658ec0 (reached from the lounge pop-up's override 0x7b0d00, which
+	// first stops the player's avatar 0x7a3ea0): no web page, only
+	// CloseAllDialogs (vtable +0x3c) and OnBarHoverOff(0) (0x656a80).
+	CloseAllDialogs();
+	OnBarHoverOff(0);
+	return;
+#endif
 	CloseAllDialogs();
 	WSingleton<COption>::Instance()->vApplyLobbyScreenSize();
 
@@ -1487,7 +1707,13 @@ void CTaskMain::OnUnderBar_NoticeUp(void) {
 	CloseAllDialogs();
 
 	m_noticeDlg = CreateForm<FrNoticeDlg>(g_pFresh->GetManager(), this, "notice_popup", 0);
+#ifdef JP_PAKS
+	// JP 0x659290 reads no ini: it hands the page list held by the global at
+	// 0xe74d14 (+0x98) to the dialog's page setter (0xae5630).
+	m_noticeDlg->SetPages(JpExtraResource_GetNoticeList());
+#else
 	m_noticeDlg->LoadInitFile("notice_popup.ini");
+#endif
 	m_noticeDlg->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnNoticeDlgResult, 0x11);
 
 	if (m_barButton[0x12] && m_noticeDlg)
@@ -2681,8 +2907,21 @@ bool CTaskMain::OnServerDlgResult(int, FrForm *) {
 	return true;
 }
 
+#ifdef JP_PAKS
+// 0x651070: the postbox form's result (OnUnderBar_GiftUp 0x658420).
+bool CTaskMain::OnPostDlgResult(int, FrForm *) {
+	m_postDlg = NULL;
+	return true;
+}
+#endif
+
 // taskmain.cpp:4013
 bool CTaskMain::OnQuitDlgResult(int, FrForm *) {
+#ifdef JP_PAKS
+	// JP 0x657200: the JP quit dialog's check-in / check-out choice opens
+	// the attendance dialog and sends 0x16E (src/jp/JpAttendanceDlg.h).
+	TaskMain_OpenAttendanceOnQuit(this, m_quitDlg);
+#endif
 	m_quitDlg = NULL;
 	return true;
 }
@@ -2910,6 +3149,35 @@ void CTaskMain::OnOverBar_OneLineReqBtnInit(intptr_t param) {
 
 // taskmain.cpp:3387
 void CTaskMain::OnOverBar_OneLineReqBtnUp(void) {
+#ifdef JP_PAKS
+	// JP 0x65d610: no gateway 0x26D/0x10 test, translated texts and no
+	// SetIconRect (the Refresh top bar leaves m_oneLineReqBtn NULL), then
+	// OnBarHoverOff(0).
+	if (CSharedDoc::Instance()->IsControlServerService(0x20000)) {
+		// "the one-line board is under maintenance" (CP949 key, JP 0xd172b4)
+		this << MsgObject(this, 0x23, (intptr_t)Jp_LookupText("\xC0\xFC\xB1\xA4\xC6\xC7 \xB0\xFC\xB7\xC3 \xBA\xCE\xBA\xD0 \xC1\xA1\xB0\xCB\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9."), 0, 0, 0, 0);
+		return;
+	}
+
+	CloseAllDialogs();
+
+	if (WSingleton<CSharedDoc>::Instance()->m_userInfo.flagBlock & 0x10) {
+		// "the one-line board is suspended for you" (CP949 key, JP 0xd17274)
+		FrForm *notify = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
+		notify->SetTimeLimit(12.0f);
+		notify->SetMessage(Jp_LookupText("\xC7\xF6\xC0\xE7 \xC0\xFC\xB1\xA4\xC6\xC7 \xC0\xCC\xBF\xEB \xC1\xA6\xC0\xE7\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9. \xC0\xFC\xB1\xA4\xC6\xC7\xC0\xBB \xBB\xE7\xBF\xEB\xC7\xCF\xBD\xC7 \xBC\xF6 \xBE\xF8\xBD\xC0\xB4\xCF\xB4\xD9."), false);
+		notify->Open(0, 0);
+		return;
+	}
+
+	m_onelineReqDlg = CreateForm<FrOnelineReqDlg>(g_pFresh->GetManager(), this, "oneline_req", 0);
+	m_onelineReqDlg->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnOnelineReqDlgResult, 0x11);
+	if (!g_pFresh->GetManager()->IsKeyExclusive())
+		g_pFresh->GetManager()->SetExclusiveKey(true);
+
+	OnBarHoverOff(0);
+	return;
+#endif
 	if (CSharedDoc::Instance()->IsControlServerService(0x20000)) {
 		// "the one-line board is under maintenance" (CP949)
 		this << MsgObject(this, 0x23, (intptr_t)"\xC0\xFC\xB1\xA4\xC6\xC7 \xB0\xFC\xB7\xC3 \xBA\xCE\xBA\xD0 \xC1\xA1\xB0\xCB\xC1\xDF\xC0\xD4\xB4\xCF\xB4\xD9.", 0, 0, 0, 0);
@@ -2970,7 +3238,9 @@ void CTaskMain::OnOverBar_OptionUp(void) {
 
 	m_optionDlg = CreateForm<FrOptionDlg>(g_pFresh->GetManager(), this, "option", 0);
 	m_optionDlg->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnOptionDlgResult, 0x11);
+#ifndef JP_PAKS  // JP 0x659d30 has no SetIconRect: the Refresh top bar leaves m_barButton[0x0D] NULL
 	m_optionDlg->SetIconRect(m_barButton[0x0D]->GetRect());
+#endif
 	m_optionDlg->SetApplyScrSize(((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false) != 0);
 
 	OnBarHoverOff(0);
@@ -3136,6 +3406,47 @@ void CTaskMain::OnOverBar_SpecialCardUp(void) {
 	__rtti_obj = 0; m_hoverButton = NULL;
 	CIconToolTip::GetInstance()->ClearToolTip();
 }
+
+#ifdef JP_PAKS
+// JP 0x656be0 (the JP rewrite of the KR one above, for the port's Refresh
+// lobby bar): the form opens centred under the button's screen rect, kept
+// inside the view; with no special card the lobby desktop shows
+// "wnd_special_card_empty" in place of the KR bubble message.
+void CTaskMain::OnOverBar_SpecialCardUp(WRect const& buttonRect) {
+	CCardManager::Instance()->SetSPCardAlarm(false);
+
+	if (m_specialCardForm) {
+		m_specialCardForm->Close(FrCANCEL, true);
+		return;
+	}
+
+	m_specialCardForm = CreateForm<FrSPCardBuffDlg>(g_pFresh->GetManager(), this, "spcardbuff", 0);
+	CCardManager::Instance()->SetCardBuffDlg(m_specialCardForm);
+	CItemBuff::UpdateBuffDlg(m_specialCardForm);  // JP 0x813490
+	// Not written: the JP-only FrSPCardBuffDlg member 0x806700 (the premium
+	// buff row, from the JP CSharedDoc +0x812 bit 14 and the item list
+	// +0x375c); no KR member.
+
+	float width = m_specialCardForm->GetRect().w;
+	WPoint pos;
+	pos.x = buttonRect.x - width * 0.5f;
+	if (pos.x + width > g_view->GetWidth())
+		pos.x -= pos.x + width - g_view->GetWidth();
+	pos.y = buttonRect.y + buttonRect.h;
+	m_specialCardForm->EnableDrag(false);
+	m_specialCardForm->Open((FRESH_RESULT_CALLBACK)&CTaskMain::OnSpecialCardFormResult, pos, 5);
+
+	if (m_specialCardForm->GetSpecialCardNum() > 0) {
+		m_specialCardForm->SetVisible(true);
+		return;
+	}
+
+	if (m_specialCardForm)
+		m_specialCardForm->Close(FrCANCEL, true);
+	if (RFLobbyDesktop::s_instance)
+		RFLobbyDesktop::s_instance->ShowSpecialCardEmpty();  // JP 0x5fb250
+}
+#endif
 
 // taskmain.cpp:3801
 void CTaskMain::OnOverBar_MessengerInit(intptr_t param) {
@@ -3499,7 +3810,114 @@ void CTaskMain::CheckNaviButtons(void) {
 
 // taskmain.cpp:4561
 void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
+#ifdef JP_PAKS
+	// JP 0x65d913-0x65d928: the JP HandleMsgCommon (0x65d8e0) first hands
+	// every message to the lobby desktop's handler (slot [35] 0x5d5520).
+	// The JP ids 1..0x26 are the KR ones, but the JP renumbered the KR
+	// 0xA8.. block and reused some KR ids for desktop messages
+	// (temps/orchestrator/refresh/R601_msgid_audit.md), so a KR id is
+	// translated first:
+	// - KR 0xA8 (messenger bubble) is JP 0xCC: the JP HandleMsgCommon's
+	//   0xCC case (0x65e1b7, jump tables 0x65f6b0/0x65f63c) runs the body
+	//   of the KR 0xA8 case.
+	// - the KR ids whose desktop meaning differs (KR 0x57 = guild battle
+	//   team points would close the JP loading dialog) or that only the JP
+	//   desktop's own senders use are never forwarded raw.
+	// - forwarded: 0x55 / 0x88 (the page openers' "Lobby" messages: the JP
+	//   0x65f9b0 / 0x65b8a0 bodies above post them to the lobby's main
+	//   actor) and 0x180 (ntLobbyBg 0xab285e sends it to the main actor when
+	//   the bar state's camera move ends).
+	if (RFLobbyDesktop::s_instance) {
+		MsgObject jpMsg = msg;
+		bool forward = true;
+		switch (msg.m_msg) {
+		case 0x53: case 0x54: case 0x56: case 0x57:
+		case 0x58: case 0x59:
+		case 0xCA: case 0xCB: case 0xCC: case 0xCD: case 0xCE:
+		case 0xCF: case 0xD0: case 0xD1:
+		case 0x106:
+			forward = false;
+			break;
+
+		case 0xA8:
+			jpMsg.m_msg = 0xCC;
+			break;
+		}
+
+		if (forward)
+			RFLobbyDesktop::s_instance->HandleMsg(jpMsg);
+	}
+#endif
 	switch (msg.m_msg) {
+#ifdef JP_PAKS
+	// JP 0x65efde (jump table 0x65f804 entry 12): the KR 0x228 on the JP id
+	// (param1 the JP packet: the my-room replies 0x12A..0x12D are the KR
+	// 0x122..0x125; the other packets are passed unchanged).
+	case 0x2A6: {
+		MsgObject krMsg = msg;
+		krMsg.m_msg = 0x228;
+		if (krMsg.m_param1 >= 0x12A && krMsg.m_param1 <= 0x12D)
+			krMsg.m_param1 -= 8;
+		HandleMsgCommon(krMsg);
+		break;
+	}
+
+	// JP 0x65f3c0 (jump table 0x65f8c0 entry 16): the attendance record the
+	// 0x248 / 0x249 replies post.
+	case 0x327:
+		TaskMain_OnAttendanceMsg(this, msg);
+		break;
+
+	// JP 0x65f1cf (jump table 0x65f8c0 entry 0): the postbox's post list
+	// enabled or not (param1).
+	case 0x2C0:
+		if (m_postDlg)
+			Post_ReciveDlg_EnablePostList(m_postDlg, msg.m_param1 != 0);
+		break;
+
+	// JP 0x65f2a3 (entry 4): the point shop result popup, param1 the text,
+	// param2 the success flag.
+	case 0x2E1:
+		TaskMain_OpenPointShopMessageDlg(this, (const char *)msg.m_param1, (int)msg.m_param2);
+		break;
+
+	// JP 0x65f259 / 0x65f27b / 0x65f297 (entries 7, 8, 9): the alchemy break
+	// answer, posted as 0x2E5, 0x2E6, then 0x2E4 (param1 the MP, param2 the
+	// bonus).
+	case 0x2E4:
+		TaskMain_OnAlchemyBreakResult(this, (int)msg.m_param1, (int)msg.m_param2);
+		break;
+
+	case 0x2E5:
+		TaskMain_StartAlchemyBreak(this);
+		break;
+
+	case 0x2E6:
+		TaskMain_ResetAlchemyDlg(this);
+		break;
+
+	// JP 0x65f34b (jump table 0x65f8c0 entry 13): the card compose dialog.
+	case 0x324:
+		TaskMain_OpenCardComposeDlg(this);
+		break;
+
+	// JP 0x65f357 / 0x65f383 (entries 14, 15): the compose answer, param1
+	// the address of the new card's grade / type id.
+	case 0x325:
+		TaskMain_SetCardComposeResultSeq(this, *(const int *)msg.m_param1);
+		break;
+
+	case 0x326:
+		TaskMain_OnCardComposeResult(this, *(const unsigned int *)msg.m_param1);
+		break;
+
+	// JP 0x65e689: the lobby desktop's server button (btn_channel, JP
+	// 0x5f75a0 sends 0x112 to the main actor); the KR id is 0xEA.
+	case 0x112:
+		OnUnderBar_ServerUp();
+		break;
+#endif
+
 	case 0x270:
 		CInitDelegate::ExecuteInitFunctions();
 		break;
@@ -3809,7 +4227,14 @@ void CTaskMain::HandleMsgCommon(const MsgObject& msg) {
 		break;
 
 	case 0xEA:
+		// JP_PAKS: 0xEA is the shop's "buy / gift answered" message
+		// (CShopWidget 0x5e0ff0 after every 0x68 / 0x6A result, for the shop
+		// form 0xa971f0); the JP HandleMsgCommon 0x65d8e0 does nothing for it
+		// (no case between 0xD3 and 0x111). The JP server list is 0x112 (the
+		// case above; FrLogoutDlg's server button 0xadc170 sends 0x112 too).
+#ifndef JP_PAKS
 		OnUnderBar_ServerUp();
+#endif
 		break;
 
 	case 0xEB:
@@ -4199,6 +4624,79 @@ void CTaskMain::OpenInformation(unsigned long typeId) {
 
 // taskmain.cpp:5718
 void CTaskMain::MakeRealMyRoom(void) {
+#ifdef JP_PAKS
+	// JP 0x65b8a0: the JP room is the CMyRoomWidget page (packet 0xB5) over
+	// TOPPAGE or AVATARCHAT_MAIN; the JP data has no REALMYROOM layout and
+	// CRealMyRoomTask is never entered. The JP CSharedDoc +0x1122c is the KR
+	// m_playingMode (2 = replay playback, 3 = back from a replay): the JP
+	// resets 3 to 1 before the packet, as the KR does before its 0xAD. The
+	// other-task path of mode 1 compares the layout with "shopmain"
+	// (0x65bc96, 0x65a020) and discards the result: nothing is closed.
+	if (Task_IsLayoutOpen(AfxGetTask(), "realmyroom")) {
+		// "A user is visiting another user's room. ..." (CP949 key, JP 0xd170d0)
+		FrForm *notify = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
+		notify->SetMessage(Jp_LookupText("\xC7\xF6\xC0\xE7 \xC0\xAF\xC0\xFA\xB0\xA1 \xB4\xD9\xB8\xA5 \xBB\xE7\xB6\xF7\xC0\xC7 \xB9\xE6\xC0\xBB \xB9\xE6\xB9\xAE\xC1\xDF\xBF\xA1 \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9. \xB4\xD9\xB8\xA5 \xB9\xE6\xC0\xB8\xB7\xCE \xC0\xCC\xB5\xBF\xC7\xCF\xB1\xE6 \xBF\xF8\xC7\xCF\xBD\xC3\xB8\xE9 \xB7\xCE\xBA\xF1\xB7\xCE \xC0\xCC\xB5\xBF\xC7\xD8 \xC1\xD6\xBC\xBC\xBF\xE4."), false);
+		notify->Open(0, 3);
+		return;
+	}
+
+	if (WSingleton<CSharedDoc>::Instance()->m_playingMode == REPLAY_MODE_RETURN)
+		WSingleton<CSharedDoc>::Instance()->m_playingMode = REPLAY_MODE_GAME;
+
+	WSendPacket roomPacket(0xB5);
+	roomPacket.Encode4(WSingleton<CSharedDoc>::Instance()->m_myUID);
+	roomPacket.Encode4(WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID);
+	roomPacket.Send(SEND_TO_DEFAULT);
+
+	switch (WSingleton<CSharedDoc>::Instance()->GetRmrMode()) {
+	case 1:
+		if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CLobbyTask::m_RTTI) : false) {
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0x88, (intptr_t)"CMyRoomWidget", (intptr_t)"TOPPAGE", 0, 0);
+		} else if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false) {
+			WSingleton<ntAvatarManager>::Instance()->SetActive(false);
+			CTaskManager::Instance()->PostMsg(NULL, "AvatarChat", 0x88, (intptr_t)"CMyRoomWidget", (intptr_t)"AVATARCHAT_MAIN", 0, 0);
+		} else {
+			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", CTaskManager::Instance()->GetPreservedTask() != 0);
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0x88, (intptr_t)"CMyRoomWidget", (intptr_t)"TOPPAGE", 0, 0);
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0x55, (intptr_t)"myroom|char", 0, 0, 0);
+		}
+		break;
+
+	case 4:
+		// JP 0x65bb2d (the item storage): no lobby-task test. From the avatar
+		// chat the JP queues the page for the task's main actor (0x9c16a0, a
+		// JP-only main-actor queue; the avatar chat task's main actor is
+		// "AvatarChat"); anywhere else it re-enters the lobby, as mode 1.
+		if ((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&ntAvatarChatTask::m_RTTI) : false) {
+			CTaskManager::Instance()->PostMsg(NULL, "AvatarChat", 0x88, (intptr_t)"CMyRoomWidget", (intptr_t)"AVATARCHAT_MAIN", 0, 0);
+			WSingleton<ntAvatarManager>::Instance()->SetActive(false);
+		} else {
+			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", CTaskManager::Instance()->GetPreservedTask() != 0);
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0x88, (intptr_t)"CMyRoomWidget", (intptr_t)"TOPPAGE", 0, 0);
+			CTaskManager::Instance()->PostMsg(NULL, "Lobby", 0x55, (intptr_t)"myroom|char", 0, 0, 0);
+		}
+		break;
+
+	case 5:
+		// JP 0x65ba4a: the "realmyroom" test again, else ChangeRealMyRoom
+		// (JP 0x657cd0).
+		if (Task_IsLayoutOpen(AfxGetTask(), "realmyroom")) {
+			// "A user is visiting another user's room. ..." (CP949 key, JP 0xd170d0)
+			FrForm *notify = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
+			notify->SetMessage(Jp_LookupText("\xC7\xF6\xC0\xE7 \xC0\xAF\xC0\xFA\xB0\xA1 \xB4\xD9\xB8\xA5 \xBB\xE7\xB6\xF7\xC0\xC7 \xB9\xE6\xC0\xBB \xB9\xE6\xB9\xAE\xC1\xDF\xBF\xA1 \xC0\xD6\xBD\xC0\xB4\xCF\xB4\xD9. \xB4\xD9\xB8\xA5 \xB9\xE6\xC0\xB8\xB7\xCE \xC0\xCC\xB5\xBF\xC7\xCF\xB1\xE6 \xBF\xF8\xC7\xCF\xBD\xC3\xB8\xE9 \xB7\xCE\xBA\xF1\xB7\xCE \xC0\xCC\xB5\xBF\xC7\xD8 \xC1\xD6\xBC\xBC\xBF\xE4."), false);
+			notify->Open(0, 3);
+		} else {
+			ChangeRealMyRoom();
+		}
+		break;
+	}
+
+	if (!((__rtti_obj = AfxGetTask()) != 0 ? ((IObject*)__rtti_obj)->IsExactKindOf(&CLobbyTask::m_RTTI) : false))
+		AfxGetTask()->SendMsgToMainActor(MsgObject(0, 1, 0, 0, 0, 0, 0));
+	return;
+#endif
 	if (!IsLocalContent((localContentType_t)0x56))
 		return;
 
@@ -4349,6 +4847,34 @@ void CTaskMain::MakeRealMyRoom(void) {
 
 // taskmain.cpp:5926
 void CTaskMain::ChangeRealMyRoom(void) {
+#ifdef JP_PAKS
+	// JP 0x657cd0: modes 1, 3 and 4 run the same code (no stall request) and
+	// there is no mode 5 (the KR password check). The JP content ids are the
+	// KR ones + 1 here (0x57, 0x62, 0x5a); the packets carry the JP ids.
+	if (IsLocalContent((localContentType_t)0x56)) {
+		unsigned char mode = WSingleton<CSharedDoc>::Instance()->m_rmrMode;
+		if (mode == 1 || mode == 3 || mode == 4) {
+			// JP 0xb2de90 (owner uid, 1): the KR GCT_COMPLETE_QUEST_FLAG
+			// as JP 0xB7, only under the JP content 0x62.
+			if (IsLocalContent((localContentType_t)0x61)) {
+				WSendPacket packet(0xB7);
+				packet.Encode4(WSingleton<CSharedDoc>::Instance()->m_myRoomOwnerUID);
+				packet.Encode1(1);
+				packet.Send(SEND_TO_DEFAULT);
+			}
+
+			// The KR GCT_UCC_REQUEST as JP 0xC1.
+			if (IsLocalContent((localContentType_t)0x59)) {
+				WSendPacket ucc(0xC1);
+				ucc.Encode1(2);
+				ucc.Send(SEND_TO_DEFAULT);
+			}
+
+			WSingleton<CSharedDoc>::Instance()->m_rmrMode = 0;
+		}
+	}
+	return;
+#endif
 	if (IsLocalContent((localContentType_t)0x56)) {
 		switch (WSingleton<CSharedDoc>::Instance()->m_rmrMode) {
 		case 1: {

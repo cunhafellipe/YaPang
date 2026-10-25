@@ -32,17 +32,28 @@ bool COption::GetQuitWindowed(void) {
 	return m_quitWindowed;
 }
 
+#ifdef JP_PAKS
+// The CMouseCursor instance (JP 0xe73e0c): defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+template <> CMouseCursor* WSingleton<CMouseCursor>::m_pInstance = NULL;
+#endif
+
 // mousecursor.cpp:41
 CMouseCursor::CMouseCursor(void) : m_pImages(0), m_pBoundArea(0), m_pTextTip(0) {
-	m_pImages = new sCursorImage[12];
+	m_pImages = new sCursorImage[MOUSECURSOR_IMAGE_COUNT];
 
-	const char* names[12] = {
+	const char* names[MOUSECURSOR_IMAGE_COUNT] = {
 		"1", "2", "3", "4",
 		"_up", "_down", "_zoom", "_both",
 		"_move", "_move_no", "_rotate", "_rotate_no",
+#ifdef JP_PAKS
+		// JP 0x893b40: the three JP-only cursors.
+		"_caret", "_context", "_rotate2",
+#endif
 	};
 
-	for (int i = 0; i < 12; i++) {
+	for (int i = 0; i < MOUSECURSOR_IMAGE_COUNT; i++) {
 		std::string fileName;
 		fileName = "[s_pointer";
 		fileName += names[i];
@@ -93,11 +104,16 @@ CMouseCursor::CMouseCursor(void) : m_pImages(0), m_pBoundArea(0), m_pTextTip(0) 
 
 	m_pGroundPropt->SetGroundType("");
 	m_terrainToolTip = COption::Instance()->gGetTerrainTooltip() != 0;
+#ifdef JP_PAKS
+	// JP 0x893b40 ends with these two.
+	m_locked = false;
+	m_owner = 0;
+#endif
 }
 
 // mousecursor.cpp:117
 CMouseCursor::~CMouseCursor(void) {
-	for (int i = 0; i < 12; i++) {
+	for (int i = 0; i < MOUSECURSOR_IMAGE_COUNT; i++) {
 		if (m_pImages[i].m_pOverlay) {
 			g_resrcmng->Release(m_pImages[i].m_pOverlay);
 			m_pImages[i].m_pOverlay = 0;
@@ -817,7 +833,7 @@ int CMouseCursor::GetCursor(void) {
 
 // mousecursor.cpp:1184
 void CMouseCursor::SetCursor(int cursor) {
-	if (cursor < 12) {
+	if (cursor < MOUSECURSOR_IMAGE_COUNT) {
 		m_cursorOverride = false;
 	} else {
 		cursor = 1;
@@ -825,6 +841,26 @@ void CMouseCursor::SetCursor(int cursor) {
 	}
 	m_cursor = cursor;
 }
+
+#ifdef JP_PAKS
+// JP 0x891020 (name ours): another owner may only replace the default
+// cursor 0.
+void CMouseCursor::SetCursor(int cursor, int owner) {
+	if (m_locked)
+		return;
+	if (m_owner != owner && m_cursor != 0)
+		return;
+
+	m_owner = owner;
+	if (cursor < MOUSECURSOR_IMAGE_COUNT) {
+		m_cursorOverride = false;
+	} else {
+		cursor = 1;
+		m_cursorOverride = true;
+	}
+	m_cursor = cursor;
+}
+#endif
 
 // mousecursor.cpp:1201
 CGroundPropt::CGroundPropt(const char* name) {

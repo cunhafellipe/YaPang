@@ -3,6 +3,9 @@
 #define PG_CLIENT_PROJECTG_NOTICEDLG_H
 
 #include <vector>
+#ifdef JP_PAKS
+#include <string>
+#endif
 
 #include "defines.h"
 #include "frform.h"
@@ -29,6 +32,10 @@ public:
 
 	void LoadOnly(const char* fileName);
 	void LoadInitFile(const char* fileName);
+#ifdef JP_PAKS
+	// JP 0xae5630: the pages given as a list of image paths (not an ini).
+	void SetPages(const std::vector<std::string>& pages);
+#endif
 	void Prev(void);
 	void Next(void);
 
