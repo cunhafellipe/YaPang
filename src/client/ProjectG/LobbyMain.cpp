@@ -3535,6 +3535,16 @@ void CLobbyMain::HandleMsg(const MsgObject& msg) {
 #ifdef JP_PAKS
 	if (JpForwardRoomFormMsg(msg))
 		return;
+	// The JP has no 0x59 case here (jump table 0xabeb40: the default
+	// 0xabe9a2, the desktop's handler): the JP senders' 0x59 (the room
+	// form 0x50d0e0 with 10, the room list 9 / 1, ...) is the desktop's
+	// bar selection, never the KR room slot reset below, which deleted
+	// the room form's player pets right after it built them.
+	if (msg.m_msg == 0x59 && msg.m_param1 != 0) {
+		if (RFLobbyDesktop::s_instance)
+			RFLobbyDesktop::s_instance->HandleMsg(msg);
+		return;
+	}
 #endif
 	switch (msg.m_msg) {
 	case 0x5B: {
