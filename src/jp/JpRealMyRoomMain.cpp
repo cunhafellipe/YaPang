@@ -17,6 +17,7 @@
 #include "commonutil.h"
 #include "ItemManager.h"
 #include "JpLobbyGlue.h"
+#include "JpTanLines.h"
 #include "RFLobbyDesktop.h"
 #include "actor.h"
 #include "frscrollbar.h"
@@ -348,10 +349,14 @@ void JpRealMyRoomMain::OnStorageOpenBtnUp(void) {
 	SelectMenu(9);
 }
 
-// Port body (JP 0x604eb0): Close(true); the JP then clears the byte +0x7a
-// of the "TanLines" game data (0x542f00), left out.
+// 0x604eb0: Close is FrTaskForm's [2] 0x523730 (it ends the page's widget
+// and hands the lobby back to the desktop).
 void JpRealMyRoomMain::OnCloseWndUp(void) {
 	Close(true);
+	JpTanLines* tanLines = JpTanLines::Instance();  // 0x542f00
+	if (tanLines != NULL) {  // port: the JP stores without a test
+		tanLines->m_flag7a = false;
+	}
 }
 
 // 0x6059a0
