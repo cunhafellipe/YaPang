@@ -7,24 +7,36 @@
 #include "frarea.h"
 #include "frbutton.h"
 #include "fredit.h"
-#include "frgaugebar.h"
 #include "frgroupbox.h"
 #include "frlistbox.h"
+#include "frstatic.h"
 #include "frtabbutton.h"
 #include "frviewer.h"
 #include "frwnd.h"
 #include "frwndmanager.h"
 #include "commonutil.h"
+#include "UccManager.h"
+#include "cardsystem.h"
+#include "CodeTinker.h"
+#include "exhibition.h"
 #include "ItemManager.h"
+#include "ItemStorage.h"
 #include "JpLobbyGlue.h"
+#include "JpMasterySlot.h"
 #include "JpTanLines.h"
 #include "RFLobbyDesktop.h"
 #include "actor.h"
+#include "avatar_avatar.h"
 #include "frscrollbar.h"
 #include "s5/Utilities.h"
 #include "Packet.h"
+#include "PangGiftDlg.h"
+#include "RankingDlg.h"
+#include "RealMyRoomData.h"
 #include "SharedDoc.h"
 #include "TaskManager.h"
+#include "user_info.h"
+#include "wresrcmng.h"
 #include "shared/Localize.h"
 
 // 0x604b00 (?SetSubTabImg@@YIXQAPBDH@Z): the KR SetSubTabImg
@@ -67,6 +79,7 @@ sFRESH_ENTRY JpRealMyRoomMain::_MsgEntries[] = {
 	{ "middle_ui.tabtxt2", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnTabTxt2Init },
 	{ "middle_ui.tabtxt2", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnTabTxt3Init },
 	{ "middle_ui.pet", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnPetInit },
+	{ "middle_ui.pet", FRCMD_OWNERDRAW, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnPetOwnerDraw },
 	{ "middle_ui.skin_pet", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnSkinPetInit },
 	{ "middle_ui.skin_pet2", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnSkinPet2Init },
 	{ "middle_ui.item_desc_bg", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnItemDescBgInit },
@@ -81,6 +94,7 @@ sFRESH_ENTRY JpRealMyRoomMain::_MsgEntries[] = {
 	{ "middle_ui.gift_desc", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnGiftDescInit },
 	{ "stat_group", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnStatGroupInit },
 	{ "stat_group.stat_text", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnStatTextInit },
+	{ "stat_group.arrow_m", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnStatArrowInit },
 	{ "stat_group.epower", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnPowerBarInit },
 	{ "stat_group.econtrol", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnControlBarInit },
 	{ "stat_group.eimpact", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&JpRealMyRoomMain::OnImpactBarInit },
@@ -148,14 +162,16 @@ sFRESH_ENTRY JpRealMyRoomMain::_MsgEntries[] = {
 // relies on its zeroing new for them).
 JpRealMyRoomMain::JpRealMyRoomMain(void) {
 	m_middleUi = NULL;
+	m_statModeWnd = NULL;
 	m_mainTab = NULL;
 	m_subTab = NULL;
 	m_itemList = NULL;
 	m_tabText[0] = NULL;
 	m_tabText[1] = NULL;
+	m_petArea = NULL;
 	m_statGroup = NULL;
 	for (int i = 0; i < 5; i++) {
-		m_statBar[i] = NULL;
+		m_statValue[i] = NULL;
 	}
 	m_itemDescBg = NULL;
 	m_itemDesc = NULL;
@@ -194,6 +210,14 @@ JpRealMyRoomMain::JpRealMyRoomMain(void) {
 	m_pCharCards = NULL;
 	m_charTypeId = 0;
 	m_charSerial = 0;
+	m_caddieTypeId = 0;
+	m_caddieSerial = 0;
+	m_caddiePreviewTypeId = 0;
+	m_mascotTypeId = 0;
+	m_mascotSerial = 0;
+	m_clubSerial = 0;
+	m_ballTypeId = 0;
+	m_statSource = 0;
 	m_mainTabIndex = 0;
 	m_subTabIndex = 0x16;
 	m_subTabDirty = false;
@@ -203,7 +227,7 @@ JpRealMyRoomMain::JpRealMyRoomMain(void) {
 	m_itemHideDescLeft2 = 0.0f;
 	m_itemHideDescBottom2 = 0.0f;
 	m_furnitureTabIndex = 0;
-	m_preview = NULL;
+	m_petExhibition = NULL;
 	m_itemStorageOpen = false;
 	m_itemStorageBg = NULL;
 	m_itemStoragePang = NULL;
@@ -228,8 +252,29 @@ JpRealMyRoomMain::JpRealMyRoomMain(void) {
 	m_cardBook = new JpCardBook();
 }
 
-// Port body (JP 0x61f500).
+// Port body (JP 0x61f500, the body 0x61d590): "AvatarChat" gets 0x58 (the
+// desktop's: the avatar manager, which MakeRealMyRoom stopped in the avatar
+// chat, is active again) and, in the avatar chat (RFLobbyDesktop::s_mode
+// 1), the desktop's m_pendingTaskChange (+0x184) is cleared (else its
+// SyncInputState keeps the bars' Refresh input off) and the player's
+// avatar drops state 2 (ntAvatar::SetState 0x7a4820) that OnInit gave it.
+// Left out: the members' destruction the port does not model; the card
+// book is deleted here.
 JpRealMyRoomMain::~JpRealMyRoomMain(void) {
+	if (CTaskManager::Instance() != NULL) {
+		AfxPostMsg(NULL, "AvatarChat", 0x58, 0, 0, 0, 0);
+	}
+
+	if (RFLobbyDesktop::s_mode == 1) {
+		if (RFLobbyDesktop::s_instance != NULL) {
+			RFLobbyDesktop::s_instance->ClearPendingTaskChange();
+		}
+		ntAvatarManager* manager = WSingleton<ntAvatarManager>::Instance();
+		if (manager != NULL && manager->m_pMyAvatar != NULL) {
+			manager->m_pMyAvatar->SubState(2);
+		}
+	}
+
 	delete m_cardBook;
 	m_cardBook = NULL;
 }
@@ -237,10 +282,11 @@ JpRealMyRoomMain::~JpRealMyRoomMain(void) {
 // Port body (JP 0x620c30). Left out: the card book's slot reset 0x7f3860
 // (its card page is not ported), the shared doc's +0x3704 character map
 // and the 0x74 bytes at +0xa26 copied to +0x710 / +0x720,
-// 0xbe7870, the lounge
-// avatar's flag (0xe73e10 +0xa4, 0x7a4820 | 2), and the 0xe7688c
+// 0xbe7870 and the 0xe7688c
 // tooltip rects under local content 0x70. Kept: the tab state, the main
-// tab (0), the sub tab (0x16, SetSubTab a port body), the lounge mode's
+// tab (0), the sub tab (0x16, SetSubTab a port body), the avatar chat's
+// state 2 on the player's avatar (0xe73e10 +0xa4, ntAvatar::SetState
+// 0x7a4820 | 2; dropped by the destructor), the lounge mode's
 // backgrounds and FrForm::OnInit; the map and equipment copies are done
 // member by member.
 bool JpRealMyRoomMain::OnInit(void) {
@@ -269,6 +315,13 @@ bool JpRealMyRoomMain::OnInit(void) {
 	SetSubTab(0x16, true);
 
 	if (RFLobbyDesktop::s_mode == 1) {
+		ntAvatarManager* manager = WSingleton<ntAvatarManager>::Instance();
+		if (manager != NULL && manager->m_pMyAvatar != NULL) {
+			manager->m_pMyAvatar->AddState(2);
+		}
+	}
+
+	if (RFLobbyDesktop::s_mode == 1) {
 		for (int i = 0; i < 4; i++) {
 			m_mainBg[i]->SetVisible(false);
 		}
@@ -284,8 +337,27 @@ bool JpRealMyRoomMain::Start(void) {
 	return true;
 }
 
-// Port body (JP 0x6165d0): only FrTaskForm::Shutdown (0x523610) and true.
+// Port body (JP 0x6165d0): the page sends what was changed (the equip
+// senders, then CSharedDoc::SendEquipItemSlot 0x63de40), drops the preview,
+// stops its loader (the resource manager's locks of the loader's thread,
+// 0xb55a00, then 0x98af10) and ends as FrTaskForm::Shutdown (0x523610).
+// Left out: the JP-only C->S 0x20 kind 10 (0x60e6c0: 8 bytes of the shared
+// doc's +0xa92, which the port's CSharedDoc has no field for), the card
+// book's +0xa78 object, 0x614530, 0x614410, the 0xe741e4 singleton and the
+// RFWnd 0xe780e4 closed last.
 bool JpRealMyRoomMain::Shutdown(void) {
+	Net_EquipDresserParts();
+	Net_EquipCharacter();
+	Net_EquipCaddie();
+	Net_EquipItem();
+	Net_EquipGear();
+	Net_EquipSkin();
+	Net_EquipMascot();
+	Net_SendEquipKind9();
+	WSingleton<CSharedDoc>::Instance()->SendEquipItemSlot();
+	ReleasePreview(true);
+	g_resrcmng->UnlockAllByThread(m_petLoader.GetThreadID());
+	m_petLoader.BreakWorkingThread();
 	FrTaskForm::Shutdown();
 	return true;
 }
@@ -303,8 +375,12 @@ bool JpRealMyRoomMain::HandleMsg(const MsgObject& msg) {
 	return false;
 }
 
-// Port body (JP 0x611f50).
+// 0x611f50 (reached through CHandOwner at +0x120; pData is the type id's
+// address LoadPreview queued)
 void JpRealMyRoomMain::OnAnotherHand(int nWork, void* pData) {
+	if (nWork == 0) {
+		ShowPet(*(const uint32_t*)pData);
+	}
 }
 
 // 0x622630 (only case 9 written; the JP cases 0, 2, 6 and 8 are the KR
@@ -607,29 +683,38 @@ void JpRealMyRoomMain::OnStatTextInit(intptr_t param) {
 	m_statText = DYNAMIC_CAST(FrArea, param);
 }
 
+// 0x607f40: the shared stat box's arrow (the shop's before / after mark) is
+// hidden in My Room.
+void JpRealMyRoomMain::OnStatArrowInit(intptr_t param) {
+	FrArea* arrow = DYNAMIC_CAST(FrArea, param);
+	if (arrow != NULL) {
+		arrow->SetVisible(false);
+	}
+}
+
 // 0x607fa0
 void JpRealMyRoomMain::OnPowerBarInit(intptr_t param) {
-	m_statBar[0] = DYNAMIC_CAST(FrGaugeBar, param);
+	m_statValue[0] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // 0x608010
 void JpRealMyRoomMain::OnControlBarInit(intptr_t param) {
-	m_statBar[1] = DYNAMIC_CAST(FrGaugeBar, param);
+	m_statValue[1] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // 0x608080
 void JpRealMyRoomMain::OnImpactBarInit(intptr_t param) {
-	m_statBar[2] = DYNAMIC_CAST(FrGaugeBar, param);
+	m_statValue[2] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // 0x6080f0
 void JpRealMyRoomMain::OnSpinBarInit(intptr_t param) {
-	m_statBar[3] = DYNAMIC_CAST(FrGaugeBar, param);
+	m_statValue[3] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // 0x608160
 void JpRealMyRoomMain::OnCurveBarInit(intptr_t param) {
-	m_statBar[4] = DYNAMIC_CAST(FrGaugeBar, param);
+	m_statValue[4] = DYNAMIC_CAST(FrStatic, param);
 }
 
 // 0x6081d0
@@ -813,20 +898,30 @@ void JpRealMyRoomMain::OnCardPackListInit(intptr_t param) {
 	}
 }
 
-// Port body (JP 0x60a420): left out the 0xe7688c registration (0x7fe140).
+// 0x60a420: the item storage's front controls are hidden and registered
+// with the storage (0xe7688c, CItemStorage::AddFrontUI 0x7fe140), which
+// shows them while it is open.
 void JpRealMyRoomMain::OnItemStoragePangInit(intptr_t param) {
 	m_itemStoragePang = DYNAMIC_CAST(FrArea, param);
+	if (CItemStorage::IsInstantiated()) {
+		CItemStorage::Instance()->AddFrontUI(m_itemStoragePang);
+	}
 }
 
-// Port body (JP 0x60a4a0): left out the +0x104 / +0x108 floats and the
-// 0xe7688c registration.
+// Port body (JP 0x60a4a0): left out the +0x104 / +0x108 floats.
 void JpRealMyRoomMain::OnPangMinusInit(intptr_t param) {
 	m_pangMinus = DYNAMIC_CAST(FrButton, param);
+	if (m_pangMinus != NULL && CItemStorage::IsInstantiated()) {
+		CItemStorage::Instance()->AddFrontUI(m_pangMinus);
+	}
 }
 
 // Port body (JP 0x60a560): as OnPangMinusInit.
 void JpRealMyRoomMain::OnPangPlusInit(intptr_t param) {
 	m_pangPlus = DYNAMIC_CAST(FrButton, param);
+	if (m_pangPlus != NULL && CItemStorage::IsInstantiated()) {
+		CItemStorage::Instance()->AddFrontUI(m_pangPlus);
+	}
 }
 
 // Port body (JP 0x60a620): left out the style bit 0x200 cleared at +0x44.
@@ -837,9 +932,12 @@ void JpRealMyRoomMain::OnItemStorageListInit(intptr_t param) {
 	}
 }
 
-// Port body (JP 0x60a850): left out the 0xe7688c registration.
+// 0x60a850 (the storage registration as OnItemStoragePangInit)
 void JpRealMyRoomMain::OnItemStorageIndexInit(intptr_t param) {
 	m_itemStorageIndex = DYNAMIC_CAST(FrListBox, param);
+	if (CItemStorage::IsInstantiated()) {
+		CItemStorage::Instance()->AddFrontUI(m_itemStorageIndex);
+	}
 }
 
 // Port body (JP 0x60a940): left out the +0x104 / +0x108 floats.
@@ -858,15 +956,24 @@ void JpRealMyRoomMain::OnItemStoragePagePrevInit(intptr_t param) {
 	}
 }
 
-// Port body (JP 0x60aac0): left out the +0x104 / +0x108 floats, the
-// 0xe7688c registration and the "TanLines" byte +0x7a = 1.
+// Port body (JP 0x60aac0): left out the +0x104 / +0x108 floats.
 void JpRealMyRoomMain::OnItemStorageCloseInit(intptr_t param) {
 	m_itemStorageClose = DYNAMIC_CAST(FrButton, param);
+	if (CItemStorage::IsInstantiated()) {
+		CItemStorage::Instance()->AddFrontUI(m_itemStorageClose);
+	}
+	JpTanLines* tanLines = JpTanLines::Instance();  // 0x542f00
+	if (tanLines != NULL) {  // port: the JP stores without a test
+		tanLines->m_flag7a = true;
+	}
 }
 
-// Port body (JP 0x60ab70): left out the 0xe7688c registration.
+// 0x60ab70 (the storage registration as OnItemStoragePangInit)
 void JpRealMyRoomMain::OnItemStorageDragDropInit(intptr_t param) {
 	m_itemStorageDragDrop = DYNAMIC_CAST(FrArea, param);
+	if (CItemStorage::IsInstantiated()) {
+		CItemStorage::Instance()->AddFrontUI(m_itemStorageDragDrop);
+	}
 }
 
 // 0x61e4e0
@@ -956,7 +1063,7 @@ void JpRealMyRoomMain::SetMainTab(int tab, bool force) {
 
 	m_itemDesc->SetVisible(false);
 	m_itemDescBg->SetVisible(false);
-	if (m_preview == NULL) {
+	if (m_petExhibition == NULL) {
 		SetSubTab(m_subTabIndex, true);
 	}
 }
@@ -1018,32 +1125,326 @@ static bool MyRoomEmptyCompare(const void* p1, const void* p2) {
 	return false;
 }
 
-// Port body (JP 0x605530): the JP waits first, when wait, for the +0x588
-// another-hand job (0x98ad40(9999)), which the port does not model, then
-// deletes the preview through its vtable [0] (deleting destructor, 1);
-// the port never builds one (LoadPreview).
+// 0x605530 (the KR HidePet; the JP deletes the preview through its virtual
+// destructor)
 void JpRealMyRoomMain::ReleasePreview(bool wait) {
-	(void)wait;
-	m_preview = NULL;
+	if (wait) {
+		m_petLoader.WaitUntilWorkDone(9999);
+	}
+
+	if (m_petExhibition != NULL) {
+		delete m_petExhibition;
+		m_petExhibition = NULL;
+	}
 }
 
-// Port body (JP 0x605640): the JP waits for the +0x588 job, returns when
-// the preview already shows *typeId (its +0x55c) unless force, then queues
-// CAnotherHand::Work(+0x588, the CHandOwner at +0x120, 0, typeId, 1, -1).
-// The +0x588 job and the preview (the character model drawn by the "pet"
-// owner draw) are not ported: nothing is queued.
+// 0x605640 (the JP exhibition's +0x55c is the KR GetTypeId)
 void JpRealMyRoomMain::LoadPreview(const uint32_t* typeId, bool force) {
-	(void)typeId;
-	(void)force;
+	m_petLoader.WaitUntilWorkDone(9999);
+	if (force || m_petExhibition == NULL || m_petExhibition->GetTypeId() != *typeId) {
+		m_petLoader.Work(this, 0, const_cast<uint32_t*>(typeId), true, -1);
+	}
 }
 
-// Port body (JP 0x61af80, the KR BuildDisplayStand). Written: the list cleared, the sub tab
-// 0x16 case (jump table index 12, 0x61b5a4: the character's parts, the
-// extra items and, under local content 0x58, the item list, with the
-// shown character's parts and cards selected) and the tail (top row
-// reset, padded to 8 rows, empty rows last unless sub tab 0x13). The other
-// 23 cases (0x61afdd ... 0x61c7c9) are not written: their sub tabs show
-// an empty list.
+// 0x604ed0
+void JpRealMyRoomMain::SetPetAreaRect(void) {
+	switch (m_subTabIndex) {
+	case 0xe:
+	case 0xf:
+	case 0x10:
+		m_petArea = m_skinPet[0];
+		break;
+	case 0x11:
+	case 0x23:
+		m_petArea = m_skinPet[1];
+		break;
+	default:
+		m_petArea = m_pet;
+		break;
+	}
+}
+
+// Port body (JP 0x60e8b0, the KR ShowPet with the JP sub tab numbers, KR +
+// 1, and local content 0x57, KR 0x56 + 1). The JP builds a character in
+// its own exhibition class (new 0x64c, ctor 0x604750, SetModel its vtable
+// [2]) and the other kinds in the JP CExhibition (ctor 0x4ff080, its last
+// argument -1); the port uses the KR CExhibition for both, with the JP
+// placements and SetControlFlag(0x1f) (JP +0x564). Left out: a character
+// in the lobby (RFLobbyDesktop::s_mode 0) outside the skin sub tabs, which
+// the JP builds only while a UCC is drawn (0x605e70: local content 0x58 and
+// the UCC draw dialog +0x228, not ported), sized after the lobby's window
+// (0xe73ddc +0x28 +0x4c) and main_bg3; the UCC texture of the drawn part.
+void JpRealMyRoomMain::ShowPet(unsigned long typeId) {
+	if (typeId == 0) {
+		return;
+	}
+
+	m_petLoader.Enter();
+	if (m_petArea == NULL) {
+		m_petLoader.Leave();
+		return;
+	}
+
+	ReleasePreview(false);
+	WRect rect = m_petArea->GetRect();
+
+	CExhibition* pet = NULL;
+	bool loaded = false;
+	switch (typeId >> 26) {
+	case 1: {
+		bool skinTab = m_subTabIndex == 0xe || m_subTabIndex == 0xf || m_subTabIndex == 0x10;
+		if (RFLobbyDesktop::s_mode == 0 && !skinTab) {
+			m_petLoader.Leave();
+			return;
+		}
+		if (skinTab) {
+			pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f, 0.35f, true);
+			pet->SetArea(rect.w, rect.h);
+			pet->SetDistanceRange(16.0f, 20.0f);
+			pet->SetDistance(18.0f, true, false);
+		} else {
+			pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f + 15.0f, 0.35f, true);
+			pet->SetArea(rect.w, rect.h);
+			pet->SetDistanceRange(8.0f, 12.0f);
+			pet->SetDistance(10.0f, true, false);
+		}
+		CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
+		loaded = pet->SetModel(pDoc->GetMyPartTidList(), pDoc->GetMyAuxPartTidList(), NULL, 3.0f, 0);
+		break;
+	}
+
+	case 4:
+		pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h / 3.0f, 0.0f, true);
+		pet->SetArea(rect.w, rect.h);
+		pet->SetDistance(7.0f, true, false);
+		loaded = pet->SetModel(typeId);
+		break;
+
+	case 5:
+		pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f, 0.0f, true);
+		pet->SetArea(rect.w, rect.h);
+		pet->SetDistance(1.0f, true, false);
+		loaded = pet->SetModel(typeId);
+		break;
+
+	case 6:
+		pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f, 0.0f, true);
+		pet->SetArea(rect.w, rect.h);
+		pet->SetDistance(6.0f, true, false);
+		pet->SetDistanceRange(5.0f, 7.0f);
+		loaded = pet->SetModel(typeId);
+		break;
+
+	case 7:
+	case 8:
+		// Only in the avatar chat (the lobby shows them on its own actors).
+		if (RFLobbyDesktop::s_mode == 0) {
+			m_petLoader.Leave();
+			return;
+		}
+		pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f + 15.0f, 0.35f, true);
+		pet->SetArea(rect.w, rect.h);
+		pet->SetDistanceRange(9.0f, 13.0f);
+		pet->SetDistance(11.0f, true, false);
+		loaded = pet->SetModel(typeId);
+		break;
+
+	case 11:
+		pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f, 0.0f, true);
+		pet->SetArea(rect.w, rect.h);
+		pet->SetDistance(18.0f, true, false);
+		loaded = pet->SetModel(typeId);
+		break;
+
+	case 16:
+		pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f + 15.0f, 0.35f, true);
+		pet->SetArea(rect.w, rect.h);
+		pet->SetDistanceRange(4.0f, 8.0f);
+		pet->SetDistance(6.0f, true, false);
+		loaded = pet->SetModel(typeId);
+		break;
+
+	case 18:
+		if (!IsLocalContent((localContentType_t)0x57)) {
+			m_petLoader.Leave();
+			return;
+		}
+		pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f, 0.0f, true);
+		pet->SetArea(rect.w * 0.5f, rect.h * 0.5f);
+		pet->SetDistance(15.0f, true, false);
+		loaded = pet->SetModel(typeId);
+		break;
+
+	case 31:
+		pet = new CExhibition(rect.x + rect.w * 0.5f, rect.y + rect.h * 0.5f, 0.0f, true);
+		pet->SetArea(rect.w, rect.h);
+		pet->SetDistanceRange(5.0f, 7.0f);
+		if ((typeId & 0x3C00000) == 0xC00000) {
+			pet->SetDistance(5.0f, true, false);
+		} else {
+			pet->SetDistance(6.0f, true, false);
+		}
+		loaded = pet->SetModel(typeId);
+		break;
+
+	default:
+		m_petLoader.Leave();
+		return;
+	}
+
+	if (!loaded) {
+		delete pet;
+	} else {
+		pet->SetControlFlag(0x1f);
+		m_petExhibition = pet;
+	}
+
+	m_petLoader.Leave();
+}
+
+// Port body (JP 0x60ca50, FrForm [9]; the KR OnProcess's preview part): the
+// preview turns with the mouse except on the main tabs 1 and 4. Left out:
+// ESCAPE closing the messenger (0xe73de8 0x905710), the skin pages' side
+// slides (+0x97c / +0x984) and the 0x899640 tooltip statics.
+void JpRealMyRoomMain::OnProc(const float dt) {
+	if (m_petLoader.IsWorking(0)) {
+		Sleep(10);
+	} else if (m_petExhibition != NULL) {
+		m_petLoader.Enter();
+
+		bool rotate;
+		switch (m_mainTabIndex) {
+		case 1:
+		case 4:
+			rotate = false;
+			break;
+		default:
+			rotate = true;
+			break;
+		}
+
+		m_petExhibition->Process(dt, rotate);
+		m_petLoader.Leave();
+	}
+}
+
+// 0x61a750 (the KR SetLevelBar on the JP stat box: FrStatic captions in place
+// of the KR gauges; 0x5e48e0 GetStatValue, 0x5e48a0 GetFreeMasteryPoints)
+void JpRealMyRoomMain::SetLevelBar(void) {
+	JpMasteryStatInfo statInfo;
+	for (int i = 0; i < 5; i++) {
+		int value = statInfo.GetStatValue(i);
+		int max = statInfo.GetFreeMasteryPoints(i) + value;
+		if (m_statValue[i] != NULL) {
+			m_statValue[i]->SetCaption11(MakeStr("%d/%d", value, max));
+		}
+	}
+}
+
+// 0x613f70 (the KR IsInItemList)
+bool JpRealMyRoomMain::IsInItemList(unsigned long typeId) {
+	for (FrListBox::ITEM_LIST::iterator it = m_itemList->m_itemList.begin(); it != m_itemList->m_itemList.end(); ++it) {
+		sItemInfo* pInfo = (sItemInfo*)(*it)->pData;
+		if (pInfo == NULL) {
+			continue;
+		}
+		if (pInfo->m_typeId == typeId) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// 0x615ab0
+void JpRealMyRoomMain::UnequipItem(DWORD* pItemId) {
+	std::list<sItemInfo>& items = WSingleton<CSharedDoc>::Instance()->m_itemInfoList;
+	for (std::list<sItemInfo>::iterator it = items.begin(); it != items.end(); ++it) {
+		if (it->m_typeId == *pItemId) {
+			if (!IsInItemList(*pItemId)) {
+				m_itemList->AddItem(&*it);
+				m_itemList->SortItem(MyRoomEmptyCompare);
+			}
+		}
+	}
+
+	*pItemId = 0;
+}
+
+// The worn parts of the shown character selected in item_list: by type id,
+// and by item id too when the character record has one for that slot (the
+// JP's +0x3704 map find of +0xa2a); byItemId false (local content 0x52
+// off) compares the type id only. Inlined in each parts case of the JP
+// BuildDisplayStand (name ours).
+static void SelectWornParts(FrListBox* pList, const DWORD* pCharParts, const uint32_t* pCharPartIds, bool byItemId) {
+	if (pCharParts == NULL) {
+		return;
+	}
+
+	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
+	for (int i = 0; i < 24; i++) {
+		for (FrListBox::ITEM_LIST::iterator it = pList->m_itemList.begin(); it != pList->m_itemList.end(); ++it) {
+			FrListItem* pItem = *it;
+			sItemInfo* pInfo = (sItemInfo*)pItem->pData;
+			if (pInfo == NULL) {
+				continue;
+			}
+			if (byItemId) {
+				std::map<unsigned int, sCharacterInfo>::iterator cit = pDoc->m_characterMap.find(pDoc->m_myCharacterId);
+				if (cit == pDoc->m_characterMap.end()) {
+					continue;
+				}
+				int slot = (pInfo->m_typeId >> 13) & 0x1F;
+				if (cit->second.partIds[slot] == 0) {
+					if (pInfo->m_typeId != pCharParts[i]) {
+						continue;
+					}
+				} else if (pInfo->m_typeId != pCharParts[i] || pInfo->m_serial != pCharPartIds[i]) {
+					continue;
+				}
+			} else if (pInfo->m_typeId != pCharParts[i]) {
+				continue;
+			}
+			pList->SelectItem(pItem, false);
+			break;
+		}
+	}
+}
+
+// A part's card slot counts copied into its item record from the IFF part
+// (the JP also copies a third short, part +0x22c to the JP record's +0xa8,
+// which the KR sItemInfo lacks). Inlined in the JP (name ours).
+static void CopyCardSlotCounts(sItemInfo* pInfo) {
+	IFF_STRUCT::sPart* pPart = ItemManager()->FindPart(pInfo->m_typeId);
+	if (pPart != NULL) {
+		pInfo->m_charCardSlotCount = pPart->m_charCardSlots;
+		pInfo->m_caddieCardSlotCount = pPart->m_caddieCardSlots;
+	}
+}
+
+// True when one of the owned characters is the one a part is made for (the
+// sub tab 0x17 rows are the parts no owned character can wear). Inlined in
+// the JP (name ours).
+static bool IsPartOfOwnedCharacter(unsigned long typeId) {
+	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
+	for (std::map<unsigned int, sCharacterInfo>::const_iterator cit = pDoc->m_characterMap.begin(); cit != pDoc->m_characterMap.end(); ++cit) {
+		if (((typeId >> 18) & 0xFF) == (cit->second.typeId & 0x3FFFFFF)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// Port body (JP 0x61af80, the KR BuildDisplayStand; jump table 0x61c82c over
+// the byte table 0x61c88c, sub tab - 2): the KR cases on the JP sub tab
+// numbers (KR + 1) and local content numbers (0x52, 0x57, 0x58: KR + 1;
+// the item slots' 0x81 is the KR 0x84). JP additions kept: the parts in the
+// trade list are left out (0x636850). Left out: the ball tab's
+// 0x140000d8 first row under the doc's +0x812 bit 14, the item tab's
+// 0x6336a0 / IFF flag (+0xc0 & 6) filters (the KR IsNonVisibleItem in
+// their place), the cut-in tab's selection by 0x63f450 (the KR equipped
+// skin test in its place), the trophy tab's fourth list (+0x3828), the
+// card tab's pack list (0x6141b0) and card book page, and the sub tab
+// 0x26 (the item set list +0xac0, 0x478f40).
 void JpRealMyRoomMain::BuildDisplayStand(int subTab) {
 	if (m_itemList == NULL) {
 		return;
@@ -1052,7 +1453,9 @@ void JpRealMyRoomMain::BuildDisplayStand(int subTab) {
 	m_itemList->ClearItem();
 	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
 	switch (subTab) {
-	case 0x16: {
+	case 2:
+	case 3:
+	case 4: {
 		unsigned long category = MyRoomCategoryFlag(subTab);
 		// JP +0x3734 (KR m_myPartsList).
 		for (std::list<sItemInfo>::iterator it = pDoc->m_myPartsList.begin(); it != pDoc->m_myPartsList.end(); ++it) {
@@ -1063,43 +1466,32 @@ void JpRealMyRoomMain::BuildDisplayStand(int subTab) {
 			if (!S5::UnderCategory(m_charTypeId, pInfo->m_typeId, category)) {
 				continue;
 			}
-			if (IsLocalContent((localContentType_t)0x52)) {
-				IFF_STRUCT::sPart* pPart = ItemManager()->FindPart(pInfo->m_typeId);
-				if (pPart != NULL) {
-					// The JP also copies a third short (part +0x22c to the
-					// JP record's +0xa8), which the KR sItemInfo lacks.
-					pInfo->m_charCardSlotCount = pPart->m_charCardSlots;
-					pInfo->m_caddieCardSlotCount = pPart->m_caddieCardSlots;
-				}
-			}
+			CopyCardSlotCounts(pInfo);
 			m_itemList->AddItem(pInfo);
 		}
+		SelectWornParts(m_itemList, m_pCharParts, m_charPartIds, true);
+		break;
+	}
 
-		// The worn parts: by type id, and by item id too when the record
-		// has one for that slot (JP +0x3704 map find of +0xa2a).
-		for (int i = 0; i < 24; i++) {
-			if (m_pCharParts == NULL) {
-				break;
+	case 5: {
+		unsigned long category = MyRoomCategoryFlag(subTab);
+		for (std::list<sItemInfo>::iterator it = pDoc->m_myPartsList.begin(); it != pDoc->m_myPartsList.end(); ++it) {
+			sItemInfo* pInfo = &*it;
+			if (!S5::UnderCategory(m_charTypeId, pInfo->m_typeId, category)) {
+				continue;
 			}
-			for (FrListBox::ITEM_LIST::iterator it = m_itemList->m_itemList.begin(); it != m_itemList->m_itemList.end(); ++it) {
-				FrListItem* pItem = *it;
-				sItemInfo* pInfo = (sItemInfo*)pItem->pData;
-				std::map<unsigned int, sCharacterInfo>::iterator cit = pDoc->m_characterMap.find(pDoc->m_myCharacterId);
-				if (cit == pDoc->m_characterMap.end()) {
+			if (IsInTradeList(pInfo->m_serial)) {
+				continue;
+			}
+			if (IsAngelWing(pInfo->m_typeId)) {
+				if (!IsMannerPlayer() || pDoc->m_myLevel < 0x15) {
 					continue;
 				}
-				int slot = (pInfo->m_typeId >> 13) & 0x1F;
-				if (cit->second.partIds[slot] == 0) {
-					if (pInfo->m_typeId != m_pCharParts[i]) {
-						continue;
-					}
-				} else if (pInfo->m_typeId != m_pCharParts[i] || pInfo->m_serial != m_charPartIds[i]) {
-					continue;
-				}
-				m_itemList->SelectItem(pItem, false);
-				break;
 			}
+			CopyCardSlotCounts(pInfo);
+			m_itemList->AddItem(pInfo);
 		}
+		SelectWornParts(m_itemList, m_pCharParts, m_charPartIds, true);
 
 		// JP +0x37bc (KR m_myExtraItemList3).
 		for (std::list<sItemInfo>::iterator it = pDoc->m_myExtraItemList3.begin(); it != pDoc->m_myExtraItemList3.end(); ++it) {
@@ -1107,6 +1499,59 @@ void JpRealMyRoomMain::BuildDisplayStand(int subTab) {
 		}
 
 		// The worn cards.
+		for (int i = 0; i < 5; i++) {
+			if (m_pCharCards == NULL) {
+				break;
+			}
+			for (FrListBox::ITEM_LIST::iterator it = m_itemList->m_itemList.begin(); it != m_itemList->m_itemList.end(); ++it) {
+				sItemInfo* pInfo = (sItemInfo*)(*it)->pData;
+				if (pInfo != NULL && pInfo->m_typeId == m_pCharCards[i]) {
+					m_itemList->SelectItem(*it, false);
+					break;
+				}
+			}
+		}
+		break;
+	}
+
+	case 0x1b: {
+		unsigned long category = MyRoomCategoryFlag(subTab);
+		// JP +0x3878 (the port's m_myItemList, JpPetFrameGlue.cpp).
+		for (std::list<sItemInfo>::iterator it = pDoc->m_myItemList.begin(); it != pDoc->m_myItemList.end(); ++it) {
+			sItemInfo* pInfo = &*it;
+			if (!S5::UnderCategory(m_charTypeId, pInfo->m_typeId, category)) {
+				continue;
+			}
+			if (IsLocalContent((localContentType_t)0x52)) {
+				CopyCardSlotCounts(pInfo);
+			}
+			m_itemList->AddItem(pInfo);
+		}
+		SelectWornParts(m_itemList, m_pCharParts, m_charPartIds, IsLocalContent((localContentType_t)0x52));
+		break;
+	}
+
+	case 0x16: {
+		unsigned long category = MyRoomCategoryFlag(subTab);
+		for (std::list<sItemInfo>::iterator it = pDoc->m_myPartsList.begin(); it != pDoc->m_myPartsList.end(); ++it) {
+			sItemInfo* pInfo = &*it;
+			if (IsInTradeList(pInfo->m_serial)) {
+				continue;
+			}
+			if (!S5::UnderCategory(m_charTypeId, pInfo->m_typeId, category)) {
+				continue;
+			}
+			if (IsLocalContent((localContentType_t)0x52)) {
+				CopyCardSlotCounts(pInfo);
+			}
+			m_itemList->AddItem(pInfo);
+		}
+		SelectWornParts(m_itemList, m_pCharParts, m_charPartIds, true);
+
+		for (std::list<sItemInfo>::iterator it = pDoc->m_myExtraItemList3.begin(); it != pDoc->m_myExtraItemList3.end(); ++it) {
+			m_itemList->AddItem(&*it);
+		}
+
 		for (int i = 0; i < 5; i++) {
 			if (m_pCharCards == NULL) {
 				break;
@@ -1124,57 +1569,347 @@ void JpRealMyRoomMain::BuildDisplayStand(int subTab) {
 			break;
 		}
 
-		// JP +0x3878 (the port's m_myItemList, JpPetFrameGlue.cpp).
 		for (std::list<sItemInfo>::iterator it = pDoc->m_myItemList.begin(); it != pDoc->m_myItemList.end(); ++it) {
 			sItemInfo* pInfo = &*it;
 			if (!S5::UnderCategory(m_charTypeId, pInfo->m_typeId, category)) {
 				continue;
 			}
 			if (IsLocalContent((localContentType_t)0x52)) {
-				IFF_STRUCT::sPart* pPart = ItemManager()->FindPart(pInfo->m_typeId);
-				if (pPart != NULL) {
-					pInfo->m_charCardSlotCount = pPart->m_charCardSlots;
-					pInfo->m_caddieCardSlotCount = pPart->m_caddieCardSlots;
-				}
+				CopyCardSlotCounts(pInfo);
+			}
+			m_itemList->AddItem(pInfo);
+		}
+		SelectWornParts(m_itemList, m_pCharParts, m_charPartIds, IsLocalContent((localContentType_t)0x52));
+		break;
+	}
+
+	case 0x17:
+		// The parts no owned character wears.
+		for (std::list<sItemInfo>::iterator it = pDoc->m_myPartsList.begin(); it != pDoc->m_myPartsList.end(); ++it) {
+			sItemInfo* pInfo = &*it;
+			if (pInfo->m_typeId & 0x600) {
+				continue;
+			}
+			if (IsPartOfOwnedCharacter(pInfo->m_typeId)) {
+				continue;
+			}
+			if (IsLocalContent((localContentType_t)0x52)) {
+				CopyCardSlotCounts(pInfo);
 			}
 			m_itemList->AddItem(pInfo);
 		}
 
-		// Its worn parts again (the JP's lower_bound of +0xa2a; under local
-		// content 0x52 the item id test of the record's slot, else the
-		// type id only).
-		for (int i = 0; i < 24; i++) {
-			if (m_pCharParts == NULL) {
-				break;
+		if (IsLocalContent((localContentType_t)0x58)) {
+			for (std::list<sItemInfo>::iterator it = pDoc->m_myItemList.begin(); it != pDoc->m_myItemList.end(); ++it) {
+				sItemInfo* pInfo = &*it;
+				if (pInfo->m_typeId & 0x600) {
+					continue;
+				}
+				if (IsPartOfOwnedCharacter(pInfo->m_typeId)) {
+					continue;
+				}
+				m_itemList->AddItem(pInfo);
 			}
-			for (FrListBox::ITEM_LIST::iterator it = m_itemList->m_itemList.begin(); it != m_itemList->m_itemList.end(); ++it) {
-				FrListItem* pItem = *it;
-				sItemInfo* pInfo = (sItemInfo*)pItem->pData;
-				if (pInfo == NULL) {
-					continue;
+		}
+		break;
+
+	case 7:
+		// Club sets (JP +0x3744, KR m_myItemMap); the shown one is selected.
+		for (std::map<unsigned int, sItemInfo>::iterator it = pDoc->m_myItemMap.begin(); it != pDoc->m_myItemMap.end(); ++it) {
+			FrListItem* pItem = m_itemList->AddItem(&it->second);
+			if (m_clubSerial == 0) {
+				if (pDoc->m_myClubId == it->second.m_serial) {
+					m_clubSerial = it->second.m_serial;
+					m_itemList->SelectItem(pItem, true);
 				}
-				if (IsLocalContent((localContentType_t)0x52)) {
-					std::map<unsigned int, sCharacterInfo>::iterator cit = pDoc->m_characterMap.find(pDoc->m_myCharacterId);
-					if (cit == pDoc->m_characterMap.end()) {
-						continue;
-					}
-					int slot = (pInfo->m_typeId >> 13) & 0x1F;
-					if (cit->second.partIds[slot] == 0) {
-						if (pInfo->m_typeId != m_pCharParts[i]) {
-							continue;
-						}
-					} else if (pInfo->m_typeId != m_pCharParts[i] || pInfo->m_serial != m_charPartIds[i]) {
-						continue;
-					}
-				} else if (pInfo->m_typeId != m_pCharParts[i]) {
-					continue;
+			} else if (m_clubSerial == it->second.m_serial) {
+				m_itemList->SelectItem(pItem, true);
+			}
+		}
+		break;
+
+	case 8:
+		// Balls (JP +0x3750, KR m_myGearList).
+		for (std::list<sItemInfo>::iterator it = pDoc->m_myGearList.begin(); it != pDoc->m_myGearList.end(); ++it) {
+			FrListItem* pItem = m_itemList->AddItem(&*it);
+			if (pDoc->m_myBallId == it->m_typeId) {
+				m_ballTypeId = (uint32_t)it->m_typeId;
+				m_itemList->SelectItem(pItem, true);
+			}
+		}
+		break;
+
+	case 9: {
+		// Usable items (JP +0x375c, KR m_itemInfoList), less the equipped
+		// ones; then the item slots.
+		for (std::list<sItemInfo>::iterator it = pDoc->m_itemInfoList.begin(); it != pDoc->m_itemInfoList.end(); ++it) {
+			sItemInfo* pInfo = &*it;
+			if (ItemManager()->GetCouponKind(pInfo->m_typeId)) {
+				continue;
+			}
+			if (pInfo->m_typeId & 0x2000000) {
+				continue;
+			}
+
+			int equipped = 0;
+			for (int k = 0; k < 10; k++) {
+				if (pInfo->m_typeId == pDoc->m_equipItem[k]) {
+					equipped++;
 				}
-				m_itemList->SelectItem(pItem, false);
-				break;
+			}
+			if (pInfo->m_count - equipped > 0) {
+				FrListItem* pItem = m_itemList->AddItem(pInfo);
+				pItem->AddNoRBtnIdx(1);
+				IFF_ITEM_COMMON* pCommon = ItemManager()->FindCommonItem(pInfo->m_typeId);
+				if (pCommon != NULL && !(pCommon->m_flags0 & 1)) {
+					pItem->AddNoRBtnIdx(2);
+				}
+			}
+		}
+
+		if (m_itemSlot == NULL) {
+			break;
+		}
+
+		m_itemSlot->ClearItem();
+		int slotCount = pDoc->GetNumAddItemSlotByMascot() + 8;
+		// Port: the JP port has no card manager (its instance is a missing
+		// symbol's zero stub): no card period slots without it.
+		CCardManager* pCards = CCardManager::Instance();
+		if (IsLocalContent((localContentType_t)0x81)) {
+			if (IsLocalContent((localContentType_t)0x52) && pCards != NULL) {
+				CCardManager::Instance()->SetPlayerIndex(0xFF);
+				CCardManager::Instance()->CalcCardPeriodAndStatus();
+				int cardSlots = CCardManager::Instance()->GetCardPeriodSlot();
+				if (cardSlots > 0) {
+					slotCount += cardSlots;
+				}
+			}
+			for (int k = 0; k < 10; k++) {
+				DWORD* pEquip = &pDoc->m_equipItem[k];
+				if (k < slotCount) {
+					m_itemSlot->AddItem(pEquip);
+				} else {
+					UnequipItem(pEquip);
+				}
+			}
+		} else {
+			if (IsLocalContent((localContentType_t)0x52) && pCards != NULL) {
+				CCardManager::Instance()->SetPlayerIndex(0xFF);
+				CCardManager::Instance()->CalcCardPeriodAndStatus();
+				slotCount += CCardManager::Instance()->GetCardPeriodSlot();
+			}
+			for (int k = 0; k < slotCount; k++) {
+				m_itemSlot->AddItem(&pDoc->m_equipItem[k]);
+			}
+		}
+		for (int n = m_itemSlot->GetCurrentItemSize(true); n < 10; n++) {
+			m_itemSlot->AddItem(NULL);
+		}
+		break;
+	}
+
+	case 10:
+		// The other items (type id bit 0x2000000), but the sub tab 0x19's.
+		for (std::list<sItemInfo>::iterator it = pDoc->m_itemInfoList.begin(); it != pDoc->m_itemInfoList.end(); ++it) {
+			sItemInfo* pInfo = &*it;
+			if (ItemManager()->GetCouponKind(pInfo->m_typeId)) {
+				continue;
+			}
+			if (pInfo->m_typeId == 0x1A000042) {
+				continue;
+			}
+			if (ItemManager()->IsNonVisibleItem(pInfo->m_typeId) == true) {
+				continue;
+			}
+			if (pInfo->m_typeId & 0x2000000) {
+				FrListItem* pItem = m_itemList->AddItem(pInfo);
+				if (CCodeTinker().IsNeedOpenMiniButton(pInfo->m_typeId)) {
+					pItem->AddNoRBtnIdx(0);
+				}
+			}
+		}
+		break;
+
+	case 0x19:
+		if (IsLocalContent((localContentType_t)0x14)) {
+			for (std::list<sItemInfo>::iterator it = pDoc->m_itemInfoList.begin(); it != pDoc->m_itemInfoList.end(); ++it) {
+				sItemInfo* pInfo = &*it;
+				if ((pInfo->m_typeId & 0x2000000) && pInfo->m_typeId == 0x1A000042) {
+					FrListItem* pItem = m_itemList->AddItem(pInfo);
+					pItem->AddNoRBtnIdx(0);
+				}
+			}
+		}
+		break;
+
+	case 0xe:
+	case 0xf:
+	case 0x10:
+	case 0x11:
+	case 0x23: {
+		// Skins (JP +0x3798, KR m_mySkinList) of the sub tab's kind; the
+		// equipped ones are selected.
+		unsigned long category = MyRoomCategoryFlag(subTab);
+		for (std::list<sItemInfo>::iterator it = pDoc->m_mySkinList.begin(); it != pDoc->m_mySkinList.end(); ++it) {
+			sItemInfo* pInfo = &*it;
+			if (category == 5 || ((pInfo->m_typeId >> 22) & 0xF) == category) {
+				FrListItem* pItem = m_itemList->AddItem(pInfo);
+				eEquipSkin skin;
+				if (S5::UTIL::GetEquipSkinIndex(skin, pInfo->m_typeId)) {
+					if (pDoc->m_equipSkin[skin] == pInfo->m_typeId) {
+						m_itemList->SelectItem(pItem, true);
+					}
+				}
 			}
 		}
 		break;
 	}
+
+	case 0x22:
+		// Cut-ins of the shown character (or for everyone).
+		for (std::list<sItemInfo>::iterator it = pDoc->m_mySkinList.begin(); it != pDoc->m_mySkinList.end(); ++it) {
+			sItemInfo* pInfo = &*it;
+			if (!S5::ISCutinItem(pInfo->m_typeId)) {
+				continue;
+			}
+			IFF_STRUCT::S5::sCutinInformation* pCutin = ItemManager()->FindCutinInformation(pInfo->m_typeId);
+			if (pCutin == NULL) {
+				continue;
+			}
+			if ((m_charTypeId & 0x3FFFFFF) == pCutin->m_charSerial || pCutin->m_charSerial >= 100) {
+				FrListItem* pItem = m_itemList->AddItem(pInfo);
+				eEquipSkin skin;
+				if (S5::UTIL::GetEquipSkinIndex(skin, pInfo->m_typeId)) {
+					if (pDoc->m_equipSkin[skin] == pInfo->m_typeId) {
+						m_itemList->SelectItem(pItem, true);
+					}
+				}
+			}
+		}
+		break;
+
+	case 0xb:
+		// Caddies (JP +0x3718, KR m_caddieMap); the shown one is selected.
+		for (std::map<unsigned int, sCaddieInfo>::iterator it = pDoc->m_caddieMap.begin(); it != pDoc->m_caddieMap.end(); ++it) {
+			FrListItem* pItem = m_itemList->AddItem(&it->second);
+			IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(it->second.typeId);
+			if ((it->second.flags & 2) && it->second.days <= 0 && it->second.cadItemTypeId == 0 && pCaddie != NULL && pCaddie->fee) {
+				pItem->AddNoRBtnIdx(3);
+			}
+			if (m_caddieSerial == 0) {
+				if (pDoc->m_myCaddieId == it->second.id) {
+					m_caddieSerial = it->second.id;
+					m_itemList->SelectItem(pItem, true);
+				}
+			} else if (m_caddieSerial == it->second.id) {
+				m_itemList->SelectItem(pItem, true);
+			}
+		}
+		break;
+
+	case 0xd:
+		// Mascots (JP +0x3728, KR m_myMascotMap).
+		for (std::map<unsigned int, sMascotInfo>::iterator it = pDoc->m_myMascotMap.begin(); it != pDoc->m_myMascotMap.end(); ++it) {
+			FrListItem* pItem = m_itemList->AddItem(&it->second);
+			if (pDoc->m_myMascotId == it->second.id) {
+				m_itemList->SelectItem(pItem, true);
+			}
+		}
+		break;
+
+	case 0x13: {
+		// Trophies: the course medals of this season and the last, then the
+		// special trophies, newest first.
+		m_trophyList.clear();
+		sTrophyStatistics& trophy = pDoc->m_myTrophy;
+		sTrophyStatistics& oldTrophy = pDoc->m_oldSeasonTrophy;
+		for (int course = 0; course <= 12; course++) {
+			for (int medal = 2; medal >= 0; medal--) {
+				if (trophy.m_medals[course][medal] > 0 || oldTrophy.m_medals[course][medal] > 0) {
+					sSpecialTrophy special;
+					special.m_count = trophy.m_medals[course][medal] + oldTrophy.m_medals[course][medal];
+					special.m_typeId = ((course | 0x2C00) << 16) | medal;
+					special.m_id = 0;
+					m_trophyList.push_back(special);
+				}
+			}
+		}
+		for (std::list<sSpecialTrophy>::iterator it = pDoc->m_mySpecialTrophies.begin(); it != pDoc->m_mySpecialTrophies.end(); ++it) {
+			m_trophyList.push_back(*it);
+		}
+		for (std::list<sSpecialTrophy>::iterator it = pDoc->m_specialTrophies.begin(); it != pDoc->m_specialTrophies.end(); ++it) {
+			m_trophyList.push_back(*it);
+		}
+		for (std::list<sSpecialTrophy>::reverse_iterator rit = m_trophyList.rbegin(); rit != m_trophyList.rend(); ++rit) {
+			m_itemList->AddItem(&*rit);
+		}
+		break;
+	}
+
+	case 0x14:
+		// Coupons.
+		for (std::list<sItemInfo>::iterator it = pDoc->m_itemInfoList.begin(); it != pDoc->m_itemInfoList.end(); ++it) {
+			if (ItemManager()->GetCouponKind(it->m_typeId)) {
+				m_itemList->AddItem(&*it);
+			}
+		}
+		break;
+
+	case 0x15:
+		// Quests (JP +0x3834).
+		for (std::list<sQuest>::iterator it = pDoc->m_questList.begin(); it != pDoc->m_questList.end(); ++it) {
+			m_itemList->AddItem(&*it);
+		}
+		break;
+
+	case 0x18:
+		// Replays (JP +0x3768).
+		if (IsLocalContent((localContentType_t)0x50)) {
+			pDoc->ReplaySavFileCheck();
+			for (std::list<sReplayFileInfo>::iterator it = pDoc->m_replayFileList.begin(); it != pDoc->m_replayFileList.end(); ++it) {
+				m_itemList->AddItem(&*it);
+			}
+		}
+		break;
+
+	case 0x1c:
+		// Cards (JP +0x37e0).
+		if (IsLocalContent((localContentType_t)0x52)) {
+			for (std::list<sCards>::iterator it = pDoc->m_myCardList.begin(); it != pDoc->m_myCardList.end(); ++it) {
+				m_itemList->AddItem(&*it);
+			}
+		}
+		break;
+
+	case 0x21:
+		// Furniture (JP +0x37d4).
+		for (std::list<sFurniture_List>::iterator it = pDoc->m_furnitureList.begin(); it != pDoc->m_furnitureList.end(); ++it) {
+			m_itemList->AddItem(&*it);
+		}
+		break;
+
+	case 0x1d:
+	case 0x1e:
+	case 0x1f:
+		if (IsLocalContent((localContentType_t)0x57)) {
+			unsigned long category = MyRoomCategoryFlag(subTab);
+			for (std::list<sFurniture_List>::iterator it = pDoc->m_furnitureList.begin(); it != pDoc->m_furnitureList.end(); ++it) {
+				if (((it->m_typeId >> 11) & 0x7FF) == category) {
+					m_itemList->AddItem(&*it);
+				}
+			}
+		}
+		break;
+
+	case 0x20:
+		for (std::list<sFurniture_List>::iterator it = pDoc->m_furnitureList.begin(); it != pDoc->m_furnitureList.end(); ++it) {
+			int kind = (it->m_typeId >> 11) & 0x7FF;
+			if ((kind >= 0 && kind < 7) || kind >= 10) {
+				m_itemList->AddItem(&*it);
+			}
+		}
+		break;
 	}
 
 	m_itemList->ResetTopRow();
@@ -1186,10 +1921,109 @@ void JpRealMyRoomMain::BuildDisplayStand(int subTab) {
 	}
 }
 
+// 0x61aa80
+void JpRealMyRoomMain::ShowMainModel(void) {
+	if (m_statModeWnd != NULL) {
+		m_statModeWnd->Enable(true);
+	}
+	m_statSource = 0;
+	SetLevelBar();
+}
+
+// 0x61aab0
+void JpRealMyRoomMain::ShowItemModel(void) {
+	if (m_statModeWnd != NULL) {
+		m_statModeWnd->Enable(false);
+	}
+	m_statSource = 1;
+	SetLevelBar();
+}
+
+// Port body (JP 0x61c960, the KR ChangeCaddie). Left out: the shared doc's
+// +0x1103c copy of the id, and in the lobby (RFLobbyDesktop::s_mode 0) the
+// doc's 0x643f40 with the preview type id before the "LobbyCaddie" message
+// 0x1a9.
+bool JpRealMyRoomMain::ChangeCaddie(uint32_t id) {
+	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
+	bool changed = false;
+	std::map<unsigned int, sCaddieInfo>::iterator it = pDoc->m_caddieMap.find(id);
+	if (it == pDoc->m_caddieMap.end()) {
+		m_caddieTypeId = 0;
+		m_caddieSerial = 0;
+		pDoc->m_myCaddieId = 0;
+		if (m_subTabIndex == 0xb) {
+			ReleasePreview(true);
+			m_itemList->UnselectAllItem();
+			ShowMainModel();
+			IActor* caddie = AfxGetTask()->GetActor("LobbyCaddie");
+			if (caddie != NULL) {
+				caddie << MsgObject(0, 0x1a6, 0, 0, 0, 0, 0);
+			}
+		}
+		return changed;
+	}
+
+	m_caddieSerial = (uint32_t)it->second.id;
+	m_caddieTypeId = (uint32_t)it->second.typeId;
+	m_caddiePreviewTypeId = (uint32_t)(it->second.cadItemTypeId != 0 ? it->second.cadItemTypeId : it->second.typeId);
+	IFF_STRUCT::sCaddie* pCaddie = ItemManager()->FindCaddie(m_caddieTypeId);
+	if (pCaddie != NULL && (pCaddie->m_level & 0x7f) <= pDoc->m_myLevel) {
+		if (it->second.id != pDoc->m_myCaddieId) {
+			changed = true;
+		}
+		pDoc->m_myCaddieId = it->second.id;
+	}
+
+	if (m_subTabIndex != 0xb) {
+		return changed;
+	}
+
+	BuildDisplayStand(0xb);
+	if (RFLobbyDesktop::s_mode != 0) {
+		LoadPreview(&m_caddiePreviewTypeId, false);
+	} else if (changed) {
+		IActor* caddie = AfxGetTask()->GetActor("LobbyCaddie");
+		if (caddie != NULL) {
+			caddie << MsgObject(0, 0x1a9, 0, 0, 0, 0, 0);
+		}
+	}
+	ShowMainModel();
+	return changed;
+}
+
+// Port body (JP 0x61cb70, the KR ChangeMascot). Left out: the shared doc's
+// +0x110a4 copy of the id.
+void JpRealMyRoomMain::ChangeMascot(uint32_t id) {
+	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
+	std::map<unsigned int, sMascotInfo>::iterator it = pDoc->m_myMascotMap.find(id);
+	if (it == pDoc->m_myMascotMap.end()) {
+		m_mascotTypeId = 0;
+		m_mascotSerial = 0;
+		pDoc->m_myMascotId = 0;
+		if (m_subTabIndex == 0xd) {
+			ReleasePreview(true);
+			m_itemList->UnselectAllItem();
+		}
+	} else {
+		m_mascotTypeId = (uint32_t)it->second.typeId;
+		m_mascotSerial = (uint32_t)it->second.id;
+		pDoc->m_myMascotId = it->second.id;
+		if (m_subTabIndex == 0xd) {
+			BuildDisplayStand(0xd);
+			LoadPreview(&m_mascotTypeId, false);
+			ShowItemModel();
+		}
+	}
+
+	if (IsLocalContent((localContentType_t)0x52)) {
+		pDoc->SendEquipItemSlot();
+	} else {
+		pDoc->SendEquipItemSlotByMascot();
+	}
+}
+
 // 0x61eaa0 (the KR ChangeCharacter). Left out: the note dialog result
-// (+0x124 == 1, OnNoteDlgResult) and 0x61aa80 (the +0x12c control's
-// vtable +0x18 with 1, +0x528 = 0, SetLevelBar) after the main tab 0
-// rebuild.
+// (+0x124 == 1, OnNoteDlgResult) and, in ShowMainModel, the +0x12c control.
 void JpRealMyRoomMain::RefreshCharacter(unsigned long id, bool onlyCurrent) {
 	CSharedDoc* pDoc = WSingleton<CSharedDoc>::Instance();
 	if (onlyCurrent) {
@@ -1227,10 +2061,13 @@ void JpRealMyRoomMain::RefreshCharacter(unsigned long id, bool onlyCurrent) {
 		BuildDisplayStand(m_subTabIndex);
 		LoadPreview(&m_charTypeId, false);
 		pDoc->m_characterMap[pDoc->m_myCharacterId];
+		ShowMainModel();
 	} else if (m_mainTabIndex == 4) {
 		pDoc->BuildMyPartTidList(info);
 		BuildDisplayStand(m_subTabIndex);
 		LoadPreview(&m_charTypeId, false);
+	} else if (m_statSource == 1) {
+		SetLevelBar();
 	}
 
 	// 0x6091a0: item_list scrolled to its top.
@@ -1239,11 +2076,11 @@ void JpRealMyRoomMain::RefreshCharacter(unsigned long id, bool onlyCurrent) {
 	}
 }
 
-// 0x61d7a0. Left out: SetLevelBar 0x61a750 (not written), the JP
-// SetItemDesc, the cases' club / aztec / gift / card helpers (0x61cc80 with
-// +0x514, 0x61ce00 with +0x524, 0x61aab0, the "st_cutin" caption, the
-// sub tab 0x18 shirt colour copy of the doc +0xa76..+0xa8a, 0x605720's card
-// book part).
+// 0x61d7a0. Left out: the JP SetItemDesc, the cases' club / aztec / gift /
+// card helpers (0x61cc80 with +0x514, 0x61ce00 with +0x524, 0x61aab0, the
+// "st_cutin" caption, the sub tab 0x18 shirt colour copy of the doc
+// +0xa76..+0xa8a, 0x605720's card book part) and 0x604f40 after
+// SetPetAreaRect.
 void JpRealMyRoomMain::SetSubTab(int subTab, bool force) {
 	if (!force && m_subTabIndex == subTab && !m_subTabDirty) {
 		return;
@@ -1277,6 +2114,7 @@ void JpRealMyRoomMain::SetSubTab(int subTab, bool force) {
 
 	m_subTabIndex = subTab;
 	BuildDisplayStand(subTab);
+	SetLevelBar();
 	m_itemDesc->ClearLine();
 	m_subTab->Select(m_subTabIndex);
 	if (m_giftBg != NULL) {
@@ -1422,6 +2260,8 @@ void JpRealMyRoomMain::SetSubTab(int subTab, bool force) {
 		JpLobbyDesktop_UpdateLobbyCamera();
 	}
 
+	SetPetAreaRect();
+
 	// 0x6091a0: item_list scrolled to its top.
 	if (m_itemList->GetScrollBar() != NULL) {
 		m_itemList->GetScrollBar()->SetCurTopRow(0);
@@ -1442,11 +2282,8 @@ void JpRealMyRoomMain::HideStatGroup(void) {
 	}
 }
 
-// 0x61f530. Left out: the test, under the +0x5a0 critical section, that
-// the +0x588 another-hand job (+0x598 / +0x59c, 0x14-byte records) is
-// done, else tab_main reselects the current tab (the job is not ported);
-// ChangeCaddie 0x61c960 (the doc's +0xa26) on tab 2, ChangeMascot
-// 0x61cb70 (+0xa8e) on tab 3 and 0x61aab0 on tabs 4 and 5 (not written).
+// 0x61f530: while the preview's job runs, tab_main goes back to the
+// current tab.
 void JpRealMyRoomMain::OnTabMainUp(void) {
 	TButtonItem* pItem = m_mainTab->GetSelected();
 	if (pItem == NULL) {
@@ -1454,6 +2291,11 @@ void JpRealMyRoomMain::OnTabMainUp(void) {
 	}
 
 	int tab = pItem->index;
+	if (m_petLoader.IsWorking(0)) {
+		m_mainTab->Select(m_mainTabIndex);
+		return;
+	}
+
 	SetMainTab(tab, false);
 	switch (tab) {
 	case 0:
@@ -1465,15 +2307,19 @@ void JpRealMyRoomMain::OnTabMainUp(void) {
 		break;
 	case 2:
 		SetSubTab(0xb, false);
+		ChangeCaddie(WSingleton<CSharedDoc>::Instance()->m_myCaddieId);
 		break;
 	case 3:
 		SetSubTab(0xd, false);
+		ChangeMascot(WSingleton<CSharedDoc>::Instance()->m_myMascotId);
 		break;
 	case 4:
 		SetSubTab(0xe, false);
+		ShowItemModel();
 		break;
 	case 5:
 		SetSubTab(0x13, false);
+		ShowItemModel();
 		ReleasePreview(true);
 		break;
 	}

@@ -461,12 +461,28 @@ static void JpDropGameRoomGroups(std::list<FrGuiItem*>& guiList) {
 // name) or a macro. Check with the port's JP control check
 // (docs/JP_CLIENT.md, "KR controls the JP data lacks").
 //
+// Macros the KR layouts get a copy of, reshaped for the KR code, while the JP
+// forms keep the original: the JP stat box is the macro stat_default (one
+// group, stat_group), which the JP shop and My Room forms bind as
+// stat_group.*, and the KR layouts SHOPMAIN and REALMYROOM (the forms
+// registered again as KR layouts) reach as st.*.
+static const char* const kJpKrMacroCopies[][2] = {
+	// JP macro, the KR layouts' copy
+	{ "stat_default", "stat_default_kr" },
+};
+
+// The KR layouts' macro items switched to the KR copy.
+static const char* const kJpKrMacroItems[][3] = {
+	// element, item, macro
+	{ "SHOPMAIN", "st_com", "stat_default_kr" },
+	{ "REALMYROOM", "st_com", "stat_default_kr" },
+};
+
 // Renamed groups: the KR code reaches the controls inside through the KR
-// group name (SHOPMAIN.st.epower). The JP stat box is the macro stat_default
-// (one group, stat_group), shared by the shop and My Room.
+// group name (SHOPMAIN.st.epower).
 static const char* const kJpRenames[][3] = {
 	// element, JP name, KR name
-	{ "stat_default", "stat_group", "st" },
+	{ "stat_default_kr", "stat_group", "st" },
 };
 
 // Items moved into a group: the KR My Room has its stat box and the
@@ -486,21 +502,21 @@ static const char* const kJpMoves[][3] = {
 // type, zero-sized so it never draws or takes a click.
 static const char* const kJpPlaceholders[][3] = {
 	// element, path (group.name), KR type
-	{ "stat_default", "st.selected_name", "STATIC" },
-	{ "stat_default", "st.selframe", "AREA" },
-	{ "stat_default", "st.selitemicon", "AREA" },
-	{ "stat_default", "st.selitem", "BUTTON" },
-	{ "stat_default", "st.selitem_prev", "BUTTON" },
-	{ "stat_default", "st.selitem_next", "BUTTON" },
-	{ "stat_default", "st.stat_frame", "AREA" },
-	{ "stat_default", "st.stat_text", "AREA" },
-	{ "stat_default", "st.stat_part", "VIEWER" },
-	{ "stat_default", "st.stat_all", "VIEWER" },
-	{ "stat_default", "st.powerbar", "GAUGEBAR" },
-	{ "stat_default", "st.controlbar", "GAUGEBAR" },
-	{ "stat_default", "st.impactbar", "GAUGEBAR" },
-	{ "stat_default", "st.spinbar", "GAUGEBAR" },
-	{ "stat_default", "st.curvebar", "GAUGEBAR" },
+	{ "stat_default_kr", "st.selected_name", "STATIC" },
+	{ "stat_default_kr", "st.selframe", "AREA" },
+	{ "stat_default_kr", "st.selitemicon", "AREA" },
+	{ "stat_default_kr", "st.selitem", "BUTTON" },
+	{ "stat_default_kr", "st.selitem_prev", "BUTTON" },
+	{ "stat_default_kr", "st.selitem_next", "BUTTON" },
+	{ "stat_default_kr", "st.stat_frame", "AREA" },
+	{ "stat_default_kr", "st.stat_text", "AREA" },
+	{ "stat_default_kr", "st.stat_part", "VIEWER" },
+	{ "stat_default_kr", "st.stat_all", "VIEWER" },
+	{ "stat_default_kr", "st.powerbar", "GAUGEBAR" },
+	{ "stat_default_kr", "st.controlbar", "GAUGEBAR" },
+	{ "stat_default_kr", "st.impactbar", "GAUGEBAR" },
+	{ "stat_default_kr", "st.spinbar", "GAUGEBAR" },
+	{ "stat_default_kr", "st.curvebar", "GAUGEBAR" },
 	// The bars' buttons the JP client dropped (item storage, scratch, the
 	// messenger and gift alarms).
 	{ "under_bar_m", "ubar.itemstorage", "BUTTON" },
@@ -564,8 +580,26 @@ static std::list<FrGuiItem*>* JpGroupList(std::list<FrGuiItem*>& guiList, const 
 	return pList;
 }
 
+// The KR layouts' copy of a JP macro (kJpKrMacroCopies), or 0.
+static const char* JpKrMacroCopy(const std::string& macro) {
+	for (unsigned int i = 0; i < sizeof(kJpKrMacroCopies) / sizeof(kJpKrMacroCopies[0]); i++) {
+		if (stricmp(macro.c_str(), kJpKrMacroCopies[i][0]) == 0) {
+			return kJpKrMacroCopies[i][1];
+		}
+	}
+	return 0;
+}
+
 static void JpReshape(const std::string& element, std::list<FrGuiItem*>& guiList) {
 	unsigned int i;
+	for (i = 0; i < sizeof(kJpKrMacroItems) / sizeof(kJpKrMacroItems[0]); i++) {
+		if (stricmp(element.c_str(), kJpKrMacroItems[i][0]) == 0) {
+			FrGuiItem* pItem = JpFindItem(guiList, kJpKrMacroItems[i][1]);
+			if (pItem != 0 && pItem->m_type == GI_MACROITEM) {
+				pItem->m_resource = kJpKrMacroItems[i][2];
+			}
+		}
+	}
 	for (i = 0; i < sizeof(kJpRenames) / sizeof(kJpRenames[0]); i++) {
 		if (stricmp(element.c_str(), kJpRenames[i][0]) == 0) {
 			FrGuiItem* pItem = JpFindItem(guiList, kJpRenames[i][1]);
@@ -719,6 +753,14 @@ bool FrElementDoc::LoadXml(const char* pszXmlFilename, std::list<FrElement*>& te
 			}
 			if (elementType == ED_MACROITEM && pElement != 0) {
 				JpReshape(name, static_cast<FrElementMacroItem*>(pElement)->m_guiList);
+				const char* krName = JpKrMacroCopy(name);
+				if (krName != 0) {
+					FrElementMacroItem* pCopy = new FrElementMacroItem;
+					pCopy->m_name = krName;
+					pCopy->Init(pNode);
+					JpReshape(krName, pCopy->m_guiList);
+					tempList.push_back(pCopy);
+				}
 			}
 			if (elementType == ED_LAYOUT && (stricmp(name.c_str(), "TOPPAGE") == 0 || stricmp(name.c_str(), "AVATARCHAT_MAIN") == 0)) {
 				JpAddBars(static_cast<FrElementLayout*>(pElement)->m_guiList, false);

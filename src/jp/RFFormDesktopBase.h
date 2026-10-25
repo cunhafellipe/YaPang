@@ -71,6 +71,11 @@ public:
 	// exe's read is > 0 (and so differs from every modal count).
 	bool IsFocusLayoutValuePositive() const { return this->m_brushDesc != NULL; }
 
+	// Ours: the pages handed over in the avatar chat store +0x184 directly
+	// when they close (CRealMyRoomMain's destructor 0x61d610, CShopMain's
+	// shutdown): 0, so SyncInputState stops holding the bars' input.
+	void ClearPendingTaskChange() { m_pendingTaskChange = 0; }
+
 protected:
 	bool m_updateRegistered;      // 0x180 set by ShowDesktop, cleared by OnDestroy
 	int32_t m_pendingTaskChange;  // 0x184 0 at Initialize/ShowDesktop(true); 1 after the shop/my-room buttons hand over to the avatar-chat task

@@ -183,8 +183,8 @@ protected:
 	void OnMessenger_FriendListOwnerDraw(PG_MSGARG param);
 	void OnMessenger_FriendListRBtnDown(void);
 	void OnMessenger_GuildListOwnerDraw(PG_MSGARG param);
-	void DrawFriendGroup(int param);
-	void DrawGuildGroup(int param);
+	void DrawFriendGroup(PG_PTRINT param);
+	void DrawGuildGroup(PG_PTRINT param);
 
 	FrListBox* m_pFriendList;            // 0x110
 	FrListBox* m_pGuildList;             // 0x114

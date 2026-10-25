@@ -34,18 +34,21 @@
 //
 // Status: GetRTTI, GetMessageMap, the creator, Start, SelectMenu's case 9,
 // SetMainTab 0x61e4e0, SetSubTab 0x61d7a0, OnTabMainUp 0x61f530,
-// RefreshCharacter 0x61eaa0, ShowUpgradeButtons 0x605010 and most INIT
-// handlers are the JP ones; the constructor, the destructor, OnInit,
-// Shutdown, HandleMsg, OnAnotherHand, the preview helpers 0x605530 /
-// 0x605640 (the +0x588 job is not modelled), BuildDisplayStand 0x61af80
-// (sub tab 0x16 only), OnItemListOwnerDraw 0x6166b0 (frame, icon, name),
+// RefreshCharacter 0x61eaa0, ShowUpgradeButtons 0x605010, the preview
+// helpers 0x605530 / 0x605640 / 0x604ed0 / 0x60d9b0, OnAnotherHand 0x611f50,
+// SetLevelBar 0x61a750 and most INIT handlers are the JP ones; the
+// constructor, the destructor, OnInit, Shutdown, HandleMsg, OnProc
+// 0x60ca50, ShowPet 0x60e8b0 and the pet owner draw 0x61f6d0 (the KR
+// CExhibition in place of the JP character preview class),
+// BuildDisplayStand 0x61af80 (the KR cases on the JP sub tabs),
+// OnItemListOwnerDraw 0x6166b0 (frame, icon, name),
 // OnItemListBtnDown 0x620e00 / SelectItemList 0x61f8b0 (the parts and
 // card cases in the lobby) and the INIT handlers whose comment says "Port
 // body" leave out what the port does not model (the shared-doc copies,
 // the 0xe7688c tooltips, the card page). The message map (176 JP rows,
 // list with handler VAs in temps/orchestrator/refresh/R990_rows.txt) has
-// its INIT rows, item_list OWNERDRAW / LBUTTONDOWN, tab_main / tab_sub
-// LBUTTONUP, close_wnd (0x604eb0) and storage_open_btn (0x6229b0); the
+// its INIT rows, item_list OWNERDRAW / LBUTTONDOWN, pet OWNERDRAW, tab_main /
+// tab_sub LBUTTONUP, close_wnd (0x604eb0) and storage_open_btn (0x6229b0); the
 // other owner draws and clicks (item_list RBUTTONDOWN 0x622330 / MOUSEMOVE
 // 0x607010 / DBLCLICK 0x614be0, equip_cancel 0x61a640, equip_reset
 // 0x61a6c0, item_slot 0x607d30 / 0x61a710, UnselectItemList 0x61dfb0)
@@ -60,19 +63,22 @@
 #include "padding.h"
 #include "frcmdtarget.h"
 #include "frform.h"
+#include <list>
+
 #include "AnotherHand.h"
 #include "JpFrForms.h"
 #include "wtypes.h"
 #include "shared/globalgamedefine.h"
 
 class Bitmap;
+class CExhibition;
 class FrArea;
 class FrButton;
 class FrEdit;
-class FrGaugeBar;
 class FrGroupBox;
 struct FrListItem;
 class FrListBox;
+class FrStatic;
 class FrTabButton;
 class FrViewer;
 class FrWnd;
@@ -130,6 +136,10 @@ public:
 	JpRealMyRoomMain(void);                                           // 0x61f1f0
 	virtual ~JpRealMyRoomMain(void);                                  // [1] 0x61f500 (deleting)
 
+	// Port body (JP 0x60ca50): the character preview's frame (the rest of
+	// the JP OnProc, ESCAPE and the skin pages' slides, is left out).
+	virtual void OnProc(const float dt);                              // [9] 0x60ca50
+
 	// Port bodies (Start is the JP one): the JP OnInit 0x620c30 fills the page from the shared
 	// doc and the controls of the INIT handlers (not written yet), then
 	// calls FrForm::OnInit (0xbe6570); Shutdown 0x6165d0 tears the page
@@ -154,8 +164,7 @@ protected:
 	static sFRESH_MSGMAP _MsgMap;                                     // 0xe1347c
 	virtual const sFRESH_MSGMAP* GetMessageMap(void) const;           // 0x604b50
 
-	// Port body (the JP 0x611f50 runs the KR CRealMyRoomMain's
-	// another-hand jobs): nothing is queued while OnInit is a port body.
+	// The KR CRealMyRoomMain::OnAnotherHand: job 0 is ShowPet(*pData).
 	virtual void OnAnotherHand(int nWork, void* pData);               // 0x611f50
 
 	// Message-map handlers (the rows written so far; the row list with
@@ -182,12 +191,14 @@ protected:
 	void OnItemDescBgInit(intptr_t param);                            // 0x607750
 	void OnItemDescInit(intptr_t param);                              // 0x6078f0
 	// Owner draws (JpRealMyRoomMainDraw.cpp; the FRCMD_OWNERDRAW rows of
-	// 0xe13488 not written yet: pet 0x61f6d0, fitem_list 0x60fb50,
+	// 0xe13488 not written yet: fitem_list 0x60fb50,
 	// card_book_back_bg 0x6056e0, card_book
 	// 0x605700, cardpacklist 0x60ff10, item_storage_bgi 0x60a3e0,
 	// item_storage_list 0x60a6b0, item_storage_index 0x60a8d0,
 	// item_storage_dragdrop 0x60abf0 are not written yet).
 	void OnItemListOwnerDraw(intptr_t param);                         // 0x6166b0 middle_ui.item_list
+	// Port body (JP 0x61f6d0, the KR OnPetOwnerDraw): the preview drawn.
+	void OnPetOwnerDraw(intptr_t param);                              // 0x61f6d0 middle_ui.pet
 	void OnItemListBtnDown(void);                                     // 0x620e00 middle_ui.item_list LBUTTONDOWN
 	// 0x61f8b0 (KR name, from the JP's decorated name): wears the row's
 	// item (the parts case only, JpRealMyRoomMainDraw.cpp).
@@ -203,6 +214,7 @@ protected:
 	void OnGiftDescInit(intptr_t param);                              // 0x607dc0
 	void OnStatGroupInit(intptr_t param);                             // 0x607e40
 	void OnStatTextInit(intptr_t param);                              // 0x607ed0
+	void OnStatArrowInit(intptr_t param);                             // 0x607f40
 	void OnPowerBarInit(intptr_t param);                              // 0x607fa0
 	void OnControlBarInit(intptr_t param);                            // 0x608010
 	void OnImpactBarInit(intptr_t param);                             // 0x608080
@@ -283,14 +295,40 @@ protected:
 	// 0x61af80 (KR name, from the JP's decorated name): fills item_list
 	// for a sub tab (jump table 0x61c82c over 0x61c88c).
 	void BuildDisplayStand(int subTab);                               // 0x61af80
-	// 0x605530 / 0x605640 (names ours): drop the character preview (after
-	// waiting for the +0x588 job when wait), or queue its build for the
-	// type id at typeId unless the preview already shows it.
+	// 0x605530 / 0x605640 (the KR HidePet and its SafeLoadPet-like
+	// caller; names ours): drop the character preview (after waiting for
+	// the m_petLoader job when wait), or queue its build for the type id at
+	// typeId unless the preview already shows it.
 	void ReleasePreview(bool wait);                                   // 0x605530
 	void LoadPreview(const uint32_t* typeId, bool force);             // 0x605640
-	// 0x61a750 (the KR SetLevelBar, not written): the five stat bars'
-	// "%d/%d" captions.
+	// 0x604ed0 (the KR SetPetAreaRect on the JP sub tabs): skin_pet for the
+	// sub tabs 0xe-0x10, skin_pet2 for 0x11 and 0x23, pet otherwise.
+	void SetPetAreaRect(void);                                        // 0x604ed0
+	// Port body (JP 0x60e8b0, the KR ShowPet; JpRealMyRoomMain.cpp): the
+	// m_petLoader job, the preview of typeId built in m_petArea.
+	void ShowPet(unsigned long typeId);                               // 0x60e8b0
+	// 0x60d9b0 (name ours): the preview drawn when the job is not running.
+	void DisplayPreview(void);                                        // 0x60d9b0
+	// 0x61a750 (the KR SetLevelBar): the five stat values, "value/max"
+	// (the mastery points the stat can still take added).
 	void SetLevelBar(void);                                           // 0x61a750
+	// 0x61aa80 / 0x61aab0 (the KR ShowMainModel and its item twin; names
+	// ours): m_statModeWnd enabled or disabled, the stat box showing the
+	// character (m_statSource 0) or the item (1), then SetLevelBar.
+	void ShowMainModel(void);                                         // 0x61aa80
+	void ShowItemModel(void);                                         // 0x61aab0
+	// Port bodies (JP 0x61c960 / 0x61cb70, the KR ChangeCaddie /
+	// ChangeMascot; JpRealMyRoomMain.cpp): the caddie or mascot id shown
+	// and equipped, and on its sub tab (0xb / 0xd) the list rebuilt and its
+	// preview loaded. ChangeCaddie is false when the caddie stayed (not
+	// owned, or above the player's level).
+	bool ChangeCaddie(uint32_t id);                                   // 0x61c960
+	void ChangeMascot(uint32_t id);                                   // 0x61cb70
+	// 0x615ab0 (the KR UnequipItem): the item slot emptied, its item back
+	// in item_list.
+	void UnequipItem(DWORD* pItemId);                                 // 0x615ab0
+	// 0x613f70 (the KR IsInItemList): an item_list row has the type id.
+	bool IsInItemList(unsigned long typeId);                          // 0x613f70
 
 	// The KR CRealMyRoomMain::SelectMenu with the JP menu numbers (jump
 	// table 0x622914, cases 0..9): only case 9 (close) is written.
@@ -315,16 +353,21 @@ protected:
 
 	PADDING(0x124, 0x128);
 	FrGroupBox* m_middleUi;              // 0x128 "middle_ui"
-	PADDING(0x12c, 0x134);
+	// A control ShowMainModel enables and ShowItemModel disables; none of
+	// the message map's INIT handlers stores it (NULL in the port).
+	FrWnd* m_statModeWnd;                // 0x12c
+	PADDING(0x130, 0x134);
 	FrTabButton* m_mainTab;              // 0x134 "middle_ui.tab_main"
 	FrTabButton* m_subTab;               // 0x138 "middle_ui.tab_sub"
 	PADDING(0x13c, 0x144);
 	FrListBox* m_itemList;               // 0x144 "middle_ui.item_list"
 	FrArea* m_tabText[2];                // 0x148 the two "middle_ui.tabtxt2" rows
-	PADDING(0x150, 0x158);
+	// The preview's area, one of m_skinPet / m_pet (SetPetAreaRect).
+	FrArea* m_petArea;                   // 0x150
+	PADDING(0x154, 0x158);
 	FrGroupBox* m_statGroup;             // 0x158 "stat_group"
-	// 0x15c "epower", "econtrol", "eimpact", "espin", "ecurve"
-	FrGaugeBar* m_statBar[5];            // 0x15c
+	// 0x15c "epower", "econtrol", "eimpact", "espin", "ecurve" (SetLevelBar)
+	FrStatic* m_statValue[5];            // 0x15c
 	FrArea* m_itemDescBg;                // 0x170 "middle_ui.item_desc_bg"
 	FrEdit* m_itemDesc;                  // 0x174 "middle_ui.item_desc"
 	FrViewer* m_itemHideDescBg;          // 0x178 "item_hide_desc_bg"
@@ -395,7 +438,22 @@ protected:
 	DWORD* m_pCharCards;                 // 0x4f4 (its card / aux part type ids, 5)
 	uint32_t m_charTypeId;               // 0x4f8 (the preview job's argument)
 	uint32_t m_charSerial;               // 0x4fc (its id, the doc's m_myCharacterId)
-	PADDING(0x500, 0x52c);
+	// The shown caddie (ChangeCaddie): its type id, its id and the type id
+	// the preview shows (its caddie item's when it has one).
+	uint32_t m_caddieTypeId;             // 0x500
+	// The shown caddie's and club set's ids, the shown ball's type id
+	// (BuildDisplayStand; the KR m_caddieValueA, m_clubSerial and the ball).
+	uint32_t m_caddieSerial;             // 0x504
+	uint32_t m_caddiePreviewTypeId;      // 0x508
+	// The shown mascot (ChangeMascot): its type id and id.
+	uint32_t m_mascotTypeId;             // 0x50c
+	uint32_t m_mascotSerial;             // 0x510
+	uint32_t m_clubSerial;               // 0x514
+	PADDING(0x518, 0x524);
+	uint32_t m_ballTypeId;               // 0x524
+	// What SetLevelBar shows (the KR m_statSource): 0 the character
+	// (RefreshCharacter's 0x61aa80), 1 the club set.
+	int m_statSource;                    // 0x528
 	int m_mainTabIndex;                  // 0x52c (SetMainTab; OnInit 0)
 	int m_subTabIndex;                   // 0x530 (SetSubTab; OnInit 0x16)
 	PADDING(0x534, 0x53c);
@@ -408,11 +466,13 @@ protected:
 	float m_itemHideDescBottom2;         // 0x550
 	int m_furnitureTabIndex;             // 0x554 (ftab_main's selection)
 	PADDING(0x558, 0x584);
-	// 0x584: the character preview the +0x588 another-hand job builds
-	// (0x605640; +0x55c its character id; deleted through its vtable [0]
-	// by 0x605530); while there is one SetMainTab leaves the sub tab alone.
-	void* m_preview;                     // 0x584
-	PADDING(0x588, 0x710);
+	// The character preview m_petLoader's job builds (ShowPet; the JP
+	// exhibition class's +0x55c is its type id); while there is one
+	// SetMainTab leaves the sub tab alone.
+	CExhibition* m_petExhibition;        // 0x584
+	// The preview's loader (ctor 0x98ad90, BreakWorkingThread 0x98af10;
+	// the JP CAnotherHand is 0x184 bytes, the KR 0x188).
+	CAnotherHand m_petLoader;            // 0x588
 	// A copy of CSharedDoc's owned characters (OnInit; the JP doc +0x3704),
 	// compared by Net_EquipDresserParts.
 	std::map<unsigned int, sCharacterInfo> m_characterMap; // 0x710
@@ -433,7 +493,9 @@ protected:
 	// adds [14] "ucc_exhibit_btn" and [15] "state_view", and [10] is
 	// "poster_btn"; LoadMyRoomImages).
 	sItemListArea m_itemListArea[16];    // 0x794
-	PADDING(0x954, 0xa12);
+	// The trophy sub tab's rows (BuildDisplayStand; the KR m_initList).
+	std::list<sSpecialTrophy> m_trophyList; // 0x954
+	PADDING(0x960, 0xa12);
 	// SetSubTab rebuilds the current sub tab once when set (cleared there).
 	bool m_subTabDirty;                  // 0xa12
 	PADDING(0xa13, 0xa14);
@@ -466,12 +528,14 @@ protected:
 CHECK_SIZE(JpRealMyRoomMain, 0xae0);
 BEGIN_LAYOUT_CHECK(JpRealMyRoomMain)
 	CHECK_FIELD(JpRealMyRoomMain, m_middleUi, 0x128);
+	CHECK_FIELD(JpRealMyRoomMain, m_statModeWnd, 0x12c);
 	CHECK_FIELD(JpRealMyRoomMain, m_mainTab, 0x134);
 	CHECK_FIELD(JpRealMyRoomMain, m_subTab, 0x138);
 	CHECK_FIELD(JpRealMyRoomMain, m_itemList, 0x144);
 	CHECK_FIELD(JpRealMyRoomMain, m_tabText, 0x148);
+	CHECK_FIELD(JpRealMyRoomMain, m_petArea, 0x150);
 	CHECK_FIELD(JpRealMyRoomMain, m_statGroup, 0x158);
-	CHECK_FIELD(JpRealMyRoomMain, m_statBar, 0x15c);
+	CHECK_FIELD(JpRealMyRoomMain, m_statValue, 0x15c);
 	CHECK_FIELD(JpRealMyRoomMain, m_itemDescBg, 0x170);
 	CHECK_FIELD(JpRealMyRoomMain, m_itemDesc, 0x174);
 	CHECK_FIELD(JpRealMyRoomMain, m_itemHideDescBg, 0x178);
@@ -514,17 +578,27 @@ BEGIN_LAYOUT_CHECK(JpRealMyRoomMain)
 	CHECK_FIELD(JpRealMyRoomMain, m_pCharCards, 0x4f4);
 	CHECK_FIELD(JpRealMyRoomMain, m_charTypeId, 0x4f8);
 	CHECK_FIELD(JpRealMyRoomMain, m_charSerial, 0x4fc);
+	CHECK_FIELD(JpRealMyRoomMain, m_caddieTypeId, 0x500);
+	CHECK_FIELD(JpRealMyRoomMain, m_caddieSerial, 0x504);
+	CHECK_FIELD(JpRealMyRoomMain, m_caddiePreviewTypeId, 0x508);
+	CHECK_FIELD(JpRealMyRoomMain, m_mascotTypeId, 0x50c);
+	CHECK_FIELD(JpRealMyRoomMain, m_mascotSerial, 0x510);
+	CHECK_FIELD(JpRealMyRoomMain, m_clubSerial, 0x514);
+	CHECK_FIELD(JpRealMyRoomMain, m_ballTypeId, 0x524);
+	CHECK_FIELD(JpRealMyRoomMain, m_statSource, 0x528);
 	CHECK_FIELD(JpRealMyRoomMain, m_mainTabIndex, 0x52c);
 	CHECK_FIELD(JpRealMyRoomMain, m_subTabIndex, 0x530);
 	CHECK_FIELD(JpRealMyRoomMain, m_itemDescPos, 0x53c);
 	CHECK_FIELD(JpRealMyRoomMain, m_itemDescLeft, 0x544);
 	CHECK_FIELD(JpRealMyRoomMain, m_furnitureTabIndex, 0x554);
-	CHECK_FIELD(JpRealMyRoomMain, m_preview, 0x584);
+	CHECK_FIELD(JpRealMyRoomMain, m_petExhibition, 0x584);
+	CHECK_FIELD(JpRealMyRoomMain, m_petLoader, 0x588);
 	CHECK_FIELD(JpRealMyRoomMain, m_caddieId, 0x720);
 	CHECK_FIELD(JpRealMyRoomMain, m_equipItem, 0x730);
 	CHECK_FIELD(JpRealMyRoomMain, m_equipSkin, 0x770);
 	CHECK_FIELD(JpRealMyRoomMain, m_mascotId, 0x788);
 	CHECK_FIELD(JpRealMyRoomMain, m_itemListArea, 0x794);
+	CHECK_FIELD(JpRealMyRoomMain, m_trophyList, 0x954);
 	CHECK_FIELD(JpRealMyRoomMain, m_subTabDirty, 0xa12);
 	CHECK_FIELD(JpRealMyRoomMain, m_uccDrawRects, 0xa14);
 	CHECK_FIELD(JpRealMyRoomMain, m_uiState, 0xa3c);
