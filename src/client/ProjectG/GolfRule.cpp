@@ -11300,13 +11300,14 @@ void CGolfRule::ReturnLobby(bool roomList) {
 					case 12:
 					case 14:
 					case 19:
-						// JP 0x67cdca-0x67cdf5, then the JP lobby's 0x2e
-						// (see below).
+						// JP 0x67cdca-0x67cdf5. The JP then posts its 0x2e
+						// (JP 0x67cde5-0x67ce52, the KR 0x2d): not ported.
 						PostMsg(0, "Lobby", 0x8B, 0xB, 0, 0, 0);
 						break;
 					case 20:
 					case 21:
-						// JP 0x67ce07-0x67ce2a, then the JP lobby's 0x2e.
+						// JP 0x67ce07-0x67ce2a. The JP then posts its 0x2e
+						// (JP 0x67ce1a-0x67ce52, the KR 0x2d): not ported.
 						PostMsg(0, "Lobby", 0x8B, 0xA, 0, 0, 0);
 						break;
 					default:
@@ -11320,14 +11321,21 @@ void CGolfRule::ReturnLobby(bool roomList) {
 				break;
 			}
 
-			// JP 0x67ce57-0x67cec5 then posts the JP lobby's 0x30, 0xf,
-			// 0xe and, for room type 6 with game statistics (JP +0x10012,
-			// the KR m_gameStatistics[0].exp != 0xFFFFFFFF), 0x2e. The JP
-			// lobby forwards all four to the room form at CLobbyMain
-			// +0x780 (0x30 -> 0x507380, 0xf -> 0x50c760, 0xe -> 0x50eb20 and
-			// 0x50c760, 0x2e -> 0x5070c0); the port's CLobbyMain has no JP
-			// room form and handles these numbers as the KR room (0x30 a
-			// friend's invitation, 0x2e the chat window): not posted.
+			// JP 0x67ce57-0x67cec5: the JP lobby's 0x30, 0xf, 0xe and, for
+			// room type 6 with game statistics (JP +0x10012, the KR
+			// m_gameStatistics[0].exp != 0xFFFFFFFF), 0x2e, all with zero
+			// parameters. The JP lobby forwards them to the room form at
+			// CLobbyMain +0x780 (0x30 -> 0x507380, 0xf -> 0x50c760, 0xe ->
+			// 0x50eb20 and 0x50c760, 0x2e -> 0x5070c0). The port's senders
+			// use the KR ids and its CLobbyMain forwards those to the JP
+			// room form, so these are the KR 0x2f, 0xf, 0xe and 0x2d.
+			PostMsg(this, "Lobby", 0x2F, 0, 0, 0, 0);
+			PostMsg(this, "Lobby", 0xF, 0, 0, 0, 0);
+			PostMsg(this, "Lobby", 0xE, 0, 0, 0, 0);
+
+			if (CSharedDoc::Instance()->m_roomType == 6 && CSharedDoc::Instance()->m_gameStatistics[0].exp != 0xFFFFFFFF) {
+				PostMsg(this, "Lobby", 0x2D, 0, 0, 0, 0);
+			}
 #else
 			if (IsMassGame()) {
 				if (CSharedDoc::Instance()->m_roomType == 10) {

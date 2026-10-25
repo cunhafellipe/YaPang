@@ -2626,6 +2626,143 @@ static bool IsShopSpecialItem(unsigned long typeId) {
 	return false;
 }
 
+// 0xa89000 (the KR PartCompare with the JP tests; name ours, called by
+// Build_Parts in JpShopMainBuild.cpp): a null right item last; the JP first
+// walks the CSharedDoc map +0x113e0 (Jp_SharedDoc_GetItemLimitKind's map)
+// in key order, and the item its entries name first sorts first; the port's
+// CSharedDoc has no such map, so that walk finds neither item. Then: a
+// listed right item in its sale period compares false; UCC display clothes
+// first (by rank, then type id); the data_d45760 parts first; items with a
+// sale period first (a listed item's only while it runs), dated before
+// undated; m_flags1 bit 0, then bit 1; discounted items (m_discountPrice
+// below m_price, JP +0x78 / +0x74) first; then the level range; two parts by
+// slot; then by type id, highest first.
+bool JpPartCompare(const void* lhs, const void* rhs) {
+	const IFF_ITEM_COMMON* left = (const IFF_ITEM_COMMON*)lhs;
+	const IFF_ITEM_COMMON* right = (const IFF_ITEM_COMMON*)rhs;
+
+	if (left == NULL) {
+		return false;
+	}
+	if (right == NULL) {
+		return true;
+	}
+
+	if (ShopListKind(*right) == 2 && ShopIsInSalePeriod(right->m_typeId)) {
+		return false;
+	}
+
+	if (UccManager()->IsDisplayUccClothes(left) && !UccManager()->IsDisplayUccClothes(right)) {
+		return true;
+	}
+	if (UccManager()->IsDisplayUccClothes(right) && !UccManager()->IsDisplayUccClothes(left)) {
+		return false;
+	}
+	if (UccManager()->IsDisplayUccClothes(left) && UccManager()->IsDisplayUccClothes(right)) {
+		const sDisplayUccClothes* leftUcc = (const sDisplayUccClothes*)lhs;
+		const sDisplayUccClothes* rightUcc = (const sDisplayUccClothes*)rhs;
+
+		if (leftUcc->m_rank < rightUcc->m_rank) {
+			return true;
+		}
+		if (leftUcc->m_rank == rightUcc->m_rank) {
+			return leftUcc->m_typeId < rightUcc->m_typeId;
+		}
+		if (leftUcc->m_rank > rightUcc->m_rank) {
+			return false;
+		}
+	}
+
+	if (IsShopSpecialItem(left->m_typeId) && !IsShopSpecialItem(right->m_typeId)) {
+		return true;
+	}
+
+	_SYSTEMTIME *leftBegin = NULL, *leftEnd = NULL, *rightBegin = NULL, *rightEnd = NULL;
+	bool leftHasPeriod = ItemManager()->HasSalePeriod(left->m_typeId, &leftBegin, &leftEnd);
+	bool rightHasPeriod = ItemManager()->HasSalePeriod(right->m_typeId, &rightBegin, &rightEnd);
+
+	if (leftHasPeriod && ShopListKind(*left) == 2 && !ShopIsInSalePeriod(left->m_typeId)) {
+		leftHasPeriod = false;
+	}
+	if (rightHasPeriod && ShopListKind(*right) == 2 && !ShopIsInSalePeriod(right->m_typeId)) {
+		rightHasPeriod = false;
+	}
+
+	if (leftHasPeriod || rightHasPeriod) {
+		if (!leftHasPeriod) {
+			return false;
+		}
+		if (!rightHasPeriod) {
+			return true;
+		}
+		bool leftDated = leftBegin->wYear != 0 || leftEnd->wYear != 0;
+		bool rightDated = rightBegin->wYear != 0 || rightEnd->wYear != 0;
+		if (leftDated && !rightDated) {
+			return true;
+		}
+		if (!leftDated && rightDated) {
+			return false;
+		}
+	}
+
+	bool leftHit = (left->m_flags1 & 1) != 0;
+	if (leftHit && (right->m_flags1 & 1) == 0) {
+		return true;
+	}
+	if ((right->m_flags1 & 1) != 0 && !leftHit) {
+		return false;
+	}
+	bool leftNew = ((left->m_flags1 >> 1) & 1) != 0;
+	if (leftNew && (right->m_flags1 & 2) == 0) {
+		return true;
+	}
+	if ((right->m_flags1 & 2) != 0 && !leftNew) {
+		return false;
+	}
+
+	bool leftDiscount = left->m_discountPrice != 0 && left->m_discountPrice < left->m_price;
+	bool rightDiscount = right->m_discountPrice != 0 && right->m_discountPrice < right->m_price;
+	if (leftDiscount && !rightDiscount) {
+		return true;
+	}
+	if (rightDiscount && !leftDiscount) {
+		return false;
+	}
+
+	unsigned int myLevel = WSingleton<CSharedDoc>::Instance()->m_myLevel;
+	unsigned int leftLevel = left->m_level & 0x7F;
+	unsigned int rightLevel = right->m_level & 0x7F;
+	if ((left->m_level & 0x80) == 0) {
+		if (leftLevel > myLevel) {
+			return false;
+		}
+		if ((right->m_level & 0x80) != 0 && rightLevel < myLevel) {
+			return true;
+		}
+	} else {
+		if ((right->m_level & 0x80) == 0 && rightLevel > myLevel) {
+			return true;
+		}
+		if (leftLevel < myLevel) {
+			return false;
+		}
+	}
+
+	if ((left->m_typeId & 0xFC000000) == 0x8000000 && (right->m_typeId & 0xFC000000) == (left->m_typeId & 0xFC000000)) {
+		const IFF_STRUCT::sPart* leftPart = (const IFF_STRUCT::sPart*)lhs;
+		const IFF_STRUCT::sPart* rightPart = (const IFF_STRUCT::sPart*)rhs;
+
+		if (leftPart->slot < rightPart->slot) {
+			return true;
+		}
+		if (leftPart->slot > rightPart->slot) {
+			return false;
+		}
+	}
+
+	return right->m_typeId < left->m_typeId;
+}
+
 // 0xa826d0
 bool JpShopMain::IsAboveShopLevel(const IFF_ITEM_COMMON* item) {
 	if (item) {
@@ -2933,8 +3070,8 @@ void JpShopMain::OnItemListOwnerDraw(intptr_t param) {
 	case 4:
 	case 5:
 	case 27: {
-		// The part's stats (not written: the slot mark m_markBegin the JP
-		// draws after them when the JP record's byte +0x234 is set).
+		// The part's stats (not written: m_markBegin at +5, +65 when the JP
+		// part byte +0x234 is set: past the KR record iff_us.cpp keeps).
 		IFF_STRUCT::sPart* part = (IFF_STRUCT::sPart*)listItem->pData;
 		if (part) {
 			DrawStatus2(graphic, listItem, part->m_baseStat, part->m_slotStat, 0.0f);
@@ -3259,10 +3396,14 @@ bool JpShopMain::SelectItemList(FrListItem* pItem) {
 		m_cartList->ClearItem();
 		m_cartList->AddItem(item);
 		{
-			// The port's record type id is 32 bits; SafeLoadPet takes an
-			// unsigned long.
-			unsigned long petTypeId = item->m_typeId;
-			SafeLoadPet(&petTypeId, false);
+			// The JP passes the record's own type id (&item->m_typeId, 0xa8d961):
+			// the CAnotherHand thread reads it after this returns, so it must
+			// outlive the call. The port's record type id is 32 bits and
+			// SafeLoadPet takes an unsigned long: a copy that lives as long
+			// (SafeLoadPet waits for the previous work before queueing).
+			static unsigned long s_itemPetTypeId;
+			s_itemPetTypeId = item->m_typeId;
+			SafeLoadPet(&s_itemPetTypeId, false);
 		}
 		TurnOffItemStatus();
 		g_audio->PlaySfx("ui_desktop_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);

@@ -23,10 +23,8 @@
 // lib: 0xa908c0 (std::map<unsigned int, IFF_STRUCT::sChar>::operator[] on
 // the character map), 0x9eb9b0 (the set item map's iterator ++)
 //
-// Not written yet: Build_Parts 0xa8e210 (also walks a JP-only CSharedDoc
-// list at +0x1147c, sort 0xa89000), Build_Decorate 0xa8f390 and Build_Cutin
-// 0xa8f520 (the KR m_skinMap is private to CItemManager: friend CShopMain
-// only), Build_Hair 0xa8e0b0 (needs the IsItemInCart 0xa88c00 member).
+// Not written yet: Build_Decorate 0xa8f390 and Build_Cutin 0xa8f520 (the
+// KR m_skinMap is private to CItemManager: friend CShopMain only).
 #include <string.h>
 
 #include "JpShopMain.h"
@@ -34,10 +32,14 @@
 #include "SharedDoc.h"
 #include "UccManager.h"
 #include "frlistbox.h"
+#include "s5/Utilities.h"
 
 // KR ShopMain.cpp's free functions (the same JP code).
 void AddSellMiniButton(IFF_ITEM_COMMON &item, FrListItem *&listItem);   // 0xa8c110
 bool ShopEmptyCompare(const void *lhs, const void *rhs);                // 0xa82460
+
+// JpShopMain.cpp: the JP parts list's order.
+bool JpPartCompare(const void *lhs, const void *rhs);                   // 0xa89000
 
 namespace {
 
@@ -59,6 +61,41 @@ bool IsInSalePeriod(unsigned long typeId) {
 }
 
 } // namespace
+
+// 0x4ce760 (the KR IsAngelWing, shareddoc.inl, with three more JP wings):
+// the parts the shop lists only to a player with manners from level 21 on.
+static bool JpIsAngelWing(unsigned long typeId) {
+	switch (typeId) {
+	case 0x8016800:
+	case 0x8058800:
+	case 0x8098800:
+	case 0x80DC800:
+	case 0x8118800:
+	case 0x8160800:
+	case 0x8190800:
+	case 0x81E2800:
+	case 0x8214800:
+	case 0x8254800:
+	case 0x82D480E:
+	case 0x8314800:
+	case 0x839C800:
+		return true;
+	}
+	return false;
+}
+
+// 0x50f810 (the KR IsMannerPlayer, shareddoc.inl): under 3% of the local
+// player's games ended without manners.
+static bool JpIsMannerPlayer(void) {
+	unsigned long games = WSingleton<CSharedDoc>::Instance()->m_myStatGamesPlayed;
+	if (games < 1) {
+		games = 1;
+	}
+	if ((float)WSingleton<CSharedDoc>::Instance()->m_myStatNoMannerGames / (float)games * 100.0f < 3.0f) {
+		return true;
+	}
+	return false;
+}
 
 // 0x9d8a80 (JP item manager unit; name ours): an item of shop flag 3 out of
 // the player's level range. Its level byte's bit 7 set: the level & 0x7f is
@@ -241,6 +278,84 @@ void JpShopMain::Build_Package(subTab_t, int) {
 	}
 
 	m_itemListBox->SortItem(ShopEmptyCompare);
+}
+
+// 0xa8e0b0: the shown character's hair styles sold now, and every listed
+// one (+0x9c == 2, any character), in the player's level range; those in
+// the cart come selected.
+void JpShopMain::Build_Hair(subTab_t, int) {
+	typedef std::map<unsigned int, IFF_STRUCT::sHairStyle> HairStyleMap;
+	for (HairStyleMap::iterator it = ItemManager()->m_hairStyleMap.begin(); it != ItemManager()->m_hairStyleMap.end(); ++it) {
+		IFF_STRUCT::sHairStyle &hair = it->second;
+		IFF_ITEM_COMMON &item = (IFF_ITEM_COMMON &)hair;
+		unsigned int level = GetMyLevel();
+		if (IsOutOfShopLevel(item, &level)) {
+			continue;
+		}
+		bool listed;
+		if ((item.m_flags0 & 0xE0) != 0 && (m_standPetTypeId & 0x3FFFFFF) == hair.m_style) {
+			listed = IsInSalePeriod(item.m_typeId) || GetListKind(item) == 2;
+		} else {
+			listed = GetListKind(item) == 2;
+		}
+		if (listed) {
+			FrListItem *listItem = m_itemListBox->AddItem(&item);
+			AddSellMiniButton(item, listItem);
+			if (IsItemInCart(listItem)) {
+				m_itemListBox->SelectItem(listItem, true);
+			}
+		}
+	}
+
+	m_itemListBox->SortItem(JpSpecialHitNewCompare);
+}
+
+// 0xa8e210: the parts of the shown character in the sub tab's slots
+// (S5::UnderCategory 0xb2e770 with GetCategoryFlag's mask) sold now or
+// listed (+0x9c == 2), the angel wings only to a player with manners from
+// level 21 on, in the player's level range; those in the cart come
+// selected. Two lists of the JP are not walked here:
+// - sub tab 27 (UCC) first lists the shown character's UCC display clothes
+//   (CUccManager +0x34, the KR m_displayClothesList, as KR sub tab 26):
+//   private to CUccManager (friend CShopMain only);
+// - then every entry of a JP-only CSharedDoc map at +0x1147c (records of
+//   0x248 bytes, part-like: type id at +4) under the same UnderCategory test,
+//   with no sale or level test, each row without its buy mini button
+//   (AddNoRBtnIdx(1)); filled by the 0x00FE / 0x01B1 shop data, which the
+//   offline server answers empty, and absent from the port's CSharedDoc.
+void JpShopMain::Build_Parts(subTab_t tab, int) {
+	unsigned long categoryFlag = GetCategoryFlag(tab);
+
+	typedef std::map<unsigned int, IFF_STRUCT::sPart> PartMap;
+	for (PartMap::iterator it = ItemManager()->m_partMap.begin(); it != ItemManager()->m_partMap.end(); ++it) {
+		IFF_STRUCT::sPart &part = it->second;
+		IFF_ITEM_COMMON &item = (IFF_ITEM_COMMON &)part;
+		if (!S5::UnderCategory(m_standPetTypeId, part.m_typeId, categoryFlag)) {
+			continue;
+		}
+		bool listed;
+		if ((item.m_flags0 & 0xE0) != 0) {
+			listed = IsInSalePeriod(item.m_typeId) || GetListKind(item) == 2;
+		} else {
+			listed = GetListKind(item) == 2;
+		}
+		if (!listed) {
+			continue;
+		}
+		if (JpIsAngelWing(part.m_typeId) && !(JpIsMannerPlayer() && GetMyLevel() >= 0x15)) {
+			continue;
+		}
+		unsigned int level = GetMyLevel();
+		if (!IsOutOfShopLevel(item, &level)) {
+			FrListItem *listItem = m_itemListBox->AddItem(&item);
+			AddSellMiniButton(item, listItem);
+			if (listItem && IsItemInCart(listItem)) {
+				m_itemListBox->SelectItem(listItem, true);
+			}
+		}
+	}
+
+	m_itemListBox->SortItem(JpPartCompare);
 }
 
 // 0xa8e520

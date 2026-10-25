@@ -136,6 +136,10 @@ static FrRoomListDlg* s_jpRoomListDlg = NULL;
 static FrForm* s_jpRoomTypeForm = NULL;
 // JpChatDlg.cpp: FrChatDlg::AddChatMsg (0x490d10) on the room form.
 void JpRoomTypeForm_AddChatMsg(FrForm* form, const char* text, unsigned int color);
+// JpGameRoomDlg.cpp: the room messages the JP CLobbyMain::HandleMsg
+// (0xabc060) hands to the open room form (+0x780), by the KR message id
+// the port's senders use (JpForwardRoomFormMsg below).
+void JpRoomTypeForm_OnLobbyMsg(FrForm* form, int id, intptr_t param1, intptr_t param2, intptr_t param3);
 // JP CLobbyMain +0x4b8 (the lobby data container, contents type 0xa5) and
 // +0x778 (the room list forms' room-state dispatcher, JpRoomListState.h),
 // both set by OnPreLoadInit (JP 0xab9720).
@@ -3490,7 +3494,48 @@ void CLobbyMain::OnDisplay(void) {
 const char* GetGameTypeName(unsigned char gameType);
 
 // lobbymain.cpp:2921
+#ifdef JP_PAKS
+// JP CLobbyMain::HandleMsg 0xabc060 (jump table 0xabe9f8): the room
+// messages go to the open room form (+0x780) and do nothing without one;
+// the KR handlers' controls (the GAMEROOM layout's) do not exist in the
+// JP data. JP ids 7 (0xabc5de), 8 (0xabc600), 9 (0xabc626), 0xe
+// (0xabc644), 0xf (0xabc667), 0x10 (0xabc67f), 0x11 (0xabc69b) and 0x12
+// (0xabc6ba) are the KR ones; from the KR 0x27 on the JP id is one more:
+// the JP 0x2a (0xabcebf), 0x2b (0xabd15a), 0x2c (0xabd111), 0x2e
+// (0xabd172), 0x2f (0xabd18a) and 0x30 (0xabd2ef) are the KR 0x29 (a
+// player's ready state), 0x2a (rank sort), 0x2b (room controls lock), 0x2d
+// (game results), 0x2e (chat window flag) and 0x2f (team controls). The
+// port's senders are KR code, so the KR ids are forwarded
+// (JpRoomTypeForm_OnLobbyMsg maps them).
+static bool JpForwardRoomFormMsg(const MsgObject& msg) {
+	switch (msg.m_msg) {
+	case 0x07:
+	case 0x08:
+	case 0x09:
+	case 0x0E:
+	case 0x0F:
+	case 0x10:
+	case 0x11:
+	case 0x12:
+	case 0x29:
+	case 0x2A:
+	case 0x2B:
+	case 0x2D:
+	case 0x2E:
+	case 0x2F:
+		if (s_jpRoomTypeForm)
+			JpRoomTypeForm_OnLobbyMsg(s_jpRoomTypeForm, msg.m_msg, msg.m_param1, msg.m_param2, msg.m_param3);
+		return true;
+	}
+	return false;
+}
+#endif
+
 void CLobbyMain::HandleMsg(const MsgObject& msg) {
+#ifdef JP_PAKS
+	if (JpForwardRoomFormMsg(msg))
+		return;
+#endif
 	switch (msg.m_msg) {
 	case 0x5B: {
 		// lobbymain.cpp:2945, a room slot's pet direction (param2 0) or

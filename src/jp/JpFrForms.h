@@ -85,6 +85,15 @@ public:
 	virtual const WRTTI* GetRTTI(void) const { return &m_RTTI; }
 
 	FrTaskForm(void);                                                 // 0x523690
+	// Closing the page (its close button, OK / Cancel, ESCAPE through
+	// FrWndManager::ProcessHotKey's OnCancel) ends its task widget and hands
+	// the lobby back to the desktop: when the form still belongs to the
+	// current task, CTask::DeleteWidget 0x9b77d0, then the main actor gets
+	// message 0x88 "RFLobbyDesktop" (RFLobbyDesktop::HandleMsg: bar state 1,
+	// the default camera, whose 0x180 clears the desktop's busy flag), the
+	// "TanLines" byte +0x7a is cleared, then the FrForm member.
+	virtual bool Close(bool bDestroy);                                // [2] 0x523730
+	using FrForm::Close;
 	// The page's start-up after its layout loaded; false fails the load
 	// (CTaskWidget::Load sends the main actor game text 0x138a).
 	virtual bool Start(void);                                         // [38] 0x5235f0
@@ -96,6 +105,11 @@ public:
 	virtual bool HandleMsg(const MsgObject& msg);                     // [40] 0x523620
 
 protected:
+	// The same tear-down as Close, then FrForm::OnOK 0xbe6150 / OnCancel
+	// 0xbe61a0 (which close through FrForm's Close(ret, bDestroy), not slot 2).
+	virtual void OnOK(void);                                          // [33] 0x5237d0
+	virtual void OnCancel(void);                                      // [34] 0x523860
+
 	CTask* m_pTask; // 0x110 (the current task at construction)
 	PADDING(0x114, 0x120);
 };
