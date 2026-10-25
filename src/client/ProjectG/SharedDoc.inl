@@ -61,6 +61,10 @@ int IsMassGame(void) {
 	case 6:
 	case 9:
 	case 10:
+#ifdef JP_PAKS
+	// JP 0x502f20 (byte table 0x502f54): room type 11 is a mass game too.
+	case 11:
+#endif
 		return 1;
 	}
 

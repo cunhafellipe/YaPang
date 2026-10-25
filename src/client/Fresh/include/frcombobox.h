@@ -39,6 +39,22 @@ public:
 	virtual void Enable(bool bEnable);
 	const FrButton* GetButton(void) { return m_pButton; }
 	const FrListBox* GetListBox(void) { return m_pListBox; }
+#ifdef JP_PAKS
+	// JP 983 only. Selects the entry whose text equals str and shows it in
+	// the edit line; false (selection unchanged) when no entry matches.
+	bool SelectString(const char* str);   // JP 0xbff1d0
+
+	// JP 983 only: the side the drop-down list opens on (JP +0x2c4, read by
+	// ResizeListRect 0xbfe780; FrChatDlg::OnChatTargetInit 0x48fe10 sets
+	// LIST_ABOVE for the chat target box at the bottom of the screen).
+	enum eListDirection {
+		LIST_KEEPSIDE = 0,   // KR behaviour: stay on the side the list is on
+		LIST_ABOVE = 1,
+		LIST_BELOW = 2
+	};
+	void SetListDirection(int direction) { m_listDirection = direction; }
+	int GetListDirection(void) const { return m_listDirection; }
+#endif
 
 protected:
 	virtual void OnKeyFocus(CChatMsg* im);
@@ -63,6 +79,11 @@ protected:
 	FrListBox* m_pListBox;                    // 0x240
 	FrGuiItem m_listInfo;                     // 0x244
 	unsigned long m_selectColor;              // 0x2b8
+#ifdef JP_PAKS
+	// JP 983 only, appended so the KR offsets stay (JP +0x2c4; the ctor
+	// 0xbff720 sets LIST_KEEPSIDE).
+	int m_listDirection;
+#endif
 };
 
 CHECK_SIZE(FrComboBox, 0x2bc);

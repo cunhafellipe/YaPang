@@ -17,6 +17,13 @@
 #include "fremoticon.h"
 #include <mmsystem.h>
 
+#ifdef JP_PAKS
+// The COneLineBoard instance (the JP lobby ad ticker): defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+template <> COneLineBoard* WSingleton<COneLineBoard>::m_pInstance = NULL;
+#endif
+
 // onelineboard.cpp:23
 COneLineBoard::COneLineBoard(void) {
 	m_fadeState = 0;
@@ -107,12 +114,23 @@ void COneLineBoard::Display(void) {
 		gdi->SetTextStyle(4);
 		gdi->SetTextColor(0xFFFFFFFF, 0xFF000000);
 	} else {
+#ifdef JP_PAKS
+		// JP 0x897c40: outside a golf task, text style 2 with colours 0xFFFFFFFF / 0xFF1F3F3F.
+		gdi->SetTextStyle(2);
+		gdi->SetTextColor(0xFFFFFFFF, 0xFF1F3F3F);
+#else
 		gdi->SetTextStyle(0);
 		gdi->SetTextColor(0xFF000000, 0xFFFFFFFF);
+#endif
 	}
 
 	FrEmoticon *emoticon = g_pFresh->GetManager()->GetEmoticon();
+#ifdef JP_PAKS
+	// JP 0x897c40: the clipping area is 5 units taller at the bottom.
+	WRect clip(m_rect.x, m_rect.y - 10.0f, m_rect.w, m_rect.h + 25.0f);
+#else
 	WRect clip(m_rect.x, m_rect.y - 10.0f, m_rect.w, m_rect.h + 20.0f);
+#endif
 	emoticon->SetClippingArea(&clip);
 
 	for (m_iter = m_msgList.begin(); m_iter != m_msgList.end(); ++m_iter) {
@@ -130,7 +148,13 @@ void COneLineBoard::Display(void) {
 	emoticon->SetClippingArea(0);
 
 	gdi->SetAlpha(alpha);
+#ifdef JP_PAKS
+	// JP 0x897c40: text style 2 and colours 0xFFFFFFFF / 0xFF1F3F3F are set before the style returns to 0.
+	gdi->SetTextStyle(2);
+	gdi->SetTextColor(0xFFFFFFFF, 0xFF1F3F3F);
+#else
 	gdi->SetTextColor(0xFFFFFFFF, 0xFFFFFFFF);
+#endif
 	gdi->SetTextStyle(0);
 }
 

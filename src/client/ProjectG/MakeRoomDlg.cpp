@@ -22,6 +22,20 @@
 #include "Packet.h"
 #include "shared/Localize.h"
 
+#ifdef JP_PAKS
+// 0xb4eb80 (src/jp/RFTextManager.h, not on this unit's include
+// path in the port: it is not a PG_REFRESH_HOOK_SOURCES unit).
+const char* Jp_LookupText(const char* key);
+#endif
+
+// The JP exe passes the dialog's Korean texts through Jp_LookupText 0xb4eb80
+// (korea.dat / japan.dat pairs); the KR exe uses them as they are.
+#ifdef JP_PAKS
+#define MAKEROOM_TEXT(text) Jp_LookupText(text)
+#else
+#define MAKEROOM_TEXT(text) (text)
+#endif
+
 #include <algorithm>
 #include <stdlib.h>
 #include <string.h>
@@ -148,6 +162,15 @@ sFRESH_ENTRY FrMakeRoomDlg::_MsgEntries[] = {
 	{ "hole_max", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrMakeRoomDlg::OnHoleMaxUp },
 	// makeroomdlg.cpp:127
 	{ "overgauge", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrMakeRoomDlg::OnOverGauge_Init },
+#ifdef JP_PAKS
+	// JP rows (message map 0xe39768): the two group boxes of the JP layout.
+	{ "map_ctrl", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrMakeRoomDlg::OnMapCtrlInit },
+	{ "artifact_ctrl", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrMakeRoomDlg::OnArtifactCtrlInit },
+	{ "make_event", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrMakeRoomDlg::OnMakeEventInit },
+	{ "make_event", FRCMD_LBUTTONDOWN, FrFuncVV, (FRESH_PMSG)&FrMakeRoomDlg::OnMakeEventDown },
+	{ "classictype_btn", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrMakeRoomDlg::OnClassicTypeInit },
+	{ "classictype_btn", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrMakeRoomDlg::OnClassicTypeUp },
+#endif
 
 	// makeroomdlg.cpp:129
 	{ 0, FRCMD_NONE, FrFuncNone, (FRESH_PMSG)0 }
@@ -171,6 +194,15 @@ FrMakeRoomDlg::FrMakeRoomDlg(void) {
 	m_pMapSelectDlg = 0;
 
 	m_btnDelay = 0.7f;
+#ifdef JP_PAKS
+	m_pMapCtrl = 0;
+	m_pArtifactCtrl = 0;
+	m_mapCtrlOffsetX = 0.0f;
+	m_mapCtrlOffsetY = 0.0f;
+	m_pMakeEventBtn = 0;
+	m_pClassicTypeBtn = 0;
+	m_naturalModeFlags = 0;
+#endif
 }
 
 // makeroomdlg.cpp:155
@@ -179,6 +211,10 @@ FrMakeRoomDlg::~FrMakeRoomDlg(void) {
 
 // makeroomdlg.cpp:160
 bool FrMakeRoomDlg::OnInit(void) {
+#ifdef JP_PAKS
+	// The JP OnInit 0xae25e0 starts with 0xadcf20(0): Natural Mode off.
+	SetNaturalModeFlags(0);
+#endif
 	m_holeType = 0;
 	m_startHole = 1;
 	m_gameTime = 0;
@@ -194,6 +230,12 @@ bool FrMakeRoomDlg::OnInit(void) {
 
 	ChangeCourse(FirstMap());
 
+#ifdef JP_PAKS
+	// The JP OnInit (0xae25e0) presses the default make button through its
+	// handler (0xae2380), which ends with ShowCoursePanel.
+	ShowCoursePanel(m_gameType != 2, m_gameType == 0 || m_gameType == 4);
+#endif
+
 	return true;
 }
 
@@ -205,6 +247,9 @@ void FrMakeRoomDlg::OnMakeVsInit(PG_MSGARG param) {
 // makeroomdlg.cpp:230
 void FrMakeRoomDlg::OnMakeVsDown(void) {
 	ChangeGameType(0, true);
+#ifdef JP_PAKS
+	ShowCoursePanel(true, true);
+#endif
 }
 
 // makeroomdlg.cpp:235
@@ -215,6 +260,9 @@ void FrMakeRoomDlg::OnMakeMassInit(PG_MSGARG param) {
 // makeroomdlg.cpp:243
 void FrMakeRoomDlg::OnMakeMassDown(void) {
 	ChangeGameType(4, true);
+#ifdef JP_PAKS
+	ShowCoursePanel(true, true);
+#endif
 }
 
 // makeroomdlg.cpp:248
@@ -225,6 +273,9 @@ void FrMakeRoomDlg::OnMakeBattleInit(PG_MSGARG param) {
 // makeroomdlg.cpp:256
 void FrMakeRoomDlg::OnMakeBattleDown(void) {
 	ChangeGameType(10, true);
+#ifdef JP_PAKS
+	ShowCoursePanel(true, false);
+#endif
 }
 
 // makeroomdlg.cpp:283
@@ -235,6 +286,9 @@ void FrMakeRoomDlg::OnMakeChatInit(PG_MSGARG param) {
 // makeroomdlg.cpp:291
 void FrMakeRoomDlg::OnMakeChatDown(void) {
 	ChangeGameType(2, true);
+#ifdef JP_PAKS
+	ShowCoursePanel(false, false);
+#endif
 }
 
 // makeroomdlg.cpp:297
@@ -265,9 +319,17 @@ void FrMakeRoomDlg::OnMakeChaosInit(PG_MSGARG param) {
 
 // makeroomdlg.cpp:332
 void FrMakeRoomDlg::OnMakeChaosDown(void) {
-	AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr("\xbd\xba\xc6\xf3\xbc\xc8 \xbc\xc5\xc7\xc3 \xb8\xf0\xb5\xe5 \xb9\xe6\xc0\xbb \xb8\xb8\xb5\xe9 \xb6\xa7, \n\\c0xffff0000\\c%s\\c0xff000000\\c\xc0\xcc \xbc\xd2\xb8\xf0 \xb5\xcb\xb4\xcf\xb4\xd9.", ItemManager()->GetItemName(0x1A0000F7)), 0, 0, 0, 0));
+	AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x23, (intptr_t)MakeStr(MAKEROOM_TEXT("\xbd\xba\xc6\xf3\xbc\xc8 \xbc\xc5\xc7\xc3 \xb8\xf0\xb5\xe5 \xb9\xe6\xc0\xbb \xb8\xb8\xb5\xe9 \xb6\xa7, \n\\c0xffff0000\\c%s\\c0xff000000\\c\xc0\xcc \xbc\xd2\xb8\xf0 \xb5\xcb\xb4\xcf\xb4\xd9."), ItemManager()->GetItemName(0x1A0000F7)), 0, 0, 0, 0));
 
+#ifdef JP_PAKS
+	// JP 0xae1820: the chaos button makes game type 0x12, the special
+	// shuffle course (JP game type 14 is Grand Zodiac practice), and ends
+	// with ShowCoursePanel(0, 0).
+	ChangeGameType(0x12, true);
+	ShowCoursePanel(false, false);
+#else
 	ChangeGameType(14, true);
+#endif
 }
 
 // makeroomdlg.cpp:354
@@ -378,7 +440,12 @@ bool FrMakeRoomDlg::MakeRoom(bool b) {
 		return false;
 	}
 
+#ifdef JP_PAKS
+	// JP 0xae1a0f: the special shuffle course is game type 0x12.
+	if (WSingleton<CSharedDoc>::Instance()->IsControlServerService(0x2000000) && m_gameType == 0x12) {
+#else
 	if (WSingleton<CSharedDoc>::Instance()->IsControlServerService(0x2000000) && m_gameType == 14) {
+#endif
 		AfxGetTask()->PassMsgToActor("Lobby", MsgObject(0, 0x272, 0x2000000, 0, 0, 0, 0));
 		return false;
 	}
@@ -419,7 +486,7 @@ bool FrMakeRoomDlg::MakeRoom(bool b) {
 		if (WSingleton<CSharedDoc>::Instance()->GetPangyaUserInfo().guildUID == 0) {
 			FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 			// "Only guild members can make a room."
-			pForm->SetMessage("\xb1\xe6\xb5\xe5 \xb0\xa1\xc0\xd4\xc0\xda\xb8\xb8 \xb9\xe6\xc0\xbb \xb8\xb8\xb5\xe5\xbd\xc7 \xbc\xf6 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", false);
+			pForm->SetMessage(MAKEROOM_TEXT("\xb1\xe6\xb5\xe5 \xb0\xa1\xc0\xd4\xc0\xda\xb8\xb8 \xb9\xe6\xc0\xbb \xb8\xb8\xb5\xe5\xbd\xc7 \xbc\xf6 \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."), false);
 			pForm->Open((FRESH_RESULT_CALLBACK)0, 3);
 			return false;
 		}
@@ -433,7 +500,7 @@ bool FrMakeRoomDlg::MakeRoom(bool b) {
 	if (title.empty() || title.find_first_not_of(' ', 0) == std::string::npos) {
 		FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 		// "Please enter a room title"
-		pForm->SetMessage("\xb9\xe6 \xc1\xa6\xb8\xf1\xc0\xbb \xb3\xd6\xbe\xee\xc1\xd6\xbc\xbc\xbf\xe4", false);
+		pForm->SetMessage(MAKEROOM_TEXT("\xb9\xe6 \xc1\xa6\xb8\xf1\xc0\xbb \xb3\xd6\xbe\xee\xc1\xd6\xbc\xbc\xbf\xe4"), false);
 		pForm->Open((FRESH_RESULT_CALLBACK)0, 3);
 		return false;
 	}
@@ -441,7 +508,7 @@ bool FrMakeRoomDlg::MakeRoom(bool b) {
 	if (WSingleton<CSharedDoc>::Instance()->m_chatManager.Filtering((char*)title.c_str())) {
 		FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 		// "The room title contains characters that cannot be used."
-		pForm->SetMessage("\xb9\xe6 \xc1\xa6\xb8\xf1\xbf\xa1\xbc\xad \xbb\xe7\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xb4\xc2 \xb9\xae\xc0\xda\xb8\xa6 \xc6\xf7\xc7\xd4\xc7\xcf\xb0\xed \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9.", false);
+		pForm->SetMessage(MAKEROOM_TEXT("\xb9\xe6 \xc1\xa6\xb8\xf1\xbf\xa1\xbc\xad \xbb\xe7\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xb4\xc2 \xb9\xae\xc0\xda\xb8\xa6 \xc6\xf7\xc7\xd4\xc7\xcf\xb0\xed \xc0\xd6\xbd\xc0\xb4\xcf\xb4\xd9."), false);
 		pForm->Open((FRESH_RESULT_CALLBACK)0, 3);
 		return false;
 	}
@@ -478,7 +545,7 @@ bool FrMakeRoomDlg::MakeRoom(bool b) {
 			if (m_gameType == 7) {
 				FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 				// "Pang Battle games cannot be played on the rookie channel."
-				pForm->SetMessage("\xb7\xe7\xc5\xb0 \xc3\xa4\xb3\xce\xbf\xa1\xbc\xad\xb4\xc2 \xc6\xce\xb9\xe8\xc6\xb2 \xb0\xd4\xc0\xd3\xc0\xbb \xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", false);
+				pForm->SetMessage(MAKEROOM_TEXT("\xb7\xe7\xc5\xb0 \xc3\xa4\xb3\xce\xbf\xa1\xbc\xad\xb4\xc2 \xc6\xce\xb9\xe8\xc6\xb2 \xb0\xd4\xc0\xd3\xc0\xbb \xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), false);
 				pForm->Open((FRESH_RESULT_CALLBACK)0, 3);
 				return false;
 			}
@@ -489,7 +556,7 @@ bool FrMakeRoomDlg::MakeRoom(bool b) {
 	if (result.m_bInvalid) {
 		FrForm* pForm = CreateForm<FrForm>(g_pFresh->GetManager(), this, "notify", 0);
 		// "Spaces cannot be used in the password."
-		pForm->SetMessage("\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3\xbf\xa1 \xb0\xf8\xb9\xe9\xc0\xba \xbb\xe7\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9.", false);
+		pForm->SetMessage(MAKEROOM_TEXT("\xba\xf1\xb9\xd0\xb9\xf8\xc8\xa3\xbf\xa1 \xb0\xf8\xb9\xe9\xc0\xba \xbb\xe7\xbf\xeb\xc7\xd2 \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9."), false);
 		pForm->Open((FRESH_RESULT_CALLBACK)0, 3);
 		return false;
 	}
@@ -499,12 +566,41 @@ bool FrMakeRoomDlg::MakeRoom(bool b) {
 	packet.Encode4(m_turnTime);
 	packet.Encode4(m_gameTime);
 	packet.Encode1(m_userLimit);
+#ifdef JP_PAKS
+	// JP 0xae2003: game type 5 is created as 4.
+	if (m_gameType == 5)
+		m_gameType = 4;
+#endif
 	packet.Encode1(m_gameType);
 	packet.Encode1(m_hole);
 	packet.Encode1(m_course);
 	packet.Encode1(m_holeType);
+#ifdef JP_PAKS
+	// JP 0xae205f..0xae2165: the title is cut to 20 bytes and the password to
+	// 8 (40-byte strncpy buffers), the Natural Mode flags go before the
+	// title and the chosen artifact's id after the password.
+	{
+		char buffer[0x28];
+
+		memset(buffer, 0, sizeof(buffer));
+		strncpy(buffer, title.c_str(), sizeof(buffer));
+		buffer[0x14] = 0;
+		title.assign(buffer, strlen(buffer));
+
+		memset(buffer, 0, sizeof(buffer));
+		strncpy(buffer, password.c_str(), sizeof(buffer));
+		buffer[8] = 0;
+		password.assign(buffer, strlen(buffer));
+	}
+	packet.Encode4(m_naturalModeFlags);
+#endif
 	packet.EncodeStr(title);
 	packet.EncodeStr(password);
+#ifdef JP_PAKS
+	// JP 0xae2151: the id at the artifact list's current entry (JP +0x1fc,
+	// 0x479e90). The artifact panel is not decompiled: no artifact (0).
+	packet.Encode4(0);
+#endif
 	packet.Send(SEND_TO_DEFAULT);
 
 	if (!b) {
@@ -540,6 +636,11 @@ void FrMakeRoomDlg::ChangeGameType(unsigned char gameType, bool b) {
 		m_pCourse->SetVisible(true);
 
 		m_pOverGauge->SetVisible(true);
+#ifdef JP_PAKS
+		// JP 0xadfc6f: the Natural Mode check comes back outside a chat room.
+		if (m_pClassicTypeBtn)
+			m_pClassicTypeBtn->SetVisible(true);
+#endif
 	}
 
 	if (m_gameType != 2 && gameType == 2) {
@@ -557,10 +658,20 @@ void FrMakeRoomDlg::ChangeGameType(unsigned char gameType, bool b) {
 		m_pCourse->SetVisible(false);
 
 		m_pOverGauge->SetVisible(false);
+#ifdef JP_PAKS
+		// JP 0xadfd65: no Natural Mode check in a chat room.
+		if (m_pClassicTypeBtn)
+			m_pClassicTypeBtn->SetVisible(false);
+#endif
 
 		if (m_course == 0x7F)
 			ChangeCourse(FirstMap());
+#ifdef JP_PAKS
+	// JP 0xadfd87: leaving the special shuffle course (game type 0x12).
+	} else if (m_gameType == 0x12 && gameType != 0x12) {
+#else
 	} else if (m_gameType == 14 && gameType != 14) {
+#endif
 		m_pCourse->SetMouseEvent(true);
 		m_pMapPrev->SetVisible(true);
 		m_pMapNext->SetVisible(true);
@@ -589,7 +700,12 @@ void FrMakeRoomDlg::ChangeGameType(unsigned char gameType, bool b) {
 		m_pMapNextChat->Enable(false);
 	}
 
+#ifdef JP_PAKS
+	// JP 0xadfebf/0xadfecc: entering the special shuffle course (0x12).
+	if (m_gameType != 0x12 && gameType == 0x12) {
+#else
 	if (m_gameType != 14 && gameType == 14) {
+#endif
 		m_pCourse->SetMouseEvent(false);
 
 		m_pMapPrev->SetVisible(false);
@@ -604,10 +720,45 @@ void FrMakeRoomDlg::ChangeGameType(unsigned char gameType, bool b) {
 		ChangeCourse(0x7F);
 	}
 
+#ifdef JP_PAKS
+	// JP 0xadff56..0xae0069: the event game types 0xb / 0xd play course 0x40
+	// with the course picker and the map arrows off.
+	if (m_gameType == 0xb || m_gameType == 0xd) {
+		if (gameType != 0xb && gameType != 0xd && gameType != 2) {
+			m_pCourse->SetMouseEvent(true);
+			m_pMapPrev->SetVisible(true);
+			m_pMapNext->SetVisible(true);
+			m_pHoleType->SetVisible(true);
+			m_pCourse->SetVisible(true);
+			m_pOverGauge->SetVisible(true);
+
+			ChangeCourse(FirstMap());
+		}
+	} else if (gameType == 0xb || gameType == 0xd) {
+		m_pCourse->SetMouseEvent(false);
+
+		m_pMapPrev->SetVisible(false);
+		m_pMapPrevChat->SetVisible(false);
+		m_pMapNext->SetVisible(false);
+		m_pMapNextChat->SetVisible(false);
+
+		m_pHoleType->SetVisible(true);
+		m_pCourse->SetVisible(true);
+		m_pOverGauge->SetVisible(false);
+
+		ChangeCourse(0x40);
+	}
+#endif
+
 	m_gameType = gameType;
 
 	for (int i = 0; i < 5; i++)
 		m_pMakeBtn[i]->SetStatus(FrButton::NORMAL);
+#ifdef JP_PAKS
+	// JP 0xae0077: the loop covers the sixth make button (make_event, +0x124).
+	if (m_pMakeEventBtn)
+		m_pMakeEventBtn->SetStatus(FrButton::NORMAL);
+#endif
 
 	if (IsLocalContent((localContentType_t)0x3E)) {
 		if ((WSingleton<CSharedDoc>::Instance()->m_currentChannel.flags & 0x800) && WSingleton<CSharedDoc>::Instance()->m_myLevel == 0)
@@ -851,6 +1002,25 @@ void FrMakeRoomDlg::ChangeGameType(unsigned char gameType, bool b) {
 			m_pMakeBtn[3]->SetStatus(FrButton::PRESSED);
 		break;
 
+#ifdef JP_PAKS
+	// JP 0xae113b (jump table 0xae15c0 [9], game type 0x12 only; JP 14 has
+	// no case): the special shuffle course, 30 players, 18 holes, 40
+	// minutes, hole type 5.
+	case 0x12:
+		m_pPicture->Open("picture_chaos.tga");
+		m_pText->SetBgImg("text_chaos");
+
+		m_makeBtnIndex = 4;
+		m_userLimit = 30;
+		m_hole = 18;
+		m_gameTime = 2400000;
+		m_timeLimit = 40;
+		m_holeType = 5;
+
+		if (!b)
+			m_pMakeBtn[4]->SetStatus(FrButton::PRESSED);
+		break;
+#else
 	case 14:
 		m_pPicture->Open("picture_chaos.tga");
 		m_pText->SetBgImg("text_chaos");
@@ -865,12 +1035,49 @@ void FrMakeRoomDlg::ChangeGameType(unsigned char gameType, bool b) {
 		if (!b)
 			m_pMakeBtn[4]->SetStatus(FrButton::PRESSED);
 		break;
+#endif
+#ifdef JP_PAKS
+
+	// JP 0xae11a1 (jump table 0xae15c0 [8], game types 0xb and 0xd): the
+	// event room, 7 or 10 minutes, 4 to 100 players, one hole.
+	case 0xb:
+	case 0xd:
+		m_pPicture->Open("picture_30s.tga");
+		m_pText->SetBgImg("text_mass");
+
+		m_makeBtnIndex = 5;
+		m_gameTime = 420000;
+		m_timeLimit = 7;
+
+		m_pTimeLimitTab->AddTab("select_button", 7, &WSize(75.0f, 20.0f));
+		m_pTimeLimitTab->AddTab("select_button", 10, &WSize(75.0f, 20.0f));
+
+		m_userLimit = 100;
+
+		m_pUserLimitTab->AddTab("select_button", 4, &WSize(50.0f, 20.0f));
+		m_pUserLimitTab->AddTab("select_button", 50, &WSize(50.0f, 20.0f));
+		m_pUserLimitTab->AddTab("select_button", 100, &WSize(50.0f, 20.0f));
+
+		m_holeType = 0;
+		m_hole = 1;
+
+		m_pHoleTab->AddTab("select_button", 1, &WSize(150.0f, 20.0f));
+
+		if (!b && m_pMakeEventBtn)
+			m_pMakeEventBtn->SetStatus(FrButton::PRESSED);
+		break;
+#endif
 	}
 
 	m_pTimeLimitTab->SetVisible(m_gameType != 6);
 	m_pTitleEdit->SetLine(1, WSingleton<CSharedDoc>::Instance()->GetDefaultTitle(m_gameType), 0, false, 0);
 
+#ifdef JP_PAKS
+	// JP 0xae1327/0xae133a: the special shuffle course is 0x12.
+	if (m_hole == 18 && m_gameType != 10 && m_gameType != 0x12) {
+#else
 	if (m_hole == 18 && m_gameType != 10 && m_gameType != 14) {
+#endif
 		if (m_holeType == 1 || m_holeType == 2)
 			m_holeType = 0;
 	}
@@ -911,6 +1118,14 @@ void FrMakeRoomDlg::ChangeGameType(unsigned char gameType, bool b) {
 		case 4:
 			m_pGameType->ClearTab();
 			break;
+#ifdef JP_PAKS
+
+		// JP 0xae1516 (jump table 0xae1600 [5]): the two event game types.
+		case 5:
+			m_pGameType->AddTab("select_button", 0xb, &WSize(75.0f, 20.0f));
+			m_pGameType->AddTab("select_button", 0xd, &WSize(75.0f, 20.0f));
+			break;
+#endif
 		}
 	}
 
@@ -919,6 +1134,10 @@ void FrMakeRoomDlg::ChangeGameType(unsigned char gameType, bool b) {
 	m_pUserLimitTab->Select(m_userLimit);
 	m_pHoleTab->Select(m_hole);
 	m_pTimeLimitTab->Select(m_timeLimit);
+#ifdef JP_PAKS
+	// The JP ChangeGameType ends with 0xadced0.
+	UpdateClassicTypeButton();
+#endif
 }
 
 // makeroomdlg.cpp:1387
@@ -989,7 +1208,13 @@ void FrMakeRoomDlg::ChangeHole(unsigned char hole) {
 		m_holeType = 0;
 		break;
 
+#ifdef JP_PAKS
+	// JP 0xadf15c (ChangeHole 0xaded10, jump table 0xadf210 [5], game
+	// type 0x12 only).
+	case 0x12:
+#else
 	case 14:
+#endif
 		m_pTimeLimitTab->ClearTab();
 		m_pTimeLimitTab->SetVisible(false);
 		m_timeLimit = 30;
@@ -1088,7 +1313,21 @@ void FrMakeRoomDlg::OnGameTypeOwnerDraw(intptr_t param) {
 	if (pDevice == 0)
 		return;
 
-	pDevice->PrintText11(WPoint(pItem->rect.x + pItem->rect.w * 0.5f, pItem->rect.y + 5.0f), 1, s_gameTypeName[pItem->index], 0);
+#ifdef JP_PAKS
+	// JP name table 0xf03210 (static init 0xcef200): 0xb and 0xd are the
+	// hole-in-one events, "normal" and "advanced" (euc-kr literals 0xd067d8 /
+	// 0xd067bc); the other indexes share the KR names.
+	const char* name;
+	if (pItem->index == 0xb)
+		name = "\xc8\xa6\xc0\xce\xbf\xf8\xc0\xcf\xb9\xdd";
+	else if (pItem->index == 0xd)
+		name = "\xc8\xa6\xc0\xce\xbf\xf8\xbb\xf3\xb1\xde";
+	else
+		name = s_gameTypeName[pItem->index];
+	pDevice->PrintText11(WPoint(pItem->rect.x + pItem->rect.w * 0.5f, pItem->rect.y + 5.0f), 1, MAKEROOM_TEXT(name), 0);
+#else
+	pDevice->PrintText11(WPoint(pItem->rect.x + pItem->rect.w * 0.5f, pItem->rect.y + 5.0f), 1, MAKEROOM_TEXT(s_gameTypeName[pItem->index]), 0);
+#endif
 }
 
 // makeroomdlg.cpp:1646
@@ -1202,8 +1441,15 @@ bool FrMakeRoomDlg::OnMapSelectDlgResult(int result, FrForm* pForm) {
 
 // makeroomdlg.cpp:1759
 void FrMakeRoomDlg::OnCourseUp(void) {
+#ifdef JP_PAKS
+	// JP 0xadf70a (byte table 0xadf820): no course picker for game types
+	// 6, 10, the event types 0xb / 0xd and the special shuffle course 0x12.
+	if (m_gameType == 10 || m_gameType == 6 || m_gameType == 0x12 || m_gameType == 0xb || m_gameType == 0xd)
+		return;
+#else
 	if (m_gameType == 10 || m_gameType == 6 || m_gameType == 14)
 		return;
+#endif
 
 	g_audio->PlaySfx("ui_icon_click", 0, 0, 0, 0, 0.5f, 200.0f);
 
@@ -1299,7 +1545,13 @@ void FrMakeRoomDlg::OnHoleTypeOwnerDraw(PG_MSGARG param) {
 		DrawHoleTypeButton(pDevice, (eHoleType)1, back, false);
 		DrawHoleTypeButton(pDevice, (eHoleType)2, random, false);
 		DrawHoleTypeButton(pDevice, (eHoleType)3, shuffle, false);
+#ifdef JP_PAKS
+	// JP 0xadde49 (byte table 0xaddfd0): every hole type is greyed for
+	// game types 10, 0xb, 0xd and 0x12.
+	} else if (m_gameType == 0x12 || m_gameType == 0xb || m_gameType == 0xd) {
+#else
 	} else if (m_gameType == 14) {
+#endif
 		DrawHoleTypeButton(pDevice, (eHoleType)0, front, false);
 		DrawHoleTypeButton(pDevice, (eHoleType)1, back, false);
 		DrawHoleTypeButton(pDevice, (eHoleType)2, random, false);
@@ -1421,6 +1673,104 @@ void FrMakeRoomDlg::OnOverGauge_Init(PG_MSGARG param) {
 		m_pOverGauge->SetBarSpeed(200.0f);
 	}
 }
+
+#ifdef JP_PAKS
+// JP 0xade460: binds "map_ctrl" and keeps its offset from the form.
+void FrMakeRoomDlg::OnMapCtrlInit(PG_MSGARG param) {
+	m_pMapCtrl = DYNAMIC_CAST(FrWnd, param);
+
+	if (m_pMapCtrl) {
+		m_mapCtrlOffsetX = m_pMapCtrl->GetRect().x - GetRect().x;
+		m_mapCtrlOffsetY = m_pMapCtrl->GetRect().y - GetRect().y;
+	}
+}
+
+// JP 0xade580: binds "artifact_ctrl" (+0x188). Its children (arti_frame, arti_icon,
+// arti_ban, arti_name, arti_desc, arti_prev, arti_next) and the artifact
+// list are not decompiled yet (temps/orchestrator/refresh_notes/MakeRoomJP.md).
+void FrMakeRoomDlg::OnArtifactCtrlInit(PG_MSGARG param) {
+	m_pArtifactCtrl = DYNAMIC_CAST(FrWnd, param);
+}
+
+// JP 0xadf990: shows or hides the course group; when it is shown without the
+// artifact beside it, it moves by (65, -16) (floats 0xe39770 / 0xe39774).
+// The artifact group follows the artifact flag. The JP then refreshes the
+// artifact list (0xadf900) when the artifact is not shown: not decompiled.
+void FrMakeRoomDlg::ShowCoursePanel(bool bVisible, bool bBesideArtifact) {
+	if (m_pMapCtrl)
+		m_pMapCtrl->SetVisible(bVisible);
+
+	if (m_pMapCtrl && bVisible) {
+		WPoint pt(GetRect().x + m_mapCtrlOffsetX, GetRect().y + m_mapCtrlOffsetY);
+		if (!bBesideArtifact) {
+			pt.x += 65.0f;
+			pt.y += -16.0f;
+		}
+		m_pMapCtrl->MoveWindow(pt);
+	}
+
+	// JP 0xadfa11: +0x188 is the artifact_ctrl group (bound by 0xade580).
+	if (m_pArtifactCtrl)
+		m_pArtifactCtrl->SetVisible(bBesideArtifact);
+}
+
+// JP 0xadec20: the sixth make button, kept (JP +0x124) and shown and enabled
+// only for an administrator (JP CSharedDoc +0x812 & 4, AdminMode).
+void FrMakeRoomDlg::OnMakeEventInit(PG_MSGARG param) {
+	m_pMakeEventBtn = DYNAMIC_CAST(FrButton, param);
+
+	if (m_pMakeEventBtn == 0)
+		return;
+
+	if (AdminMode()) {
+		m_pMakeEventBtn->Enable(true);
+		m_pMakeEventBtn->SetVisible(true);
+	} else {
+		m_pMakeEventBtn->Enable(false);
+		m_pMakeEventBtn->SetVisible(false);
+	}
+}
+
+// JP 0xae18c0 (make_event LBUTTONDOWN): the event game type, course panel
+// away from the artifact group.
+void FrMakeRoomDlg::OnMakeEventDown(void) {
+	ChangeGameType(0xb, true);
+	ShowCoursePanel(true, false);
+}
+
+// JP 0xade940: binds the Natural Mode check and shows the current flag.
+void FrMakeRoomDlg::OnClassicTypeInit(PG_MSGARG param) {
+	m_pClassicTypeBtn = DYNAMIC_CAST(FrButton, param);
+
+	if (m_pClassicTypeBtn)
+		UpdateClassicTypeButton();
+}
+
+// JP 0xade9c0: the check's state (JP FrButton +0xf4, PRESSED) sets or clears
+// flag bit 0.
+void FrMakeRoomDlg::OnClassicTypeUp(void) {
+	if (m_pClassicTypeBtn == 0)
+		return;
+
+	if (m_pClassicTypeBtn->GetStatus() == FrButton::PRESSED)
+		SetNaturalModeFlags(m_naturalModeFlags | 1);
+	else
+		SetNaturalModeFlags(m_naturalModeFlags & ~1u);
+}
+
+// JP 0xadcf20.
+void FrMakeRoomDlg::SetNaturalModeFlags(unsigned int flags) {
+	m_naturalModeFlags = flags;
+	UpdateClassicTypeButton();
+}
+
+// JP 0xadced0: the check shows flag bit 0 (status (flags & 1) * 2: NORMAL or
+// PRESSED).
+void FrMakeRoomDlg::UpdateClassicTypeButton(void) {
+	if (m_pClassicTypeBtn)
+		m_pClassicTypeBtn->SetStatus((m_naturalModeFlags & 1) ? FrButton::PRESSED : FrButton::NORMAL);
+}
+#endif
 
 // makeroomdlg.cpp:2060
 void FrMakeRoomDlg::OnProc(const float dt) {

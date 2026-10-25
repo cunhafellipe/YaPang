@@ -145,6 +145,9 @@ private:
 	WRect* m_pIndexRects;             // 0x1F8, one rect per index entry (left, top, right, bottom in x, y, w, h), BuildIndexPage
 	int m_questionIndex;              // 0x1FC, -1 once a question is answered no
 	LAYOUT_CHECK_FRIEND;
+#ifdef JP_PAKS
+	friend void Post_ReciveDlg_EnablePostList(CPost_ReciveDlg* dlg, bool enable);   // JP 0x5b14d0
+#endif
 };
 
 CHECK_SIZE(CPost_ReciveDlg::miniBtn_t, 0x1C);

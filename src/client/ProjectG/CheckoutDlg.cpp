@@ -116,6 +116,27 @@ sFRESH_ENTRY FrCheckoutDlg::_MsgEntries[] = {
 	{ "days", FRCMD_LBUTTONDOWN, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnDaysBtnDown },
 	// checkoutdlg.cpp:59
 	{ "days2", FRCMD_LBUTTONDOWN, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnDays2BtnDown },
+#ifdef JP_PAKS
+	// The JP map's coupon entries (initializer 0xceade0, after "days2").
+	{ "coupon_pang", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrCheckoutDlg::OnCouponPangInit },
+	{ "coupon_cookie", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrCheckoutDlg::OnCouponCookieInit },
+	{ "coupon_icon_01", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrCheckoutDlg::OnCouponIcon1Init },
+	{ "coupon_icon_01", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIcon1LBtnUp },
+	{ "coupon_icon_01", FRCMD_RBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIcon1RBtnUp },
+	{ "coupon_icon_02", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrCheckoutDlg::OnCouponIcon2Init },
+	{ "coupon_icon_02", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIcon2LBtnUp },
+	{ "coupon_icon_02", FRCMD_RBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIcon2RBtnUp },
+	{ "coupon_icon_03", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrCheckoutDlg::OnCouponIcon3Init },
+	{ "coupon_icon_03", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIcon3LBtnUp },
+	{ "coupon_icon_03", FRCMD_RBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIcon3RBtnUp },
+	{ "coupon_icon_04", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrCheckoutDlg::OnCouponIcon4Init },
+	{ "coupon_icon_04", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIcon4LBtnUp },
+	{ "coupon_icon_04", FRCMD_RBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIcon4RBtnUp },
+	{ "coupon_icon_prev", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrCheckoutDlg::OnCouponIconPrevInit },
+	{ "coupon_icon_prev", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIconPrevLBtnUp },
+	{ "coupon_icon_next", FRCMD_INIT, FrFuncVI, (FRESH_PMSG)(FRESH_PMSGVI)&FrCheckoutDlg::OnCouponIconNextInit },
+	{ "coupon_icon_next", FRCMD_LBUTTONUP, FrFuncVV, (FRESH_PMSG)&FrCheckoutDlg::OnCouponIconNextLBtnUp },
+#endif
 	// checkoutdlg.cpp:82
 	{ 0, FRCMD_NONE, FrFuncNone, (FRESH_PMSG)0 }
 };
@@ -186,6 +207,18 @@ FrCheckoutDlg::FrCheckoutDlg(void) {
 	m_miniBtn[0].m_pCartItem = 0;
 	m_miniBtn[1].m_pCartItem = 0;
 	m_flag1dc = false;
+#ifdef JP_PAKS
+	// The coupon controls (JP +0x15c..+0x178) and page (JP +0x1e4).
+	m_pCouponPang = 0;
+	m_pCouponCookie = 0;
+	m_pCouponIcon[0] = 0;
+	m_pCouponIcon[1] = 0;
+	m_pCouponIcon[2] = 0;
+	m_pCouponIcon[3] = 0;
+	m_pCouponPrev = 0;
+	m_pCouponNext = 0;
+	m_couponPage = 0;
+#endif
 }
 
 // checkoutdlg.cpp:167
@@ -256,6 +289,20 @@ void FrCheckoutDlg::RecalculateTotalCookie(__int64 pang, __int64 cookie, bool up
 				m_unitCookie += pCadItem->m_levels[item.m_days];
 			else
 				m_unitPang += pCadItem->m_levels[item.m_days];
+#ifdef JP_PAKS
+		} else if ((item.m_pItem->m_typeId >> 26) == 0x10 && item.m_pItem->m_timeType == 0) {
+			// JP 0xa1f711: a mascot sold for good has no period price, the
+			// common one (the discount price when it is lower).
+			if (item.m_pItem->m_discountPrice > 0 && item.m_pItem->m_discountPrice < item.m_pItem->m_price)
+				price = item.m_pItem->m_discountPrice;
+			else
+				price = item.m_pItem->m_price;
+
+			if (item.m_pItem->m_flags0 & 1)
+				m_unitCookie += price;
+			else
+				m_unitPang += price;
+#endif
 		} else if ((item.m_pItem->m_typeId >> 26) == 0x10) {
 			IFF_STRUCT::sMascot* pMascot = ItemManager()->FindMascot(item.m_pItem->m_typeId);
 
@@ -424,6 +471,14 @@ void FrCheckoutDlg::Checkout(__int64 pang, __int64 cookie, bool b) {
 			m_pNumNext->MoveWindow(WPoint(rect.x + ((first->m_pItem->m_flags0 & 1) ? 50 : -50), rect.y));
 		}
 	}
+#ifdef JP_PAKS
+	// JP 0xaa3568: the coupon list, the coupon controls' layout, the icons
+	// and the discount.
+	BuildCouponList();
+	UpdateCouponControls();
+	UpdateCouponButtons();
+	RecalculateCouponDiscount();
+#endif
 }
 
 // checkoutdlg.cpp:524
@@ -636,11 +691,81 @@ bool FrCheckoutDlg::OnChargeResult(int ret, FrForm*) {
 // sBuyItem's constructor, so its type has no constructor. Name provisional.
 struct sBuyRequestItem {
 	int m_uid;                  // 0x0, -1 for a new item
-	unsigned long m_typeId;     // 0x4
+	unsigned int m_typeId;      // 0x4 (a 32-bit field of the wire record: unsigned long is 8 bytes on LP64)
 	unsigned short m_period;    // 0x8, rental period (sPeriodPrice::altPeriod or days_t::m_days)
 	short m_periodIndex;        // 0xa, index of the rental period, -1 for none
 	int m_count;                // 0xc
 };
+
+#ifdef JP_PAKS
+// The JP buy record is 0x25 bytes (JP OnConfirmResult 0xaa25f0 zeroes 0x25
+// bytes and pushes EncodeBuffer 0x25; SuperSS-Dev's BuyItem): the KR 0x10
+// bytes above, then what this tail holds.
+struct sJpBuyRequestTail {
+	unsigned int m_pangPrice;    // 0x10, the line's pang price (0 for a cookie item)
+	unsigned int m_cookiePrice;  // 0x14, the line's cookie price (0 for a pang item)
+	unsigned int m_uccSerial;    // 0x18, a display UCC clothes' serial (sDisplayUccClothes::m_serial), else 0
+	char m_uccKey[9];            // 0x1c, its UCC key, else ""
+};
+
+// The pang or cookie price of a line, by the item's cash flag (JP 0xaa27d0).
+static void JpSetBuyPrice(sJpBuyRequestTail& tail, const IFF_ITEM_COMMON* pItem, unsigned int price) {
+	if (pItem->m_flags0 & 1) {
+		tail.m_cookiePrice = price;
+		tail.m_pangPrice = 0;
+	} else {
+		tail.m_cookiePrice = 0;
+		tail.m_pangPrice = price;
+	}
+}
+
+// JP 0xa1f680 (the JP CItemManager::GetItemSalePrice) for the lines this
+// port prices: a mascot whose common header byte +0x82 (m_timeType once
+// converted) is 0 has no rental period (jump table 0xa1f9e4 group 0x10 ->
+// 0xa1f711) and sells at the common price (0x9d8ac0: the discount price when
+// it is lower); anything else as the KR GetItemSalePrice.
+static unsigned int JpGetItemSalePrice(unsigned long typeId, int count, unsigned long period) {
+	IFF_ITEM_COMMON* pItem = ItemManager()->FindCommonItem(typeId);
+	if (pItem != NULL && (typeId >> 26) == 0x10 && pItem->m_timeType == 0) {
+		if (pItem->m_discountPrice != 0 && pItem->m_discountPrice < pItem->m_price)
+			return pItem->m_discountPrice;
+		return pItem->m_price;
+	}
+	return ItemManager()->GetItemSalePrice(typeId, count, period);
+}
+
+// The display UCC clothes whose buy line carries the UCC serial and key (JP
+// table 0xd46110, 35 part type ids).
+static const unsigned int s_jpUccDisplayParts[35] = {
+	0x08006055, 0x0800A035, 0x08044085, 0x08048025, 0x080440B3, 0x08084044, 0x0808A025,
+	0x080C408B, 0x080CA023, 0x080C40B2, 0x0810404F, 0x08108030, 0x08144084, 0x0814A02C,
+	0x081440BF, 0x08184087, 0x08188020, 0x081840C7, 0x081C404B, 0x081CA01F, 0x0820404A,
+	0x0820A00E, 0x08204091, 0x08244064, 0x0824A004, 0x0824408F, 0x08284026, 0x08284027,
+	0x0828A012, 0x0830401B, 0x0830401E, 0x0830A00C, 0x0838400E, 0x08384011, 0x0838A006,
+};
+
+// 0xa9b500
+static bool JpIsUccDisplayPart(unsigned long typeId) {
+	for (int i = 0; i < 35; i++) {
+		if (s_jpUccDisplayParts[i] == typeId)
+			return true;
+	}
+	return false;
+}
+
+// One 0x25-byte JP buy record, field by field (a fixed wire layout).
+static void JpEncodeBuyRequestItem(WSendPacket& packet, const sBuyRequestItem& buy, const sJpBuyRequestTail& tail) {
+	packet.Encode4((unsigned long)buy.m_uid);
+	packet.Encode4(buy.m_typeId);
+	packet.Encode2(buy.m_period);
+	packet.Encode2((unsigned short)buy.m_periodIndex);
+	packet.Encode4((unsigned long)buy.m_count);
+	packet.Encode4(tail.m_pangPrice);
+	packet.Encode4(tail.m_cookiePrice);
+	packet.Encode4(tail.m_uccSerial);
+	packet.EncodeBuffer(tail.m_uccKey, sizeof(tail.m_uccKey));
+}
+#endif
 
 // checkoutdlg.cpp:857
 bool FrCheckoutDlg::OnConfirmResult(int ret, FrForm*) {
@@ -652,6 +777,10 @@ bool FrCheckoutDlg::OnConfirmResult(int ret, FrForm*) {
 		sBuyRequestItem buy;
 		memset(&buy, 0, sizeof(buy));
 		buy.m_uid = -1;
+#ifdef JP_PAKS
+		sJpBuyRequestTail jpTail;
+		memset(&jpTail, 0, sizeof(jpTail));
+#endif
 
 		FrListBox::ITEM_LIST::iterator it = items.begin();
 		CartItem& item = *(CartItem*)(*it)->pData;
@@ -677,10 +806,18 @@ bool FrCheckoutDlg::OnConfirmResult(int ret, FrForm*) {
 				buy.m_period = m_dayNames[item.m_days].altPeriod;
 				buy.m_periodIndex = (short)item.m_days;
 				buy.m_count = count;
+#ifdef JP_PAKS
+				JpSetBuyPrice(jpTail, item.m_pItem, ItemManager()->GetItemSalePrice(buy.m_typeId, count, buy.m_period));
+#endif
 
 				packet.Encode1(0);
 				packet.Encode2(1);
+#ifdef JP_PAKS
+				JpEncodeBuyRequestItem(packet, buy, jpTail);
+				packet.Encode4(GetGuidSelectedCoupon());
+#else
 				packet.EncodeBuffer(&buy, sizeof(buy));
+#endif
 				packet.Send(SEND_TO_DEFAULT);
 			} else {
 				int n = items.size();
@@ -696,10 +833,17 @@ bool FrCheckoutDlg::OnConfirmResult(int ret, FrForm*) {
 					buy.m_period = m_dayNames[item.m_days].altPeriod;
 					buy.m_periodIndex = (short)item.m_days;
 					buy.m_count = count;
-
+#ifdef JP_PAKS
+					JpSetBuyPrice(jpTail, item.m_pItem, ItemManager()->GetItemSalePrice(buy.m_typeId, count, buy.m_period));
+					JpEncodeBuyRequestItem(packet, buy, jpTail);
+#else
 					packet.EncodeBuffer(&buy, sizeof(buy));
+#endif
 				}
 
+#ifdef JP_PAKS
+				packet.Encode4(GetGuidSelectedCoupon());
+#endif
 				packet.Send(SEND_TO_DEFAULT);
 			}
 		} else {
@@ -775,10 +919,34 @@ bool FrCheckoutDlg::OnConfirmResult(int ret, FrForm*) {
 				buy.m_period = (unsigned short)days[pCartItem->m_days].m_days;
 				buy.m_periodIndex = -1;
 				buy.m_count = count;
-
+#ifdef JP_PAKS
+				// JP 0xaa2d63: a rental-parts checkout prices a cash part at its pang
+				// rental price.
+				if (!(pCartItem->m_pItem->m_flags0 & 1)) {
+					jpTail.m_cookiePrice = 0;
+					jpTail.m_pangPrice = JpGetItemSalePrice(buy.m_typeId, count, buy.m_period);
+				} else if (!m_bCheckoutFlag) {
+					jpTail.m_cookiePrice = JpGetItemSalePrice(buy.m_typeId, count, buy.m_period);
+					jpTail.m_pangPrice = 0;
+				} else {
+					jpTail.m_cookiePrice = 0;
+					jpTail.m_pangPrice = S5::RENTALPARTS::GetRentalPrice(buy.m_typeId);
+				}
+				if (JpIsUccDisplayPart(pCartItem->m_pItem->m_typeId)) {
+					const sDisplayUccClothes* pDisplay = (const sDisplayUccClothes*)pCartItem->m_pItem;
+					jpTail.m_uccSerial = pDisplay->m_serial;
+					strncpy(jpTail.m_uccKey, pDisplay->m_uccKey.c_str(), sizeof(jpTail.m_uccKey) - 1);
+					jpTail.m_uccKey[sizeof(jpTail.m_uccKey) - 1] = '\0';
+				}
+				JpEncodeBuyRequestItem(packet, buy, jpTail);
+#else
 				packet.EncodeBuffer(&buy, sizeof(buy));
+#endif
 			}
 
+#ifdef JP_PAKS
+			packet.Encode4(GetGuidSelectedCoupon());
+#endif
 			packet.Send(SEND_TO_DEFAULT);
 		}
 
@@ -810,9 +978,21 @@ bool ComparePeriodCoupon(const FrCheckoutDlg::sCoupon& a, const FrCheckoutDlg::s
 
 // checkoutdlg.cpp:1775
 unsigned long FrCheckoutDlg::GetGuidSelectedCoupon(void) {
+#ifdef JP_PAKS
+	// JP 0xa9f680: the item id of the selected coupon (m_coupons keyed by
+	// its list index), 0 when coupons are off or none is selected.
+	if (m_bCouponFlag) {
+		std::map<unsigned int, sCoupon>::iterator it = m_coupons.find((unsigned int)m_selectedCoupon);
+		if (it != m_coupons.end())
+			return it->second.m_guid;
+	}
+
+	return 0;
+#else
 	m_bCouponFlag = false;
 
 	return 0;
+#endif
 }
 
 // checkoutdlg.cpp:1802
@@ -1556,6 +1736,11 @@ void FrCheckoutDlg::OnCartOwnerDraw(PG_MSGARG param) {
 					pGDI->SetTextColor(0xFF000000, 0xFFFFFFFF);
 				}
 			}
+#ifdef JP_PAKS
+			// The JP owner draw (0xa9f6d0) ends with the coupon picker.
+			DrawCouponLine();
+			DrawCouponIcons();
+#endif
 		}
 	}
 }
@@ -1649,3 +1834,616 @@ void FrCheckoutDlg::OnNumNextLBtnUp(void) {
 		}
 	}
 }
+
+#ifdef JP_PAKS
+// The JP checkout's coupon picker (no KR counterpart). JP offsets: see the
+// coupon members in checkoutdlg.h.
+
+#include "frarea.h"
+
+const char* Jp_LookupText(const char* key);   // JP 0xb4eb80 (port glue)
+
+// JP 0xa9ac60
+void FrCheckoutDlg::RecalculateCouponDiscount(void) {
+	if (m_bCouponFlag) {
+		if (m_value1d8 == 1) {
+			m_pangDiscount = m_num * m_unitPang;
+			m_cookieDiscount = m_unitCookie;
+		} else if (m_value1d8 == 4) {
+			if (m_cookieDiscount == 20000) {
+				m_cookieDiscount = m_unitCookie * 20 / 100;
+			} else if (m_cookieDiscount == 50000) {
+				m_cookieDiscount = (m_unitCookie + 1) / 2;
+			} else {
+				m_cookieDiscount = 0;
+			}
+		}
+
+		char text[0x20];
+		if (m_pCouponPang) {
+			memset(text, 0, sizeof(text));
+			if (m_pangDiscount <= 0) {
+				sprintf(text, Jp_LookupText("0\xC6\xCE"));
+			} else {
+				char price[0x20];
+				memset(price, 0, sizeof(price));
+				MakePriceStrA(price, m_pangDiscount);
+				sprintf(text, Jp_LookupText("- %s\xC6\xCE"), price);
+			}
+			m_pCouponPang->SetLine(1, text, 0, false, 0);
+		}
+
+		if (m_pCouponCookie) {
+			memset(text, 0, sizeof(text));
+			if (m_cookieDiscount <= 0) {
+				sprintf(text, Jp_LookupText("0\xC4\xED\xC5\xB0"));
+			} else {
+				sprintf(text, Jp_LookupText("- %I64d\xC4\xED\xC5\xB0"), m_cookieDiscount);
+			}
+			m_pCouponCookie->SetLine(1, text, 0, false, 0);
+		}
+	}
+}
+
+// JP 0xa9e900
+// The "information" form of a coupon (right click on a coupon icon): its
+// icon, name, level, the time left of the player's coupon item and its
+// description; an unknown coupon shows "name: unknown / level: unknown".
+void FrCheckoutDlg::ShowCouponInformation(const sCoupon* coupon) {
+	if (!coupon || g_pFresh->GetManager()->GetDesktop()->FindChildByName("information")) {
+		return;
+	}
+
+	FrForm* form = CreateForm<FrForm>(g_pFresh->GetManager(), this, "information", 0);
+	IFF_ITEM_COMMON* item = ItemManager()->FindCommonItem(coupon->m_typeId);
+
+	FrArea* portrait = DYNAMIC_CAST(FrArea, form->FindChildByName("portrait"));
+	FrWnd* reset = DYNAMIC_CAST(FrWnd, form->FindChildByName("reset"));
+	if (reset) {
+		reset->SetVisible(false);
+	}
+	FrWnd* workshop = DYNAMIC_CAST(FrWnd, form->FindChildByName("icon_clubsetworkshop"));
+	if (workshop) {
+		workshop->SetVisible(false);
+	}
+
+	if (portrait) {
+		if (item) {
+			portrait->SetBgImg(item->m_icon);
+		} else {
+			portrait->SetBgImg("hide");
+		}
+	}
+
+	if (item) {
+		FrEdit* name = DYNAMIC_CAST(FrEdit, form->FindChildByName("name"));
+		FrArea* level = DYNAMIC_CAST(FrArea, form->FindChildByName("level"));
+		if (name && level) {
+			// "name: %s\n\nlevel: <spaces> or lower / or higher\n"
+			const char* format = (item->m_level & 0x80)
+				? "\xC0\xCC\xB8\xA7: %s\n\n\xB7\xB9\xBA\xA7:                \xC0\xCC\xC7\xCF\n"
+				: "\xC0\xCC\xB8\xA7: %s\n\n\xB7\xB9\xBA\xA7:                \xC0\xCC\xBB\xF3\n";
+			name->AddText(MakeStr(Jp_LookupText(format), item->m_name), false, true);
+			level->SetBgImg(MakeStr("level_%03d", (item->m_level & 0x7F) + 1));
+
+			// The time left of the player's coupon item (a period item).
+			const std::list<sItemInfo>& items = WSingleton<CSharedDoc>::Instance()->GetConstMyItemList();
+			for (std::list<sItemInfo>::const_iterator it = items.begin(); it != items.end(); ++it) {
+				if (it->m_serial != coupon->m_guid) {
+					continue;
+				}
+				if (it->m_stateBits.kind) {
+					int days = it->m_remainHours / 24;
+					int hours = it->m_remainHours % 24;
+					const char* text;
+					if (it->m_stateBits.expired) {
+						// "the period of use is over."
+						text = Jp_LookupText("\\c0xffff0000\\c\xBB\xE7\xBF\xEB\xB1\xE2\xB0\xA3\\c0xff000000\\c\xC0\xCC "
+							"\\c0xffff0000\\c\xB8\xB8\xB7\xE1\\c0xff000000\\c\xB5\xC7\xBE\xFA\xBD\xC0\xB4\xCF\xB4\xD9.\n");
+					} else if (days == 0 && hours == 0) {
+						// "time left: less than 1 hour"
+						text = Jp_LookupText("\xB3\xB2\xC0\xBA\xBD\xC3\xB0\xA3: 1\xBD\xC3\xB0\xA3\xB9\xCC\xB8\xB8\n");
+					} else {
+						// "time left: %d days %d hours"
+						text = MakeStr(Jp_LookupText("\xB3\xB2\xC0\xBA\xBD\xC3\xB0\xA3: %d\xC0\xCF %d\xBD\xC3\xB0\xA3\n"), days, hours);
+					}
+					name->AddText(text, false, true);
+				}
+				break;
+			}
+		}
+
+		IFF_STRUCT::sDesc* desc = ItemManager()->FindDesc(item->m_typeId);
+		if (desc) {
+			form->SetMessage(desc->m_text, false);
+		}
+	} else {
+		FrEdit* name = DYNAMIC_CAST(FrEdit, form->FindChildByName("name"));
+		if (name) {
+			// "name: unknown\n\nlevel: unknown"
+			name->AddText(Jp_LookupText("\xC0\xCC\xB8\xA7: \xBA\xD2\xB8\xED\n\n\xB7\xB9\xBA\xA7: \xBA\xD2\xB8\xED"), false, true);
+		}
+		// "an unknown being wrapped in a veil"
+		form->SetMessage(Jp_LookupText("\xBA\xA3\xC0\xCF\xBF\xA1 \xBD\xCE\xC0\xCE \xC1\xA4\xC3\xBC\xBA\xD2\xB8\xED\xC0\xC7 \xC1\xB8\xC0\xE7"), false);
+	}
+
+	form->Open(0, 3);
+}
+
+// JP 0xa9b810
+// The separator line under the coupon icons, 148 below the dialog's top.
+void FrCheckoutDlg::DrawCouponLine(void) {
+	if (!m_bCouponFlag) {
+		return;
+	}
+
+	const WRect& rect = GetRect();
+	if (!m_pCart->WndManager()->GetGDI()) {
+		return;
+	}
+
+	float y = rect.y + 148.0;
+	g_view->DrawLine2D(WPoint(rect.x, y), WPoint(rect.w + rect.x - 10.0, y), 0xFF000000, 0xFF000000, 0);
+}
+
+// JP 0xa9f410
+// The item icons of the (up to four) coupons shown on the coupon buttons;
+// a disabled (unusable) coupon is greyed and gets the "shop_icon_disable"
+// overlay, a pressed one is drawn one pixel lower right.
+void FrCheckoutDlg::DrawCouponIcons(void) {
+	if (!m_bCouponFlag) {
+		return;
+	}
+
+	FrGraphicInterface* pGDI = m_pCart->WndManager()->GetGDI();
+	if (!pGDI) {
+		return;
+	}
+
+	int count = 4;
+	if (m_coupons.size() < 4) {
+		count = (int)m_coupons.size();
+	}
+
+	for (int i = 0; i < count; i++) {
+		std::map<unsigned int, sCoupon>::iterator it = m_coupons.find((unsigned int)(m_couponPage + i));
+		if (it == m_coupons.end()) {
+			continue;
+		}
+
+		FrButton* button = m_pCouponIcon[i];
+		WRect rect = button->GetRect();
+		unsigned long color = button->IsEnabled() ? 0xFFFFFFFF : 0xFFCCCCCC;
+		int shift = 0;
+		if (button->GetStatus() == FrButton::PRESSED) {
+			shift = 1;
+		}
+
+		IFF_STRUCT::sItem* item = ItemManager()->FindItem(it->second.m_typeId);
+		if (!item) {
+			continue;
+		}
+		const Bitmap* icon = g_pFresh->GetManager()->GetBitmap("ITEMS", item->m_icon);
+		if (!icon) {
+			continue;
+		}
+
+		float offset = (float)shift;
+		pGDI->DrawTexture(icon, WRect(rect.x + 13.0 + offset, rect.y + 15.0 + offset, (float)icon->Width(), (float)icon->Height()), color, 0);
+
+		if (color != 0xFFFFFFFF) {
+			const Bitmap* disable = g_pFresh->GetManager()->GetBitmap("ITEMS", "shop_icon_disable");
+			if (disable) {
+				pGDI->DrawTexture(disable, WRect(rect.x - 6.0, rect.y + 22.0, (float)disable->Width(), (float)disable->Height()), color, 0);
+			}
+		}
+	}
+}
+
+// JP 0xa9f0c0
+void FrCheckoutDlg::UpdateCouponButtons(void) {
+	if (!m_pCouponPang || !m_pCouponCookie || !m_pCouponPrev || !m_pCouponNext || !m_pCouponIcon[0]
+		|| !m_pCouponIcon[1] || !m_pCouponIcon[2] || !m_pCouponIcon[3] || !m_bCouponFlag) {
+		return;
+	}
+
+	for (int i = 0; i < 4; i++) {
+		std::map<unsigned int, sCoupon>::iterator it = m_coupons.find((unsigned int)(m_couponPage + i));
+		if (it != m_coupons.end()) {
+			m_pCouponIcon[i]->Enable(it->second.m_bUsable);
+		}
+	}
+
+	m_pCouponIcon[0]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[1]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[2]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[3]->SetStatus(FrButton::NORMAL);
+
+	if (m_selectedCoupon >= m_couponPage && m_selectedCoupon < m_couponPage + 4) {
+		m_pCouponIcon[m_selectedCoupon - m_couponPage]->SetStatus(FrButton::PRESSED);
+	}
+}
+
+// JP 0xa9b530
+void FrCheckoutDlg::UpdateCouponControls(void) {
+	if (!m_pCouponPang || !m_pCouponCookie || !m_pCouponPrev || !m_pCouponNext || !m_pCouponIcon[0]
+		|| !m_pCouponIcon[1] || !m_pCouponIcon[2] || !m_pCouponIcon[3]) {
+		return;
+	}
+
+	if (!m_bCouponFlag) {
+		m_pCouponIcon[0]->SetVisible(false);
+		m_pCouponIcon[1]->SetVisible(false);
+		m_pCouponIcon[2]->SetVisible(false);
+		m_pCouponIcon[3]->SetVisible(false);
+		m_pCouponPrev->SetVisible(false);
+		m_pCouponNext->SetVisible(false);
+		if (m_pCouponPang) {
+			m_pCouponPang->SetAlpha(0.2f);
+		}
+		if (m_pCouponCookie) {
+			m_pCouponCookie->SetAlpha(0.2f);
+		}
+		return;
+	}
+
+	// Coupons on: the cart list gives 70 points of its height to the icons.
+	if (m_pCart) {
+		WRect rect = m_pCart->GetRect();
+		m_pCart->SetRect(WRect(rect.x, rect.y, rect.w, rect.h - 70.0));
+	}
+
+	if (m_coupons.size() > 4) {
+		m_pCouponIcon[0]->SetVisible(true);
+		m_pCouponIcon[1]->SetVisible(true);
+		m_pCouponIcon[2]->SetVisible(true);
+		m_pCouponIcon[3]->SetVisible(true);
+		m_pCouponPrev->Enable(false);
+		return;
+	}
+
+	m_pCouponIcon[0]->SetVisible(false);
+	m_pCouponIcon[1]->SetVisible(false);
+	m_pCouponIcon[2]->SetVisible(false);
+	m_pCouponIcon[3]->SetVisible(false);
+	m_pCouponPrev->Enable(false);
+	m_pCouponNext->Enable(false);
+	switch (m_coupons.size()) {
+	case 4:
+		m_pCouponIcon[3]->SetVisible(true);
+	case 3:
+		m_pCouponIcon[2]->SetVisible(true);
+	case 2:
+		m_pCouponIcon[1]->SetVisible(true);
+	case 1:
+		m_pCouponIcon[0]->SetVisible(true);
+		break;
+	default:
+		m_pCouponPrev->SetVisible(false);
+		m_pCouponNext->SetVisible(false);
+		break;
+	}
+	if (m_pCouponPang) {
+		m_pCouponPang->SetAlpha(1.0f);
+	}
+	if (m_pCouponCookie) {
+		m_pCouponCookie->SetAlpha(1.0f);
+	}
+}
+
+// JP 0xa9f270
+void FrCheckoutDlg::SelectCoupon(int index) {
+	if (!m_bCouponFlag) {
+		return;
+	}
+
+	m_pangDiscount = 0;
+	m_cookieDiscount = 0;
+	m_value1d8 = 0;
+
+	if (index < 0 || (unsigned int)index >= m_coupons.size()) {
+		return;
+	}
+
+	std::map<unsigned int, sCoupon>::iterator it = m_coupons.find((unsigned int)index);
+	if (it == m_coupons.end() || !it->second.m_bUsable) {
+		return;
+	}
+
+	// Kind 3: a fixed cookie discount; kind 1: the item for free; kind 4:
+	// a cookie percentage (20000 = 20%, 50000 = 50%, RecalculateCouponDiscount).
+	switch (it->second.m_typeId & 0xfffff) {
+	case 0x15:
+	case 0x1d:
+	case 0x1e:
+		m_cookieDiscount = 5;
+		m_value1d8 = 3;
+		break;
+	case 0x16:
+	case 0x2b:
+	case 0x2c:
+		m_cookieDiscount = 10;
+		m_value1d8 = 3;
+		break;
+	case 0x17:
+	case 0x2d:
+	case 0x2e:
+		m_cookieDiscount = 0;
+		m_pangDiscount = 0;
+		m_value1d8 = 1;
+		break;
+	case 0x3a:
+		m_cookieDiscount = 50000;
+		m_value1d8 = 4;
+		break;
+	case 0x3c:
+	case 0x4e:
+		m_cookieDiscount = 20000;
+		m_value1d8 = 4;
+		break;
+	}
+}
+
+// JP 0xaa2f30
+void FrCheckoutDlg::BuildCouponList(void) {
+	if (!m_pCouponPang || !m_pCouponCookie || !m_pCouponPrev || !m_pCouponNext || !m_pCouponIcon[0]
+		|| !m_pCouponIcon[1] || !m_pCouponIcon[2] || !m_pCouponIcon[3] || m_cart.size() > 1) {
+		m_bCouponFlag = false;
+		return;
+	}
+
+	std::list<sCoupon> coupons;
+	const std::list<sItemInfo>& items = WSingleton<CSharedDoc>::Instance()->GetConstMyItemList();
+	for (std::list<sItemInfo>::const_iterator it = items.begin(); it != items.end(); ++it) {
+		unsigned long typeId = it->m_typeId;
+		if ((typeId & 0xfc000000) != 0x18000000 || (typeId & 0x1f00000) || !(typeId & 0x2000000)) {
+			continue;
+		}
+
+		// (The JP also looks the coupon up with CItemManager::FindItem and
+		// drops the result.)
+		const IFF_ITEM_COMMON* pItem = ((CartItem*)(*m_pCart->m_itemList.begin())->pData)->m_pItem;
+
+		sCoupon coupon;
+		coupon.m_typeId = it->m_typeId;
+		coupon.m_guid = it->m_serial;
+		coupon.m_bUsable = false;
+		coupon.m_period = it->m_remainHours;
+
+		bool known = false;
+		switch (coupon.m_typeId & 0xfffff) {
+		case 0x15:
+		case 0x16:
+		case 0x1d:
+		case 0x1e:
+		case 0x2b:
+		case 0x2c:
+		case 0x3a:
+		case 0x3c:
+		case 0x4e:
+			// Cookie coupons: only for a cookie item (JP item +0x80 bit 0).
+			coupon.m_bUsable = (pItem->m_flags0 & 1) == 1;
+			known = true;
+			break;
+		case 0x17:
+		case 0x2d:
+		case 0x2e: {
+			unsigned long kind = pItem->m_typeId >> 26;
+			if (kind != 4) {
+				coupon.m_bUsable = true;
+				if (kind == 9) {
+					coupon.m_bUsable = false;
+				}
+			} else {
+				coupon.m_bUsable = false;
+			}
+			known = true;
+			break;
+		}
+		}
+
+		if (m_bCheckoutFlag) {
+			coupon.m_bUsable = false;
+		}
+
+		if (known) {
+			for (int i = 0; i < it->m_count; i++) {
+				coupons.push_back(coupon);
+			}
+		}
+	}
+
+	if (coupons.empty()) {
+		m_bCouponFlag = false;
+		return;
+	}
+
+	coupons.sort(CompareUsableCoupon);
+	coupons.sort(ComparePeriodCoupon);
+
+	unsigned int index = 0;
+	for (std::list<sCoupon>::iterator it = coupons.begin(); it != coupons.end(); ++it) {
+		m_coupons.insert(std::pair<const unsigned int, sCoupon>(index, *it));
+		index++;
+	}
+}
+
+// JP 0xa9bff0
+void FrCheckoutDlg::OnCouponPangInit(intptr_t param) {
+	m_pCouponPang = DYNAMIC_CAST(FrEdit, param);
+}
+
+// JP 0xa9c060
+void FrCheckoutDlg::OnCouponCookieInit(intptr_t param) {
+	m_pCouponCookie = DYNAMIC_CAST(FrEdit, param);
+}
+
+// JP 0xa9c0d0
+void FrCheckoutDlg::OnCouponIcon1Init(intptr_t param) {
+	m_pCouponIcon[0] = DYNAMIC_CAST(FrButton, param);
+	if (m_pCouponIcon[0]) {
+		m_pCouponIcon[0]->UseRightButton(true);
+	}
+}
+
+// JP 0xa9c150
+void FrCheckoutDlg::OnCouponIcon2Init(intptr_t param) {
+	m_pCouponIcon[1] = DYNAMIC_CAST(FrButton, param);
+	if (m_pCouponIcon[1]) {
+		m_pCouponIcon[1]->UseRightButton(true);
+	}
+}
+
+// JP 0xa9c1d0
+void FrCheckoutDlg::OnCouponIcon3Init(intptr_t param) {
+	m_pCouponIcon[2] = DYNAMIC_CAST(FrButton, param);
+	if (m_pCouponIcon[2]) {
+		m_pCouponIcon[2]->UseRightButton(true);
+	}
+}
+
+// JP 0xa9c250
+void FrCheckoutDlg::OnCouponIcon4Init(intptr_t param) {
+	m_pCouponIcon[3] = DYNAMIC_CAST(FrButton, param);
+	if (m_pCouponIcon[3]) {
+		m_pCouponIcon[3]->UseRightButton(true);
+	}
+}
+
+// JP 0xa9c2d0
+void FrCheckoutDlg::OnCouponIconPrevInit(intptr_t param) {
+	m_pCouponPrev = DYNAMIC_CAST(FrButton, param);
+	if (m_pCouponPrev) {
+		m_pCouponPrev->UseDblClick(false);
+		m_pCouponPrev->SetPushDelay(0.0f);
+	}
+}
+
+// JP 0xa9c360
+void FrCheckoutDlg::OnCouponIconNextInit(intptr_t param) {
+	m_pCouponNext = DYNAMIC_CAST(FrButton, param);
+	if (m_pCouponNext) {
+		m_pCouponNext->UseDblClick(false);
+		m_pCouponNext->SetPushDelay(0.0f);
+	}
+}
+
+// JP 0xaa0f10
+void FrCheckoutDlg::OnCouponIcon1LBtnUp(void) {
+	m_pCouponIcon[1]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[2]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[3]->SetStatus(FrButton::NORMAL);
+	if (m_pCouponIcon[0]->GetStatus() == FrButton::PRESSED) {
+		m_selectedCoupon = m_couponPage;
+	} else {
+		m_selectedCoupon = -1;
+	}
+	SelectCoupon(m_selectedCoupon);
+	RecalculateCouponDiscount();
+	SetPrice(m_num);
+}
+
+// JP 0xaa0f90
+void FrCheckoutDlg::OnCouponIcon1RBtnUp(void) {
+	OnCouponIcon1LBtnUp();
+	std::map<unsigned int, sCoupon>::iterator it = m_coupons.find((unsigned int)m_couponPage);
+	if (it != m_coupons.end()) {
+		ShowCouponInformation(&it->second);
+	}
+}
+
+// JP 0xaa0fe0
+void FrCheckoutDlg::OnCouponIcon2LBtnUp(void) {
+	m_pCouponIcon[0]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[2]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[3]->SetStatus(FrButton::NORMAL);
+	if (m_pCouponIcon[1]->GetStatus() == FrButton::PRESSED) {
+		m_selectedCoupon = m_couponPage + 1;
+	} else {
+		m_selectedCoupon = -1;
+	}
+	SelectCoupon(m_selectedCoupon);
+	RecalculateCouponDiscount();
+	SetPrice(m_num);
+}
+
+// JP 0xaa1060
+void FrCheckoutDlg::OnCouponIcon2RBtnUp(void) {
+	OnCouponIcon2LBtnUp();
+	std::map<unsigned int, sCoupon>::iterator it = m_coupons.find((unsigned int)(m_couponPage + 1));
+	if (it != m_coupons.end()) {
+		ShowCouponInformation(&it->second);
+	}
+}
+
+// JP 0xaa10b0
+void FrCheckoutDlg::OnCouponIcon3LBtnUp(void) {
+	m_pCouponIcon[0]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[1]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[3]->SetStatus(FrButton::NORMAL);
+	if (m_pCouponIcon[2]->GetStatus() == FrButton::PRESSED) {
+		m_selectedCoupon = m_couponPage + 2;
+	} else {
+		m_selectedCoupon = -1;
+	}
+	SelectCoupon(m_selectedCoupon);
+	RecalculateCouponDiscount();
+	SetPrice(m_num);
+}
+
+// JP 0xaa1130
+void FrCheckoutDlg::OnCouponIcon3RBtnUp(void) {
+	OnCouponIcon3LBtnUp();
+	std::map<unsigned int, sCoupon>::iterator it = m_coupons.find((unsigned int)(m_couponPage + 2));
+	if (it != m_coupons.end()) {
+		ShowCouponInformation(&it->second);
+	}
+}
+
+// JP 0xaa1180
+void FrCheckoutDlg::OnCouponIcon4LBtnUp(void) {
+	m_pCouponIcon[0]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[1]->SetStatus(FrButton::NORMAL);
+	m_pCouponIcon[2]->SetStatus(FrButton::NORMAL);
+	if (m_pCouponIcon[3]->GetStatus() == FrButton::PRESSED) {
+		m_selectedCoupon = m_couponPage + 3;
+	} else {
+		m_selectedCoupon = -1;
+	}
+	SelectCoupon(m_selectedCoupon);
+	RecalculateCouponDiscount();
+	SetPrice(m_num);
+}
+
+// JP 0xaa1200
+void FrCheckoutDlg::OnCouponIcon4RBtnUp(void) {
+	OnCouponIcon4LBtnUp();
+	std::map<unsigned int, sCoupon>::iterator it = m_coupons.find((unsigned int)(m_couponPage + 3));
+	if (it != m_coupons.end()) {
+		ShowCouponInformation(&it->second);
+	}
+}
+
+// JP 0xaa1250
+void FrCheckoutDlg::OnCouponIconPrevLBtnUp(void) {
+	m_couponPage--;
+	m_pCouponNext->Enable(true);
+	if (m_couponPage <= 0) {
+		m_couponPage = 0;
+		m_pCouponPrev->Enable(false);
+	}
+	UpdateCouponButtons();
+}
+
+// JP 0xaa12a0
+void FrCheckoutDlg::OnCouponIconNextLBtnUp(void) {
+	m_couponPage++;
+	m_pCouponPrev->Enable(true);
+	unsigned int count = m_coupons.size();
+	if ((unsigned int)m_couponPage >= count - 4) {
+		m_couponPage = count - 4;
+		m_pCouponNext->Enable(false);
+	}
+	UpdateCouponButtons();
+}
+#endif

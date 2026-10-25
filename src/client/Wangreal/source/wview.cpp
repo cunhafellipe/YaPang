@@ -5,6 +5,13 @@
 #include "../include/wvideo.h"
 #include "../include/wutil.h"
 
+#ifdef JP_PAKS
+// The current view: defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+WView* g_view = NULL;
+#endif
+
 // The vertex offset into the batch buffer, reset at each flush.
 static int g_foffset;
 

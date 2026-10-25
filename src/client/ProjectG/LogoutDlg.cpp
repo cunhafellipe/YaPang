@@ -12,6 +12,9 @@
 #include "../../shared/Localize.h"
 #include "messengerdlg.h"
 #include "LobbyTask.h"
+#ifdef JP_PAKS
+#include "JpAttendanceDlg.h" // JpQuitDlg_OnExitUp / JpQuitDlg_OnLogoutUp (src/jp)
+#endif
 
 extern bool g_bQuit;
 
@@ -125,7 +128,13 @@ void FrLogoutDlg::OnServerBtnInit(intptr_t param) {
 
 // logoutdlg.cpp:103
 void FrLogoutDlg::OnServerBtnUp(void) {
+#ifdef JP_PAKS
+	// JP 0xadc170: the server list is message 0x112 (0xEA is the shop's
+	// "buy answered" in the JP; CTaskMain::HandleMsgCommon 0x65d8e0).
+	AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0x112, 0, 0, 0, 0, 0));
+#else
 	AfxGetTask()->SendMsgToMainActor(MsgObject(0, 0xEA, 0, 0, 0, 0, 0));
+#endif
 
 	Close(FrOK, true);
 }
@@ -147,6 +156,13 @@ void FrLogoutDlg::OnLogoutBtnInit(intptr_t param) {
 
 // logoutdlg.cpp:123
 void FrLogoutDlg::OnLogoutBtnUp(void) {
+#ifdef JP_PAKS
+	// JP 0xadc550: outside the login-side layouts the button opens the
+	// check-out attendance dialog instead (Close(true)).
+	if (JpQuitDlg_OnLogoutUp(this)) {
+		return;
+	}
+#endif
 	if (g_pFresh->IsCurrentLayout("REALMYROOM")) {
 		AfxGetTask()->GetActor("RealMyRoom") << MsgObject(0, 0xDF, 0, 0, 0, 0, 0);
 	}
@@ -204,5 +220,10 @@ const WRect& rc = m_pExitBtn->GetRect();
 
 // logoutdlg.cpp:198
 void FrLogoutDlg::OnExitBtnUp(void) {
+#ifdef JP_PAKS
+	// JP 0xadc2e0: the check-in attendance dialog, or g_bQuit = true.
+	JpQuitDlg_OnExitUp(this);
+#else
 	g_bQuit = true;
+#endif
 }

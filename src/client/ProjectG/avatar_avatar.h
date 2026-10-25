@@ -59,6 +59,9 @@ class ntAvatar {
 	friend class ntAvatarManager;
 	friend class ntAvatarChatMain;  // its OnPreserveBack sets m_state bits
 	friend class ntAvatarChatTask;  // its Process hands a loaded burden to the avatar (m_burden, m_burdenReady)
+#ifdef JP_PAKS
+	friend class FrAvatarMotionDlg;  // the JP motion dialog reads m_charTypeId
+#endif
 
 public:
 	~ntAvatar();
@@ -249,6 +252,18 @@ class ntAvatarManager : public WSingleton<ntAvatarManager> {
 	friend class ntAvatar;
 	friend class ntAvatarChatMain;  // its OnUnderBar_*Up stop m_pMyAvatar
 	friend class ntAvatarChatTask;  // OnPacket 0x3E and OnAnotherHand read m_pMyAvatar (0xA4)
+#ifdef JP_PAKS
+	// The JP ntAvatarChatMain's club page and quest handlers (port glue, JpLobbyTaskGlue.cpp) stop m_pMyAvatar.
+	friend void AvatarChatMain_OpenClubPage(ntAvatarChatMain* main);
+	friend void AvatarChatMain_OpenQuest(ntAvatarChatMain* main);
+	// The JP CTaskMain's alchemy dialog (port glue, JpAlchemyDlg.cpp) reads
+	// m_pMyAvatar.
+	friend class CTaskMain;
+	friend class FrAlchemyMPBreakDlg;
+	friend class FrCardComposeDlg;
+	friend class FrAvatarMotionDlg;  // the JP motion dialog reads m_pMyAvatar
+	friend class JpShopMain;         // port glue: the JP shop main reads m_pMyAvatar (0xA4)
+#endif
 
 public:
 	ntAvatarManager();

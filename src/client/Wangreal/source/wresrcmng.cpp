@@ -243,6 +243,13 @@ void WResrcCache<T>::AddOrigin(const char* name, T resource) {
 	originList.AddItem(origin, origin->name, false);
 }
 
+#ifdef JP_PAKS
+// The resource manager (ProjectG.cpp creates it): defined for the JP port build only, whose Refresh game code
+// (src/jp) reads it; the matching build links nothing and
+// leaves it undefined.
+WResourceManager* g_resrcmng = NULL;
+#endif
+
 // wresrcmng.cpp:49
 WResourceManager::WResourceManager(void)
 	: m_missingTextureList(8, 8), m_matchList(1024, 1024), texList(64, 64), voiceList(8, 0), originList(8, 0) {

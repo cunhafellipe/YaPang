@@ -813,7 +813,15 @@ bool FrServerDlg::CloseByEnterChannel(bool bDestroy) {
 			CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
 		}
 
+#ifdef JP_PAKS
+		// JP 0xaf4229-0xaf4262: the JP data has no ROOMLIST layout; the
+		// lobby stays on TOPPAGE and the room list is a form over it
+		// (CLobbyMain message 0x8b (4, tab 0), JP case 0xabc986).
+		CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+		CTaskManager::Instance()->PostMsg(0, "Lobby", 0x8B, 4, 0, 0, 0);
+#else
 		CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
+#endif
 	}
 
 

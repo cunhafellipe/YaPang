@@ -65,7 +65,14 @@ public:
 
 	// A discount coupon of the player (std::map value, 0x10 bytes).
 	struct sCoupon {
+#ifdef JP_PAKS
+		// The JP coupon list builder 0xaa2f30 copies them from the player's
+		// item list (CSharedDoc +0x375c, node value +0x4 / +0x0).
+		unsigned int m_typeId;      // 0x0, the coupon item's type id
+		unsigned int m_guid;        // 0x4, the player's coupon item id, sent by GetGuidSelectedCoupon
+#else
 		UNKNOWN(0x0, 0x8);
+#endif
 		bool m_bUsable;             // 0x8
 		int m_period;               // 0xc
 	};
@@ -165,9 +172,52 @@ protected:
 	int m_dayNameCount;                  // 0x288, entries of m_dayNames in use
 	PADDING(0x28c, 0x290);               // FrCheckoutDlg members
 	sPeriodPrice m_dayNames[5];          // 0x290, rental periods of the item (FixCartItem)
+#ifdef JP_PAKS
+	// The JP coupon picker: four icons paged by prev / next, the discounts of
+	// the selected coupon. Its 8 control pointers sit at JP +0x15c..+0x178,
+	// before the cart (later JP offsets = KR + 0x20). JP +0x1dc m_bCouponFlag,
+	// +0x1e0 m_selectedCoupon, +0x1e8 / +0x1f0 / +0x1f8 m_pangDiscount /
+	// m_cookieDiscount / m_value1d8 (the kind); the JP constructor 0xaa1af0.
+protected:
+	void BuildCouponList(void);
+	void UpdateCouponControls(void);
+	void UpdateCouponButtons(void);
+	void SelectCoupon(int index);
+	void RecalculateCouponDiscount(void);
+	void ShowCouponInformation(const sCoupon* coupon);
+	void DrawCouponLine(void);
+	void DrawCouponIcons(void);
+	void OnCouponPangInit(intptr_t param);
+	void OnCouponCookieInit(intptr_t param);
+	void OnCouponIcon1Init(intptr_t param);
+	void OnCouponIcon2Init(intptr_t param);
+	void OnCouponIcon3Init(intptr_t param);
+	void OnCouponIcon4Init(intptr_t param);
+	void OnCouponIconPrevInit(intptr_t param);
+	void OnCouponIconNextInit(intptr_t param);
+	void OnCouponIcon1LBtnUp(void);
+	void OnCouponIcon2LBtnUp(void);
+	void OnCouponIcon3LBtnUp(void);
+	void OnCouponIcon4LBtnUp(void);
+	void OnCouponIcon1RBtnUp(void);
+	void OnCouponIcon2RBtnUp(void);
+	void OnCouponIcon3RBtnUp(void);
+	void OnCouponIcon4RBtnUp(void);
+	void OnCouponIconPrevLBtnUp(void);
+	void OnCouponIconNextLBtnUp(void);
+
+	FrEdit* m_pCouponPang;               // JP 0x15c, "coupon_pang": the pang discount
+	FrEdit* m_pCouponCookie;             // JP 0x160, "coupon_cookie": the cookie discount
+	FrButton* m_pCouponIcon[4];          // JP 0x164, "coupon_icon_01".."coupon_icon_04"
+	FrButton* m_pCouponPrev;             // JP 0x174, "coupon_icon_prev"
+	FrButton* m_pCouponNext;             // JP 0x178, "coupon_icon_next"
+	int m_couponPage;                    // JP 0x1e4 (KR m_value1c0's slot), m_coupons key on the first icon
+#endif
 };
 
+#ifndef JP_PAKS
 CHECK_SIZE(FrCheckoutDlg, 0x3d0);
+#endif
 BEGIN_LAYOUT_CHECK(FrCheckoutDlg)
 	CHECK_FIELD(FrCheckoutDlg, m_pCheckout, 0x110);
 	CHECK_FIELD(FrCheckoutDlg, m_pNumNext, 0x140);

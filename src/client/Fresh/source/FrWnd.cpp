@@ -13,6 +13,9 @@
 #include "client/Wangreal/include/woverlay.h"
 #include "client/Wangreal/include/wview.h"
 #include "client/ProjectG/SoundManager.h"
+#ifdef JP_PAKS
+#include "frgraphicinterface.h"
+#endif
 
 
 // frwnd.cpp:18 (run-time type and factory registration of FrWnd)
@@ -49,6 +52,9 @@ FrWnd::FrWnd(void)
 	  m_hoverTime(0.0f),
 	  m_accHoverTime(0.0f),
 	  m_pToolTipData(0) {
+#ifdef JP_PAKS
+	m_guiType = 0;   // GI_NONE until FrWndManager::DoCreate sets it
+#endif
 }
 
 // frwnd.cpp:35
@@ -592,11 +598,53 @@ void FrWnd::DoFadeProcess(const float dt, bool bElement) {
 
 // frwnd.cpp:709
 void FrWnd::DoFadeDisplay(void) {
+#ifdef JP_PAKS
+	// JP makes this virtual (vtable slot 23) and FrForm's override (0xbe62f0)
+	// draws the backdrop first. Only FrForm::_Init gives the backdrop a device,
+	// and Draw returns without one, so calling it here for every window is the
+	// same thing.
+	m_modalDim.Draw(m_fadeTime);
+#endif
 	float inv = 1.0f - m_fadeTime;
 
 	WOverlay::DrawLineBox(g_view, WRect(inv * m_iconRect.x + m_rect.x * m_fadeTime, inv * m_iconRect.y + m_rect.y * m_fadeTime,
 		inv * m_iconRect.w + m_rect.w * m_fadeTime, inv * m_iconRect.h + m_rect.h * m_fadeTime), 0, 0xffffffff);
 }
+
+#ifdef JP_PAKS
+bool FrModalDim::ms_bCancel = false;
+
+// JP 0xbe7850
+void FrModalDim::Begin(void) {
+	if (!ms_bCancel) {
+		m_bActive = true;
+	}
+}
+
+// JP 0xbe7870
+void FrModalDim::Cancel(void) {
+	ms_bCancel = true;
+}
+
+// JP 0xbe7c10: the screen-sized black box, its alpha 110/255 of the form's.
+void FrModalDim::Draw(float alpha) {
+	if (m_pDevice == 0) {
+		return;
+	}
+
+	if (ms_bCancel) {
+		ms_bCancel = false;
+		m_bActive = false;
+		return;
+	}
+
+	if (m_bActive) {
+		WRect rect(0.0f, 0.0f, m_width, m_height);
+		// JP's WOverlay::DrawBox takes no depth; 0 is the KR overlay's default plane.
+		WOverlay::DrawBox(g_view, rect, 0, FrALPHA(0xff000000, (float)(alpha * 110.0 / 255.0)), 0.0f);
+	}
+}
+#endif
 
 // frwnd.cpp:720
 void FrWnd::CheckHover(float dt, bool bIn, bool& bHover) {
@@ -653,6 +701,10 @@ void FrWnd::OnProcess(const float deltaTime, FrInputState& istate, bool checkTop
 
 			delete pChild;
 			it = m_childList.erase(it);
+#ifdef JP_PAKS
+			// JP 0xbe9643
+			m_pWndManager->UpdateModalFormCount();
+#endif
 
 			if (viewFocused) {
 				m_pWndManager->HandOverViewFocus();

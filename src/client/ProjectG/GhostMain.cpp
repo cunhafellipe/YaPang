@@ -597,6 +597,15 @@ void CGhostMain::OnExit(void) {
 
 	CGhostManager::Instance()->ReleaseDocument();
 
+#ifdef JP_PAKS
+	// JP 0x823820-0x823864: the JP data has no ROOMLIST layout; back in the
+	// lobby the layout is TOPPAGE, and with the lobby flag clear the JP
+	// changes no task here.
+	if (WSingleton<CSharedDoc>::Instance()->m_lobbyStateFlag) {
+		CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
+		CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
+	}
+#else
 	if (WSingleton<CSharedDoc>::Instance()->m_lobbyStateFlag) {
 		CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
 		CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"ROOMLIST", 0, 0, 0);
@@ -604,6 +613,7 @@ void CGhostMain::OnExit(void) {
 		CTaskManager::Instance()->ChangeTask("CLobbyTask", "CGolfDoc", false);
 		CTaskManager::Instance()->PostMsg(0, "Lobby", 0, (intptr_t)"TOPPAGE", 0, 0, 0);
 	}
+#endif
 }
 
 // ghostmain.cpp:795

@@ -62,6 +62,13 @@ public:
 	float PrintText11(const WPoint& pos, unsigned long align, const char* text, Bitmap* pBitmap);
 	float GetTextExtend(const char* lpszText);
 	float GetTextExtend11(const char* lpszText);
+#ifdef JP_PAKS
+	// The JP 983 Fresh's wide-text extents (RFTextDraw::MeasureText): the
+	// width of text in m_pFont12 / m_pFont11 through the JP WFont's [5]
+	// GetTextWidth(m_pView, text), which takes wide text there.
+	float GetTextExtend(const wchar_t* text);   // JP 0xbec3e0
+	float GetTextExtend11(const wchar_t* text); // JP 0xbec400
+#endif
 	int GetFontHeight(void);
 	int GetFontHeight11(void);
 	int SetSpace(int space);
